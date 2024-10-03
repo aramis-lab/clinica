@@ -253,7 +253,6 @@ class CAPSFileQuery(CAPSQuery):
     """
 
     from clinica.utils.input_files import (
-        custom_pipeline,
         pet_volume_normalized_suvr_pet,
         t1_volume_dartel_input_tissue,
         t1_volume_deformation_to_template,
@@ -276,7 +275,7 @@ class CAPSFileQuery(CAPSQuery):
         "t1w_to_mni": t1w_to_mni_transform,
         "pet_volume": pet_volume_normalized_suvr_pet,
         "t1_volume": t1_volume_template_tpm_in_mni,
-        "custom_pipeline": custom_pipeline,
+        # "custom_pipeline": custom_pipeline,
     }
 
 
@@ -304,7 +303,7 @@ class CAPSGroupQuery(CAPSQuery):
     """
 
     from clinica.utils.input_files import (
-        custom_group,
+        # custom_group,
         t1_volume_final_group_template,
         t1_volume_i_th_iteration_group_template,
     )
@@ -312,7 +311,7 @@ class CAPSGroupQuery(CAPSQuery):
     _query_makers = {
         "dartel_template": t1_volume_final_group_template,
         "dartel_iteration_templates": t1_volume_i_th_iteration_group_template,
-        "t_map": custom_group,
+        # "t_map": custom_group,
     }
 
 

@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from clinica.utils.dwi import DTIBasedMeasure
-from clinica.utils.input_files import Query, query_factory
+from clinica.utils.input_files import QueryPattern, query_pattern_factory
 from clinica.utils.pet import ReconstructionMethod, Tracer
 
 
@@ -93,7 +93,7 @@ def test_aggregator():
 def test_query_factory(
     query_name, expected_pattern, expected_description, expected_pipelines
 ):
-    query = query_factory(query_name)
+    query = query_pattern_factory(query_name)
 
     assert query.pattern == expected_pattern
     assert query.description == expected_description
@@ -180,8 +180,8 @@ def test_bids_pet_nii_empty():
 @pytest.fixture
 def expected_bids_pet_query(
     tracer: Tracer, reconstruction: ReconstructionMethod
-) -> Query:
-    return Query(
+) -> QueryPattern:
+    return QueryPattern(
         str(Path("pet") / f"*_trc-{tracer.value}_rec-{reconstruction.value}_pet.nii*"),
         f"PET data with {tracer.value} tracer and reconstruction method {reconstruction.value}",
         "",
@@ -191,7 +191,9 @@ def expected_bids_pet_query(
 @pytest.mark.parametrize("tracer", Tracer)
 @pytest.mark.parametrize("reconstruction", ReconstructionMethod)
 def test_bids_pet_nii(
-    tracer: Tracer, reconstruction: ReconstructionMethod, expected_bids_pet_query: Query
+    tracer: Tracer,
+    reconstruction: ReconstructionMethod,
+    expected_bids_pet_query: QueryPattern,
 ):
     from clinica.utils.input_files import bids_pet_nii
 

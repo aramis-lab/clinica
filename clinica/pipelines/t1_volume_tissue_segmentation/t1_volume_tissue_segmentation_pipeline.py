@@ -75,8 +75,7 @@ class T1VolumeTissueSegmentation(Pipeline):
         from clinica.iotools.utils.data_handling import (
             check_volume_location_in_world_coordinate_system,
         )
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
-        from clinica.utils.input_files import T1W_NII
+        from clinica.utils.input_files import QueryPatternName, query_pattern_factory
         from clinica.utils.inputs import clinica_file_filter
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
@@ -84,8 +83,9 @@ class T1VolumeTissueSegmentation(Pipeline):
         # Inputs from anat/ folder
         # ========================
         # T1w file:
+        pattern = query_pattern_factory(QueryPatternName.T1W)()
         t1w_files, subjects, sessions = clinica_file_filter(
-            self.subjects, self.sessions, self.bids_directory, T1W_NII
+            self.subjects, self.sessions, self.bids_directory, pattern
         )
         self.subjects = subjects
         self.sessions = sessions

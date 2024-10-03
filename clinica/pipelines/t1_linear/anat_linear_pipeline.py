@@ -72,16 +72,17 @@ class AnatLinear(Pipeline):
         caps_directory: Path, subjects: List[str], sessions: List[str]
     ) -> List[str]:
         from clinica.utils.filemanip import extract_image_ids
-        from clinica.utils.input_files import T1W_LINEAR_CROPPED
+        from clinica.utils.input_files import QueryPatternName, query_pattern_factory
         from clinica.utils.inputs import clinica_file_reader
 
         image_ids: List[str] = []
         if caps_directory.is_dir():
+            pattern = query_pattern_factory(QueryPatternName.T1W_LINEAR)(cropped=True)
             cropped_files, _ = clinica_file_reader(
                 subjects,
                 sessions,
                 caps_directory,
-                T1W_LINEAR_CROPPED,
+                pattern,
             )
             image_ids = extract_image_ids(cropped_files)
         return image_ids
@@ -119,10 +120,9 @@ class AnatLinear(Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
         from clinica.utils.image import get_mni_template
-        from clinica.utils.input_files import T1W_NII, Flair_T2W_NII
+        from clinica.utils.input_files import QueryPatternName, query_pattern_factory
         from clinica.utils.inputs import clinica_file_filter
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
@@ -155,10 +155,11 @@ class AnatLinear(Pipeline):
         # Inputs from anat/ folder
         # ========================
         # anat image file:
-        query = T1W_NII if self.name == "t1-linear" else Flair_T2W_NII
-
+        pattern = query_pattern_factory(
+            QueryPatternName.T1W if self.name == "t1-linear" else QueryPatternName.T2W
+        )()
         anat_files, filtered_subjects, filtered_sessions = clinica_file_filter(
-            self.subjects, self.sessions, self.bids_directory, query
+            self.subjects, self.sessions, self.bids_directory, pattern
         )
         self.subjects = filtered_subjects
         self.sessions = filtered_sessions

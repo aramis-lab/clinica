@@ -6,44 +6,73 @@ These dictionaries describe files to grab.
 import functools
 from collections.abc import Iterable
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, auto
 from pathlib import Path
-from typing import Optional, Union
+from typing import Callable, Optional, Union
 
 from clinica.utils.dwi import DTIBasedMeasure
 from clinica.utils.image import HemiSphere
 from clinica.utils.pet import ReconstructionMethod, SUVRReferenceRegion, Tracer
 
+from .spm import get_spm_tissue_from_index
+
 __all__ = [
-    "Query",
-    "QueryName",
-    "query_factory",
+    "DWIFileType",
+    "Parcellation",
+    "QueryPattern",
+    "QueryPatternName",
+    "query_pattern_factory",
+    "get_dwi_file",
+    "get_dwi_preprocessed_file",
+    "get_dwi_fmap_phasediff_file",
+    "get_dwi_fmap_magnitude1_file",
+    "get_t1w_linear",
+    "get_t1_freesurfer_white_matter_surface",
+    "get_t1_freesurfer_longitudinal_white_matter_surface",
+    "get_t1_freesurfer_segmentation",
+    "get_t1_freesurfer_parcellation",
+    "get_t1_freesurfer_template",
+    "get_t1_freesurfer_longitudinal_parcellation",
+    "get_t1_volume_native_tpm",
+    "get_t1_volume_dartel_input_tissue",
 ]
 
 
 @dataclass
-class Query:
-    """Represents a query for the clinica_file_reader.
+class QueryPattern:
+    """Represents a pattern to be used by the clinica_file_reader to query some specific files.
 
     Attributes
     ----------
     pattern : str
-        The pattern used to match file names.
+        The actual pattern string to be used to match file names.
 
     description : str
-        A plain text description of the files the query matches.
+        A plain text description of the files the pattern matches.
 
-    needed_pipeline : list of tuples of str
+    needed_pipeline : str
         The pipelines that should have been run in order to have the requested files.
+        TODO: Improve this to be an iterable of PipelineName objects.
+              The difficult part is that some pattern have combinations with AND and OR.
     """
 
     pattern: str
     description: str
     needed_pipeline: str
 
+    def __post_init__(self):
+        if len(self.pattern) == 0:
+            raise ValueError("Pattern cannot be empty.")
+        if self.pattern[0] == "/":
+            raise ValueError(
+                "pattern argument cannot start with char: / (does not work in os.path.join function). "
+                "If you want to indicate the exact name of the file, use the format "
+                "directory_name/filename.extension or filename.extension in the pattern argument."
+            )
 
-class QueryName(str, Enum):
-    """The different names for usual queries in Clinica.
+
+class QueryPatternName(Enum):
+    """The different names for usual pattern in Clinica.
 
     T1W : Get T1W MRI in BIDS
     T2W : Get T2W FLAIR MRI in BIDS
@@ -54,29 +83,40 @@ class QueryName(str, Enum):
     T1_FS_LONG_SURF : Get white matter border surface files from the Freesurfer longitudinal output
     """
 
-    T1W = "T1W"
-    T2W = "T2W"
-    T1_FS_WM = "T1_FS_WM"
-    T1_FS_BRAIN = "T1_FS_BRAIN"
-    T1_FS_ORIG_NU = "T1_FS_ORIG_NU"
-    T1_FS_LONG_ORIG_NU = "T1_FS_LONG_ORIG_NU"
-    T1_FS_WM_SURF = "T1_FS_WM_SURF"
-    T1_FS_LONG_SURF = "T1_FS_LONG_SURF"
-    T1W_LINEAR = "T1W_LINEAR"
-    T1W_TO_MNI_TRANSFORM = "T1W_TO_MNI_TRANSFORM"
-    T1_FS_PARC = "T1_FS_PARC"
-    T1_FS_LONG_PARC = "T1_FS_LONG_PARC"
-    T1_FS_SEG = "T1_FS_SEG"
-    T1_FS_TEMPLATE = "T1_FS_TEMPLATE"
-    DWI = "DWI"
-    DWI_PREPROC = "DWI_PREPROC"
-    DWI_PREPROC_BRAINMASK = "DWI_PREPROC_BRAINMASK"
-    DWI_FMAP_PHASEDIFF = "DWI_FMAP_PHASEDIFF"
-    DWI_FMAP_MAGNITUDE1 = "DWI_FMAP_MAGNITUDE1"
-    DWI_DTI = "DWI_DTI"
+    T1W = auto()
+    T1W_LINEAR = auto()
+    T1W_TO_MNI_TRANSFORM = auto()
+    T2W = auto()
+    T1_FREESURFER_WHITE_MATTER = auto()
+    T1_FREESURFER_BRAIN = auto()
+    T1_FREESURFER_ORIG_NU = auto()
+    T1_FREESURFER_LONG_ORIG_NU = auto()
+    T1_FREESURFER_WHITE_MATTER_SURFACE = auto()
+    T1_FREESURFER_LONG_SURFACE = auto()
+    T1_FREESURFER_PARCELLATION = auto()
+    T1_FREESURFER_LONG_PARCELLATION = auto()
+    T1_FREESURFER_SEGMENTATION = auto()
+    T1_FREESURFER_TEMPLATE = auto()
+    T1_VOLUME_NATIVE_TPM = auto()
+    T1_VOLUME_DARTEL_INPUT_TISSUE = auto()
+    T1_VOLUME_DEFORMATION_TO_TEMPLATE = auto()
+    T1_VOLUME_GROUP_TEMPLATE = auto()
+    T1_VOLUME_ITERATION_GROUP_TEMPLATE = auto()
+    T1_VOLUME_TEMPLATE_TPM_IN_MNI = auto()
+    DWI = auto()
+    DWI_PREPROC = auto()
+    DWI_PREPROC_BRAINMASK = auto()
+    DWI_FMAP_PHASEDIFF = auto()
+    DWI_FMAP_MAGNITUDE1 = auto()
+    DWI_DTI = auto()
+    PET_NII = auto()
+    PET_LINEAR_NII = auto()
+    PET_VOLUME_NORMALIZED_SUVR = auto()
 
 
 class Parcellation(str, Enum):
+    """The possible atlas names used for deriving parcellations and segmentations."""
+
     DESIKAN = "Desikan"
     DESTRIEUX = "Destrieux"
 
@@ -88,131 +128,191 @@ class DWIFileType(str, Enum):
     BVAL = "bval"
 
 
-def query_factory(name: Union[str, QueryName], *args, **kwargs) -> Query:
-    """Return the query corresponding to the provided name.
+QueryPatternBuilderInterface = Callable[..., QueryPattern]
 
-    Additional arguments can be passed if the query builder is parametric.
+
+def query_pattern_factory(
+    name: Union[str, QueryPatternName],
+) -> QueryPatternBuilderInterface:
+    """Return the query pattern builder corresponding to the provided name.
 
     Parameters
     ----------
-    name : str or QueryName
-        The name of the desired query.
+    name : str or QueryPatternName
+        The name of the desired pattern.
 
     Returns
     -------
-    Query :
-        The desired query.
+    QueryPatternBuilderInterface :
+        The desired query pattern builder.
     """
-    name = QueryName(name)
-    if name == QueryName.T1W:
-        return Query("sub-*_ses-*_t1w.nii*", "T1w MRI", "")
-    if name == QueryName.T2W:
-        return Query("sub-*_ses-*_flair.nii*", "FLAIR T2w MRI", "")
-    if name == QueryName.T1_FS_WM:
-        return Query(
-            "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/wm.seg.mgz",
-            "segmentation of white matter (mri/wm.seg.mgz).",
-            "t1-freesurfer",
-        )
-    if name == QueryName.T1_FS_BRAIN:
-        return Query(
-            "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/brain.mgz",
-            "extracted brain from T1w MRI (mri/brain.mgz).",
-            "t1-freesurfer",
-        )
-    if name == QueryName.T1_FS_ORIG_NU:
-        return Query(
-            "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/orig_nu.mgz",
-            (
-                "intensity normalized volume generated after correction for "
-                "non-uniformity in FreeSurfer (mri/orig_nu.mgz)."
-            ),
-            "t1-freesurfer",
-        )
-    if name == QueryName.T1_FS_LONG_ORIG_NU:
-        return Query(
-            "t1/long-*/freesurfer_longitudinal/sub-*_ses-*.long.sub-*_*/mri/orig_nu.mgz",
-            (
-                "intensity normalized volume generated after correction for "
-                "non-uniformity in FreeSurfer (orig_nu.mgz) in longitudinal"
-            ),
-            "t1-freesurfer and t1-freesurfer longitudinal",
-        )
-    if name == QueryName.T1_FS_WM:
-        return t1_freesurfer_white_matter_surface(*args, **kwargs)
-    if name == QueryName.T1_FS_LONG_SURF:
-        return t1_freesurfer_longitudinal_white_matter_surface(*args, **kwargs)
-    if name == QueryName.T1W_LINEAR:
-        return get_t1w_linear(*args, **kwargs)
-    if name == QueryName.T1W_TO_MNI_TRANSFORM:
-        return Query(
-            "*space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
-            "Transformation matrix from T1W image to MNI space using t1-linear pipeline",
-            "t1-linear",
-        )
-    if name == QueryName.T1_FS_PARC:
-        return get_t1_freesurfer_parcellation(*args, **kwargs)
-    if name == QueryName.T1_FS_LONG_PARC:
-        return get_t1_freesurfer_longitudinal_parcellation(*args, **kwargs)
-    if name == QueryName.T1_FS_SEG:
-        return get_t1_freesurfer_segmentation(*args, **kwargs)
-    if name == QueryName.T1_FS_TEMPLATE:
-        return get_t1_freesurfer_template(*args, **kwargs)
-    if name == QueryName.DWI:
-        return get_dwi_file(*args, **kwargs)
-    if name == QueryName.DWI_PREPROC:
-        return get_dwi_preprocessed_file(*args, **kwargs)
-    if name == QueryName.DWI_PREPROC_BRAINMASK:
-        return Query(
-            "dwi/preprocessing/sub-*_ses-*_space-*_brainmask.nii*",
-            "b0 brainmask",
-            "dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap",
-        )
-    if name == QueryName.DWI_FMAP_PHASEDIFF:
-        return get_dwi_fmap_phasediff_file(*args, **kwargs)
-    if name == QueryName.DWI_FMAP_MAGNITUDE1:
-        return get_dwi_fmap_magnitude1_file(*args, **kwargs)
-    if name == QueryName.DWI_DTI:
-        return dwi_dti(*args, **kwargs)
+    name = QueryPatternName(name)
+    if name == QueryPatternName.T1W:
+        return get_t1w_mri
+    if name == QueryPatternName.T2W:
+        return get_t2w_mri
+    if name == QueryPatternName.T1_FREESURFER_WHITE_MATTER:
+        return get_t1_freesurfer_segmentation_white_matter
+    if name == QueryPatternName.T1_FREESURFER_BRAIN:
+        return get_t1_freesurfer_extracted_brain
+    if name == QueryPatternName.T1_FREESURFER_ORIG_NU:
+        return get_t1_freesurfer_intensity_normalized_volume_after_nu
+    if name == QueryPatternName.T1_FREESURFER_LONG_ORIG_NU:
+        return get_t1_freesurfer_longitudinal_intensity_normalized_volume_after_nu
+    if name == QueryPatternName.T1_FREESURFER_WHITE_MATTER_SURFACE:
+        return get_t1_freesurfer_white_matter_surface
+    if name == QueryPatternName.T1_FREESURFER_LONG_SURFACE:
+        return get_t1_freesurfer_longitudinal_white_matter_surface
+    if name == QueryPatternName.T1_VOLUME_NATIVE_TPM:
+        return get_t1_volume_native_tpm
+    if name == QueryPatternName.T1_VOLUME_DARTEL_INPUT_TISSUE:
+        return get_t1_volume_dartel_input_tissue
+    if name == QueryPatternName.T1_VOLUME_DEFORMATION_TO_TEMPLATE:
+        return get_t1_volume_deformation_to_template
+    if name == QueryPatternName.T1_VOLUME_GROUP_TEMPLATE:
+        return get_t1_volume_group_template
+    if name == QueryPatternName.T1_VOLUME_ITERATION_GROUP_TEMPLATE:
+        return get_t1_volume_i_th_iteration_group_template
+    if name == QueryPatternName.T1_VOLUME_TEMPLATE_TPM_IN_MNI:
+        return get_t1_volume_template_tpm_in_mni
+    if name == QueryPatternName.T1W_LINEAR:
+        return get_t1w_linear
+    if name == QueryPatternName.T1W_TO_MNI_TRANSFORM:
+        return get_t1w_to_mni_transform
+    if name == QueryPatternName.T1_FREESURFER_PARCELLATION:
+        return get_t1_freesurfer_parcellation
+    if name == QueryPatternName.T1_FREESURFER_LONG_PARCELLATION:
+        return get_t1_freesurfer_longitudinal_parcellation
+    if name == QueryPatternName.T1_FREESURFER_SEGMENTATION:
+        return get_t1_freesurfer_segmentation
+    if name == QueryPatternName.T1_FREESURFER_TEMPLATE:
+        return get_t1_freesurfer_template
+    if name == QueryPatternName.DWI:
+        return get_dwi_file
+    if name == QueryPatternName.DWI_PREPROC:
+        return get_dwi_preprocessed_file
+    if name == QueryPatternName.DWI_PREPROC_BRAINMASK:
+        return get_dwi_preprocessed_brainmask
+    if name == QueryPatternName.DWI_FMAP_PHASEDIFF:
+        return get_dwi_fmap_phasediff_file
+    if name == QueryPatternName.DWI_FMAP_MAGNITUDE1:
+        return get_dwi_fmap_magnitude1_file
+    if name == QueryPatternName.DWI_DTI:
+        return get_dwi_dti
+    if name == QueryPatternName.PET_NII:
+        return get_pet_nifti
+    if name == QueryPatternName.PET_LINEAR_NII:
+        return get_pet_linear_nifti
+    if name == QueryPatternName.PET_VOLUME_NORMALIZED_SUVR:
+        return get_pet_volume_normalized_suvr
 
 
-def get_dwi_file(filetype: Union[str, DWIFileType]) -> Query:
+def get_t1w_mri(*args, **kwargs) -> QueryPattern:
+    """Get T1W MRI in BIDS."""
+    return QueryPattern("sub-*_ses-*_t1w.nii*", "T1w MRI", "")
+
+
+def get_t2w_mri(*args, **kwargs) -> QueryPattern:
+    """Get T2W FLAIR MRI in BIDS."""
+    return QueryPattern("sub-*_ses-*_flair.nii*", "FLAIR T2w MRI", "")
+
+
+def get_t1_freesurfer_segmentation_white_matter(*args, **kwargs) -> QueryPattern:
+    """GET Freesurfer segmentation of white matter."""
+    return QueryPattern(
+        "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/wm.seg.mgz",
+        "segmentation of white matter (mri/wm.seg.mgz).",
+        "t1-freesurfer",
+    )
+
+
+def get_t1_freesurfer_extracted_brain(*args, **kwargs) -> QueryPattern:
+    return QueryPattern(
+        "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/brain.mgz",
+        "extracted brain from T1w MRI (mri/brain.mgz).",
+        "t1-freesurfer",
+    )
+
+
+def get_t1_freesurfer_intensity_normalized_volume_after_nu(
+    *args, **kwargs
+) -> QueryPattern:
+    return QueryPattern(
+        "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/orig_nu.mgz",
+        (
+            "intensity normalized volume generated after correction for "
+            "non-uniformity in FreeSurfer (mri/orig_nu.mgz)."
+        ),
+        "t1-freesurfer",
+    )
+
+
+def get_t1_freesurfer_longitudinal_intensity_normalized_volume_after_nu(
+    *args, **kwargs
+) -> QueryPattern:
+    return QueryPattern(
+        "t1/long-*/freesurfer_longitudinal/sub-*_ses-*.long.sub-*_*/mri/orig_nu.mgz",
+        (
+            "intensity normalized volume generated after correction for "
+            "non-uniformity in FreeSurfer (orig_nu.mgz) in longitudinal"
+        ),
+        "t1-freesurfer and t1-freesurfer longitudinal",
+    )
+
+
+def get_t1w_to_mni_transform(*args, **kwargs) -> QueryPattern:
+    return QueryPattern(
+        "*space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
+        "Transformation matrix from T1W image to MNI space using t1-linear pipeline",
+        "t1-linear",
+    )
+
+
+def get_dwi_file(filetype: Union[str, DWIFileType]) -> QueryPattern:
     """Return the query to get DWI files (nii, json, bvec, bval)."""
     filetype = DWIFileType(filetype)
-    return Query(
+    return QueryPattern(
         f"dwi/sub-*_ses-*_dwi.{filetype.value}*", f"DWI {filetype.value} files.", ""
     )
 
 
-def get_dwi_preprocessed_file(filetype: Union[str, DWIFileType]) -> Query:
+def get_dwi_preprocessed_file(filetype: Union[str, DWIFileType]) -> QueryPattern:
     filetype = DWIFileType(filetype)
-    return Query(
+    return QueryPattern(
         f"dwi/preprocessing/sub-*_ses-*_space-*_desc-preproc_dwi.{filetype.value}*",
         f"preprocessed {filetype.value} files",
         "dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap",
     )
 
 
-def get_dwi_fmap_phasediff_file(filetype: Union[str, DWIFileType]) -> Query:
+def get_dwi_preprocessed_brainmask(*args, **kwargs) -> QueryPattern:
+    return QueryPattern(
+        "dwi/preprocessing/sub-*_ses-*_space-*_brainmask.nii*",
+        "b0 brainmask",
+        "dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap",
+    )
+
+
+def get_dwi_fmap_phasediff_file(filetype: Union[str, DWIFileType]) -> QueryPattern:
     filetype = DWIFileType(filetype)
-    return Query(
+    return QueryPattern(
         f"fmap/sub-*_ses-*_phasediff.{filetype.value}",
         f"phasediff {filetype.value} file",
         "",
     )
 
 
-def get_dwi_fmap_magnitude1_file(filetype: Union[str, DWIFileType]) -> Query:
+def get_dwi_fmap_magnitude1_file(filetype: Union[str, DWIFileType]) -> QueryPattern:
     filetype = DWIFileType(filetype)
-    return Query(
+    return QueryPattern(
         f"fmap/sub-*_ses-*_magnitude1.{filetype.value}*",
         f"magnitude1 {filetype.value} file",
         "",
     )
 
 
-def get_t1w_linear(cropped: bool) -> Query:
-    return Query(
+def get_t1w_linear(cropped: bool) -> QueryPattern:
+    return QueryPattern(
         f"*space-MNI152NLin2009cSym{'_desc-Crop' if cropped else ''}_res-1x1x1_T1w.nii.gz",
         (
             "T1w image registered in MNI152NLin2009cSym space "
@@ -223,8 +323,10 @@ def get_t1w_linear(cropped: bool) -> Query:
     )
 
 
-def t1_freesurfer_white_matter_surface(hemisphere: Union[str, HemiSphere]) -> Query:
-    """Return the query to get white matter border surface files from the Freesurfer output.
+def get_t1_freesurfer_white_matter_surface(
+    hemisphere: Union[str, HemiSphere],
+) -> QueryPattern:
+    """Return the pattern to query white matter border surface files from the Freesurfer output.
 
     Parameters
     ----------
@@ -237,7 +339,7 @@ def t1_freesurfer_white_matter_surface(hemisphere: Union[str, HemiSphere]) -> Qu
         The query to use with a file reader.
     """
     hemisphere = HemiSphere(hemisphere)
-    return Query(
+    return QueryPattern(
         f"t1/freesurfer_cross_sectional/sub-*_ses-*/surf/{hemisphere.value}.white",
         (
             f"{'right' if hemisphere == HemiSphere.RIGHT else 'left'} white matter/gray "
@@ -247,9 +349,9 @@ def t1_freesurfer_white_matter_surface(hemisphere: Union[str, HemiSphere]) -> Qu
     )
 
 
-def t1_freesurfer_longitudinal_white_matter_surface(
+def get_t1_freesurfer_longitudinal_white_matter_surface(
     hemisphere: Union[str, HemiSphere],
-) -> Query:
+) -> QueryPattern:
     """Return the query to get white matter border surface files from the Freesurfer longitudinal output.
 
     Parameters
@@ -259,11 +361,11 @@ def t1_freesurfer_longitudinal_white_matter_surface(
 
     Returns
     -------
-    Query :
-        The query to use with a file reader.
+    QueryPattern :
+        The pattern to use with a file reader.
     """
     hemisphere = HemiSphere(hemisphere)
-    return Query(
+    return QueryPattern(
         f"t1/long-*/freesurfer_longitudinal/sub-*_ses-*.long.sub-*_*/surf/{hemisphere.value}.white",
         (
             f"{'right' if hemisphere == HemiSphere.RIGHT else 'left'} white matter/gray matter border "
@@ -280,12 +382,12 @@ def _get_annot_file_name(hemisphere: HemiSphere, parcellation: Parcellation) -> 
         return f"{hemisphere.value}.aparc.a2009s.annot"
 
 
-def get_t1_freesurfer_segmentation(parcellation: Parcellation) -> Query:
+def get_t1_freesurfer_segmentation(parcellation: Parcellation) -> QueryPattern:
     parcellation = Parcellation(parcellation)
     filename = (
         f"aparc{'.a2009s' if parcellation == Parcellation.DESTRIEUX else ''}+aseg.mgz"
     )
-    return Query(
+    return QueryPattern(
         f"t1/freesurfer_cross_sectional/sub-*_ses-*/mri/{filename}",
         f"{parcellation.value}-based segmentation (mri/{filename}).",
         "t1-freesurfer",
@@ -295,10 +397,10 @@ def get_t1_freesurfer_segmentation(parcellation: Parcellation) -> Query:
 def get_t1_freesurfer_parcellation(
     hemisphere: Union[str, HemiSphere],
     parcellation: Union[str, Parcellation],
-) -> Query:
+) -> QueryPattern:
     hemisphere = HemiSphere(hemisphere)
     parcellation = Parcellation(parcellation)
-    return Query(
+    return QueryPattern(
         f"t1/freesurfer_cross_sectional/sub-*_ses-*/label/{_get_annot_file_name(hemisphere, parcellation)}",
         (
             f"{'left' if hemisphere == HemiSphere.LEFT else 'right'} hemisphere surface-based "
@@ -308,12 +410,12 @@ def get_t1_freesurfer_parcellation(
     )
 
 
-def get_t1_freesurfer_template(parcellation: Parcellation) -> Query:
+def get_t1_freesurfer_template(parcellation: Union[str, Parcellation]) -> QueryPattern:
     parcellation = Parcellation(parcellation)
     filename = (
         f"aparc{'.a2009s' if parcellation == Parcellation.DESTRIEUX else ''}+aseg.mgz"
     )
-    return Query(
+    return QueryPattern(
         f"freesurfer_unbiased_template/sub-*_long-*/mri/{filename}",
         f"{parcellation.value}-based segmentation (mri/{filename}) from unbiased template.",
         "t1-freesurfer-longitudinal or t1-freesurfer-template",
@@ -323,10 +425,10 @@ def get_t1_freesurfer_template(parcellation: Parcellation) -> Query:
 def get_t1_freesurfer_longitudinal_parcellation(
     hemisphere: Union[str, HemiSphere],
     parcellation: Union[str, Parcellation],
-) -> Query:
+) -> QueryPattern:
     hemisphere = HemiSphere(hemisphere)
     parcellation = Parcellation(parcellation)
-    return Query(
+    return QueryPattern(
         f"t1/long-*/freesurfer_longitudinal/sub-*_ses-*.long.sub-*_*/label/{_get_annot_file_name(hemisphere, parcellation)}",
         (
             f"{'left' if hemisphere == HemiSphere.LEFT else 'right'} hemisphere surface-based "
@@ -480,29 +582,37 @@ def aggregator(func):
 
 
 @aggregator
-def t1_volume_native_tpm(tissue_number: int) -> Query:
-    from .spm import get_spm_tissue_from_index
-
+def get_t1_volume_native_tpm(
+    tissue_number: int, modulation: bool, mni_space: bool
+) -> QueryPattern:
     tissue = get_spm_tissue_from_index(tissue_number)
-    return Query(
+    description = f"Tissue probability map {tissue.value} "
+    pattern_modulation = ""
+    space = ""
+    if mni_space:
+        pattern_modulation = f"_modulated-{'on' if modulation else 'off'}"
+        space = "_space-Ixi549Space"
+        description += f"based on native MRI in MNI space (Ixi549) {'with' if modulation else 'without'} modulation."
+    else:
+        description += "in native space"
+
+    return QueryPattern(
         str(
             Path("t1")
             / "spm"
             / "segmentation"
-            / "native_space"
-            / f"*_*_T1w_segm-{tissue.value}_probability.nii*"
+            / f"{'normalized' if mni_space else 'native'}_space"
+            / f"*_*_T1w_segm-{tissue.value}{space}{pattern_modulation}_probability.nii*"
         ),
-        f"Tissue probability map {tissue.value} in native space",
+        description,
         "t1-volume-tissue-segmentation",
     )
 
 
 @aggregator
-def t1_volume_dartel_input_tissue(tissue_number: int) -> Query:
-    from .spm import get_spm_tissue_from_index
-
+def get_t1_volume_dartel_input_tissue(tissue_number: int) -> QueryPattern:
     tissue = get_spm_tissue_from_index(tissue_number)
-    return Query(
+    return QueryPattern(
         str(
             Path("t1")
             / "spm"
@@ -515,34 +625,10 @@ def t1_volume_dartel_input_tissue(tissue_number: int) -> Query:
     )
 
 
-@aggregator
-def t1_volume_native_tpm_in_mni(tissue_number: int, modulation: bool) -> Query:
-    from .spm import get_spm_tissue_from_index
-
-    tissue = get_spm_tissue_from_index(tissue_number)
-    pattern_modulation = "on" if modulation else "off"
-    description_modulation = "with" if modulation else "without"
-
-    return Query(
-        str(
-            Path("t1")
-            / "spm"
-            / "segmentation"
-            / "normalized_space"
-            / f"*_*_T1w_segm-{tissue.value}_space-Ixi549Space_modulated-{pattern_modulation}_probability.nii*"
-        ),
-        (
-            f"Tissue probability map {tissue.value} based on "
-            f"native MRI in MNI space (Ixi549) {description_modulation} modulation."
-        ),
-        "t1-volume-tissue-segmentation",
-    )
-
-
-def t1_volume_template_tpm_in_mni(
+def get_t1_volume_template_tpm_in_mni(
     group_label: str, tissue_number: int, modulation: bool, fwhm: Optional[int] = None
-) -> Query:
-    """Build the dictionary required by clinica_file_reader to get the tissue
+) -> QueryPattern:
+    """Build the pattern required by clinica_file_reader to get the tissue
     probability maps based on group template in MNI space.
 
     Parameters
@@ -561,8 +647,8 @@ def t1_volume_template_tpm_in_mni(
 
     Returns
     -------
-    dict :
-        Information dict to be passed to clinica_file_reader.
+    QueryPattern :
+        Pattern to be passed to clinica_file_reader.
     """
     from .spm import get_spm_tissue_from_index
 
@@ -572,7 +658,7 @@ def t1_volume_template_tpm_in_mni(
     fwhm_key_value = f"_fwhm-{fwhm}mm" if fwhm else ""
     fwhm_description = f"with {fwhm}mm smoothing" if fwhm else "with no smoothing"
 
-    return Query(
+    return QueryPattern(
         str(
             Path("t1")
             / "spm"
@@ -588,8 +674,8 @@ def t1_volume_template_tpm_in_mni(
     )
 
 
-def t1_volume_deformation_to_template(group_label: str) -> Query:
-    return Query(
+def get_t1_volume_deformation_to_template(group_label: str) -> QueryPattern:
+    return QueryPattern(
         str(
             Path("t1")
             / "spm"
@@ -603,8 +689,10 @@ def t1_volume_deformation_to_template(group_label: str) -> Query:
 
 
 @aggregator
-def t1_volume_i_th_iteration_group_template(group_label: str, i: int) -> Query:
-    return Query(
+def get_t1_volume_i_th_iteration_group_template(
+    group_label: str, i: int
+) -> QueryPattern:
+    return QueryPattern(
         str(
             Path(f"group-{group_label}")
             / "t1"
@@ -615,21 +703,18 @@ def t1_volume_i_th_iteration_group_template(group_label: str, i: int) -> Query:
     )
 
 
-def t1_volume_final_group_template(group_label: str) -> Query:
-    return Query(
+def get_t1_volume_group_template(group_label: str) -> QueryPattern:
+    return QueryPattern(
         str(Path(f"group-{group_label}") / "t1" / f"group-{group_label}_template.nii*"),
         f"T1w template file of group {group_label}",
         "t1-volume or t1-volume-create-dartel",
     )
 
 
-def custom_group(pattern, description):
-    information = {"pattern": pattern, "description": description}
-    return information
-
-
-def dwi_dti(measure: Union[str, DTIBasedMeasure], space: Optional[str] = None) -> Query:
-    """Return the query dict required to capture DWI DTI images.
+def get_dwi_dti(
+    measure: Union[str, DTIBasedMeasure], space: Optional[str] = None
+) -> QueryPattern:
+    """Return the query pattern required to capture DWI DTI images.
 
     Parameters
     ----------
@@ -642,24 +727,24 @@ def dwi_dti(measure: Union[str, DTIBasedMeasure], space: Optional[str] = None) -
 
     Returns
     -------
-    dict :
-        The query dictionary to get DWI DTI images.
+    QueryPattern :
+        The query pattern to get DWI DTI images.
     """
     measure = DTIBasedMeasure(measure)
     space = space or "*"
 
-    return Query(
+    return QueryPattern(
         f"dwi/dti_based_processing/*/*_space-{space}_{measure.value}.nii.gz",
         f"DTI-based {measure.value} in space {space}.",
         "dwi_dti",
     )
 
 
-def bids_pet_nii(
+def get_pet_nifti(
     tracer: Optional[Union[str, Tracer]] = None,
     reconstruction: Optional[Union[str, ReconstructionMethod]] = None,
-) -> Query:
-    """Return the query dict required to capture PET scans.
+) -> QueryPattern:
+    """Return the query pattern required to capture PET scans.
 
     Parameters
     ----------
@@ -677,8 +762,8 @@ def bids_pet_nii(
 
     Returns
     -------
-    dict :
-        The query dictionary to get PET scans.
+    QueryPattern :
+        The query pattern to get PET scans.
     """
     description = f"PET data"
     trc = ""
@@ -692,21 +777,21 @@ def bids_pet_nii(
         rec = f"_rec-{reconstruction.value}"
         description += f" and reconstruction method {reconstruction.value}"
 
-    return Query(
+    return QueryPattern(
         str(Path("pet") / f"*{trc}{rec}_pet.nii*"),
         description,
         "",
     )
 
 
-def pet_volume_normalized_suvr_pet(
+def get_pet_volume_normalized_suvr(
     tracer: Union[str, Tracer],
     group_label: str,
     suvr_reference_region: Union[str, SUVRReferenceRegion],
     use_brainmasked_image: bool,
     use_pvc_data: bool,
     fwhm: int = 0,
-) -> Query:
+) -> QueryPattern:
     tracer = Tracer(tracer)
     region = SUVRReferenceRegion(suvr_reference_region)
 
@@ -730,7 +815,7 @@ def pet_volume_normalized_suvr_pet(
         fwhm_description = "with no smoothing"
     suvr_key_value = f"_suvr-{region.value}"
 
-    return Query(
+    return QueryPattern(
         str(
             Path("pet")
             / "preprocessing"
@@ -745,18 +830,16 @@ def pet_volume_normalized_suvr_pet(
     )
 
 
-def pet_linear_nii(
+def get_pet_linear_nifti(
     tracer: Union[str, Tracer],
     suvr_reference_region: Union[str, SUVRReferenceRegion],
     uncropped_image: bool,
-) -> Query:
-    from pathlib import Path
-
+) -> QueryPattern:
     tracer = Tracer(tracer)
     region = SUVRReferenceRegion(suvr_reference_region)
     description = "" if uncropped_image else "_desc-Crop"
 
-    return Query(
+    return QueryPattern(
         str(
             Path("pet_linear")
             / f"*_trc-{tracer.value}_pet_space-MNI152NLin2009cSym{description}_res-1x1x1_suvr-{region.value}_pet.nii.gz"
@@ -764,9 +847,3 @@ def pet_linear_nii(
         "PET nifti image obtained with pet-linear",
         "pet-linear",
     )
-
-
-# CUSTOM
-def custom_pipeline(pattern, description):
-    information = {"pattern": pattern, "description": description}
-    return information
