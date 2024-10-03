@@ -242,7 +242,7 @@ class OASISBIDSSubjectID(BIDSSubjectID):
         )
 
     def to_original_study_id(self) -> str:
-        return "OAS1" + self.split("OASIS1")[1] + "MR1"
+        return f"OAS1_{self.split('OASIS1')[1]}_MR1"
 
 
 class OASIS3BIDSSubjectID(BIDSSubjectID):

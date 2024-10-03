@@ -102,8 +102,7 @@ def test_study_to_bids_id_value_error(study, study_id):
         (StudyName.GENFI, "MAPT009", "sub-MAPT009"),
         (StudyName.OASIS3, "OAS30001", "sub-OAS30001"),
         (StudyName.HABS, "P_INIBUB", "sub-HABSINIBUB"),
-        # (StudyName.OASIS, "OAS1_0001_MR1", "sub-OASIS10001"),
-        # todo : check OASIS
+        (StudyName.OASIS, "OAS1_0001_MR1", "sub-OASIS10001"),
         (StudyName.IXI, "IXI001", "sub-IXI001"),
     ],
 )
