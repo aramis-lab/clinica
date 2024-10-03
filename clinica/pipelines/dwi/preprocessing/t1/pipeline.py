@@ -4,6 +4,12 @@ from typing import List
 from nipype import config
 
 from clinica.pipelines.dwi.preprocessing.engine import DWIPreprocessingPipeline
+from clinica.utils.input_files import (
+    DWIFileType,
+    QueryPatternName,
+    query_pattern_factory,
+)
+from clinica.utils.inputs import clinica_file_reader
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
@@ -34,13 +40,14 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         caps_directory: Path, subjects: List[str], sessions: List[str]
     ) -> List[str]:
         from clinica.utils.filemanip import extract_image_ids
-        from clinica.utils.input_files import DWI_PREPROC_NII
-        from clinica.utils.inputs import clinica_file_reader
 
         image_ids: List[str] = []
         if caps_directory.is_dir():
+            pattern = query_pattern_factory(QueryPatternName.DWI_PREPROC)(
+                DWIFileType.NII
+            )
             preproc_files, _ = clinica_file_reader(
-                subjects, sessions, caps_directory, DWI_PREPROC_NII
+                subjects, sessions, caps_directory, pattern
             )
             image_ids = extract_image_ids(preproc_files)
         return image_ids
@@ -90,21 +97,20 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         from clinica.pipelines.dwi.preprocessing.utils import check_dwi_volume
         from clinica.pipelines.dwi.utils import DWIDataset
         from clinica.utils.bids import BIDSFileName
-        from clinica.utils.input_files import (
-            DWI_BVAL,
-            DWI_BVEC,
-            DWI_NII,
-        )
         from clinica.utils.inputs import clinica_list_of_files_reader
         from clinica.utils.stream import cprint
 
         subjects = []
         sessions = []
+        patterns = [
+            query_pattern_factory(QueryPatternName.DWI)(file_type)
+            for file_type in (DWIFileType.NII, DWIFileType.BVEC, DWIFileType.BVAL)
+        ]
         list_bids_files = clinica_list_of_files_reader(
             self.subjects,
             self.sessions,
             self.bids_directory,
-            [DWI_NII, DWI_BVEC, DWI_BVAL],
+            patterns,
             raise_exception=True,
         )
         for dwi_image_file, b_vectors_file, b_values_file in zip(*list_bids_files):
@@ -134,22 +140,25 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.utils.filemanip import save_participants_sessions
-        from clinica.utils.input_files import (
-            DWI_BVAL,
-            DWI_BVEC,
-            DWI_JSON,
-            DWI_NII,
-            T1W_NII,
-        )
         from clinica.utils.inputs import clinica_list_of_files_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
+        patterns = [
+            query_pattern_factory(QueryPatternName.DWI)(file_type)
+            for file_type in (
+                DWIFileType.NII,
+                DWIFileType.JSON,
+                DWIFileType.BVEC,
+                DWIFileType.BVAL,
+            )
+        ]
+        patterns.insert(0, query_pattern_factory(QueryPatternName.T1W)())
         list_bids_files = clinica_list_of_files_reader(
             self.subjects,
             self.sessions,
             self.bids_directory,
-            [T1W_NII, DWI_NII, DWI_JSON, DWI_BVEC, DWI_BVAL],
+            patterns,
             raise_exception=True,
         )
 

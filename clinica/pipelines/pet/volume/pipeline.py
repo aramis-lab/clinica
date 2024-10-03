@@ -3,6 +3,7 @@ from typing import List
 from nipype import config
 
 from clinica.pipelines.pet.engine import PETPipeline
+from clinica.utils.input_files import QueryPatternName, query_pattern_factory
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
@@ -90,13 +91,6 @@ class PETVolume(PETPipeline):
         from clinica.pipelines.pet.utils import get_suvr_mask, read_psf_information
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.filemanip import save_participants_sessions
-        from clinica.utils.input_files import (
-            T1W_NII,
-            t1_volume_deformation_to_template,
-            t1_volume_final_group_template,
-            t1_volume_native_tpm,
-            t1_volume_native_tpm_in_mni,
-        )
         from clinica.utils.inputs import (
             clinica_file_reader,
             clinica_group_reader,
@@ -130,7 +124,6 @@ class PETVolume(PETPipeline):
 
         # PET from BIDS directory
         # Native T1w-MRI
-
         try:
             pet_bids, t1w_bids = clinica_list_of_files_reader(
                 self.subjects,
@@ -138,7 +131,7 @@ class PETVolume(PETPipeline):
                 self.bids_directory,
                 [
                     self._get_pet_scans_query(),
-                    T1W_NII,
+                    query_pattern_factory(QueryPatternName.T1W)(),
                 ],
             )
         except ClinicaException as e:
@@ -151,7 +144,9 @@ class PETVolume(PETPipeline):
                 self.sessions,
                 self.caps_directory,
                 [
-                    t1_volume_native_tpm_in_mni(tissue_number, False)
+                    query_pattern_factory(QueryPatternName.T1_VOLUME_NATIVE_TPM)(
+                        tissue_number, modulation=False, mni_space=True
+                    )
                     for tissue_number in self.parameters["mask_tissues"]
                 ],
             )
@@ -166,26 +161,26 @@ class PETVolume(PETPipeline):
             all_errors += e
 
         # Flowfields
+        pattern = query_pattern_factory(
+            QueryPatternName.T1_VOLUME_DEFORMATION_TO_TEMPLATE
+        )(self.parameters["group_label"])
         flowfields_caps, flowfields_errors = clinica_file_reader(
             self.subjects,
             self.sessions,
             self.caps_directory,
-            t1_volume_deformation_to_template(self.parameters["group_label"]),
+            pattern,
         )
         if flowfields_errors:
             all_errors.append(
-                format_clinica_file_reader_errors(
-                    flowfields_errors,
-                    t1_volume_deformation_to_template(self.parameters["group_label"]),
-                )
+                format_clinica_file_reader_errors(flowfields_errors, pattern)
             )
 
         # Dartel Template
         try:
-            final_template = clinica_group_reader(
-                self.caps_directory,
-                t1_volume_final_group_template(self.parameters["group_label"]),
+            pattern = query_pattern_factory(QueryPatternName.T1_VOLUME_GROUP_TEMPLATE)(
+                self.parameters["group_label"]
             )
+            final_template = clinica_group_reader(self.caps_directory, pattern)
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -204,14 +199,17 @@ class PETVolume(PETPipeline):
         if self.parameters["apply_pvc"]:
             # pvc tissues input
             try:
+                patterns = [
+                    query_pattern_factory(QueryPatternName.T1_VOLUME_NATIVE_TPM)(
+                        tissue_number, modulation=False, mni_space=False
+                    )
+                    for tissue_number in self.parameters["pvc_mask_tissues"]
+                ]
                 pvc_tissues_input = clinica_list_of_files_reader(
                     self.subjects,
                     self.sessions,
                     self.caps_directory,
-                    [
-                        t1_volume_native_tpm(tissue_number)
-                        for tissue_number in self.parameters["pvc_mask_tissues"]
-                    ],
+                    patterns,
                 )
                 pvc_tissues_input_final = []
                 for subject_tissue_list in zip(*pvc_tissues_input):
