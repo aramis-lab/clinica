@@ -108,18 +108,16 @@ class OasisToBids(Converter):
         bids_dir: Path,
         bids_ids: list[str],
     ) -> dict:
-        from oasis_to_bids_utils import create_sessions_dict, write_sessions_tsv
-
-        from clinica.iotools.bids_utils import StudyName
+        from .oasis_to_bids_utils import create_sessions_dict, write_sessions_tsv
 
         sessions_dict = create_sessions_dict(
             clinical_data_dir=clinical_data_dir,
             bids_dir=bids_dir,
-            study_name=StudyName.OASIS,
             clinical_specifications_folder=Path(__file__).parents[1] / "specifications",
             bids_ids=bids_ids,
-            name_column_ids="ID",
         )
+
+        # todo : when tested add to create_sessions_dict bc specific to oasis1
         for bids_id in bids_ids:
             sessions_dict[bids_id]["M000"]["diagnosis"] = (
                 "AD" if sessions_dict[bids_id]["M000"]["diagnosis"] > 0 else "CN"

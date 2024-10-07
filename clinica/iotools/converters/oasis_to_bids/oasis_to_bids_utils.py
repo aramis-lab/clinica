@@ -14,14 +14,11 @@ __all__ = ["create_sessions_dict", "write_sessions_tsv"]
 def create_sessions_dict(
     clinical_data_dir: Path,
     bids_dir: Path,
-    study_name: StudyName,
     clinical_specifications_folder: Path,
     bids_ids: list[str],
-    name_column_ids: str,
     subj_to_remove: Optional[list[str]] = None,
-    participants_df: Optional[pd.DataFrame] = None,
 ) -> dict:
-    """Extract the information regarding the sessions and store them in a dictionary (session M00 only).
+    """Extract the information regarding the sessions and store them in a dictionary (session M000 only).
 
     Parameters
     ----------
@@ -31,23 +28,14 @@ def create_sessions_dict(
     bids_dir : Path
         The path to the BIDS directory.
 
-    study_name : StudyName
-        The name of the study (Ex: ADNI).
-
     clinical_specifications_folder : Path
         The path to the clinical file.
 
     bids_ids : list of str
         The list of bids ids.
 
-    name_column_ids : str
-        The name of the column where the subject ids are stored.
-
     subj_to_remove : list of str, optional
         The list of subject IDs to remove.
-
-    participants_df : pd.DataFrame, optional
-        A pandas dataframe that contains the participants data (required for OASIS3 only).
 
     Returns
     -------
@@ -56,9 +44,9 @@ def create_sessions_dict(
     """
 
     subj_to_remove = subj_to_remove or []
-    location = f"{study_name.value} location"
+    location = f"{StudyName.OASIS.value} location"
     sessions = pd.read_csv(clinical_specifications_folder / "sessions.tsv", sep="\t")
-    sessions_fields = sessions[study_name.value]
+    sessions_fields = sessions[StudyName.OASIS.value]
     field_location = sessions[location]
     sessions_fields_bids = sessions["BIDS CLINICA"]
     fields_dataset = []
@@ -94,7 +82,7 @@ def create_sessions_dict(
 
             for r in range(0, len(file_to_read.values)):
                 # Extracts the subject ids columns from the dataframe
-                subj_id = file_to_read.iloc[r][name_column_ids]
+                subj_id = file_to_read.iloc[r]["ID"]
                 if hasattr(subj_id, "dtype"):
                     if subj_id.dtype == np.int64:
                         subj_id = str(subj_id)
@@ -116,13 +104,7 @@ def create_sessions_dict(
                     session_names = get_bids_sess_list(subj_dir)
                     for s in session_names:
                         s_name = s.replace("ses-", "")
-                        if study_name == StudyName.OASIS3:
-                            row = file_to_read[
-                                file_to_read["MR ID"].str.startswith(subj_id)
-                                & file_to_read["MR ID"].str.endswith(s_name)
-                            ].iloc[0]
-                        else:
-                            row = file_to_read.iloc[r]
+                        row = file_to_read.iloc[r]
                         if subj_bids not in sessions_dict:
                             sessions_dict.update({subj_bids: {}})
                         if s_name not in sessions_dict[subj_bids].keys():
@@ -130,20 +112,6 @@ def create_sessions_dict(
                         (sessions_dict[subj_bids][s_name]).update(
                             {sessions_fields_bids[i]: row[sessions_fields[i]]}
                         )
-                        # Calculate the difference in months for OASIS3 only
-                        if (
-                            study_name == StudyName.OASIS3
-                            and sessions_fields_bids[i] == "age"
-                        ):
-                            diff_years = (
-                                float(sessions_dict[subj_bids][s_name]["age"])
-                                - participants_df[
-                                    participants_df["participant_id"] == subj_bids
-                                ]["age_bl"]
-                            )
-                            (sessions_dict[subj_bids][s_name]).update(
-                                {"diff_months": round(float(diff_years) * 12)}
-                            )
 
     return sessions_dict
 
