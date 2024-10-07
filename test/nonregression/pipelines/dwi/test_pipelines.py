@@ -31,8 +31,8 @@ def run_dwi_dti(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
     from clinica.pipelines.dwi.dti.pipeline import DwiDti
-    from clinica.pipelines.dwi.dti.utils import DTIBasedMeasure
     from clinica.utils.bids import BIDSFileName
+    from clinica.utils.dwi import DTIBasedMeasure
 
     caps_dir = output_dir / "caps"
 
