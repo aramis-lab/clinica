@@ -70,6 +70,13 @@ class QueryPattern:
                 "directory_name/filename.extension or filename.extension in the pattern argument."
             )
 
+    def to_dict(self) -> dict:
+        return {
+            "pattern": self.pattern,
+            "description": self.description,
+            "needed_pipeline": self.needed_pipeline,
+        }
+
 
 class QueryPatternName(Enum):
     """The different names for usual pattern in Clinica.

@@ -3,7 +3,11 @@ from pathlib import Path
 import pytest
 
 from clinica.utils.dwi import DTIBasedMeasure
-from clinica.utils.input_files import QueryPattern, query_pattern_factory
+from clinica.utils.input_files import (
+    QueryPattern,
+    QueryPatternName,
+    query_pattern_factory,
+)
 from clinica.utils.pet import ReconstructionMethod, Tracer
 
 
@@ -44,22 +48,22 @@ def test_aggregator():
 @pytest.mark.parametrize(
     "query_name,expected_pattern,expected_description,expected_pipelines",
     [
-        ("T1W", "sub-*_ses-*_t1w.nii*", "T1w MRI", ""),
-        ("T2W", "sub-*_ses-*_flair.nii*", "FLAIR T2w MRI", ""),
+        (QueryPatternName.T1W, "sub-*_ses-*_t1w.nii*", "T1w MRI", ""),
+        (QueryPatternName.T2W, "sub-*_ses-*_flair.nii*", "FLAIR T2w MRI", ""),
         (
-            "T1_FS_WM",
+            QueryPatternName.T1_FREESURFER_WHITE_MATTER,
             "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/wm.seg.mgz",
             "segmentation of white matter (mri/wm.seg.mgz).",
             "t1-freesurfer",
         ),
         (
-            "T1_FS_BRAIN",
+            QueryPatternName.T1_FREESURFER_BRAIN,
             "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/brain.mgz",
             "extracted brain from T1w MRI (mri/brain.mgz).",
             "t1-freesurfer",
         ),
         (
-            "T1_FS_ORIG_NU",
+            QueryPatternName.T1_FREESURFER_ORIG_NU,
             "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/orig_nu.mgz",
             (
                 "intensity normalized volume generated after correction for"
@@ -68,7 +72,7 @@ def test_aggregator():
             "t1-freesurfer",
         ),
         (
-            "T1_FS_LONG_ORIG_NU",
+            QueryPatternName.T1_FREESURFER_LONG_ORIG_NU,
             "t1/long-*/freesurfer_longitudinal/sub-*_ses-*.long.sub-*_*/mri/orig_nu.mgz",
             (
                 "intensity normalized volume generated after correction for non-uniformity "
@@ -77,13 +81,13 @@ def test_aggregator():
             "t1-freesurfer and t1-freesurfer longitudinal",
         ),
         (
-            "T1W_TO_MNI_TRANSFORM",
+            QueryPatternName.T1W_TO_MNI_TRANSFORM,
             "*space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
             "Transformation matrix from T1W image to MNI space using t1-linear pipeline",
             "t1-linear",
         ),
         (
-            "DWI_PREPROC_BRAINMASK",
+            QueryPatternName.DWI_PREPROC_BRAINMASK,
             "dwi/preprocessing/sub-*_ses-*_space-*_brainmask.nii*",
             "b0 brainmask",
             "dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap",
@@ -93,7 +97,7 @@ def test_aggregator():
 def test_query_factory(
     query_name, expected_pattern, expected_description, expected_pipelines
 ):
-    query = query_pattern_factory(query_name)
+    query = query_pattern_factory(query_name)()
 
     assert query.pattern == expected_pattern
     assert query.description == expected_description
@@ -169,9 +173,9 @@ def test_get_dwi_preprocessed_file(
 
 
 def test_bids_pet_nii_empty():
-    from clinica.utils.input_files import bids_pet_nii
+    from clinica.utils.input_files import get_pet_nifti
 
-    query = bids_pet_nii()
+    query = get_pet_nifti()
 
     assert query.pattern == str(Path("pet") / "*_pet.nii*")
     assert query.description == "PET data"
@@ -195,18 +199,18 @@ def test_bids_pet_nii(
     reconstruction: ReconstructionMethod,
     expected_bids_pet_query: QueryPattern,
 ):
-    from clinica.utils.input_files import bids_pet_nii
+    from clinica.utils.input_files import get_pet_nifti
 
-    assert bids_pet_nii(tracer, reconstruction) == expected_bids_pet_query
+    assert get_pet_nifti(tracer, reconstruction) == expected_bids_pet_query
 
 
 @pytest.mark.parametrize("dti_measure", DTIBasedMeasure)
 @pytest.mark.parametrize("space", [None, "*", "T1w"])
 def test_dwi_dti_query(dti_measure, space):
-    from clinica.utils.input_files import dwi_dti
+    from clinica.utils.input_files import get_dwi_dti
 
     space = space or "*"
-    query = dwi_dti(dti_measure, space=space)
+    query = get_dwi_dti(dti_measure, space=space)
 
     assert (
         query.pattern
@@ -217,10 +221,10 @@ def test_dwi_dti_query(dti_measure, space):
 
 
 def test_dwi_dti_query_error():
-    from clinica.utils.input_files import dwi_dti
+    from clinica.utils.input_files import get_dwi_dti
 
     with pytest.raises(
         ValueError,
         match="'foo' is not a valid DTIBasedMeasure",
     ):
-        dwi_dti("foo")
+        get_dwi_dti("foo")

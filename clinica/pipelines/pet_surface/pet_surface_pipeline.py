@@ -1,6 +1,12 @@
 from typing import List
 
 from clinica.pipelines.pet.engine import PETPipeline
+from clinica.utils.image import HemiSphere
+from clinica.utils.input_files import (
+    Parcellation,
+    QueryPatternName,
+    query_pattern_factory,
+)
 
 
 class PetSurface(PETPipeline):
@@ -72,7 +78,6 @@ class PetSurface(PETPipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        import clinica.utils.input_files as input_files
         from clinica.iotools.utils.data_handling import (
             check_relative_volume_location_in_world_coordinate_system,
         )
@@ -100,8 +105,32 @@ class PetSurface(PETPipeline):
             self._get_pet_scans_query(),
         )
         if pet_errors:
-            all_errors.append(format_clinica_file_reader_errors(pet_errors))
+            all_errors.append(
+                format_clinica_file_reader_errors(
+                    pet_errors, self._get_pet_scans_query()
+                )
+            )
 
+        patterns = [
+            query_pattern_factory(QueryPatternName.T1_FREESURFER_LONG_ORIG_NU)()
+        ]
+        patterns.extend(
+            [
+                query_pattern_factory(QueryPatternName.T1_FREESURFER_LONG_SURFACE)(
+                    hemisphere
+                )
+                for hemisphere in (HemiSphere.RIGHT, HemiSphere.LEFT)
+            ]
+        )
+        patterns.extend(
+            [
+                query_pattern_factory(QueryPatternName.T1_FREESURFER_LONG_PARCELLATION)(
+                    hemisphere, parcellation
+                )
+                for parcellation in (Parcellation.DESTRIEUX, Parcellation.DESIKAN)
+                for hemisphere in (HemiSphere.LEFT, HemiSphere.RIGHT)
+            ]
+        )
         try:
             (
                 read_parameters_node.inputs.orig_nu,
@@ -115,17 +144,8 @@ class PetSurface(PETPipeline):
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
-                [
-                    input_files.T1_FS_LONG_ORIG_NU,
-                    input_files.T1_FS_LONG_SURF_R,
-                    input_files.T1_FS_LONG_SURF_L,
-                    input_files.T1_FS_LONG_DESTRIEUX_PARC_L,
-                    input_files.T1_FS_LONG_DESTRIEUX_PARC_R,
-                    input_files.T1_FS_LONG_DESIKAN_PARC_L,
-                    input_files.T1_FS_LONG_DESIKAN_PARC_R,
-                ],
+                patterns,
             )
-
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -164,7 +184,6 @@ class PetSurface(PETPipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        import clinica.utils.input_files as input_files
         from clinica.iotools.utils.data_handling import (
             check_relative_volume_location_in_world_coordinate_system,
         )
@@ -193,6 +212,24 @@ class PetSurface(PETPipeline):
         if pet_errors:
             all_errors.append(format_clinica_file_reader_errors(pet_errors))
 
+        patterns = [query_pattern_factory(QueryPatternName.T1_FREESURFER_ORIG_NU)]
+        patterns.extend(
+            [
+                query_pattern_factory(
+                    QueryPatternName.T1_FREESURFER_WHITE_MATTER_SURFACE
+                )(hemisphere)
+                for hemisphere in (HemiSphere.RIGHT, HemiSphere.LEFT)
+            ]
+        )
+        patterns.extend(
+            [
+                query_pattern_factory(QueryPatternName.T1_FREESURFER_PARCELLATION)(
+                    hemisphere, parcellation
+                )
+                for parcellation in (Parcellation.DESTRIEUX, Parcellation.DESIKAN)
+                for hemisphere in (HemiSphere.LEFT, HemiSphere.RIGHT)
+            ]
+        )
         try:
             (
                 read_parameters_node.inputs.orig_nu,
@@ -206,15 +243,7 @@ class PetSurface(PETPipeline):
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
-                [
-                    input_files.T1_FS_ORIG_NU,
-                    input_files.T1_FS_WM_SURF_R,
-                    input_files.T1_FS_WM_SURF_L,
-                    input_files.T1_FS_DESTRIEUX_PARC_L,
-                    input_files.T1_FS_DESTRIEUX_PARC_R,
-                    input_files.T1_FS_DESIKAN_PARC_L,
-                    input_files.T1_FS_DESIKAN_PARC_R,
-                ],
+                patterns,
             )
         except ClinicaException as e:
             all_errors.append(e)

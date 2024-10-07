@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from clinica.pydra.query import BIDSQuery, CAPSFileQuery, CAPSGroupQuery, Query
+from clinica.utils.input_files import QueryPattern
 
 
 def test_query():
@@ -40,24 +41,28 @@ def test_caps_file_query():
     assert len(q) == 1
     assert q.query == {
         "mask_tissues": [
-            {
-                "pattern": Path("t1")
-                / "spm"
-                / "segmentation"
-                / "normalized_space"
-                / "*_*_T1w_segm-graymatter_space-Ixi549Space_modulated-off_probability.nii*",
-                "description": "Tissue probability map graymatter based on native MRI in MNI space (Ixi549) without modulation.",
-                "needed_pipeline": "t1-volume-tissue-segmentation",
-            },
-            {
-                "pattern": Path("t1")
-                / "spm"
-                / "segmentation"
-                / "normalized_space"
-                / "*_*_T1w_segm-whitematter_space-Ixi549Space_modulated-off_probability.nii*",
-                "description": "Tissue probability map whitematter based on native MRI in MNI space (Ixi549) without modulation.",
-                "needed_pipeline": "t1-volume-tissue-segmentation",
-            },
+            QueryPattern(
+                str(
+                    Path("t1")
+                    / "spm"
+                    / "segmentation"
+                    / "normalized_space"
+                    / "*_*_T1w_segm-graymatter_space-Ixi549Space_modulated-off_probability.nii*"
+                ),
+                "Tissue probability map graymatter based on native MRI in MNI space (Ixi549) without modulation.",
+                "t1-volume-tissue-segmentation",
+            ),
+            QueryPattern(
+                str(
+                    Path("t1")
+                    / "spm"
+                    / "segmentation"
+                    / "normalized_space"
+                    / "*_*_T1w_segm-whitematter_space-Ixi549Space_modulated-off_probability.nii*"
+                ),
+                "Tissue probability map whitematter based on native MRI in MNI space (Ixi549) without modulation.",
+                "t1-volume-tissue-segmentation",
+            ),
         ]
     }
 
@@ -70,34 +75,40 @@ def test_caps_file_query():
     assert len(q) == 2
     assert q.query == {
         "mask_tissues": [
-            {
-                "pattern": Path("t1")
-                / "spm"
-                / "segmentation"
-                / "normalized_space"
-                / "*_*_T1w_segm-graymatter_space-Ixi549Space_modulated-off_probability.nii*",
-                "description": "Tissue probability map graymatter based on native MRI in MNI space (Ixi549) without modulation.",
-                "needed_pipeline": "t1-volume-tissue-segmentation",
-            },
-            {
-                "pattern": Path("t1")
-                / "spm"
-                / "segmentation"
-                / "normalized_space"
-                / "*_*_T1w_segm-whitematter_space-Ixi549Space_modulated-off_probability.nii*",
-                "description": "Tissue probability map whitematter based on native MRI in MNI space (Ixi549) without modulation.",
-                "needed_pipeline": "t1-volume-tissue-segmentation",
-            },
+            QueryPattern(
+                str(
+                    Path("t1")
+                    / "spm"
+                    / "segmentation"
+                    / "normalized_space"
+                    / "*_*_T1w_segm-graymatter_space-Ixi549Space_modulated-off_probability.nii*"
+                ),
+                "Tissue probability map graymatter based on native MRI in MNI space (Ixi549) without modulation.",
+                "t1-volume-tissue-segmentation",
+            ),
+            QueryPattern(
+                str(
+                    Path("t1")
+                    / "spm"
+                    / "segmentation"
+                    / "normalized_space"
+                    / "*_*_T1w_segm-whitematter_space-Ixi549Space_modulated-off_probability.nii*"
+                ),
+                "Tissue probability map whitematter based on native MRI in MNI space (Ixi549) without modulation.",
+                "t1-volume-tissue-segmentation",
+            ),
         ],
-        "flow_fields": {
-            "pattern": Path("t1")
-            / "spm"
-            / "dartel"
-            / "group-UnitTest"
-            / "sub-*_ses-*_T1w_target-UnitTest_transformation-forward_deformation.nii*",
-            "description": "Deformation from native space to group template UnitTest space.",
-            "needed_pipeline": "t1-volume-create-dartel",
-        },
+        "flow_fields": QueryPattern(
+            str(
+                Path("t1")
+                / "spm"
+                / "dartel"
+                / "group-UnitTest"
+                / "sub-*_ses-*_T1w_target-UnitTest_transformation-forward_deformation.nii*"
+            ),
+            "Deformation from native space to group template UnitTest space.",
+            "t1-volume-create-dartel",
+        ),
     }
 
 
@@ -105,11 +116,11 @@ def test_caps_group_query():
     q = CAPSGroupQuery({"dartel_template": {"group_label": "UnitTest"}})
     assert len(q) == 1
     assert q.query == {
-        "dartel_template": {
-            "pattern": Path("group-UnitTest") / "t1" / "group-UnitTest_template.nii*",
-            "description": "T1w template file of group UnitTest",
-            "needed_pipeline": "t1-volume or t1-volume-create-dartel",
-        }
+        "dartel_template": QueryPattern(
+            str(Path("group-UnitTest") / "t1" / "group-UnitTest_template.nii*"),
+            "T1w template file of group UnitTest",
+            "t1-volume or t1-volume-create-dartel",
+        )
     }
 
 
