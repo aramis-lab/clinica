@@ -10,7 +10,7 @@ from enum import Enum, auto
 from pathlib import Path
 from typing import Callable, Optional, Union
 
-from clinica.pipelines.dwi.dti.utils import DTIBasedMeasure
+from clinica.utils.dwi import DTIBasedMeasure
 from clinica.utils.image import HemiSphere
 from clinica.utils.pet import ReconstructionMethod, SUVRReferenceRegion, Tracer
 
@@ -69,6 +69,13 @@ class QueryPattern:
                 "If you want to indicate the exact name of the file, use the format "
                 "directory_name/filename.extension or filename.extension in the pattern argument."
             )
+
+    def to_dict(self) -> dict:
+        return {
+            "pattern": self.pattern,
+            "description": self.description,
+            "needed_pipeline": self.needed_pipeline,
+        }
 
 
 class QueryPatternName(Enum):

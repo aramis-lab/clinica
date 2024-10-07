@@ -1,5 +1,12 @@
 import abc
+from functools import partial
 from typing import Callable, Dict, Optional
+
+from clinica.utils.input_files import (
+    QueryPattern,
+    QueryPatternName,
+    query_pattern_factory,
+)
 
 
 class Query:
@@ -85,10 +92,15 @@ class Query:
         if not input_query:
             return formatted_query
         for k, q in self.parse_query(input_query).items():
-            if isinstance(q, dict):
+            if isinstance(q, QueryPattern):
+                formatted_query[k] = q
+            elif isinstance(q, dict):
                 formatted_query[k] = {**self.default_query(k), **q}
             elif isinstance(q, list):
-                formatted_query[k] = [{**self.default_query(k), **qq} for qq in q]
+                if isinstance(q[0], QueryPattern):
+                    formatted_query[k] = q
+                else:
+                    formatted_query[k] = [{**self.default_query(k), **qq} for qq in q]
             else:
                 raise TypeError(
                     f"Unexpected type {type(q)} for query {q}."
@@ -198,8 +210,11 @@ class CAPSQuery(Query):
         parsed_query = {}
         for label, params in query.items():
             query_maker = self._query_maker(label)
-            formatted_query = query_maker(**params)
-            if len(formatted_query) > 0:
+            if (formatted_query := query_maker(**params)) is not None:
+                # if isinstance(formatted_query, QueryPattern):
+                #    parsed_query[label] = formatted_query.to_dict()
+                # else:
+                #    parsed_query[label] = [q.to_dict() for q in formatted_query]
                 parsed_query[label] = formatted_query
         return parsed_query
 
@@ -219,7 +234,7 @@ class CAPSQuery(Query):
             If the label does not match any entry, a default maker which return
              an empty dict for any passed parameters is returned.
         """
-        return self._query_makers.get(label, lambda **kwargs: {})
+        return self._query_makers.get(label, lambda **kwargs: None)
 
 
 class CAPSFileQuery(CAPSQuery):
@@ -252,30 +267,37 @@ class CAPSFileQuery(CAPSQuery):
     }
     """
 
-    from clinica.utils.input_files import (
-        pet_volume_normalized_suvr_pet,
-        t1_volume_dartel_input_tissue,
-        t1_volume_deformation_to_template,
-        t1_volume_native_tpm,
-        t1_volume_native_tpm_in_mni,
-        t1_volume_template_tpm_in_mni,
-    )
+    from functools import partial
 
-    def t1w_to_mni_transform():
-        from clinica.utils.input_files import T1W_TO_MNI_TRANSFORM
-
-        return T1W_TO_MNI_TRANSFORM
+    from clinica.utils.input_files import QueryPatternName, query_pattern_factory
 
     _query_makers = {
-        "tissues": t1_volume_native_tpm,
-        "mask_tissues": t1_volume_native_tpm_in_mni,
-        "flow_fields": t1_volume_deformation_to_template,
-        "pvc_mask_tissues": t1_volume_native_tpm,
-        "dartel_input_tissue": t1_volume_dartel_input_tissue,
-        "t1w_to_mni": t1w_to_mni_transform,
-        "pet_volume": pet_volume_normalized_suvr_pet,
-        "t1_volume": t1_volume_template_tpm_in_mni,
-        # "custom_pipeline": custom_pipeline,
+        "tissues": partial(
+            query_pattern_factory(QueryPatternName.T1_VOLUME_NATIVE_TPM),
+            mni_space=False,
+            modulation=False,
+        ),
+        "mask_tissues": partial(
+            query_pattern_factory(QueryPatternName.T1_VOLUME_NATIVE_TPM), mni_space=True
+        ),
+        "flow_fields": query_pattern_factory(
+            QueryPatternName.T1_VOLUME_DEFORMATION_TO_TEMPLATE
+        ),
+        "pvc_mask_tissues": partial(
+            query_pattern_factory(QueryPatternName.T1_VOLUME_NATIVE_TPM),
+            mni_space=False,
+            modulation=False,
+        ),
+        "dartel_input_tissue": query_pattern_factory(
+            QueryPatternName.T1_VOLUME_DARTEL_INPUT_TISSUE
+        ),
+        "t1w_to_mni": query_pattern_factory(QueryPatternName.T1W_TO_MNI_TRANSFORM),
+        "pet_volume": query_pattern_factory(
+            QueryPatternName.PET_VOLUME_NORMALIZED_SUVR
+        ),
+        "t1_volume": query_pattern_factory(
+            QueryPatternName.T1_VOLUME_TEMPLATE_TPM_IN_MNI
+        ),
     }
 
 
@@ -302,16 +324,15 @@ class CAPSGroupQuery(CAPSQuery):
     }
     """
 
-    from clinica.utils.input_files import (
-        # custom_group,
-        t1_volume_final_group_template,
-        t1_volume_i_th_iteration_group_template,
-    )
+    from clinica.utils.input_files import QueryPatternName, query_pattern_factory
 
     _query_makers = {
-        "dartel_template": t1_volume_final_group_template,
-        "dartel_iteration_templates": t1_volume_i_th_iteration_group_template,
-        # "t_map": custom_group,
+        "dartel_template": query_pattern_factory(
+            QueryPatternName.T1_VOLUME_GROUP_TEMPLATE
+        ),
+        "dartel_iteration_templates": query_pattern_factory(
+            QueryPatternName.T1_VOLUME_ITERATION_GROUP_TEMPLATE
+        ),
     }
 
 
