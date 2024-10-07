@@ -108,13 +108,11 @@ class OasisToBids(Converter):
         bids_dir: Path,
         bids_ids: list[str],
     ) -> dict:
-        from clinica.iotools.bids_utils import (
-            StudyName,
-            create_sessions_dict_oasis,
-            write_sessions_tsv,
-        )
+        from oasis_to_bids_utils import create_sessions_dict, write_sessions_tsv
 
-        sessions_dict = create_sessions_dict_oasis(
+        from clinica.iotools.bids_utils import StudyName
+
+        sessions_dict = create_sessions_dict(
             clinical_data_dir=clinical_data_dir,
             bids_dir=bids_dir,
             study_name=StudyName.OASIS,
