@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Iterable
 
 import numpy as np
 import pandas as pd
@@ -15,7 +15,7 @@ def create_sessions_dict(
     clinical_data_dir: Path,
     bids_dir: Path,
     clinical_specifications_folder: Path,
-    bids_ids: list[str],
+    bids_ids: Iterable[str],
 ) -> dict:
     """Extract the information regarding the sessions and store them in a dictionary (session M000 only).
 

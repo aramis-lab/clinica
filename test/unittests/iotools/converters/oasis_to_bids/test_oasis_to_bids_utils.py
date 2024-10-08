@@ -29,15 +29,67 @@ def build_clinical_data(tmp_path: Path) -> None:
     df.to_csv(tmp_path / "oasis_cross-sectional.csv", index=False)
 
     # todo : do excel for future
-    bids_ids = ["sub-OASIS10001", "sub-OASIS10002"]
 
 
-def test_create_sessions_dict():
-    # todo
-    clinical_specifications_folder = Path("clinica/iotools/converters/specifications")
-    pass
+def build_bids_dir(tmp_path: Path):
+    (tmp_path / "sub-OASIS10001" / "ses-M000").mkdir(parents=True)
+    (tmp_path / "sub-OASIS10001" / "ses-M006").mkdir(parents=True)
+    (tmp_path / "sub-OASIS10002" / "ses-M000").mkdir(parents=True)
 
 
-def test_write_sessions_tsv():
-    # todo
-    pass
+def test_create_sessions_dict(tmp_path):
+    # todo : how does it handle nan inside excel/csv ? verify with excel
+    build_clinical_data(tmp_path)
+    build_bids_dir(tmp_path)
+
+    expected = {
+        "sub-OASIS10001": {
+            "M000": {
+                "session_id": "ses-M000",
+                "cdr_global": 0,
+                "MMS": 29,
+                "diagnosis": 0,
+            },
+            "M006": {
+                "session_id": "ses-M006",
+                "cdr_global": 0,
+                "MMS": 29,
+                "diagnosis": 0,
+            },
+        },
+        "sub-OASIS10002": {
+            "M000": {
+                "session_id": "ses-M000",
+                "cdr_global": 0,
+                "MMS": 29,
+                "diagnosis": 0,
+            }
+        },
+    }
+
+    result = create_sessions_dict(
+        tmp_path,
+        tmp_path,
+        Path("clinica/iotools/converters/specifications"),
+        ["sub-OASIS10001", "sub-OASIS10002"],
+    )
+
+    assert result == expected
+
+
+def test_write_sessions_tsv(tmp_path):
+    build_clinical_data(tmp_path)
+    build_bids_dir(tmp_path)
+
+    sessions = create_sessions_dict(
+        tmp_path,
+        tmp_path,
+        Path("clinica/iotools/converters/specifications"),
+        ["sub-OASIS10001", "sub-OASIS10002"],
+    )
+
+    write_sessions_tsv(tmp_path, sessions)
+
+    sessions_files = list(tmp_path.rglob("*.tsv"))
+
+    # todo : finish test
