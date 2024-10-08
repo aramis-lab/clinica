@@ -1042,6 +1042,7 @@ def identify_modality(filename: str) -> Optional[str]:
         return np.nan
 
 
+# todo : use more ?
 def write_to_tsv(df: pd.DataFrame, buffer: Union[Path, BinaryIO]) -> None:
     """Save dataframe as a BIDS-compliant TSV file.
 

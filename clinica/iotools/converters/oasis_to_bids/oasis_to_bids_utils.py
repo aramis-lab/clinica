@@ -16,7 +16,6 @@ def create_sessions_dict(
     bids_dir: Path,
     clinical_specifications_folder: Path,
     bids_ids: list[str],
-    subj_to_remove: Optional[list[str]] = None,
 ) -> dict:
     """Extract the information regarding the sessions and store them in a dictionary (session M000 only).
 
@@ -34,16 +33,12 @@ def create_sessions_dict(
     bids_ids : list of str
         The list of bids ids.
 
-    subj_to_remove : list of str, optional
-        The list of subject IDs to remove.
-
     Returns
     -------
     dict :
         Session dict.
     """
 
-    subj_to_remove = subj_to_remove or []
     location = f"{StudyName.OASIS.value} location"
     sessions = pd.read_csv(clinical_specifications_folder / "sessions.tsv", sep="\t")
     sessions_fields = sessions[StudyName.OASIS.value]
@@ -91,14 +86,7 @@ def create_sessions_dict(
 
                 # Extract the corresponding BIDS id and create the output file if doesn't exist
                 subj_bids = [s for s in bids_ids if subj_id_alpha in s]
-                if len(subj_bids) == 0:
-                    # If the subject is not an excluded one
-                    if subj_id not in subj_to_remove:
-                        cprint(
-                            f"{sessions_fields[i]} for {subj_id} not found in the BIDS converted.",
-                            "info",
-                        )
-                else:
+                if subj_bids:
                     subj_bids = subj_bids[0]
                     subj_dir = bids_dir / subj_bids
                     session_names = get_bids_sess_list(subj_dir)
