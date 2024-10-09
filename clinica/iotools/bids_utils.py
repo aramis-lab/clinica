@@ -26,6 +26,7 @@ class StudyName(str, Enum):
     OASIS3 = "OASIS3"
     UKB = "UKB"
     IXI = "IXI"
+    MIRIAD = "MIRIAD"
 
 
 BIDS_VALIDATOR_CONFIG = {
@@ -93,7 +94,8 @@ def bids_id_factory(study: StudyName) -> Type[BIDSSubjectID]:
         return HABSBIDSSubjectID
     if study == StudyName.IXI:
         return IXIBIDSSubjectID
-
+    if study == StudyName.MIRIAD:
+        return MIRIADBIDSSubjectID
 
 class ADNIBIDSSubjectID(BIDSSubjectID):
     """Implementation for ADNI of the BIDSSubjectIDClass, allowing to go from the source id XXX_S_XXXX
@@ -319,6 +321,29 @@ class IXIBIDSSubjectID(BIDSSubjectID):
     def to_original_study_id(self) -> str:
         return str(self.replace("sub-", ""))
 
+class MIRIADBIDSSubjectID(BIDSSubjectID):
+    """Implementation for MIRIAD of the BIDSSubjectIDClass, allowing to go from the source id MIRIAD###
+    to a bids id sub-MIRAD### and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-MIRIAD\d{3}", value):
+            return value
+        raise ValueError(
+            f"BIDS MIRIAD subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-MIRIAD' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"MIRIAD\d{3}", study_id):
+            return f"sub-{study_id}"
+        raise ValueError(
+            f"Raw MIRIAD subject ID {study_id} is not properly formatted. "
+            "Expecting a 'Y' format."
+        )
+
+    def to_original_study_id(self) -> str:
+        return str(self.replace("sub-", ""))
 
 # -- Methods for the clinical data --
 def create_participants_df(
