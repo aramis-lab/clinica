@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
@@ -12,6 +13,8 @@ from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_utils import (
 
 @pytest.fixture
 def build_clinical_data(tmp_path: Path) -> None:
+    (tmp_path / "clinical").mkdir()
+
     df = pd.DataFrame(
         {
             "ID": ["OAS1_0001_MR1", "OAS1_0002_MR1"],
@@ -28,16 +31,35 @@ def build_clinical_data(tmp_path: Path) -> None:
             "Delay": [float("nan"), float("nan")],
         }
     )
-    df.to_csv(tmp_path / "oasis_cross-sectional.csv", index=False)
+    df.to_csv(tmp_path / "clinical" / "oasis_cross-sectional.csv", index=False)
 
     # todo : future with excel
 
 
 @pytest.fixture
-def build_bids_dir(tmp_path: Path):
-    (tmp_path / "sub-OASIS10001" / "ses-M000").mkdir(parents=True)
-    (tmp_path / "sub-OASIS10001" / "ses-M006").mkdir(parents=True)
-    (tmp_path / "sub-OASIS10002" / "ses-M000").mkdir(parents=True)
+def build_spec_sessions(tmp_path: Path) -> None:
+    (tmp_path / "spec").mkdir()
+    spec = pd.DataFrame(
+        {
+            "BIDS CLINICA": ["cdr_global", "MMS", "diagnosis", "foo"],
+            "ADNI": [np.nan, np.nan, np.nan, "foo"],
+            "OASIS": ["CDR", "MMSE", "CDR", np.nan],
+            "OASIS location": [
+                "oasis_cross-sectional.csv",
+                "oasis_cross-sectional.csv",
+                "oasis_cross-sectional.csv",
+                np.nan,
+            ],
+        }
+    )
+    spec.to_csv(tmp_path / "spec" / "sessions.tsv", index=False, sep="\t")
+
+
+@pytest.fixture
+def build_bids_dir(tmp_path: Path) -> None:
+    (tmp_path / "BIDS" / "sub-OASIS10001" / "ses-M000").mkdir(parents=True)
+    (tmp_path / "BIDS" / "sub-OASIS10001" / "ses-M006").mkdir(parents=True)
+    (tmp_path / "BIDS" / "sub-OASIS10002" / "ses-M000").mkdir(parents=True)
 
 
 @pytest.fixture
@@ -71,14 +93,18 @@ def get_expected_dict() -> dict:
 
 
 def test_create_sessions_dict(
-    tmp_path, build_clinical_data, build_bids_dir, get_expected_dict
+    tmp_path,
+    build_clinical_data,
+    build_bids_dir,
+    build_spec_sessions,
+    get_expected_dict,
 ):
     # todo : how does it handle nan inside excel/csv ? verify with excel
 
     result = create_sessions_dict(
-        tmp_path,
-        tmp_path,
-        Path("clinica/iotools/converters/specifications"),
+        tmp_path / "clinical",
+        tmp_path / "BIDS",
+        tmp_path / "spec",
         ["sub-OASIS10001", "sub-OASIS10002"],
     )
 
@@ -86,16 +112,20 @@ def test_create_sessions_dict(
 
 
 def test_write_sessions_tsv(
-    tmp_path, build_clinical_data, build_bids_dir, get_expected_dict
+    tmp_path,
+    build_clinical_data,
+    build_bids_dir,
+    build_spec_sessions,
+    get_expected_dict,
 ):
     sessions = create_sessions_dict(
-        tmp_path,
-        tmp_path,
-        Path("clinica/iotools/converters/specifications"),
+        tmp_path / "clinical",
+        tmp_path / "BIDS",
+        tmp_path / "spec",
         ["sub-OASIS10001", "sub-OASIS10002"],
     )
-    write_sessions_tsv(tmp_path, sessions)
-    sessions_files = list(tmp_path.rglob("*.tsv"))
+    write_sessions_tsv(tmp_path / "BIDS", sessions)
+    sessions_files = list((tmp_path / "BIDS").rglob("*.tsv"))
     assert len(sessions_files) == 2
     for file in sessions_files:
         assert not assert_frame_equal(
