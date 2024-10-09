@@ -133,9 +133,9 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
             "OASIS": [np.nan, "ID", np.nan, "M/F", np.nan],
             "OASIS location": [
                 np.nan,
-                "oasis_cross-sectional.csv",
+                "oasis_cross-sectional-5708aa0a98d82080.xlsx",
                 np.nan,
-                "oasis_cross-sectional.csv",
+                "oasis_cross-sectional-5708aa0a98d82080.xlsx",
                 np.nan,
             ],
         }
@@ -182,7 +182,9 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
                 "Age": ["45", "50", "55", "60", "60"],
             }
         )
-        df_oasis.to_csv(clinical_path / "oasis_cross-sectional.csv", index=False)
+        df_oasis.to_csv(
+            clinical_path / "oasis_cross-sectional-5708aa0a98d82080.xlsx", index=False
+        )
     return clinical_path
 
 
