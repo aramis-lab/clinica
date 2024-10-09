@@ -59,7 +59,7 @@ def define_participants(
 
     list_from_data = _get_subjects_list_from_data(data_directory)
     if subjs_list_path is None:
-        return list_from_data
+        return sorted(list_from_data)
     cprint("Loading a subjects list provided by the user...")
     list_from_file = _get_subjects_list_from_file(subjs_list_path)
     list_filtered = [subject for subject in list_from_file if subject in list_from_data]
@@ -69,7 +69,7 @@ def define_participants(
             f"The subjects : {' , '.join(invalid_subjects)} do not have any associated data inside the directory {data_directory}"
             f" and can not be converted."
         )
-    return list_filtered
+    return sorted(list_filtered)
 
 
 def _rename_clinical_data_to_bids(column: str) -> str:
