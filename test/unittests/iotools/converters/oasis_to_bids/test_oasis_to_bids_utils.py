@@ -102,7 +102,7 @@ def _build_bids_dir(bids_dir: Path) -> None:
 
 
 @pytest.fixture
-def expected_dict() -> dict:
+def expected() -> dict:
     expected = {
         "sub-OASIS10001": {
             "M000": {
@@ -133,10 +133,10 @@ def expected_dict() -> dict:
 
 def test_create_sessions_dict_success(
     tmp_path,
-    clinical_data_path,
-    bids_dir,
-    sessions_path_success,
-    expected_dict,
+    clinical_data_path: Path,
+    bids_dir: Path,
+    sessions_path_success: Path,
+    expected: dict,
 ):
     # todo : how does it handle nan inside excel/csv ? verify with excel
 
@@ -147,15 +147,15 @@ def test_create_sessions_dict_success(
         ["sub-OASIS10001", "sub-OASIS10002"],
     )
 
-    assert result == expected_dict
+    assert result == expected
 
 
 def test_create_sessions_dict_error(
     tmp_path,
-    clinical_data_path,
-    bids_dir,
-    sessions_path_error,
-    expected_dict,
+    clinical_data_path: Path,
+    bids_dir: Path,
+    sessions_path_error: Path,
+    expected: dict,
 ):
     # todo : how does it handle nan inside excel/csv ? verify with excel
 
@@ -170,10 +170,10 @@ def test_create_sessions_dict_error(
 
 def test_write_sessions_tsv(
     tmp_path,
-    clinical_data_path,
-    bids_dir,
-    sessions_path_success,
-    expected_dict,
+    clinical_data_path: Path,
+    bids_dir: Path,
+    sessions_path_success: Path,
+    expected: dict,
 ):
     sessions = create_sessions_dict(
         clinical_data_path,
@@ -187,7 +187,7 @@ def test_write_sessions_tsv(
     for file in sessions_files:
         assert_frame_equal(
             pd.read_csv(file, sep="\t").set_index("session_id", drop=False),
-            pd.DataFrame(expected_dict[file.parent.name]).T.set_index(
+            pd.DataFrame(expected[file.parent.name]).T.set_index(
                 "session_id", drop=False
             ),
             check_like=True,
