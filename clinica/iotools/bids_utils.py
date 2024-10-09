@@ -360,7 +360,7 @@ def create_participants_df(
 
     fields_bids = ["participant_id"]
     prev_location = ""
-    prev_sheet = None
+    prev_sheet = 0
     index_to_drop = []
     subjects_to_drop = []
     study_name = StudyName(study_name)
