@@ -11,12 +11,12 @@ There are many ways in which you can contribute to the ongoing development of th
 
 ## Asking questions, reporting a bug, or discussing the state of the code
 
-You have two ways for asking questions or reporting a bug or discussing the current state of the code (feedback is more than welcome).
+You have two ways for asking questions, reporting a bug, or discussing the current state of the code (feedbacks are more than welcome).
 
 - [Open an issue on GitHub](https://github.com/aramis-lab/clinica/issues).
-- If you are less familiar with GitHub, you can still write us using the [Google Group dedicated to Clinica](https://groups.google.com/g/clinica-user).
+- If you are less familiar with GitHub, you can still contact us using the [Google Group dedicated to Clinica](https://groups.google.com/g/clinica-user).
 
-## Making direct contributions (e.g. submitting a fix)
+## Making direct contributions
 
 ### Open an issue on GitHub
 
@@ -78,9 +78,9 @@ A first thing to verify is whether your changes broke some unit tests. You can v
 pytest -v test/unittests
 ```
 
-This will run the entire suite of unit tests (should take a fw minutes) and tell you how many passed and how many failed.
+This will run the entire suite of unit tests (should take a few minutes) and tell you how many passed and how many failed.
 
-If all passed, it is a good sign, and you can proceed with opening a Pull Request. If some tests failed, you can inspect which one failed and see whether this is expected or not.
+If all tests passed, it is a good sign, and you can proceed with opening a Pull Request. If some tests failed, you can inspect which one failed and see whether this is expected or not.
 
 Sometime, a fix or a new feature will break existing unit tests and these will need to be updated, so broken unit tests don't mean that we will reject the PR, but these will need to be fixed during the review process.
 
@@ -133,7 +133,7 @@ If you plan to contribute regularly to Clinica, you have to synchronize your for
    git pull upstream dev
    ```
 
-    Now the `dev` branch of your own fork is up to date with `aramislab/clinica` dev.
+Now the `dev` branch of your own fork is up to date with `aramislab/clinica` dev.
 
 ### Solving conflicts in pull request
 
@@ -145,28 +145,28 @@ We will rather rebase it, so that our git history in Clinica can keep a linear h
 
 1. Go to your feature branch, and perform an interactive rebasing:
 
-   ```{.sourceCode .bash}
-   git checkout newfeature
-   git rebase -i upstream/dev
-   ```
+    ```{.sourceCode .bash}
+    git checkout newfeature
+    git rebase -i upstream/dev
+    ```
 
-   Keep only the commits that must be applied, corresponding to `newfeature`, at the top of `upstream/dev` (more information [here](https://thoughtbot.com/blog/git-interactive-rebase-squash-amend-rewriting-history)).
+    Keep only the commits that must be applied, corresponding to `newfeature`, at the top of `upstream/dev` (more information [here](https://thoughtbot.com/blog/git-interactive-rebase-squash-amend-rewriting-history)).
 
-   The conflict will appear once you validate the rebasing.
+    The conflict will appear once you validate the rebasing.
 
 2. Solve the conflicts, following git instructions.
 
 3. Once it is done, you can force push (because you have rewritten history):
 
-   ```{.sourceCode .bash}
-   git push --force
-   ```
+    ```{.sourceCode .bash}
+    git push --force
+    ```
 
-   or
+    or
 
-   ```{.sourceCode .bash}
-   git push --force origin newfeature
-   ```
+    ```{.sourceCode .bash}
+    git push --force origin newfeature
+    ```
 
 Now your Pull Request does not have conflicts anymore!
 
