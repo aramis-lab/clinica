@@ -182,7 +182,7 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
                 "Age": ["45", "50", "55", "60", "60"],
             }
         )
-        df_oasis.to_csv(
+        df_oasis.to_excel(
             clinical_path / "oasis_cross-sectional-5708aa0a98d82080.xlsx", index=False
         )
     return clinical_path
