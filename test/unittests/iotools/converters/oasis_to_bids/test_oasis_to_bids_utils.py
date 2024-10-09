@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
 
 from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_utils import (
     create_sessions_dict,
@@ -9,6 +10,7 @@ from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_utils import (
 )
 
 
+@pytest.fixture
 def build_clinical_data(tmp_path: Path) -> None:
     df = pd.DataFrame(
         {
@@ -28,20 +30,18 @@ def build_clinical_data(tmp_path: Path) -> None:
     )
     df.to_csv(tmp_path / "oasis_cross-sectional.csv", index=False)
 
-    # todo : do excel for future
+    # todo : future with excel
 
 
+@pytest.fixture
 def build_bids_dir(tmp_path: Path):
     (tmp_path / "sub-OASIS10001" / "ses-M000").mkdir(parents=True)
     (tmp_path / "sub-OASIS10001" / "ses-M006").mkdir(parents=True)
     (tmp_path / "sub-OASIS10002" / "ses-M000").mkdir(parents=True)
 
 
-def test_create_sessions_dict(tmp_path):
-    # todo : how does it handle nan inside excel/csv ? verify with excel
-    build_clinical_data(tmp_path)
-    build_bids_dir(tmp_path)
-
+@pytest.fixture
+def get_expected_dict() -> dict:
     expected = {
         "sub-OASIS10001": {
             "M000": {
@@ -67,6 +67,14 @@ def test_create_sessions_dict(tmp_path):
         },
     }
 
+    return expected
+
+
+def test_create_sessions_dict(
+    tmp_path, build_clinical_data, build_bids_dir, get_expected_dict
+):
+    # todo : how does it handle nan inside excel/csv ? verify with excel
+
     result = create_sessions_dict(
         tmp_path,
         tmp_path,
@@ -74,22 +82,28 @@ def test_create_sessions_dict(tmp_path):
         ["sub-OASIS10001", "sub-OASIS10002"],
     )
 
-    assert result == expected
+    assert result == get_expected_dict
 
 
-def test_write_sessions_tsv(tmp_path):
-    build_clinical_data(tmp_path)
-    build_bids_dir(tmp_path)
-
+def test_write_sessions_tsv(
+    tmp_path, build_clinical_data, build_bids_dir, get_expected_dict
+):
     sessions = create_sessions_dict(
         tmp_path,
         tmp_path,
         Path("clinica/iotools/converters/specifications"),
         ["sub-OASIS10001", "sub-OASIS10002"],
     )
-
     write_sessions_tsv(tmp_path, sessions)
-
     sessions_files = list(tmp_path.rglob("*.tsv"))
-
-    # todo : finish test
+    assert len(sessions_files) == 2
+    for file in sessions_files:
+        assert not assert_frame_equal(
+            pd.read_csv(file, sep="\t").set_index("session_id", drop=False),
+            pd.DataFrame(get_expected_dict[file.parent.name]).T.set_index(
+                "session_id", drop=False
+            ),
+            check_like=True,
+            check_dtype=False,
+        )
+        assert file.name == f"{file.parent.name}_sessions.tsv"
