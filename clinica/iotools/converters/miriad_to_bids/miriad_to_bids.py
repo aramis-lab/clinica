@@ -26,7 +26,7 @@ def convert(
         subjects (Optional[UserProvidedPath], optional): _description_. Defaults to None.
         n_procs (Optional[int], optional): _description_. Defaults to 1.
     """
-    from clinica.iotools.converters.miriad_to_bids.miriad_to_bids_utils import create_bids_structure
+    from clinica.iotools.converters.miriad_to_bids.miriad_to_bids_utils import create_bids_structure, parse_filename
     metadata_csv = 'metadata.csv'
     # Load clinical data
     for file in os.listdir(path_to_clinical):
@@ -63,6 +63,9 @@ def convert(
                     session_alt = parts[4].lstrip('0')    # Session number
                     scan_number = parts[6].replace('.nii', '')  # Scan number from MR_1 or MR_2
 
+                        # Parse subject ID, session ID, and run ID from the filename
+           # subject_id, session_id, run_id = parse_filename(file)
+
                     # Extract MR ID
                     mr_id = f"{cohort}_{subject_id}_{session}_MR_{scan_number}"
 
@@ -80,7 +83,7 @@ def convert(
                     input_file = os.path.join(root, file)
                     
                     # Create BIDS structure and move the file
-                    create_bids_structure(subject_id, session_alt, cohort, diagnosis, gender, input_file, path_to_dataset, bids_dir, path_to_clinical)
+                    create_bids_structure(subject_id, session_alt, scan_number, cohort, diagnosis, gender, input_file, path_to_dataset, bids_dir, path_to_clinical)
                     
                     # Write the extracted information to CSV
                     bids_filename = f"sub-MIRIAD{subject_id}_ses-{session}_T1w.nii.gz"
