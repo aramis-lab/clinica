@@ -360,6 +360,7 @@ def create_participants_df(
 
     fields_bids = ["participant_id"]
     prev_location = ""
+    prev_sheet = None
     index_to_drop = []
     subjects_to_drop = []
     study_name = StudyName(study_name)
@@ -387,7 +388,7 @@ def create_participants_df(
             tmp = field_location[i].split("/")
             location = tmp[0]
             # If a sheet is available
-            sheet = tmp[1] if len(tmp) > 1 else ""
+            sheet = tmp[1] if len(tmp) > 1 else 0
             # Check if the file to open for a certain field is the same of the previous field
             if location == prev_location and sheet == prev_sheet:
                 pass
@@ -462,6 +463,146 @@ def create_participants_df(
     participant_df = participant_df.fillna("n/a")
 
     return participant_df
+
+
+def create_sessions_dict_oasis(
+    clinical_data_dir: Path,
+    bids_dir: Path,
+    study_name: StudyName,
+    clinical_specifications_folder: Path,
+    bids_ids: list[str],
+    name_column_ids: str,
+    subj_to_remove: Optional[list[str]] = None,
+    participants_df: Optional[pd.DataFrame] = None,
+) -> dict:
+    """Extract the information regarding the sessions and store them in a dictionary (session M00 only).
+
+    Parameters
+    ----------
+    clinical_data_dir : Path
+        The path to the input folder.
+
+    bids_dir : Path
+        The path to the BIDS directory.
+
+    study_name : StudyName
+        The name of the study (Ex: ADNI).
+
+    clinical_specifications_folder : Path
+        The path to the clinical file.
+
+    bids_ids : list of str
+        The list of bids ids.
+
+    name_column_ids : str
+        The name of the column where the subject ids are stored.
+
+    subj_to_remove : list of str, optional
+        The list of subject IDs to remove.
+
+    participants_df : pd.DataFrame, optional
+        A pandas dataframe that contains the participants data (required for OASIS3 only).
+
+    Returns
+    -------
+    dict :
+        Session dict.
+    """
+    import numpy as np
+
+    from clinica.utils.stream import cprint
+
+    subj_to_remove = subj_to_remove or []
+    location = f"{study_name.value} location"
+    sessions = pd.read_csv(clinical_specifications_folder / "sessions.tsv", sep="\t")
+    sessions_fields = sessions[study_name.value]
+    field_location = sessions[location]
+    sessions_fields_bids = sessions["BIDS CLINICA"]
+    fields_dataset = []
+    fields_bids = []
+    sessions_dict = {}
+
+    for i in range(0, len(sessions_fields)):
+        if not pd.isnull(sessions_fields[i]):
+            fields_bids.append(sessions_fields_bids[i])
+            fields_dataset.append(sessions_fields[i])
+
+    for i in range(0, len(sessions_fields)):
+        # If the i-th field is available
+        if not pd.isnull(sessions_fields[i]):
+            # Load the file
+            tmp = field_location[i].split("/")
+            location = tmp[0]
+            if len(tmp) > 1:
+                sheet = tmp[1]
+            else:
+                sheet = 0
+
+            file_to_read_path = clinical_data_dir / location
+            file_ext = os.path.splitext(location)[1]
+            if file_ext == ".xlsx":
+                file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
+            elif file_ext == ".csv":
+                file_to_read = pd.read_csv(file_to_read_path)
+            else:
+                raise ValueError(
+                    f"Unknown file extension {file_ext}. Expecting either .xlsx or .csv."
+                )
+
+            for r in range(0, len(file_to_read.values)):
+                # Extracts the subject ids columns from the dataframe
+                subj_id = file_to_read.iloc[r][name_column_ids]
+                if hasattr(subj_id, "dtype"):
+                    if subj_id.dtype == np.int64:
+                        subj_id = str(subj_id)
+                # Removes all the - from
+                subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3] + subj_id[5:9])
+
+                # Extract the corresponding BIDS id and create the output file if doesn't exist
+                subj_bids = [s for s in bids_ids if subj_id_alpha in s]
+                if len(subj_bids) == 0:
+                    # If the subject is not an excluded one
+                    if subj_id not in subj_to_remove:
+                        cprint(
+                            f"{sessions_fields[i]} for {subj_id} not found in the BIDS converted.",
+                            "info",
+                        )
+                else:
+                    subj_bids = subj_bids[0]
+                    subj_dir = bids_dir / subj_bids
+                    session_names = get_bids_sess_list(subj_dir)
+                    for s in session_names:
+                        s_name = s.replace("ses-", "")
+                        if study_name == StudyName.OASIS3:
+                            row = file_to_read[
+                                file_to_read["MR ID"].str.startswith(subj_id)
+                                & file_to_read["MR ID"].str.endswith(s_name)
+                            ].iloc[0]
+                        else:
+                            row = file_to_read.iloc[r]
+                        if subj_bids not in sessions_dict:
+                            sessions_dict.update({subj_bids: {}})
+                        if s_name not in sessions_dict[subj_bids].keys():
+                            sessions_dict[subj_bids].update({s_name: {"session_id": s}})
+                        (sessions_dict[subj_bids][s_name]).update(
+                            {sessions_fields_bids[i]: row[sessions_fields[i]]}
+                        )
+                        # Calculate the difference in months for OASIS3 only
+                        if (
+                            study_name == StudyName.OASIS3
+                            and sessions_fields_bids[i] == "age"
+                        ):
+                            diff_years = (
+                                float(sessions_dict[subj_bids][s_name]["age"])
+                                - participants_df[
+                                    participants_df["participant_id"] == subj_bids
+                                ]["age_bl"]
+                            )
+                            (sessions_dict[subj_bids][s_name]).update(
+                                {"diff_months": round(float(diff_years) * 12)}
+                            )
+
+    return sessions_dict
 
 
 def create_scans_dict(
