@@ -12,8 +12,14 @@ from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_utils import (
 
 
 @pytest.fixture
-def build_clinical_data(tmp_path: Path) -> None:
-    (tmp_path / "clinical").mkdir()
+def clinical_data_path(tmp_path: Path) -> Path:
+    clinical_data_path = tmp_path / "clinical"
+    _build_clinical_data(clinical_data_path)
+    return clinical_data_path
+
+
+def _build_clinical_data(clinical_data_path: Path) -> None:
+    clinical_data_path.mkdir()
 
     df = pd.DataFrame(
         {
@@ -31,14 +37,20 @@ def build_clinical_data(tmp_path: Path) -> None:
             "Delay": [float("nan"), float("nan")],
         }
     )
-    df.to_csv(tmp_path / "clinical" / "oasis_cross-sectional.csv", index=False)
+    df.to_csv(clinical_data_path / "oasis_cross-sectional.csv", index=False)
 
     # todo : future with excel
 
 
 @pytest.fixture
-def build_spec_sessions_success(tmp_path: Path) -> None:
-    (tmp_path / "spec").mkdir()
+def sessions_path_success(tmp_path: Path) -> Path:
+    sessions_path_success = tmp_path / "spec"
+    _build_spec_sessions_success(sessions_path_success)
+    return sessions_path_success
+
+
+def _build_spec_sessions_success(sessions_path_success: Path) -> None:
+    sessions_path_success.mkdir()
     spec = pd.DataFrame(
         {
             "BIDS CLINICA": ["cdr_global", "MMS", "diagnosis", "foo"],
@@ -52,12 +64,18 @@ def build_spec_sessions_success(tmp_path: Path) -> None:
             ],
         }
     )
-    spec.to_csv(tmp_path / "spec" / "sessions.tsv", index=False, sep="\t")
+    spec.to_csv(sessions_path_success / "sessions.tsv", index=False, sep="\t")
 
 
 @pytest.fixture
-def build_spec_sessions_error(tmp_path: Path) -> None:
-    (tmp_path / "spec").mkdir()
+def sessions_path_error(tmp_path: Path) -> Path:
+    sessions_path_error = tmp_path / "spec"
+    _build_spec_sessions_error(sessions_path_error)
+    return sessions_path_error
+
+
+def _build_spec_sessions_error(sessions_path_error: Path) -> None:
+    sessions_path_error.mkdir()
     spec = pd.DataFrame(
         {
             "BIDS CLINICA": ["foo"],
@@ -67,18 +85,24 @@ def build_spec_sessions_error(tmp_path: Path) -> None:
             ],
         }
     )
-    spec.to_csv(tmp_path / "spec" / "sessions.tsv", index=False, sep="\t")
+    spec.to_csv(sessions_path_error / "sessions.tsv", index=False, sep="\t")
 
 
 @pytest.fixture
-def build_bids_dir(tmp_path: Path) -> None:
-    (tmp_path / "BIDS" / "sub-OASIS10001" / "ses-M000").mkdir(parents=True)
-    (tmp_path / "BIDS" / "sub-OASIS10001" / "ses-M006").mkdir(parents=True)
-    (tmp_path / "BIDS" / "sub-OASIS10002" / "ses-M000").mkdir(parents=True)
+def bids_dir(tmp_path: Path) -> Path:
+    bids_dir = tmp_path / "BIDS"
+    _build_bids_dir(bids_dir)
+    return bids_dir
+
+
+def _build_bids_dir(bids_dir: Path) -> None:
+    (bids_dir / "sub-OASIS10001" / "ses-M000").mkdir(parents=True)
+    (bids_dir / "sub-OASIS10001" / "ses-M006").mkdir(parents=True)
+    (bids_dir / "sub-OASIS10002" / "ses-M000").mkdir(parents=True)
 
 
 @pytest.fixture
-def get_expected_dict() -> dict:
+def expected_dict() -> dict:
     expected = {
         "sub-OASIS10001": {
             "M000": {
@@ -109,61 +133,61 @@ def get_expected_dict() -> dict:
 
 def test_create_sessions_dict_success(
     tmp_path,
-    build_clinical_data,
-    build_bids_dir,
-    build_spec_sessions_success,
-    get_expected_dict,
+    clinical_data_path,
+    bids_dir,
+    sessions_path_success,
+    expected_dict,
 ):
     # todo : how does it handle nan inside excel/csv ? verify with excel
 
     result = create_sessions_dict(
-        tmp_path / "clinical",
-        tmp_path / "BIDS",
-        tmp_path / "spec",
+        clinical_data_path,
+        bids_dir,
+        sessions_path_success,
         ["sub-OASIS10001", "sub-OASIS10002"],
     )
 
-    assert result == get_expected_dict
+    assert result == expected_dict
 
 
 def test_create_sessions_dict_error(
     tmp_path,
-    build_clinical_data,
-    build_bids_dir,
-    build_spec_sessions_error,
-    get_expected_dict,
+    clinical_data_path,
+    bids_dir,
+    sessions_path_error,
+    expected_dict,
 ):
     # todo : how does it handle nan inside excel/csv ? verify with excel
 
     with pytest.raises(FileNotFoundError):
         create_sessions_dict(
-            tmp_path / "clinical",
-            tmp_path / "BIDS",
-            tmp_path / "spec",
+            clinical_data_path,
+            bids_dir,
+            sessions_path_error,
             ["sub-OASIS10001", "sub-OASIS10002"],
         )
 
 
 def test_write_sessions_tsv(
     tmp_path,
-    build_clinical_data,
-    build_bids_dir,
-    build_spec_sessions_success,
-    get_expected_dict,
+    clinical_data_path,
+    bids_dir,
+    sessions_path_success,
+    expected_dict,
 ):
     sessions = create_sessions_dict(
-        tmp_path / "clinical",
-        tmp_path / "BIDS",
-        tmp_path / "spec",
+        clinical_data_path,
+        bids_dir,
+        sessions_path_success,
         ["sub-OASIS10001", "sub-OASIS10002"],
     )
     write_sessions_tsv(tmp_path / "BIDS", sessions)
     sessions_files = list((tmp_path / "BIDS").rglob("*.tsv"))
     assert len(sessions_files) == 2
     for file in sessions_files:
-        assert not assert_frame_equal(
+        assert_frame_equal(
             pd.read_csv(file, sep="\t").set_index("session_id", drop=False),
-            pd.DataFrame(get_expected_dict[file.parent.name]).T.set_index(
+            pd.DataFrame(expected_dict[file.parent.name]).T.set_index(
                 "session_id", drop=False
             ),
             check_like=True,
