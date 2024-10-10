@@ -112,7 +112,6 @@ class OasisToBids(Converter):
 
         sessions_dict = create_sessions_dict(
             clinical_data_dir=clinical_data_dir,
-            bids_dir=bids_dir,
             clinical_specifications_folder=Path(__file__).parents[1] / "specifications",
             bids_ids=bids_ids,
         )
