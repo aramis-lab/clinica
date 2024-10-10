@@ -111,7 +111,7 @@ def expected() -> dict:
                 "session_id": "ses-M000",
                 "cdr_global": 0,
                 "MMS": 29,
-                "diagnosis": 0,
+                "diagnosis": "CN",
             },
         },
         "sub-OASIS10002": {
@@ -119,7 +119,7 @@ def expected() -> dict:
                 "session_id": "ses-M000",
                 "cdr_global": 0,
                 "MMS": 29,
-                "diagnosis": 0,
+                "diagnosis": "CN",
             }
         },
     }

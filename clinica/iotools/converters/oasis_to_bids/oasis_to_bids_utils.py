@@ -58,6 +58,9 @@ def create_sessions_dict(
         # managed before
 
         result = result.loc[bids_ids]
+        result["diagnosis"] = result["diagnosis"].apply(
+            lambda x: "AD" if x > 0 else "CN"
+        )
         result["session_id"] = "ses-M000"
 
         for bids_id, row in result.iterrows():

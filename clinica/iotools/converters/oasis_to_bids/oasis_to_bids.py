@@ -117,11 +117,6 @@ class OasisToBids(Converter):
             bids_ids=bids_ids,
         )
 
-        # todo : when tested add to create_sessions_dict bc specific to oasis1
-        for bids_id in bids_ids:
-            sessions_dict[bids_id]["M000"]["diagnosis"] = (
-                "AD" if sessions_dict[bids_id]["M000"]["diagnosis"] > 0 else "CN"
-            )
         write_sessions_tsv(bids_dir, sessions_dict)
 
         return sessions_dict
