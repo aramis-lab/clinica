@@ -21,6 +21,8 @@ def clinical_data_path(tmp_path: Path) -> Path:
 def _build_clinical_data(clinical_data_path: Path) -> None:
     clinical_data_path.mkdir()
 
+    # todo :what happens if nan instead of value ? (handling of float...)
+
     df = pd.DataFrame(
         {
             "ID": ["OAS1_0001_MR1", "OAS1_0002_MR1"],
@@ -37,9 +39,9 @@ def _build_clinical_data(clinical_data_path: Path) -> None:
             "Delay": [float("nan"), float("nan")],
         }
     )
-    df.to_csv(clinical_data_path / "oasis_cross-sectional.csv", index=False)
-
-    # todo : future with excel
+    df.to_excel(
+        clinical_data_path / "oasis_cross-sectional-5708aa0a98d82080.xlsx", index=False
+    )
 
 
 @pytest.fixture
@@ -57,9 +59,9 @@ def _build_spec_sessions_success(sessions_path_success: Path) -> None:
             "ADNI": [np.nan, np.nan, np.nan, "foo"],
             "OASIS": ["CDR", "MMSE", "CDR", np.nan],
             "OASIS location": [
-                "oasis_cross-sectional.csv",
-                "oasis_cross-sectional.csv",
-                "oasis_cross-sectional.csv",
+                "oasis_cross-sectional-5708aa0a98d82080.xlsx",
+                "oasis_cross-sectional-5708aa0a98d82080.xlsx",
+                "oasis_cross-sectional-5708aa0a98d82080.xlsx",
                 np.nan,
             ],
         }
@@ -111,12 +113,6 @@ def expected() -> dict:
                 "MMS": 29,
                 "diagnosis": 0,
             },
-            "M006": {
-                "session_id": "ses-M006",
-                "cdr_global": 0,
-                "MMS": 29,
-                "diagnosis": 0,
-            },
         },
         "sub-OASIS10002": {
             "M000": {
@@ -138,8 +134,6 @@ def test_create_sessions_dict_success(
     sessions_path_success: Path,
     expected: dict,
 ):
-    # todo : how does it handle nan inside excel/csv ? verify with excel
-
     result = create_sessions_dict(
         clinical_data_path,
         bids_dir,
@@ -157,8 +151,6 @@ def test_create_sessions_dict_error(
     sessions_path_error: Path,
     expected: dict,
 ):
-    # todo : how does it handle nan inside excel/csv ? verify with excel
-
     with pytest.raises(FileNotFoundError):
         create_sessions_dict(
             clinical_data_path,
