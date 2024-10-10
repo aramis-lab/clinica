@@ -21,8 +21,6 @@ def clinical_data_path(tmp_path: Path) -> Path:
 def _build_clinical_data(clinical_data_path: Path) -> None:
     clinical_data_path.mkdir()
 
-    # todo :what happens if nan instead of value ? (handling of float...)
-
     df = pd.DataFrame(
         {
             "ID": ["OAS1_0001_MR1", "OAS1_0002_MR1"],

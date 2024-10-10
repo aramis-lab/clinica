@@ -48,21 +48,21 @@ def create_sessions_dict(
             lambda x: bids_id_factory(StudyName.OASIS).from_original_study_id(x)
         )
         file.set_index("BIDS ID", drop=True, inplace=True)
-        result = pd.DataFrame()
+        sessions_df = pd.DataFrame()
         for _, row in spec[spec[location] == loc].iterrows():
-            result[row["BIDS CLINICA"]] = file[row[[study]]]
+            sessions_df[row["BIDS CLINICA"]] = file[row[[study]]]
 
         # todo : what happens if one subject is not in the metadata ? at this point, I could add a line
         # but I have to be sure that it has a corresponding image OR that the bids_ids list was properly
         # managed before
 
-        result = result.loc[bids_ids]
-        result["diagnosis"] = result["diagnosis"].apply(
+        sessions_df = sessions_df.loc[bids_ids]
+        sessions_df["diagnosis"] = sessions_df["diagnosis"].apply(
             lambda x: "AD" if x > 0 else "CN"
         )
-        result["session_id"] = "ses-M000"
+        sessions_df["session_id"] = "ses-M000"
 
-        for bids_id, row in result.iterrows():
+        for bids_id, row in sessions_df.iterrows():
             sessions_dict.update(
                 {bids_id: {"M000": {label: value for label, value in row.items()}}}
             )
