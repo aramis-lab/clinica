@@ -360,6 +360,7 @@ def create_participants_df(
 
     fields_bids = ["participant_id"]
     prev_location = ""
+    prev_sheet = 0
     index_to_drop = []
     subjects_to_drop = []
     study_name = StudyName(study_name)
@@ -387,7 +388,7 @@ def create_participants_df(
             tmp = field_location[i].split("/")
             location = tmp[0]
             # If a sheet is available
-            sheet = tmp[1] if len(tmp) > 1 else ""
+            sheet = tmp[1] if len(tmp) > 1 else 0
             # Check if the file to open for a certain field is the same of the previous field
             if location == prev_location and sheet == prev_sheet:
                 pass

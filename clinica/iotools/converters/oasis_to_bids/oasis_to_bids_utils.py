@@ -59,11 +59,7 @@ def create_sessions_dict(
             # Load the file
             tmp = field_location[i].split("/")
             location = tmp[0]
-            if len(tmp) > 1:
-                sheet = tmp[1]
-            else:
-                sheet = ""
-
+            sheet = tmp[1] if len(tmp) > 1 else 0
             file_to_read_path = clinical_data_dir / location
             file_ext = os.path.splitext(location)[1]
             if file_ext == ".xlsx":
