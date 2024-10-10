@@ -130,13 +130,11 @@ def expected() -> dict:
 def test_create_sessions_dict_success(
     tmp_path,
     clinical_data_path: Path,
-    bids_dir: Path,
     sessions_path_success: Path,
     expected: dict,
 ):
     result = create_sessions_dict(
         clinical_data_path,
-        bids_dir,
         sessions_path_success,
         ["sub-OASIS10001", "sub-OASIS10002"],
     )
@@ -147,14 +145,12 @@ def test_create_sessions_dict_success(
 def test_create_sessions_dict_error(
     tmp_path,
     clinical_data_path: Path,
-    bids_dir: Path,
     sessions_path_error: Path,
     expected: dict,
 ):
     with pytest.raises(FileNotFoundError):
         create_sessions_dict(
             clinical_data_path,
-            bids_dir,
             sessions_path_error,
             ["sub-OASIS10001", "sub-OASIS10002"],
         )
@@ -169,7 +165,6 @@ def test_write_sessions_tsv(
 ):
     sessions = create_sessions_dict(
         clinical_data_path,
-        bids_dir,
         sessions_path_success,
         ["sub-OASIS10001", "sub-OASIS10002"],
     )
