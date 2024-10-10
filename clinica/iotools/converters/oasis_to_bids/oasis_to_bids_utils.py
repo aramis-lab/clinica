@@ -10,7 +10,6 @@ __all__ = ["create_sessions_dict", "write_sessions_tsv"]
 
 def create_sessions_dict(
     clinical_data_dir: Path,
-    bids_dir: Path,
     clinical_specifications_folder: Path,
     bids_ids: Iterable[str],
 ) -> dict:
