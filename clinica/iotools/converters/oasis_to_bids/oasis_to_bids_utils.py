@@ -20,9 +20,6 @@ def create_sessions_dict(
     clinical_data_dir : Path
         The path to the input folder.
 
-    bids_dir : Path
-        The path to the BIDS directory.
-
     clinical_specifications_folder : Path
         The path to the clinical file folder.
 
@@ -51,10 +48,6 @@ def create_sessions_dict(
         sessions_df = pd.DataFrame()
         for _, row in spec[spec[location] == loc].iterrows():
             sessions_df[row["BIDS CLINICA"]] = file[row[[study]]]
-
-        # todo : what happens if one subject is not in the metadata ? at this point, I could add a line
-        # but I have to be sure that it has a corresponding image OR that the bids_ids list was properly
-        # managed before
 
         sessions_df = sessions_df.loc[bids_ids]
         sessions_df["diagnosis"] = sessions_df["diagnosis"].apply(
