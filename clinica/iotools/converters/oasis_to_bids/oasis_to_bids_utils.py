@@ -1,19 +1,15 @@
-import os
 from pathlib import Path
 from typing import Iterable
 
-import numpy as np
 import pandas as pd
 
-from clinica.iotools.bids_utils import StudyName, get_bids_sess_list
-from clinica.utils.stream import cprint
+from clinica.iotools.bids_utils import StudyName, bids_id_factory
 
 __all__ = ["create_sessions_dict", "write_sessions_tsv"]
 
 
 def create_sessions_dict(
     clinical_data_dir: Path,
-    bids_dir: Path,
     clinical_specifications_folder: Path,
     bids_ids: Iterable[str],
 ) -> dict:
@@ -24,11 +20,8 @@ def create_sessions_dict(
     clinical_data_dir : Path
         The path to the input folder.
 
-    bids_dir : Path
-        The path to the BIDS directory.
-
     clinical_specifications_folder : Path
-        The path to the clinical file.
+        The path to the clinical file folder.
 
     bids_ids : list of str
         The list of bids ids.
@@ -39,63 +32,33 @@ def create_sessions_dict(
         Session dict.
     """
 
-    location = f"{StudyName.OASIS.value} location"
-    sessions = pd.read_csv(clinical_specifications_folder / "sessions.tsv", sep="\t")
-    sessions_fields = sessions[StudyName.OASIS.value]
-    field_location = sessions[location]
-    sessions_fields_bids = sessions["BIDS CLINICA"]
-    fields_dataset = []
-    fields_bids = []
+    study = StudyName.OASIS.value
+    location = f"{study} location"
+    spec = pd.read_csv(clinical_specifications_folder / "sessions.tsv", sep="\t")[
+        [study, location, "BIDS CLINICA"]
+    ].dropna()
     sessions_dict = {}
 
-    for i in range(0, len(sessions_fields)):
-        if not pd.isnull(sessions_fields[i]):
-            fields_bids.append(sessions_fields_bids[i])
-            fields_dataset.append(sessions_fields[i])
+    for loc in spec[location].unique():
+        file = pd.read_excel(clinical_data_dir / loc)
+        file["BIDS ID"] = file.ID.apply(
+            lambda x: bids_id_factory(StudyName.OASIS).from_original_study_id(x)
+        )
+        file.set_index("BIDS ID", drop=True, inplace=True)
+        sessions_df = pd.DataFrame()
+        for _, row in spec[spec[location] == loc].iterrows():
+            sessions_df[row["BIDS CLINICA"]] = file[row[[study]]]
 
-    for i in range(0, len(sessions_fields)):
-        # If the i-th field is available
-        if not pd.isnull(sessions_fields[i]):
-            # Load the file
-            tmp = field_location[i].split("/")
-            location = tmp[0]
-            sheet = tmp[1] if len(tmp) > 1 else 0
-            file_to_read_path = clinical_data_dir / location
-            file_ext = os.path.splitext(location)[1]
-            if file_ext == ".xlsx":
-                file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
-            elif file_ext == ".csv":
-                file_to_read = pd.read_csv(file_to_read_path)
-            else:
-                raise ValueError(
-                    f"Unknown file extension {file_ext}. Expecting either .xlsx or .csv."
-                )
+        sessions_df = sessions_df.loc[bids_ids]
+        sessions_df["diagnosis"] = sessions_df["diagnosis"].apply(
+            lambda x: "AD" if x > 0 else "CN"
+        )
+        sessions_df["session_id"] = "ses-M000"
 
-            for r in range(0, len(file_to_read.values)):
-                # Extracts the subject ids columns from the dataframe
-                subj_id = file_to_read.iloc[r]["ID"]
-                if hasattr(subj_id, "dtype"):
-                    if subj_id.dtype == np.int64:
-                        subj_id = str(subj_id)
-                # Removes all the - from
-                subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3] + subj_id[5:9])
-
-                # Extract the corresponding BIDS id and create the output file if doesn't exist
-                subj_bids = [s for s in bids_ids if subj_id_alpha in s]
-                if subj_bids:
-                    subj_bids = subj_bids[0]
-                    subj_dir = bids_dir / subj_bids
-                    session_names = get_bids_sess_list(subj_dir)
-                    for s in session_names:
-                        s_name = s.replace("ses-", "")
-                        row = file_to_read.iloc[r]
-                        if subj_bids not in sessions_dict:
-                            sessions_dict.update({subj_bids: {}})
-                        if s_name not in sessions_dict[subj_bids].keys():
-                            sessions_dict[subj_bids].update({s_name: {"session_id": s}})
-                        (sessions_dict[subj_bids][s_name]).update(
-                            {sessions_fields_bids[i]: row[sessions_fields[i]]}
-                        )
+        for bids_id, row in sessions_df.iterrows():
+            sessions_dict.update(
+                {bids_id: {"M000": {label: value for label, value in row.items()}}}
+            )
 
     return sessions_dict
 
