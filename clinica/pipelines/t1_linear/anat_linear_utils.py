@@ -108,6 +108,7 @@ def run_n4biasfieldcorrection(
     bias_corrected_output_path : Path
         The path to the bias corrected image.
     """
+    from clinica.utils.exceptions import ClinicaMissingDependencyError
     from clinica.utils.stream import cprint, log_and_raise
 
     try:
