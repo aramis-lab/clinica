@@ -105,3 +105,11 @@ def write_sessions_tsv(bids_dir: Path, sessions_dict: dict) -> None:
             sep="\t",
             encoding="utf8",
         )
+
+
+def create_scans_dict(
+    clinical_data_dir: Path,
+) -> dict:
+    # todo : dict, can be specific to oasis1 ;
+
+    return dict()
