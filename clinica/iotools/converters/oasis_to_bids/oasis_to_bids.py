@@ -69,8 +69,8 @@ class OasisToBids(Converter):
         cprint("Converting clinical data...", lvl="info")
         bids_ids = get_bids_subjs_list(bids_dir)
         self._create_participants_tsv(clinical_data_dir, bids_dir, bids_ids)
-        sessions = self._create_sessions_tsv(clinical_data_dir, bids_dir, bids_ids)
-        self._create_scans_tsv(clinical_data_dir, bids_dir, bids_ids, sessions)
+        self._create_sessions_tsv(clinical_data_dir, bids_dir, bids_ids)
+        self._create_scans_tsv(bids_dir)
         self._create_modality_agnostic_files(bids_dir)
 
     def _create_participants_tsv(
@@ -107,7 +107,7 @@ class OasisToBids(Converter):
         clinical_data_dir: Path,
         bids_dir: Path,
         bids_ids: list[str],
-    ) -> dict:
+    ) -> None:
         from .oasis_to_bids_utils import create_sessions_dict, write_sessions_tsv
 
         sessions_dict = create_sessions_dict(
@@ -118,31 +118,15 @@ class OasisToBids(Converter):
 
         write_sessions_tsv(bids_dir, sessions_dict)
 
-        return sessions_dict
-
     def _create_scans_tsv(
         self,
-        clinical_data_dir: Path,
         bids_dir: Path,
-        bids_ids: list[str],
-        sessions: dict,
-    ):
-        from clinica.iotools.bids_utils import (
-            StudyName,
-            create_scans_dict,
-            write_scans_tsv,
+    ) -> None:
+        from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_utils import (
+            write_scans,
         )
 
-        scans_dict = create_scans_dict(
-            clinical_data_dir=clinical_data_dir,
-            study_name=StudyName.OASIS,
-            clinical_specifications_folder=Path(__file__).parents[1] / "specifications",
-            bids_ids=bids_ids,
-            name_column_ids="ID",
-            name_column_ses="",
-            ses_dict=sessions,
-        )
-        write_scans_tsv(bids_dir, bids_ids, scans_dict)
+        write_scans(bids_dir)
 
     def _create_modality_agnostic_files(self, bids_dir: Path):
         from clinica.iotools.bids_utils import StudyName, write_modality_agnostic_files
