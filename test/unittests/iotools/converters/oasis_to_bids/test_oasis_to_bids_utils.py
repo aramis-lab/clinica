@@ -8,7 +8,7 @@ from pandas.testing import assert_frame_equal
 
 from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_utils import (
     create_sessions_dict,
-    write_scans,
+    write_scans_tsv,
     write_sessions_tsv,
 )
 
@@ -183,7 +183,7 @@ def test_write_sessions_tsv(
         assert file.name == f"{file.parent.name}_sessions.tsv"
 
 
-def test_write_scans(tmp_path, bids_dir: Path) -> None:
+def test_write_scans_tsv(tmp_path, bids_dir: Path) -> None:
     image_path = (
         bids_dir
         / "sub-OASIS10001"
@@ -194,7 +194,7 @@ def test_write_scans(tmp_path, bids_dir: Path) -> None:
     image_path.parent.mkdir(parents=True)
     image_path.touch()
 
-    write_scans(bids_dir)
+    write_scans_tsv(bids_dir)
 
     for session_path in bids_dir.rglob("ses-M*"):
         tsv_path = list(session_path.rglob("*scans.tsv"))

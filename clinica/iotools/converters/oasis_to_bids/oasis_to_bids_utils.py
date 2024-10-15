@@ -5,7 +5,7 @@ import pandas as pd
 
 from clinica.iotools.bids_utils import StudyName, bids_id_factory
 
-__all__ = ["create_sessions_dict", "write_sessions_tsv", "write_scans"]
+__all__ = ["create_sessions_dict", "write_sessions_tsv", "write_scans_tsv"]
 
 
 def create_sessions_dict(
@@ -106,18 +106,14 @@ def write_sessions_tsv(bids_dir: Path, sessions_dict: dict) -> None:
         )
 
 
-def write_scans(
-    bids_dir: Path,
-) -> None:
+def write_scans_tsv(bids_dir: Path) -> None:
     """
     Write the scans.tsv file at the root of baseline sessions (ses-M000).
 
     Parameters
     ----------
     bids_dir : Path to the BIDS output
-
     """
-
     for subject_path in bids_dir.rglob("sub-*"):
         if subject_path.is_dir():
             to_write = pd.DataFrame(

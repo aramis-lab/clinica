@@ -118,15 +118,10 @@ class OasisToBids(Converter):
 
         write_sessions_tsv(bids_dir, sessions_dict)
 
-    def _create_scans_tsv(
-        self,
-        bids_dir: Path,
-    ) -> None:
-        from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_utils import (
-            write_scans,
-        )
+    def _create_scans_tsv(self, bids_dir: Path) -> None:
+        from .oasis_to_bids_utils import write_scans_tsv
 
-        write_scans(bids_dir)
+        write_scans_tsv(bids_dir)
 
     def _create_modality_agnostic_files(self, bids_dir: Path):
         from clinica.iotools.bids_utils import StudyName, write_modality_agnostic_files
