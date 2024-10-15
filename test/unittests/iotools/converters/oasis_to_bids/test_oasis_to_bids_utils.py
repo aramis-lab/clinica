@@ -1,3 +1,4 @@
+from os import write
 from pathlib import Path
 
 import numpy as np
@@ -7,6 +8,7 @@ from pandas.testing import assert_frame_equal
 
 from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_utils import (
     create_sessions_dict,
+    write_scans_tsv,
     write_sessions_tsv,
 )
 
@@ -179,3 +181,33 @@ def test_write_sessions_tsv(
             check_dtype=False,
         )
         assert file.name == f"{file.parent.name}_sessions.tsv"
+
+
+def test_write_scans_tsv(tmp_path, bids_dir: Path) -> None:
+    image_path = (
+        bids_dir
+        / "sub-OASIS10001"
+        / "ses-M000"
+        / "anat"
+        / "sub-OASIS10001_ses-M000_T1.nii.gz"
+    )
+    image_path.parent.mkdir(parents=True)
+    image_path.touch()
+
+    write_scans_tsv(bids_dir)
+
+    for session_path in bids_dir.rglob("ses-M*"):
+        tsv_path = list(session_path.rglob("*scans.tsv"))
+        if session_path.name != "ses-M000":
+            assert not tsv_path
+        else:
+            assert len(tsv_path) == 1
+            sub = session_path.parent.name
+            assert (
+                tsv_path[0] == bids_dir / sub / "ses-M000" / f"{sub}_ses-M000_scans.tsv"
+            )
+            file = pd.read_csv(tsv_path[0], sep="\t")
+            if sub == "sub-OASIS10001":
+                assert file["filename"].loc[0] == f"anat/{image_path.name}"
+            elif sub == "sub-OASIS10002":
+                assert file.empty
