@@ -93,7 +93,7 @@ def test_study_to_bids_id_value_error(study, study_id):
 
 
 @pytest.mark.parametrize(
-    "study,expected,bids_id",
+    "study,source_id,bids_id",
     [
         (StudyName.ADNI, "001_S_0001", "sub-ADNI001S0001"),
         (StudyName.NIFD, "1_S_0001", "sub-NIFD1S0001"),
@@ -106,10 +106,10 @@ def test_study_to_bids_id_value_error(study, study_id):
         (StudyName.IXI, "IXI001", "sub-IXI001"),
     ],
 )
-def test_bids_to_study(study, bids_id, expected):
+def test_bids_to_study(study, bids_id, source_id):
     from clinica.iotools.bids_utils import bids_id_factory
 
-    assert bids_id_factory(study).to_original_study_id(bids_id) == expected
+    assert bids_id_factory(study)(bids_id).to_original_study_id() == source_id
 
 
 def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
