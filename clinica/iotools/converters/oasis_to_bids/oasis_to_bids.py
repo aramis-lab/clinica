@@ -102,23 +102,24 @@ class OasisToBids(Converter):
             encoding="utf-8",
         )
 
+    @staticmethod
     def _create_sessions_tsv(
-        self,
         clinical_data_dir: Path,
         bids_dir: Path,
         bids_ids: list[str],
     ) -> None:
-        from .oasis_to_bids_utils import create_sessions_dict, write_sessions_tsv
+        from .oasis_to_bids_utils import create_sessions_df, write_sessions_tsv
 
-        sessions_dict = create_sessions_dict(
+        sessions_df = create_sessions_df(
             clinical_data_dir=clinical_data_dir,
             clinical_specifications_folder=Path(__file__).parents[1] / "specifications",
             bids_ids=bids_ids,
         )
 
-        write_sessions_tsv(bids_dir, sessions_dict)
+        write_sessions_tsv(bids_dir, sessions_df)
 
-    def _create_scans_tsv(self, bids_dir: Path) -> None:
+    @staticmethod
+    def _create_scans_tsv(bids_dir: Path) -> None:
         from .oasis_to_bids_utils import write_scans_tsv
 
         write_scans_tsv(bids_dir)
