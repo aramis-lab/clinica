@@ -292,7 +292,7 @@ class HABSBIDSSubjectID(BIDSSubjectID):
         )
 
     def to_original_study_id(self) -> str:
-        return str(self.replace("sub-HABS", "P_"))
+        return str(self).replace("sub-HABS", "P_")
 
 
 class IXIBIDSSubjectID(BIDSSubjectID):
@@ -317,7 +317,7 @@ class IXIBIDSSubjectID(BIDSSubjectID):
         )
 
     def to_original_study_id(self) -> str:
-        return str(self.replace("sub-", ""))
+        return str(self).replace("sub-", "")
 
 
 # -- Methods for the clinical data --
