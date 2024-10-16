@@ -2,22 +2,19 @@ from pathlib import Path
 from typing import Iterable, Union
 
 import pandas as pd
-from jinja2.utils import missing
 
 from clinica.iotools.bids_utils import StudyName, bids_id_factory
-from clinica.utils.stream import cprint
 
 __all__ = ["create_sessions_df", "write_sessions_tsv", "write_scans_tsv"]
 
 
 def _convert_cdr_to_diagnosis(cdr: Union[int, str]) -> str:
-    # todo : test
-    if cdr == int(0):
+    if cdr == 0:
         return "CN"
-    elif cdr == "n/a":
-        return cdr
-    else:
+    elif isinstance(cdr, int) and cdr > 0:
         return "AD"
+    else:
+        return "n/a"
 
 
 def create_sessions_df(

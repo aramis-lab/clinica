@@ -1,4 +1,3 @@
-from os import write
 from pathlib import Path
 
 import numpy as np
@@ -7,6 +6,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_utils import (
+    _convert_cdr_to_diagnosis,
     create_sessions_df,
     write_scans_tsv,
     write_sessions_tsv,
@@ -234,3 +234,17 @@ def test_write_scans_tsv(tmp_path, bids_dir: Path) -> None:
                 assert file["filename"].loc[0] == f"anat/{image_path.name}"
             elif sub == "sub-OASIS10002":
                 assert file.empty
+
+
+@pytest.mark.parametrize(
+    "cdr,diagnosis",
+    [
+        (0, "CN"),
+        (12, "AD"),
+        (-2, "n/a"),
+        ("n/a", "n/a"),
+        ("foo", "n/a"),
+    ],
+)
+def test_convert_cdr_to_diagnosis(cdr, diagnosis):
+    assert diagnosis == _convert_cdr_to_diagnosis(cdr)
