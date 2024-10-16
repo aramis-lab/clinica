@@ -879,6 +879,12 @@ def remove_space_and_symbols(data: Union[str, List[str]]) -> Union[str, List[str
     return re.sub("[-_ ]", "", data)
 
 
+def write_json():
+    # todo : calls json_from_dcm + other for manually inferred keys + write
+    pass
+
+
+# todo : can this function be used elsewhere ? (yes if dicom I guess)
 def json_from_dcm(dcm_dir: Path, json_path: Path) -> None:
     """Writes descriptive JSON file from DICOM header.
 
@@ -900,19 +906,22 @@ def json_from_dcm(dcm_dir: Path, json_path: Path) -> None:
         "Manufacturer": Tag(("0008", "0070")),
         "ManufacturersModelName": Tag(("0008", "1090")),
         "SoftwareVersions": Tag(("0018", "1020")),
-        "BodyPart": Tag(("0018", "0015")),
-        "Units": Tag(("0054", "1001")),
+        "BodyPart": Tag(("0018", "0015")),  # todo ?
+        "Units": Tag(("0054", "1001")),  # todo ?
+        "MagneticFieldStrength": Tag(("0018", "0087")),
         # Institution
         "InstitutionName": Tag(("0008", "0080")),
         "InstitutionAddress": Tag(("0008", "0081")),
         "InstitutionalDepartmentName": Tag(("0008", "1040")),
-        # MRI
-        "MagneticFieldStrength": Tag(("0018", "0087")),
-        # PET
-        "InjectedRadioactivity": Tag(("0018", "1074")),
-        "MolarActivity": Tag(("0018", "1077")),
-        "InjectionStart": Tag(("0018", "1042")),
+        # Time
+        "TimeZero": Tag(("0018", "1072")),
+        "ScanStart": Tag(("0018", "1072")),
+        "InjectionStart": Tag(("0018", "1072")),
         "FrameDuration": Tag(("0018", "1242")),
+        # Radiochemistry
+        "TracerName": Tag(("0008", "0105")),
+        "TracerRadionuclide": Tag(("0008", "0104")),
+        "InjectedRadioactivity": Tag(("0018", "1074")),
     }
 
     try:
@@ -921,6 +930,17 @@ def json_from_dcm(dcm_dir: Path, json_path: Path) -> None:
         json_dict = {
             key: ds.get(tag).value for key, tag in fields_dict.items() if tag in ds
         }
+
+        # todo : ADD if key not found, n/a
+        # todo : "InjectedRadioactivityUnits" required (MBq), how ?
+        # todo : "InjectedMass" : "InjectedRadioactivity" / "MolarRadioactivity" -> need both else n/a
+        # todo : "InjectedMassUnits", "SpecificRadioactivity", "SpecificRadioactivityUnits"
+        # todo : "ModeOfAdministration" : bolus-infusion ADNI, same for AIBL ?
+
+        # todo : "FrameTimesStart"
+
+        # todo : do specific function for dicoms tags / other need to be added 'manually'
+
         with open(json_path, "w") as f:
             f.write(json.dumps(json_dict, skipkeys=True, indent=4))
     except IndexError:
