@@ -76,7 +76,8 @@ def create_sessions_df(
     sessions_df["diagnosis"] = sessions_df["diagnosis"].apply(
         lambda x: _convert_cdr_to_diagnosis(x)
     )
-    sessions_df["session_id"] = "ses-M000"
+
+    sessions_df.insert(loc=0, column="session_id", value="ses-M000")
 
     return sessions_df
 
