@@ -12,6 +12,7 @@ from typing import BinaryIO, List, Optional, Type, Union
 import pandas as pd
 
 from clinica.utils.pet import Tracer
+from clinica.utils.stream import cprint
 
 
 class StudyName(str, Enum):
@@ -356,7 +357,6 @@ def create_participants_df(
     import numpy as np
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
-    from clinica.utils.stream import cprint
 
     fields_bids = ["participant_id"]
     prev_location = ""
@@ -507,7 +507,6 @@ def create_scans_dict(
     import datetime
 
     from clinica.utils.pet import Tracer
-    from clinica.utils.stream import cprint
 
     scans_dict = {}
     prev_file = ""
@@ -879,72 +878,81 @@ def remove_space_and_symbols(data: Union[str, List[str]]) -> Union[str, List[str
     return re.sub("[-_ ]", "", data)
 
 
-def write_json():
-    # todo : calls json_from_dcm + other for manually inferred keys + write
-    pass
+# todo : can this be used for other than AIBL ?
+# todo : test
+class BidsCompliantJson:
+    def __init__(self):
+        from pydicom.tag import Tag
 
-
-# todo : can this function be used elsewhere ? (yes if dicom I guess)
-def json_from_dcm(dcm_dir: Path, json_path: Path) -> None:
-    """Writes descriptive JSON file from DICOM header.
-
-    Parameters
-    ----------
-    dcm_dir : Path
-        The path to the DICOM directory.
-
-    json_path : Path
-        The path to the output JSON file.
-    """
-    from pydicom import dcmread
-    from pydicom.tag import Tag
-
-    from clinica.utils.stream import cprint
-
-    fields_dict = {
-        "DeviceSerialNumber": Tag(("0018", "1000")),
-        "Manufacturer": Tag(("0008", "0070")),
-        "ManufacturersModelName": Tag(("0008", "1090")),
-        "SoftwareVersions": Tag(("0018", "1020")),
-        "BodyPart": Tag(("0018", "0015")),  # todo ?
-        "Units": Tag(("0054", "1001")),  # todo ?
-        "MagneticFieldStrength": Tag(("0018", "0087")),
-        # Institution
-        "InstitutionName": Tag(("0008", "0080")),
-        "InstitutionAddress": Tag(("0008", "0081")),
-        "InstitutionalDepartmentName": Tag(("0008", "1040")),
-        # Time
-        "TimeZero": Tag(("0018", "1072")),
-        "ScanStart": Tag(("0018", "1072")),
-        "InjectionStart": Tag(("0018", "1072")),
-        "FrameDuration": Tag(("0018", "1242")),
-        # Radiochemistry
-        "TracerName": Tag(("0008", "0105")),
-        "TracerRadionuclide": Tag(("0008", "0104")),
-        "InjectedRadioactivity": Tag(("0018", "1074")),
-    }
-
-    try:
-        dcm_path = [f for f in dcm_dir.glob("*.dcm")][0]
-        ds = dcmread(dcm_path)
-        json_dict = {
-            key: ds.get(tag).value for key, tag in fields_dict.items() if tag in ds
+        self.dcm_dict = {
+            "DeviceSerialNumber": Tag(("0018", "1000")),
+            "Manufacturer": Tag(("0008", "0070")),
+            "ManufacturersModelName": Tag(("0008", "1090")),
+            "SoftwareVersions": Tag(("0018", "1020")),
+            "BodyPart": Tag(("0018", "0015")),
+            "MagneticFieldStrength": Tag(("0018", "0087")),
+            # Institution
+            "InstitutionName": Tag(("0008", "0080")),
+            "InstitutionAddress": Tag(("0008", "0081")),
+            "InstitutionalDepartmentName": Tag(("0008", "1040")),
+            # Time
+            "TimeZero": Tag(("0018", "1072")),
+            "ScanStart": Tag(("0018", "1072")),
+            "InjectionStart": Tag(("0018", "1072")),
+            "FrameDuration": Tag(("0018", "1242")),
+            # Radiochemistry
+            "TracerName": Tag(("0008", "0105")),
+            "TracerRadionuclide": Tag(("0008", "0104")),
+            "InjectedRadioactivity": Tag(("0018", "1074")),
+            "InjectedRadioactivityUnits": Tag(("0054", "1001")),
+            "SpecificRadioactivity": Tag(("0018", "1077")),
+        }
+        # todo : rename
+        self.other_dict = {
+            "FrameTimesStart": "n/a",
+            "InjectedMass": "n/a",
+            "InjectedMassUnits": "n/a",
+            "SpecificRadioactivityUnits": "Bq/micromole",
+            "ModeOfAdministration": "n/a",
         }
 
-        # todo : ADD if key not found, n/a
-        # todo : "InjectedRadioactivityUnits" required (MBq), how ?
+    def _update_dcm_dict(self, dcm_dir: Path) -> None:
+        from pydicom import dcmread
+
+        try:
+            dcm_path = [f for f in dcm_dir.glob("*.dcm")][0]
+            ds = dcmread(dcm_path)
+
+            self.dcm_dict = {
+                key: ds.get(tag).value if tag in ds else "n/a"
+                for key, tag in self.dcm_dict.items()
+            }
+        except IndexError:
+            cprint(msg=f"No DICOM found at {dcm_dir}", lvl="warning")
+            self.dcm_dict = {key: "n/a" for key in self.dcm_dict.keys()}
+
+    def _get_admin_mode_from_study(self, study: StudyName) -> None:
+        # todo : do we know for others ?
+        if study == StudyName.ADNI:
+            self.other_dict["ModeOfAdministration"] = "bolus-infusion"
+
+    def _get_injected_mass(self) -> None:
         # todo : "InjectedMass" : "InjectedRadioactivity" / "MolarRadioactivity" -> need both else n/a
-        # todo : "InjectedMassUnits", "SpecificRadioactivity", "SpecificRadioactivityUnits"
-        # todo : "ModeOfAdministration" : bolus-infusion ADNI, same for AIBL ?
+        pass
 
-        # todo : "FrameTimesStart"
+    def _update_other_dict(self, study: StudyName) -> None:
+        self._get_admin_mode_from_study(study)
+        self._get_injected_mass()
 
-        # todo : do specific function for dicoms tags / other need to be added 'manually'
+    def _build_dict(self, dcm_dir: Path, study: StudyName) -> dict:
+        self._update_dcm_dict(dcm_dir)
+        self._update_other_dict(study)
+        return {**self.dcm_dict, **self.other_dict}
 
+    def write_json(self, dcm_dir: Path, json_path: Path, study: StudyName):
+        json_dict = self._build_dict(dcm_dir, study)
         with open(json_path, "w") as f:
             f.write(json.dumps(json_dict, skipkeys=True, indent=4))
-    except IndexError:
-        cprint(msg=f"No DICOM found at {dcm_dir}", lvl="warning")
 
 
 def _build_dcm2niix_command(
@@ -998,8 +1006,6 @@ def run_dcm2niix(
         True if the conversion was successful, False otherwise.
     """
     import subprocess
-
-    from clinica.utils.stream import cprint
 
     cprint(f"Attempting to convert {output_fmt}.", lvl="debug")
     command = _build_dcm2niix_command(
