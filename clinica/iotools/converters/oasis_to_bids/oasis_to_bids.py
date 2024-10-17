@@ -145,8 +145,16 @@ class OasisToBids(Converter):
 
     @staticmethod
     def convert_single_subject(subj_folder: Path, dest_dir: Path):
+        from clinica.cmdline import setup_clinica_logging
         from clinica.iotools.bids_utils import StudyName, bids_id_factory
         from clinica.utils.stream import cprint
+
+        # This function is executed in a multiprocessing context
+        # such that we need to re-configure the clinica logger in the child processes.
+        # Note that logging messages could easily be lost (for example when logging
+        # to a file from two different processes). A better solution would be to
+        # implement a logging process consuming logging messages from a multiprocessing.Queue...
+        setup_clinica_logging("INFO")
 
         t1_folder = subj_folder / "PROCESSED" / "MPRAGE" / "SUBJ_111"
         cprint(f"Converting {subj_folder.name}", lvl="info")
