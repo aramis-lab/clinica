@@ -675,6 +675,7 @@ def _create_file(
         if output_path.with_suffix(".nii.gz").exists():
             output_path.with_suffix(".nii.gz").unlink()
         output_image = _dicom_to_nii(output_path, image_path)
+        # todo : there, it does it whatever the modality
         BidsCompliantJson().write_json(
             image_path, output_path.with_suffix(".json"), StudyName.AIBL
         )

@@ -881,73 +881,96 @@ def remove_space_and_symbols(data: Union[str, List[str]]) -> Union[str, List[str
 # todo : can this be used for other than AIBL ?
 # todo : test
 class BidsCompliantJson:
+    """For BIDS 1.10 compliance"""
+
     def __init__(self):
         from pydicom.tag import Tag
 
-        self.dcm_dict = {
+        self.from_dcm = {
+            # Hardware
             "DeviceSerialNumber": Tag(("0018", "1000")),
-            "Manufacturer": Tag(("0008", "0070")),
-            "ManufacturersModelName": Tag(("0008", "1090")),
+            "Manufacturer": Tag(("0008", "0070")),  # Manufacturer
+            "ManufacturersModelName": Tag(("0008", "1090")),  # ManufacturersModelName
             "SoftwareVersions": Tag(("0018", "1020")),
-            "BodyPart": Tag(("0018", "0015")),
+            "BodyPart": Tag(("0018", "0015")),  # BodyPartExamined
             "MagneticFieldStrength": Tag(("0018", "0087")),
+            "Units": Tag(("0054", "1001")),  # Units
             # Institution
-            "InstitutionName": Tag(("0008", "0080")),
-            "InstitutionAddress": Tag(("0008", "0081")),
-            "InstitutionalDepartmentName": Tag(("0008", "1040")),
+            "InstitutionName": Tag(("0008", "0080")),  # InstitutionName
+            "InstitutionAddress": Tag(("0008", "0081")),  # InstitutionAddress
+            "InstitutionalDepartmentName": Tag(
+                ("0008", "1040")
+            ),  # InstitutionalDepartmentName
             # Time
             "TimeZero": Tag(("0018", "1072")),
             "ScanStart": Tag(("0018", "1072")),
             "InjectionStart": Tag(("0018", "1072")),
             "FrameDuration": Tag(("0018", "1242")),
             # Radiochemistry
-            "TracerName": Tag(("0008", "0105")),
-            "TracerRadionuclide": Tag(("0008", "0104")),
+            "TracerName": Tag(("0008", "0105")),  # MappingResource
+            "TracerRadionuclide": Tag(("0008", "0104")),  #
             "InjectedRadioactivity": Tag(("0018", "1074")),
-            "InjectedRadioactivityUnits": Tag(("0054", "1001")),
             "SpecificRadioactivity": Tag(("0018", "1077")),
+            # Reconstruction
+            "AcquisitionMode": 1,  # todo :find
+            "ImageDecayCorrected": 1,
+            "ImageDecayCorrectionTime": 1,
+            "ReconMethodName": 1,
+            "ReconMethodParameterLabels": 1,
+            "ReconMethodParameterUnits": 1,
+            "ReconMethodParameterValues": 1,
+            "ReconFilterType": 1,
+            "ReconFilterSize": 1,
+            "AttenuationCorrection": 1,
+            "InfusionRadioactivity": 0,  # todo : if MOA == bolus-infusion
+            "InfusionStart": 0,
+            "InfusionSpeed": 0,
+            "InfusionSpeedUnits": 0,
+            "InjectedVolume": 0,
         }
-        # todo : rename
-        self.other_dict = {
+        self.not_from_dcm = {
+            # Time
             "FrameTimesStart": "n/a",
+            # Radiochemistry
             "InjectedMass": "n/a",
             "InjectedMassUnits": "n/a",
+            "InjectedRadioactivityUnits": "n/a",
             "SpecificRadioactivityUnits": "Bq/micromole",
             "ModeOfAdministration": "n/a",
         }
 
-    def _update_dcm_dict(self, dcm_dir: Path) -> None:
+    def _update_from_dcm(self, dcm_dir: Path) -> None:
         from pydicom import dcmread
 
         try:
             dcm_path = [f for f in dcm_dir.glob("*.dcm")][0]
             ds = dcmread(dcm_path)
 
-            self.dcm_dict = {
+            self.from_dcm = {
                 key: ds.get(tag).value if tag in ds else "n/a"
-                for key, tag in self.dcm_dict.items()
+                for key, tag in self.from_dcm.items()
             }
         except IndexError:
             cprint(msg=f"No DICOM found at {dcm_dir}", lvl="warning")
-            self.dcm_dict = {key: "n/a" for key in self.dcm_dict.keys()}
+            self.from_dcm = {key: "n/a" for key in self.from_dcm.keys()}
 
     def _get_admin_mode_from_study(self, study: StudyName) -> None:
         # todo : do we know for others ?
         if study == StudyName.ADNI:
-            self.other_dict["ModeOfAdministration"] = "bolus-infusion"
+            self.not_from_dcm["ModeOfAdministration"] = "bolus-infusion"
 
     def _get_injected_mass(self) -> None:
         # todo : "InjectedMass" : "InjectedRadioactivity" / "MolarRadioactivity" -> need both else n/a
         pass
 
-    def _update_other_dict(self, study: StudyName) -> None:
+    def _update_not_from_dcm(self, study: StudyName) -> None:
         self._get_admin_mode_from_study(study)
         self._get_injected_mass()
 
     def _build_dict(self, dcm_dir: Path, study: StudyName) -> dict:
-        self._update_dcm_dict(dcm_dir)
-        self._update_other_dict(study)
-        return {**self.dcm_dict, **self.other_dict}
+        self._update_from_dcm(dcm_dir)
+        self._update_not_from_dcm(study)
+        return {**self.from_dcm, **self.not_from_dcm}
 
     def write_json(self, dcm_dir: Path, json_path: Path, study: StudyName):
         json_dict = self._build_dict(dcm_dir, study)
