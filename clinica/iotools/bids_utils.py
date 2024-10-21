@@ -401,6 +401,17 @@ def create_participants_df(
                     file_to_read = load_clinical_csv(
                         clinical_data_dir, location.split(".")[0]
                     )
+                    if location == "APOERES.csv":
+                        if (
+                            "APGEN1" not in file_to_read.columns
+                            and "GENOTYPE" in file_to_read.columns
+                        ):
+                            # Split the 'GENOTYPE' column into 'APGEN1' and 'APGEN2'
+                            genotype = file_to_read["GENOTYPE"].str.split(
+                                "/", expand=True
+                            )
+                            file_to_read.assign(APGEN1=genotype[0], APGEN2=genotype[1])
+
                 prev_location = location
                 prev_sheet = sheet
 
