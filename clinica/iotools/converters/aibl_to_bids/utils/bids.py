@@ -630,7 +630,8 @@ def _create_file(
     Path or None :
         Path to file
     """
-    from clinica.iotools.bids_utils import BidsCompliantJson, StudyName, bids_id_factory
+    from clinica.iotools.bids_json import BidsCompliantJson
+    from clinica.iotools.bids_utils import StudyName, bids_id_factory
     from clinica.iotools.converter_utils import viscode_to_session
     from clinica.iotools.utils.data_handling import center_nifti_origin
     from clinica.utils.stream import cprint
