@@ -401,7 +401,9 @@ def create_participants_df(
                     file_to_read = load_clinical_csv(
                         clinical_data_dir, location.split(".")[0]
                     )
-                    if location == "APOERES.csv":
+                    # Condition to handle ADNI modification of file APOERES.csv
+                    # See issue https://github.com/aramis-lab/clinica/issues/1294
+                    if study_name == StudyName.ADNI and location == "APOERES.csv":
                         if (
                             "APGEN1" not in file_to_read.columns
                             and "GENOTYPE" in file_to_read.columns
