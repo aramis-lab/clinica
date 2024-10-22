@@ -236,7 +236,7 @@ def test_compute_session_id(csv_filename, visit_code_column_name):
 
 
 @pytest.fixture
-def input_df():
+def input_df() -> pd.DataFrame:
     return pd.DataFrame(
         {
             "foo": ["foo1", "foo2", "foo3"],
@@ -255,6 +255,7 @@ def test_load_clinical_csv(tmp_path, input_df, csv_name, csv_to_look_for):
     from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
 
     input_df.to_csv(tmp_path / csv_name, index=False)
+    pd.DataFrame().to_csv(tmp_path / f".{csv_name}")
     assert_frame_equal(load_clinical_csv(tmp_path, csv_to_look_for), input_df)
 
 
@@ -278,8 +279,6 @@ def test_load_clinical_csv_error(
 
 
 def test_load_clinical_csv_value_error(tmp_path):
-    import re
-
     from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
 
     with open(tmp_path / "adnimerge.csv", "w") as fp:
