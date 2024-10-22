@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
-from types import NoneType
-from typing import Iterable, Tuple, Union
+from typing import Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -15,6 +14,14 @@ from .bids_utils import StudyName
 # todo : can this be used for other than AIBL ?
 # todo : test
 # todo : should do specific construction depending on modality ?
+# todo : clarify class and use, what it will return...
+# Currently done there for AIBL, PET (applied for all though)
+
+
+def write_json(json_path: Path, json_dict: dict):
+    # todo : maybe exists somewhere else in the code base
+    with open(json_path, "w") as f:
+        f.write(json.dumps(json_dict, indent=4))
 
 
 class BidsCompliantJson:
@@ -76,7 +83,7 @@ class BidsCompliantJson:
                     "n/a",
                 ],
                 ["SpecificRadioactivityUnits", (), "Bq/micromole"],
-                ["ModeOfAdministration", (), "n/a"],  # todo : corresp ?
+                ["ModeOfAdministration", (), "n/a"],
                 # todo : required if bolus-infusion (below)
                 ["InfusionRadioactivity", (), np.nan],  # todo : corresp ?
                 ["InfusionStart", ("RadiopharmaceuticalStartTime",), np.nan],
@@ -145,32 +152,29 @@ class BidsCompliantJson:
             if dcm_value := self._get_dcm_tag(metadata.DCMtag, dicom_header):
                 self.meta_collection.loc[metadata.BIDSname, "Value"] = dcm_value
 
+    def _get_admin_mode_from_study(self, study: StudyName) -> None:
+        # todo : should actually be inferred from time start vs injection
+        if study == StudyName.ADNI:
+            self.meta_collection.loc["ModeOfAdministration", "Value"] = "bolus-infusion"
+
+    def _update_injected_mass(self) -> None:
+        # todo :test
+        injected = self.meta_collection.loc["InjectedRadioactivity", "Value"]
+        specific = self.meta_collection.loc["SpecificRadioactivity", "Value"]
+
+        if not bool(np.isnan(injected)) and specific != "n/a":
+            self.meta_collection.loc["InjectedMass", "Value"] = injected / float(
+                specific
+            )
+            self.meta_collection.loc["InjectedMassUnits", "Value"] = "mole"
+
     def _translate_to_dict(self) -> dict:
         return {
             data.BIDSname: data.Value for _, data in self.meta_collection.iterrows()
         }
 
-    def _build_dict(self, dcm_dir: Path, study: StudyName) -> dict:
+    def build_dict(self, dcm_dir: Path, study: StudyName) -> dict:
         self._update_from_dcm(dcm_dir)
-        # self._update_not_from_dcm
-        # todo
-        return self._translate_to_dict()
-
-    def _get_admin_mode_from_study(self, study: StudyName) -> None:
-        # todo : do we know for others ?
-        if study == StudyName.ADNI:
-            self.not_from_dcm["ModeOfAdministration"] = "bolus-infusion"
-
-    def _get_injected_mass(self) -> None:
-        # todo : "InjectedMass" : "InjectedRadioactivity" / "SpecificRadioactivity" -> need both else n/a
-        # todo : Units : mole
-        pass
-
-    def _update_not_from_dcm(self, study: StudyName) -> None:
         self._get_admin_mode_from_study(study)
-        self._get_injected_mass()
-
-    def write_json(self, dcm_dir: Path, json_path: Path, study: StudyName):
-        json_dict = self._build_dict(dcm_dir, study)
-        with open(json_path, "w") as f:
-            f.write(json.dumps(json_dict, skipkeys=True, indent=4))
+        self._update_injected_mass()
+        return self._translate_to_dict()

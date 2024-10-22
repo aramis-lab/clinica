@@ -630,7 +630,7 @@ def _create_file(
     Path or None :
         Path to file
     """
-    from clinica.iotools.bids_json import BidsCompliantJson
+    from clinica.iotools.bids_json import BidsCompliantJson, write_json
     from clinica.iotools.bids_utils import StudyName, bids_id_factory
     from clinica.iotools.converter_utils import viscode_to_session
     from clinica.iotools.utils.data_handling import center_nifti_origin
@@ -677,9 +677,9 @@ def _create_file(
             output_path.with_suffix(".nii.gz").unlink()
         output_image = _dicom_to_nii(output_path, image_path)
         # todo : there, it does it whatever the modality
-        BidsCompliantJson().write_json(
-            image_path, output_path.with_suffix(".json"), StudyName.AIBL
-        )
+
+        json_dict = BidsCompliantJson().build_dict(image_path, StudyName.AIBL)
+        write_json(output_path.with_suffix(".json"), json_dict)
 
     center_nifti_origin(output_image, output_image)
 
