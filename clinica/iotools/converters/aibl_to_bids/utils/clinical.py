@@ -158,7 +158,7 @@ def create_sessions_tsv_file(
     Parameters
     ----------
     input_path : Path
-        The path to the input folder.
+        The path to the input folder (BIDS directory).
 
     clinical_data_dir : Path
         The path to the directory to the clinical data files.
@@ -231,7 +231,13 @@ def create_sessions_tsv_file(
         exam_dates = _clean_exam_dates(
             rid, exam_date.to_list(), visit_code.to_list(), clinical_data_dir
         )
-        age = _compute_ages_at_each_exam(patient_date_of_birth.values[0], exam_dates)
+
+        if not patient_date_of_birth.empty:
+            age = _compute_ages_at_each_exam(
+                patient_date_of_birth.values[0], exam_dates
+            )
+        else:
+            age = "n/a"
 
         visit_code[visit_code == "bl"] = "M000"
         visit_code = visit_code.str.upper()
@@ -367,8 +373,13 @@ def _compute_ages_at_each_exam(
 
     for exam_date in exam_dates:
         exam_date = datetime.strptime(exam_date, "%m/%d/%Y")
-        delta = exam_date - date_of_birth
-        ages.append(round(delta.days / 365.25, 1))
+        delta = exam_date.year - date_of_birth.year
+        ages.append(delta)
+
+    # todo :rq : what is the use of being so precise ?? we are comparing a year with a full date.. that's false anyway
+    #  we could give ages in years (int, >=0) and just subtract the years
+
+    # todo : what happens if wrong format ? or exam < birth for some reason ?
 
     return ages
 

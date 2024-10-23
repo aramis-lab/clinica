@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -45,7 +46,17 @@ def test_get_first_file_matching_pattern_error(tmp_path, pattern, msg):
         _get_first_file_matching_pattern(tmp_path, pattern)
 
 
-@pytest.mark.parametrize("birth_date, exam_date, age", [("", [""], []), ("", [""], [])])
+@pytest.mark.parametrize(
+    "birth_date, exam_date, age",
+    [
+        (
+            "/2000",
+            ["01/02/2000", "02/01/2000", "01/01/2001", "07/06/2003"],
+            [0, 0, 1, 3],
+        ),
+        ("/2001", ["12/30/2003"], [2]),
+    ],
+)
 def test_compute_age(birth_date, exam_date, age):
     from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
         _compute_ages_at_each_exam,
@@ -94,6 +105,7 @@ def build_clinical_data(tmp_path: Path) -> Path:
     neuro = pd.DataFrame(
         {
             "RID": [1, 2, 12, 100, 100],  # %m/%d/%Y
+            "VISCODE": ["bl", "bl", "bl", "bl", "m12"],
             "EXAMDATE": [
                 "01/01/2001",
                 "01/01/2002",
@@ -106,54 +118,42 @@ def build_clinical_data(tmp_path: Path) -> Path:
     neuro.to_csv(data_path / "aibl_neurobat_230ct2024.csv", index=False)
 
     ptdemog = pd.DataFrame(
-        {"RID": [1, 2, 12, 101], "PTDOB": ["/1901", "/1902", "/1912", "/2001"]}
+        {
+            "RID": [1, 2, 12, 101],
+            "VISCODE": ["bl", "bl", "bl", "bl"],
+            "PTDOB": ["/1901", "/1902", "/1912", "/2001"],
+        }
     )
     ptdemog.to_csv(data_path / "aibl_ptdemog_230ct2024.csv", index=False)
 
     cdr = pd.DataFrame(
-        {"RID": [1, 2, 12, 100, 100], "CDGLOBAL": [-4, 1, 0.5, 0, 0]}
+        {
+            "RID": [1, 2, 12, 100, 100],
+            "VISCODE": ["bl", "bl", "bl", "bl", "m12"],
+            "CDGLOBAL": [-4, 1, 0.5, 0, 0],
+        }
     )  # rq:float
     cdr.to_csv(data_path / "aibl_cdr_230ct2024.csv", index=False)
 
     mmse = pd.DataFrame(
-        {"RID": [1, 2, 12, 100, 100], "MMSCORE": [-4, 10, 10, 30, 29]}
+        {
+            "RID": [1, 2, 12, 100, 100],
+            "VISCODE": ["bl", "bl", "bl", "bl", "m12"],
+            "MMSCORE": [-4, 10, 10, 30, 29],
+        }
     )  # rq:int
     mmse.to_csv(data_path / "aibl_mmse_230ct2024.csv", index=False)
 
     pdx = pd.DataFrame(
-        {"RID": [1, 2, 12, 100, 100], "DXCURREN": [-4, 0, 0, 1, 3]}
+        {
+            "RID": [1, 2, 12, 100, 100],
+            "VISCODE": ["bl", "bl", "bl", "bl", "m12"],
+            "DXCURREN": [-4, 0, 0, 1, 3],
+        }
     )  # rq : int
     pdx.to_csv(data_path / "aibl_pdxconv_230ct2024.csv", index=False)
 
     return data_path
-
-
-def build_expected_sessions() -> pd.DataFrame:
-    expectedsub100 = pd.DataFrame(
-        {
-            "session_id": ["ses-M000", "ses-M012"],
-            "months": ["000", "12"],
-            "age": [],
-            "MMS": [30, 29],
-            "cdr_global": [0, 0],
-            "diagnosis": ["CN", "AD"],
-            "examination_date": ["01/01/2100", "01/12/2100"],
-        }
-    )
-
-    expectedsub1 = pd.DataFrame(
-        {
-            "session_id": ["ses-M000"],
-            "months": ["ses-M000"],
-            "age": [],
-            "MMS": [],
-            "cdr_global": [],
-            "diagnosis": [],
-            "examination_date": [],
-        }
-    )
-
-    return expectedsub100
 
 
 def test_create_sessions_tsv(tmp_path):
@@ -161,5 +161,45 @@ def test_create_sessions_tsv(tmp_path):
         create_sessions_tsv_file,
     )
 
-    spec_path = build_sessions_spec(tmp_path)
-    clinical_data_path = build_clinical_data(tmp_path)
+    bids_path = build_bids_dir(tmp_path)
+
+    create_sessions_tsv_file(
+        input_path=bids_path,
+        clinical_data_dir=build_clinical_data(tmp_path),
+        clinical_specifications_folder=build_sessions_spec(tmp_path),
+    )
+    result_sub100_list = list(bids_path.rglob("*sub-AIBL100_sessions.tsv"))
+    result_sub1_list = list(bids_path.rglob("*sub-AIBL1_sessions.tsv"))
+
+    assert len(result_sub100_list) == 1
+    assert len(result_sub1_list) == 1
+
+    result_sub100 = pd.read_csv(result_sub100_list[0], sep="\t")
+    result_sub1 = pd.read_csv(result_sub1_list[0], sep="\t")
+
+    expected_sub100 = pd.DataFrame(
+        {
+            "session_id": ["ses-M000", "ses-M012"],
+            "months": [0, 12],
+            "age": [np.nan, np.nan],
+            "MMS": [30, 29],
+            "cdr_global": [0.0, 0.0],
+            "diagnosis": ["CN", "AD"],
+            "examination_date": ["01/01/2100", "12/01/2100"],
+        }
+    )
+
+    expected_sub1 = pd.DataFrame(
+        {
+            "session_id": ["ses-M000"],
+            "months": [0],
+            "age": [100],
+            "MMS": [np.nan],
+            "cdr_global": [np.nan],
+            "diagnosis": [np.nan],
+            "examination_date": ["01/01/2001"],
+        }
+    )
+
+    assert expected_sub1.equals(result_sub1)
+    assert expected_sub100.equals(result_sub100)
