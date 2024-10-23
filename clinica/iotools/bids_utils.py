@@ -406,13 +406,16 @@ def create_participants_df(
                     if study_name == StudyName.ADNI and location == "APOERES.csv":
                         if (
                             "APGEN1" not in file_to_read.columns
+                            or "APGEN2" not in file_to_read.columns
                             and "GENOTYPE" in file_to_read.columns
                         ):
                             # Split the 'GENOTYPE' column into 'APGEN1' and 'APGEN2'
                             genotype = file_to_read["GENOTYPE"].str.split(
                                 "/", expand=True
                             )
-                            file_to_read.assign(APGEN1=genotype[0], APGEN2=genotype[1])
+                            file_to_read = file_to_read.assign(
+                                APGEN1=genotype[0], APGEN2=genotype[1]
+                            )
 
                 prev_location = location
                 prev_sheet = sheet

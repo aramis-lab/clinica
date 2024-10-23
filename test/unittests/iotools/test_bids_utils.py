@@ -1,6 +1,6 @@
 from pathlib import Path
 from string import Template
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -112,7 +112,7 @@ def test_bids_to_study(study, bids_id, source_id):
     assert bids_id_factory(study)(bids_id).to_original_study_id() == source_id
 
 
-def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
+def create_participants_spec(tmp_path: Path) -> Path:
     spec_df = pd.DataFrame(
         {
             "BIDS CLINICA": [
@@ -142,6 +142,12 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
     )
     spec_df.to_csv(tmp_path / "participant.tsv", sep="\t", index=False)
 
+    return tmp_path
+
+
+def create_clinical_data(
+    tmp_path: Path, study_name: StudyName, adni_genotype: Optional[bool] = False
+) -> Path:
     clinical_path = tmp_path / "clinical_data"
     clinical_path.mkdir()
 
@@ -160,14 +166,25 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
                 "AGE": ["40", "50", "60", "70", "80", None],
             }
         )
+
         df_apoeres = pd.DataFrame(
             {
                 "APGEN1": ["3", "3", "3", "3", None, "3"],
                 "GEN2": ["2", "2", "2", "2", None, "2"],
             }
         )
+
+        if adni_genotype:
+            df_apoeres = pd.DataFrame(
+                {
+                    "GENOTYPE": ["3/2", "3/2", "3/2", "3/2", None, "3/2"],
+                    "GEN2": ["2", "2", "2", "2", None, "2"],
+                }
+            )
+
         df_adnimerge.to_csv(clinical_path / "ADNIMERGE.csv", index=False)
         df_apoeres.to_csv(clinical_path / "APOERES.csv", index=False)
+
     if study_name == StudyName.OASIS:
         df_oasis = pd.DataFrame(
             {
@@ -189,7 +206,7 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
 
 
 @pytest.mark.parametrize(
-    "study_name, bids_ids, expected",
+    "study_name, bids_ids, expected, adni_genotype",
     [
         (
             StudyName.OASIS,
@@ -201,6 +218,7 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
                     "sex": ["F"],
                 }
             ),
+            False,
         ),
         (
             StudyName.ADNI,
@@ -210,9 +228,10 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
                     "participant_id": ["sub-ADNI001S0001"],
                     "alternative_id_1": ["001_S_0001"],
                     "sex": ["Male"],
-                    "apoegen1": [3.0],
+                    "apoegen1": ["3"],
                 }
             ),
+            True,
         ),
         (
             StudyName.OASIS,
@@ -224,6 +243,7 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
                     "sex": ["M", "M"],
                 }
             ),
+            False,
         ),
         (
             StudyName.ADNI,
@@ -236,6 +256,7 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
                     "apoegen1": ["n/a"],
                 }
             ),
+            False,
         ),
         (
             StudyName.ADNI,
@@ -248,18 +269,20 @@ def create_clinical_data(tmp_path: Path, study_name: StudyName) -> Path:
                     "apoegen1": [3.0],
                 }
             ),
+            False,
         ),
     ],
 )
-def test_create_participants_df(tmp_path, bids_ids, expected, study_name):
+def test_create_participants_df(
+    tmp_path, bids_ids, expected, study_name, adni_genotype
+):
     from clinica.iotools.bids_utils import create_participants_df
 
-    clinical_path = create_clinical_data(tmp_path, study_name)
     assert (
         create_participants_df(
             study_name,
-            clinical_specifications_folder=tmp_path,
-            clinical_data_dir=clinical_path,
+            clinical_specifications_folder=create_participants_spec(tmp_path),
+            clinical_data_dir=create_clinical_data(tmp_path, study_name, adni_genotype),
             bids_ids=bids_ids,
         )
         .reset_index(drop=True)
