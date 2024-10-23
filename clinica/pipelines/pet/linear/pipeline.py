@@ -66,7 +66,12 @@ class PETLinear(PETPipeline):
             ClinicaException,
         )
         from clinica.utils.image import get_mni_template
-        from clinica.utils.input_files import T1W_NII, T1W_TO_MNI_TRANSFORM, T1W_LINEAR, T1W_LINEAR_CROPPED
+        from clinica.utils.input_files import (
+            T1W_LINEAR,
+            T1W_LINEAR_CROPPED,
+            T1W_NII,
+            T1W_TO_MNI_TRANSFORM,
+        )
         from clinica.utils.inputs import (
             clinica_file_reader,
             format_clinica_file_reader_errors,
@@ -112,7 +117,7 @@ class PETLinear(PETPipeline):
         if t1w_linear_errors:
             raise ClinicaCAPSError(
                 format_clinica_file_reader_errors(
-                    t1w_linear_errors, t1w_linear_file_pattern 
+                    t1w_linear_errors, t1w_linear_file_pattern
                 )
             )
         # Transformation files from T1w files to MNI:
@@ -146,7 +151,7 @@ class PETLinear(PETPipeline):
                 (read_input_node, self.input_node, [("t1w", "t1w")]),
                 (read_input_node, self.input_node, [("pet", "pet")]),
                 (read_input_node, self.input_node, [("t1w_to_mni", "t1w_to_mni")]),
-                (read_input_node, self.input_node, [("t1w_linear", "t1w_linear")])
+                (read_input_node, self.input_node, [("t1w_linear", "t1w_linear")]),
             ]
         )
 
