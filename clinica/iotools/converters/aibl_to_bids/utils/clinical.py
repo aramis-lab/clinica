@@ -153,7 +153,7 @@ def create_sessions_tsv_file(
     clinical_data_dir: Path,
     clinical_specifications_folder: Path,
 ) -> None:
-    """Extract the information regarding the sessions and save them in a tsv file.
+    """Extract the information regarding a subject sessions and save them in a tsv file.
 
     Parameters
     ----------
@@ -211,7 +211,9 @@ def create_sessions_tsv_file(
 
                 elif field in list(df.columns.values) and field == "CDGLOBAL":
                     cd_global = df.loc[(df["RID"] == rid), field]
-                    cd_global[cd_global == -4] = "n/a"
+                    cd_global[
+                        cd_global == -4
+                    ] = "n/a"  # todo : do that mapping later, same for other fields
 
                 elif field in list(df.columns.values) and field == "DXCURREN":
                     dx_curren = df.loc[(df["RID"] == rid), field]
