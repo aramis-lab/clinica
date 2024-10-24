@@ -294,7 +294,7 @@ def _find_exam_date_in_other_csv_files(
     rid: str, visit_code: str, clinical_data_dir: Path
 ) -> Optional[str]:
     """Try to find an alternative exam date by searching in other CSV files."""
-    for csv_file in _get_cvs_files(clinical_data_dir):
+    for csv_file in _get_csv_files(clinical_data_dir):
         if "aibl_flutemeta" in csv_file:
             csv_data = pd.read_csv(
                 csv_file, low_memory=False, usecols=list(range(0, 36))
@@ -307,7 +307,7 @@ def _find_exam_date_in_other_csv_files(
     return None
 
 
-def _get_cvs_files(clinical_data_dir: Path) -> List[str]:
+def _get_csv_files(clinical_data_dir: Path) -> List[str]:
     """Return a list of paths to CSV files in which an alternative exam date could be found."""
     import glob
 

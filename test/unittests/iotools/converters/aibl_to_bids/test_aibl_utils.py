@@ -5,6 +5,30 @@ import pandas as pd
 import pytest
 
 
+def test_load_specifications_success(tmp_path):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        _load_specifications,
+    )
+
+    filename = "foo.tsv"
+    file = pd.DataFrame(columns=["foo"])
+    file.to_csv(tmp_path / filename, sep="\t", index=False)
+    assert _load_specifications(tmp_path, filename).equals(file)
+
+
+def test_load_specifications_error_tmp_path(tmp_path):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        _load_specifications,
+    )
+
+    with pytest.raises(
+        FileNotFoundError,
+        match=f"The specifications for bar.tsv were not found. "
+        f"The should be located in {tmp_path/'bar.tsv'}.",
+    ):
+        _load_specifications(tmp_path, "bar.tsv")
+
+
 def test_listdir_nohidden(tmp_path):
     from clinica.iotools.converters.aibl_to_bids.utils.bids import _listdir_nohidden
 
