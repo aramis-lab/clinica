@@ -401,6 +401,21 @@ def create_participants_df(
                     file_to_read = load_clinical_csv(
                         clinical_data_dir, location.split(".")[0]
                     )
+                    # Condition to handle ADNI modification of file APOERES.csv
+                    # See issue https://github.com/aramis-lab/clinica/issues/1294
+                    if study_name == StudyName.ADNI and location == "APOERES.csv":
+                        if (
+                            participant_fields_db[i] not in file_to_read.columns
+                            and "GENOTYPE" in file_to_read.columns
+                        ):
+                            # Split the 'GENOTYPE' column into 'APGEN1' and 'APGEN2'
+                            genotype = file_to_read["GENOTYPE"].str.split(
+                                "/", expand=True
+                            )
+                            file_to_read = file_to_read.assign(
+                                APGEN1=genotype[0], APGEN2=genotype[1]
+                            )
+
                 prev_location = location
                 prev_sheet = sheet
 
