@@ -405,8 +405,7 @@ def create_participants_df(
                     # See issue https://github.com/aramis-lab/clinica/issues/1294
                     if study_name == StudyName.ADNI and location == "APOERES.csv":
                         if (
-                            "APGEN1" not in file_to_read.columns
-                            or "APGEN2" not in file_to_read.columns
+                            participant_fields_db[i] not in file_to_read.columns
                             and "GENOTYPE" in file_to_read.columns
                         ):
                             # Split the 'GENOTYPE' column into 'APGEN1' and 'APGEN2'
