@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import pandas as pd
 
@@ -252,6 +252,7 @@ def create_sessions_tsv_file(
                 "examination_date": exam_dates,
             }
         )
+        # todo (LATER) : pretty sure there exists a function that converts viscode to session
         sessions = sessions.assign(
             session_id=lambda df: df.months.apply(lambda x: f"ses-M{int(x):03d}")
         )
@@ -271,12 +272,28 @@ def create_sessions_tsv_file(
 
 
 def _clean_exam_dates(
-    rid: str, exam_dates: List[str], visit_codes: List[str], clinical_data_dir: Path
+    rid: int,
+    exam_dates: List[Union[str, int]],
+    visit_codes: List[str],
+    clinical_data_dir: Path,
 ) -> List[str]:
-    """Clean the exam dates when necessary by trying to compute them from other sources."""
-    # todo (NOW) : rid 1 int
-    # exam_dates ['10/12/2007', '05/29/2009', '10/25/2010', '04/16/2012']
-    # visit codes : ['bl', 'm18', 'm36', 'm54']
+    """Clean the exam dates when necessary by trying to compute them from other sources.
+
+    Parameters
+    ----------
+    rid : int
+        Patient study/source id
+    exam_dates : List
+        Ex : ['10/12/2007', '05/29/2009', '10/25/2010', -4]
+    visit_codes : List
+        Ex : ['bl', 'm18', 'm36', 'm54']
+    clinical_data_dir : Path
+
+    Returns
+    -------
+    List of cleaned exam dates
+
+    """
 
     from clinica.utils.stream import cprint
 
@@ -298,9 +315,10 @@ def _clean_exam_dates(
 
 
 def _find_exam_date_in_other_csv_files(
-    rid: str, visit_code: str, clinical_data_dir: Path
+    rid: int, visit_code: str, clinical_data_dir: Path
 ) -> Optional[str]:
     """Try to find an alternative exam date by searching in other CSV files."""
+    # todo (LATER) : refactor and test depending on _get_csv_files
     for csv_file in _get_csv_files(clinical_data_dir):
         if "aibl_flutemeta" in csv_file:
             csv_data = pd.read_csv(
@@ -317,6 +335,8 @@ def _find_exam_date_in_other_csv_files(
 def _get_csv_files(clinical_data_dir: Path) -> List[str]:
     """Return a list of paths to CSV files in which an alternative exam date could be found."""
     import glob
+    # todo (LATER) : would be better to use a function similar to load_clinical_csv from ADNI
+    # bc there it does not check for existence and can return anything
 
     return [
         glob.glob(str(clinical_data_dir / pattern))[0]
@@ -332,10 +352,9 @@ def _get_csv_files(clinical_data_dir: Path) -> List[str]:
 
 
 def _compute_exam_date_from_baseline(
-    visit_code: str, exam_dates: List[str], visit_codes: List[str]
+    visit_code: str, exam_dates: List[Union[str, int]], visit_codes: List[str]
 ) -> Optional[str]:
-    """
-    Try to find an alternative exam date by computing the number of months from the visit code.
+    """Try to find an alternative exam date by computing the number of months from the visit code.
 
     Parameters
     ----------
@@ -343,10 +362,13 @@ def _compute_exam_date_from_baseline(
     exam_dates : List of all the exam_dates for one subject (ex : ['01/01/2000', -4])
     visit_codes : List of all the visit codes for one subject (ex : ['bl', 'm12']
 
+    Returns
+    -------
+    Either None or the calculated date (str)
     """
     # todo (LATER) : this function could use a refactor though,
     # for the same output you could just use the visitcode and the date at baseline (no need to use the lists)
-    # (assuming you know it), there it returns none if its baseline ? why not the baseline date ?
+    # assuming you know it. There it returns none if its baseline ? why not the baseline date ?
 
     import re
     from datetime import datetime
@@ -397,8 +419,9 @@ def _compute_ages_at_each_exam(
         ages.append(delta)
 
     # todo (NOW) :
-    #  rq : what is the use of being so precise ?? we are comparing a year with a full date.. that's false anyway
+    #  rq : what is the use of being so precise ? we are comparing a year with a full date.. that's false anyway
     #  we could give ages in years (int, >=0) and just subtract the years
+
     # todo (LATER) : what happens if wrong format ? or exam < birth for some reason ?
 
     return ages

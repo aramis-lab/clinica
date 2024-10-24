@@ -36,10 +36,6 @@ def test_compute_exam_date_from_baseline_raiseValue():
         _compute_exam_date_from_baseline("foo", [], [])
 
 
-def test_get_csv_files():
-    pass
-
-
 def test_find_exam_date_in_other_csv_files():
     pass
 
