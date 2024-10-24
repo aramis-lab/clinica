@@ -107,10 +107,7 @@ class PETLinear(PETPipeline):
 
         # Inputs from t1-linear pipeline
         # T1w images registered
-        if self.parameters["uncropped_image"]:
-            t1w_linear_file_pattern = T1W_LINEAR
-        else:
-            t1w_linear_file_pattern = T1W_LINEAR_CROPPED
+        t1w_linear_file_pattern = T1W_LINEAR if self.parameters.get("uncropped_image", False) else T1W_LINEAR_CROPPED
         t1w_linear_files, t1w_linear_errors = clinica_file_reader(
             self.subjects, self.sessions, self.caps_directory, t1w_linear_file_pattern
         )
