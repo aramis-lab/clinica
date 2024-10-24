@@ -276,7 +276,7 @@ def _clean_exam_dates(
     exam_dates: List[Union[str, int]],
     visit_codes: List[str],
     clinical_data_dir: Path,
-) -> List[str]:
+) -> List[Union[str, int]]:
     """Clean the exam dates when necessary by trying to compute them from other sources.
 
     Parameters
