@@ -32,6 +32,16 @@ def remove_mni_background_task(
     )
 
 
+def clip_task(
+    input_pet: str,
+) -> str:
+    from pathlib import Path
+
+    from clinica.pipelines.pet.linear.utils import clip_img
+
+    return str(clip_img(Path(input_pet)))
+
+
 def rename_into_caps_task(
     pet_bids_image_filename: str,
     pet_preprocessed_image_filename: str,

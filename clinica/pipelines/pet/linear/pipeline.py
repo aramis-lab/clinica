@@ -281,7 +281,11 @@ class PETLinear(PETPipeline):
 
         from clinica.pipelines.tasks import crop_nifti_task
 
-        from .tasks import perform_suvr_normalization_task, remove_mni_background_task
+        from .tasks import (
+            clip_task,
+            perform_suvr_normalization_task,
+            remove_mni_background_task,
+        )
         from .utils import concatenate_transforms, init_input_node, print_end_pipeline
 
         init_node = npe.Node(
@@ -302,6 +306,16 @@ class PETLinear(PETPipeline):
         )
 
         # The core (processing) nodes
+
+        # 0. Optional, clipping node
+        clipping_node = npe.Node(
+            name="clipping",
+            interface=nutil.Function(
+                function=clip_task,
+                input_names=["input_pet"],
+                output_names=["output_image"],
+            ),
+        )
 
         # 1. `RegistrationSynQuick` by *ANTS*. It uses nipype interface.
         ants_registration_node = npe.Node(
@@ -376,11 +390,12 @@ class PETLinear(PETPipeline):
 
         # 5. Remove background
         remove_background_node = npe.Node(
+            name="removeBackground",
             interface=nutil.Function(
                 function=remove_mni_background_task,
                 input_names=["input_image"],
                 output_names=["output_image"],
-            )
+            ),
         )
         remove_background_node.mni_mask_path = self.mni_mask
 
@@ -398,12 +413,27 @@ class PETLinear(PETPipeline):
         )
         ants_applytransform_optional_node.inputs.dimension = 3
 
+        self.connect([(self.input_node, init_node, [("pet", "pet")])])
+        # STEP 0: Optional
+        if self.parameters.get("clip_min_0"):
+            self.connect(
+                [
+                    (init_node, clipping_node, ["pet", "input_pet"]),
+                    (
+                        clipping_node,
+                        ants_registration_node,
+                        ["output_image", "moving_image"],
+                    ),
+                ]
+            )
+        else:
+            self.connect(
+                [(init_node, ants_registration_node, [("pet", "moving_image")])]
+            )
         self.connect(
             [
-                (self.input_node, init_node, [("pet", "pet")]),
                 # STEP 1
                 (self.input_node, ants_registration_node, [("t1w", "fixed_image")]),
-                (init_node, ants_registration_node, [("pet", "moving_image")]),
                 # STEP 2
                 (
                     ants_registration_node,

@@ -132,6 +132,26 @@ def remove_mni_background(
     return output_image
 
 
+def clip_img(
+    pet_image_path: Path,
+) -> Path:
+    """ """
+    import nibabel as nib
+    import numpy as np
+
+    from clinica.utils.filemanip import get_filename_no_ext
+
+    pet_image = nib.load(pet_image_path)
+
+    data = np.clip(pet_image.get_fdata(dtype="float32"), a_min=0)
+
+    output_image = Path.cwd() / f"{get_filename_no_ext(pet_image_path)}_clipped.nii.gz"
+    clipped_pet = nib.Nifti1Image(data, pet_image.affine, header=pet_image.header)
+    clipped_pet.to_filename(output_image)
+
+    return output_image
+
+
 def rename_into_caps(
     pet_bids_image_filename: Path,
     pet_preprocessed_image_filename: Path,
