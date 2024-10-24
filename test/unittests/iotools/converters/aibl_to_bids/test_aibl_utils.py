@@ -5,6 +5,49 @@ import pandas as pd
 import pytest
 
 
+@pytest.mark.parametrize(
+    "visit, visit_list, date_list, expected",
+    [
+        ("bl", ["bl", "m10"], ["01/01/2000", -4], None),
+        ("m10", ["bl", "m10"], ["01/01/2000", -4], "11/01/2000"),
+        ("m0006", ["bl"], ["01/01/2000"], "07/01/2000"),
+    ],
+)
+def test_compute_exam_date_from_baseline_success(
+    visit, date_list, visit_list, expected
+):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        _compute_exam_date_from_baseline,
+    )
+
+    assert _compute_exam_date_from_baseline(visit, date_list, visit_list) == expected
+
+
+def test_compute_exam_date_from_baseline_raiseValue():
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        _compute_exam_date_from_baseline,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=f"Unexpected visit code foo. Should be in format mX :"
+        "Ex: m0, m6, m12, m048...",
+    ):
+        _compute_exam_date_from_baseline("foo", [], [])
+
+
+def test_get_csv_files():
+    pass
+
+
+def test_find_exam_date_in_other_csv_files():
+    pass
+
+
+def test_clean_exam_dates():
+    pass
+
+
 def test_load_specifications_success(tmp_path):
     from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
         _load_specifications,

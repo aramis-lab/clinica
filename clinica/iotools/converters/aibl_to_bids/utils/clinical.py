@@ -213,7 +213,7 @@ def create_sessions_tsv_file(
                     cd_global = df.loc[(df["RID"] == rid), field]
                     cd_global[
                         cd_global == -4
-                    ] = "n/a"  # todo : do that mapping later, same for other fields
+                    ] = "n/a"  # todo (LATER) : do that mapping later, same for other fields
 
                 elif field in list(df.columns.values) and field == "DXCURREN":
                     dx_curren = df.loc[(df["RID"] == rid), field]
@@ -274,6 +274,10 @@ def _clean_exam_dates(
     rid: str, exam_dates: List[str], visit_codes: List[str], clinical_data_dir: Path
 ) -> List[str]:
     """Clean the exam dates when necessary by trying to compute them from other sources."""
+    # todo (NOW) : rid 1 int
+    # exam_dates ['10/12/2007', '05/29/2009', '10/25/2010', '04/16/2012']
+    # visit codes : ['bl', 'm18', 'm36', 'm54']
+
     from clinica.utils.stream import cprint
 
     exam_dates_cleaned: List[str] = []
@@ -283,7 +287,10 @@ def _clean_exam_dates(
                 rid, visit_code, clinical_data_dir
             ) or _compute_exam_date_from_baseline(visit_code, exam_dates, visit_codes)
             if not exam_date:
-                cprint(f"No EXAMDATE for subject %{rid}, at session {visit_code}")
+                cprint(
+                    f"No EXAMDATE for subject %{rid}, at session {visit_code}",
+                    lvl="debug",
+                )
                 exam_date = "-4"
         exam_dates_cleaned.append(exam_date)
 
@@ -327,24 +334,37 @@ def _get_csv_files(clinical_data_dir: Path) -> List[str]:
 def _compute_exam_date_from_baseline(
     visit_code: str, exam_dates: List[str], visit_codes: List[str]
 ) -> Optional[str]:
-    """Try to find an alternative exam date by computing the number of months from the visit code."""
+    """
+    Try to find an alternative exam date by computing the number of months from the visit code.
+
+    Parameters
+    ----------
+    visit_code : Visit code of the current analysed session
+    exam_dates : List of all the exam_dates for one subject (ex : ['01/01/2000', -4])
+    visit_codes : List of all the visit codes for one subject (ex : ['bl', 'm12']
+
+    """
+    # todo (LATER) : this function could use a refactor though,
+    # for the same output you could just use the visitcode and the date at baseline (no need to use the lists)
+    # (assuming you know it), there it returns none if its baseline ? why not the baseline date ?
+
+    import re
     from datetime import datetime
 
     from dateutil.relativedelta import relativedelta
 
-    baseline_index = visit_codes.index("bl")
-    if baseline_index > -1:
+    if visit_code != "bl":
+        try:
+            months = int(re.match(r"m(\d*)", visit_code).group(1))
+        except AttributeError:
+            raise ValueError(
+                f"Unexpected visit code {visit_code}. Should be in format mX :"
+                "Ex: m0, m6, m12, m048..."
+            )
+        baseline_index = visit_codes.index("bl")
         baseline_date = datetime.strptime(exam_dates[baseline_index], "%m/%d/%Y")
-        if visit_code != "bl":
-            try:
-                months = int(visit_code[1:])
-            except TypeError:
-                raise ValueError(
-                    f"Unexpected visit code {visit_code}. Should be in format MXXX."
-                    "Ex: M000, M006, M048..."
-                )
-            exam_date = baseline_date + relativedelta(months=+months)
-            return exam_date.strftime("%m/%d/%Y")
+        exam_date = baseline_date + relativedelta(months=+months)
+        return exam_date.strftime("%m/%d/%Y")
     return None
 
 
@@ -376,10 +396,10 @@ def _compute_ages_at_each_exam(
         delta = exam_date.year - date_of_birth.year
         ages.append(delta)
 
-    # todo :rq : what is the use of being so precise ?? we are comparing a year with a full date.. that's false anyway
+    # todo (NOW) :
+    #  rq : what is the use of being so precise ?? we are comparing a year with a full date.. that's false anyway
     #  we could give ages in years (int, >=0) and just subtract the years
-
-    # todo : what happens if wrong format ? or exam < birth for some reason ?
+    # todo (LATER) : what happens if wrong format ? or exam < birth for some reason ?
 
     return ages
 
