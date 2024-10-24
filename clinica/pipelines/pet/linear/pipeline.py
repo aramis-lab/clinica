@@ -59,7 +59,7 @@ class PETLinear(PETPipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.pipelines.pet.utils import get_suvr_mask
+        from clinica.pipelines.pet.utils import get_mni_mask, get_suvr_mask
         from clinica.utils.exceptions import (
             ClinicaBIDSError,
             ClinicaCAPSError,
@@ -81,6 +81,7 @@ class PETLinear(PETPipeline):
 
         self.ref_template = get_mni_template("t1")
         self.ref_mask = get_suvr_mask(self.parameters["suvr_reference_region"])
+        self.mni_mask = get_mni_mask()
 
         # Inputs from BIDS directory
         pet_files, pet_errors = clinica_file_reader(
@@ -280,7 +281,7 @@ class PETLinear(PETPipeline):
 
         from clinica.pipelines.tasks import crop_nifti_task
 
-        from .tasks import perform_suvr_normalization_task
+        from .tasks import perform_suvr_normalization_task, remove_mni_background_task
         from .utils import concatenate_transforms, init_input_node, print_end_pipeline
 
         init_node = npe.Node(
@@ -373,7 +374,17 @@ class PETLinear(PETPipeline):
         )
         crop_nifti_node.inputs.output_path = self.base_dir
 
-        # 5. Print end message
+        # 5. Remove background
+        remove_background_node = npe.Node(
+            interface=nutil.Function(
+                function=remove_mni_background_task,
+                input_names=["input_image"],
+                output_names=["output_image"],
+            )
+        )
+        remove_background_node.mni_mask_path = self.mni_mask
+
+        # 6. Print end message
         print_end_message = npe.Node(
             interface=nutil.Function(
                 input_names=["pet", "final_file"], function=print_end_pipeline
@@ -381,7 +392,7 @@ class PETLinear(PETPipeline):
             name="WriteEndMessage",
         )
 
-        # 6. Optional node: compute PET image in T1w
+        # 7. Optional node: compute PET image in T1w
         ants_applytransform_optional_node = npe.Node(
             name="antsApplyTransformPET2T1w", interface=ants.ApplyTransforms()
         )
@@ -451,7 +462,9 @@ class PETLinear(PETPipeline):
             ]
         )
         # STEP 4
-        if not (self.parameters.get("uncropped_image")):
+        if not (self.parameters.get("uncropped_image")) and not (
+            self.parameters.get("remove_background")
+        ):
             self.connect(
                 [
                     (
@@ -471,6 +484,59 @@ class PETLinear(PETPipeline):
                     ),
                 ]
             )
+        elif not (self.parameters.get("uncropped_image")) and (
+            self.parameters.get("remove_background")
+        ):
+            self.connect(
+                [
+                    (
+                        normalize_intensity_node,
+                        crop_nifti_node,
+                        [("output_img", "input_image")],
+                    ),
+                    (
+                        crop_nifti_node,
+                        remove_background_node,
+                        [("output_image", "input_image")],
+                    ),
+                    (
+                        remove_background_node,
+                        self.output_node,
+                        [
+                            ("output_image", "outfile_crop_no_bkgd")
+                        ],  # to implement in out node
+                    ),
+                    (
+                        remove_background_node,
+                        print_end_message,
+                        [("output_image", "final_file")],
+                    ),
+                ]
+            )
+        elif (self.parameters.get("uncropped_image")) and (
+            self.parameters.get("remove_background")
+        ):
+            self.connect(
+                [
+                    (
+                        normalize_intensity_node,
+                        remove_background_node,
+                        [("output_img", "input_image")],
+                    ),
+                    (
+                        remove_background_node,
+                        self.output_node,
+                        [
+                            ("output_image", "outfile_no_bcgd")
+                        ],  # to implement in out node
+                    ),
+                    (
+                        remove_background_node,
+                        print_end_message,
+                        [("output_image", "final_file")],
+                    ),
+                ]
+            )
         else:
             self.connect(
                 [
@@ -481,6 +547,7 @@ class PETLinear(PETPipeline):
                     ),
                 ]
             )
+
         # STEP 6: Optional argument
         if self.parameters.get("save_PETinT1w"):
             self.connect(

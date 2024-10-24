@@ -108,6 +108,30 @@ def perform_suvr_normalization(
     return output_image
 
 
+def remove_mni_background(
+    pet_image_path: Path,
+    mni_mask_path: Path,
+) -> Path:
+    """ """
+    import nibabel as nib
+
+    from clinica.utils.filemanip import get_filename_no_ext
+
+    pet_image = nib.load(pet_image_path)
+    mni_mask = nib.load(mni_mask_path)
+
+    # TODO: check if it is the best way to do the operation
+    data = pet_image.get_fdata(dtype="float32") * mni_mask.get_fdata(dtype="float32")
+
+    output_image = (
+        Path.cwd() / f"{get_filename_no_ext(pet_image_path)}_remove_background.nii.gz"
+    )
+    normalized_img = nib.Nifti1Image(data, pet_image.affine, header=pet_image.header)
+    normalized_img.to_filename(output_image)
+
+    return output_image
+
+
 def rename_into_caps(
     pet_bids_image_filename: Path,
     pet_preprocessed_image_filename: Path,

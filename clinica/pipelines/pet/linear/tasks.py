@@ -16,6 +16,22 @@ def perform_suvr_normalization_task(
     )
 
 
+def remove_mni_background_task(
+    input_image: str,
+    mni_mask_path: str,
+) -> str:
+    from pathlib import Path
+
+    from clinica.pipelines.pet.linear.utils import remove_mni_background
+
+    return str(
+        remove_mni_background(
+            Path(input_image),
+            Path(mni_mask_path),
+        )
+    )
+
+
 def rename_into_caps_task(
     pet_bids_image_filename: str,
     pet_preprocessed_image_filename: str,
