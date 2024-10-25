@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import pandas as pd
 
@@ -153,12 +153,12 @@ def create_sessions_tsv_file(
     clinical_data_dir: Path,
     clinical_specifications_folder: Path,
 ) -> None:
-    """Extract the information regarding the sessions and save them in a tsv file.
+    """Extract the information regarding a subject sessions and save them in a tsv file.
 
     Parameters
     ----------
     input_path : Path
-        The path to the input folder.
+        The path to the input folder (BIDS directory).
 
     clinical_data_dir : Path
         The path to the directory to the clinical data files.
@@ -211,7 +211,9 @@ def create_sessions_tsv_file(
 
                 elif field in list(df.columns.values) and field == "CDGLOBAL":
                     cd_global = df.loc[(df["RID"] == rid), field]
-                    cd_global[cd_global == -4] = "n/a"
+                    cd_global[
+                        cd_global == -4
+                    ] = "n/a"  # todo (LATER) : do that mapping later, same for other fields
 
                 elif field in list(df.columns.values) and field == "DXCURREN":
                     dx_curren = df.loc[(df["RID"] == rid), field]
@@ -229,7 +231,13 @@ def create_sessions_tsv_file(
         exam_dates = _clean_exam_dates(
             rid, exam_date.to_list(), visit_code.to_list(), clinical_data_dir
         )
-        age = _compute_ages_at_each_exam(patient_date_of_birth.values[0], exam_dates)
+
+        if not patient_date_of_birth.empty:
+            age = _compute_ages_at_each_exam(
+                patient_date_of_birth.values[0], exam_dates
+            )
+        else:
+            age = "n/a"
 
         visit_code[visit_code == "bl"] = "M000"
         visit_code = visit_code.str.upper()
@@ -244,6 +252,7 @@ def create_sessions_tsv_file(
                 "examination_date": exam_dates,
             }
         )
+        # todo (LATER) : pretty sure there exists a function that converts viscode to session
         sessions = sessions.assign(
             session_id=lambda df: df.months.apply(lambda x: f"ses-M{int(x):03d}")
         )
@@ -263,9 +272,29 @@ def create_sessions_tsv_file(
 
 
 def _clean_exam_dates(
-    rid: str, exam_dates: List[str], visit_codes: List[str], clinical_data_dir: Path
-) -> List[str]:
-    """Clean the exam dates when necessary by trying to compute them from other sources."""
+    rid: int,
+    exam_dates: List[Union[str, int]],
+    visit_codes: List[str],
+    clinical_data_dir: Path,
+) -> List[Union[str, int]]:
+    """Clean the exam dates when necessary by trying to compute them from other sources.
+
+    Parameters
+    ----------
+    rid : int
+        Patient study/source id
+    exam_dates : List
+        Ex : ['10/12/2007', '05/29/2009', '10/25/2010', -4]
+    visit_codes : List
+        Ex : ['bl', 'm18', 'm36', 'm54']
+    clinical_data_dir : Path
+
+    Returns
+    -------
+    List of cleaned exam dates
+
+    """
+
     from clinica.utils.stream import cprint
 
     exam_dates_cleaned: List[str] = []
@@ -275,7 +304,10 @@ def _clean_exam_dates(
                 rid, visit_code, clinical_data_dir
             ) or _compute_exam_date_from_baseline(visit_code, exam_dates, visit_codes)
             if not exam_date:
-                cprint(f"No EXAMDATE for subject %{rid}, at session {visit_code}")
+                cprint(
+                    f"No EXAMDATE for subject %{rid}, at session {visit_code}",
+                    lvl="debug",
+                )
                 exam_date = "-4"
         exam_dates_cleaned.append(exam_date)
 
@@ -283,10 +315,11 @@ def _clean_exam_dates(
 
 
 def _find_exam_date_in_other_csv_files(
-    rid: str, visit_code: str, clinical_data_dir: Path
+    rid: int, visit_code: str, clinical_data_dir: Path
 ) -> Optional[str]:
     """Try to find an alternative exam date by searching in other CSV files."""
-    for csv_file in _get_cvs_files(clinical_data_dir):
+    # todo (LATER) : refactor and test depending on _get_csv_files
+    for csv_file in _get_csv_files(clinical_data_dir):
         if "aibl_flutemeta" in csv_file:
             csv_data = pd.read_csv(
                 csv_file, low_memory=False, usecols=list(range(0, 36))
@@ -299,9 +332,11 @@ def _find_exam_date_in_other_csv_files(
     return None
 
 
-def _get_cvs_files(clinical_data_dir: Path) -> List[str]:
+def _get_csv_files(clinical_data_dir: Path) -> List[str]:
     """Return a list of paths to CSV files in which an alternative exam date could be found."""
     import glob
+    # todo (LATER) : would be better to use a function similar to load_clinical_csv from ADNI
+    # bc there it does not check for existence and can return anything
 
     return [
         glob.glob(str(clinical_data_dir / pattern))[0]
@@ -317,26 +352,41 @@ def _get_cvs_files(clinical_data_dir: Path) -> List[str]:
 
 
 def _compute_exam_date_from_baseline(
-    visit_code: str, exam_dates: List[str], visit_codes: List[str]
+    visit_code: str, exam_dates: List[Union[str, int]], visit_codes: List[str]
 ) -> Optional[str]:
-    """Try to find an alternative exam date by computing the number of months from the visit code."""
+    """Try to find an alternative exam date by computing the number of months from the visit code.
+
+    Parameters
+    ----------
+    visit_code : Visit code of the current analysed session
+    exam_dates : List of all the exam_dates for one subject (ex : ['01/01/2000', -4])
+    visit_codes : List of all the visit codes for one subject (ex : ['bl', 'm12']
+
+    Returns
+    -------
+    Either None or the calculated date (str)
+    """
+    # todo (LATER) : this function could use a refactor though,
+    # for the same output you could just use the visitcode and the date at baseline (no need to use the lists)
+    # assuming you know it. There it returns none if its baseline ? why not the baseline date ?
+
+    import re
     from datetime import datetime
 
     from dateutil.relativedelta import relativedelta
 
-    baseline_index = visit_codes.index("bl")
-    if baseline_index > -1:
+    if visit_code != "bl":
+        try:
+            months = int(re.match(r"m(\d*)", visit_code).group(1))
+        except AttributeError:
+            raise ValueError(
+                f"Unexpected visit code {visit_code}. Should be in format mX :"
+                "Ex: m0, m6, m12, m048..."
+            )
+        baseline_index = visit_codes.index("bl")
         baseline_date = datetime.strptime(exam_dates[baseline_index], "%m/%d/%Y")
-        if visit_code != "bl":
-            try:
-                months = int(visit_code[1:])
-            except TypeError:
-                raise ValueError(
-                    f"Unexpected visit code {visit_code}. Should be in format MXXX."
-                    "Ex: M000, M006, M048..."
-                )
-            exam_date = baseline_date + relativedelta(months=+months)
-            return exam_date.strftime("%m/%d/%Y")
+        exam_date = baseline_date + relativedelta(months=+months)
+        return exam_date.strftime("%m/%d/%Y")
     return None
 
 
@@ -365,8 +415,14 @@ def _compute_ages_at_each_exam(
 
     for exam_date in exam_dates:
         exam_date = datetime.strptime(exam_date, "%m/%d/%Y")
-        delta = exam_date - date_of_birth
-        ages.append(round(delta.days / 365.25, 1))
+        delta = exam_date.year - date_of_birth.year
+        ages.append(delta)
+
+    # todo (NOW) :
+    #  rq : what is the use of being so precise ? we are comparing a year with a full date.. that's false anyway
+    #  we could give ages in years (int, >=0) and just subtract the years
+
+    # todo (LATER) : what happens if wrong format ? or exam < birth for some reason ?
 
     return ages
 
