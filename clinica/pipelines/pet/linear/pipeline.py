@@ -38,7 +38,7 @@ class PETLinear(PETPipeline):
         list of str :
             A list of (string) input fields name.
         """
-        return ["pet", "t1w", "t1w_to_mni", "t1w_linear"]
+        return ["pet", "t1w", "t1w_to_mni"]
 
     def get_output_fields(self) -> List[str]:
         """Specify the list of possible outputs of this pipeline.
@@ -66,12 +66,7 @@ class PETLinear(PETPipeline):
             ClinicaException,
         )
         from clinica.utils.image import get_mni_template
-        from clinica.utils.input_files import (
-            T1W_LINEAR,
-            T1W_LINEAR_CROPPED,
-            T1W_NII,
-            T1W_TO_MNI_TRANSFORM,
-        )
+        from clinica.utils.input_files import T1W_NII, T1W_TO_MNI_TRANSFORM
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
@@ -107,21 +102,6 @@ class PETLinear(PETPipeline):
             raise ClinicaBIDSError(err)
 
         # Inputs from t1-linear pipeline
-        # T1w images registered
-        t1w_linear_file_pattern = (
-            T1W_LINEAR
-            if self.parameters.get("uncropped_image", False)
-            else T1W_LINEAR_CROPPED
-        )
-        try:
-            t1w_linear_files, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                t1w_linear_file_pattern,
-            )
-        except ClinicaException as e:
-            raise ClinicaCAPSError(e)
         # Transformation files from T1w files to MNI:
         try:
             t1w_to_mni_transformation_files, _ = clinica_file_reader(
@@ -144,7 +124,6 @@ class PETLinear(PETPipeline):
                 ("t1w", t1w_files),
                 ("pet", pet_files),
                 ("t1w_to_mni", t1w_to_mni_transformation_files),
-                ("t1w_linear", t1w_linear_files),
             ],
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
@@ -154,7 +133,6 @@ class PETLinear(PETPipeline):
                 (read_input_node, self.input_node, [("t1w", "t1w")]),
                 (read_input_node, self.input_node, [("pet", "pet")]),
                 (read_input_node, self.input_node, [("t1w_to_mni", "t1w_to_mni")]),
-                (read_input_node, self.input_node, [("t1w_linear", "t1w_linear")]),
             ]
         )
 
@@ -416,12 +394,12 @@ class PETLinear(PETPipeline):
                 (
                     self.input_node,
                     ants_registration_nonlinear_node,
-                    [("t1w_linear", "moving_image")],
+                    [("t1w", "moving_image")],
                 ),
                 (
                     ants_registration_nonlinear_node,
                     ants_applytransform_nonlinear_node,
-                    [("forward_transforms", "transforms")],
+                    [("reverse_forward_transforms", "transforms")],
                 ),
                 (
                     ants_applytransform_node,
