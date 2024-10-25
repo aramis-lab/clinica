@@ -11,7 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - [Converters] Fix KeyError "APGEN" in adni-to-bids (see PR [#1342](https://github.com/aramis-lab/clinica/pull/1342))
-- [PETLinear] Fix SUVR transform computation (see PR [#1348](https://github.com/aramis-lab/clinica/pull/1348))
 - [Converters] Fix function `load_clinical_csv` to avoid hidden files (see PR [#1343](https://github.com/aramis-lab/clinica/pull/1343))
 - [Converters] Fix logging in oasis-to-bids and aibl-to-bids (see PR [#1340](https://github.com/aramis-lab/clinica/pull/1340))
 - [Converters] Fix method `BIDSSubjectID.to_study_id()` (see PR [#1335](https://github.com/aramis-lab/clinica/pull/1335))
