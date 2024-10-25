@@ -6,6 +6,20 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.9.2
+
+### Fixed
+
+- [Converters] Fix KeyError "APGEN" in adni-to-bids (see PR [#1342](https://github.com/aramis-lab/clinica/pull/1342))
+- [PETLinear] Fix SUVR transform computation (see PR [#1348](https://github.com/aramis-lab/clinica/pull/1348))
+- [Converters] Fix function `load_clinical_csv` to avoid hidden files (see PR [#1343](https://github.com/aramis-lab/clinica/pull/1343))
+- [Converters] Fix logging in oasis-to-bids and aibl-to-bids (see PR [#1340](https://github.com/aramis-lab/clinica/pull/1340))
+- [Converters] Fix method `BIDSSubjectID.to_study_id()` (see PR [#1335](https://github.com/aramis-lab/clinica/pull/1335))
+- [T1Linear] Fix missing import in utility function (see PR [#1329](https://github.com/aramis-lab/clinica/pull/1329))
+- [Converters] Fix oasis-to-bids to work with new clinical data (see PR [#1321](https://github.com/aramis-lab/clinica/pull/1321))
+- [Converters] Fix function `define_participants` in ixi-to-bids, which is now deterministic (see PR [#1318](https://github.com/aramis-lab/clinica/pull/1318))
+- [Converters] Fix Oasis1 `BIDSSubjectID` method (see PR [#1312](https://github.com/aramis-lab/clinica/pull/1312))
+
 ## Clinica 0.9.1
 
 ### Fixed
