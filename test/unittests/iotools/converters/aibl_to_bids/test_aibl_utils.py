@@ -3,6 +3,25 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
+
+
+@pytest.mark.parametrize(
+    "diagnosis, expected",
+    [
+        (-4, "n/a"),
+        (1, "CN"),
+        (2, "MCI"),
+        (3, "AD"),
+        (0, "n/a"),
+    ],
+)
+def test_mapping_diagnosis(diagnosis, expected):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        _mapping_diagnosis,
+    )
+
+    assert _mapping_diagnosis(diagnosis) == expected
 
 
 @pytest.mark.parametrize(
@@ -34,14 +53,6 @@ def test_compute_exam_date_from_baseline_raiseValue():
         "Ex: m0, m6, m12, m048...",
     ):
         _compute_exam_date_from_baseline("foo", [], [])
-
-
-def test_find_exam_date_in_other_csv_files():
-    pass
-
-
-def test_clean_exam_dates():
-    pass
 
 
 def test_load_specifications_success(tmp_path):
@@ -227,7 +238,7 @@ def test_create_sessions_tsv(tmp_path):
     bids_path = build_bids_dir(tmp_path)
 
     create_sessions_tsv_file(
-        input_path=bids_path,
+        bids_dir=bids_path,
         clinical_data_dir=build_clinical_data(tmp_path),
         clinical_specifications_folder=build_sessions_spec(tmp_path),
     )
@@ -243,7 +254,6 @@ def test_create_sessions_tsv(tmp_path):
     expected_sub100 = pd.DataFrame(
         {
             "session_id": ["ses-M000", "ses-M012"],
-            "months": [0, 12],
             "age": [np.nan, np.nan],
             "MMS": [30, 29],
             "cdr_global": [0.0, 0.0],
@@ -255,7 +265,6 @@ def test_create_sessions_tsv(tmp_path):
     expected_sub1 = pd.DataFrame(
         {
             "session_id": ["ses-M000"],
-            "months": [0],
             "age": [100],
             "MMS": [np.nan],
             "cdr_global": [np.nan],
@@ -264,5 +273,5 @@ def test_create_sessions_tsv(tmp_path):
         }
     )
 
-    assert expected_sub1.equals(result_sub1)
-    assert expected_sub100.equals(result_sub100)
+    assert_frame_equal(result_sub1, expected_sub1, check_like=True)
+    assert_frame_equal(result_sub100, expected_sub100, check_like=True)

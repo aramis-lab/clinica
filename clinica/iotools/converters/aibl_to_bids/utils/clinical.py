@@ -1,6 +1,8 @@
+from ast import Index
 from pathlib import Path
 from typing import List, Optional, Union
 
+import numpy as np
 import pandas as pd
 
 __all__ = [
@@ -148,8 +150,73 @@ def _load_specifications(
     return pd.read_csv(specifications, sep="\t")
 
 
+def _mapping_unknown(input_value: Union[int, str]) -> str:
+    # todo :test
+    # todo : what happens if str -4 ?
+    if input_value == -4:
+        return "n/a"
+    else:
+        return input_value
+
+
+def _mapping_diagnosis(diagnosis: int) -> str:
+    # todo : what happens if str ?
+    if diagnosis == 1:
+        return "CN"
+    elif diagnosis == 2:
+        return "MCI"
+    elif diagnosis == 3:
+        return "AD"
+    else:
+        return "n/a"
+
+
+def _extract_metadata_df(
+    input_df: pd.DataFrame, source_id: int, bids_metadata: str, source_metadata: str
+) -> pd.DataFrame:
+    # todo :test
+    from clinica.iotools.converter_utils import viscode_to_session
+
+    extract = input_df.loc[(input_df["RID"] == source_id), ["VISCODE", source_metadata]]
+    extract.rename(columns={source_metadata: bids_metadata}, inplace=True)
+    extract = extract.assign(
+        session_id=extract.VISCODE.apply(lambda x: viscode_to_session(x))
+    )
+    extract.drop(labels="VISCODE", inplace=True, axis=1)
+    extract.set_index("session_id", inplace=True, drop=True)
+
+    return extract
+
+
+def _compute_age_at_exam(birth_date: str, exam_date: str) -> float:
+    """Compute the ages of the patient at each exam date.
+
+    Parameters
+    ----------
+    birth_date : str
+        Date of birth of patient ("/%Y" format)
+
+    exam_date : str
+        Exam date ("%m/%d/%Y" format)
+
+    Return
+    ------
+    float
+        Age of the patient at exam date.
+    """
+    # todo : test
+    # todo (LATER) : what happens if wrong format ?
+
+    from datetime import datetime
+
+    date_of_birth = datetime.strptime(birth_date, "/%Y")
+    exam_date = datetime.strptime(exam_date, "%m/%d/%Y")
+
+    return exam_date.year - date_of_birth.year
+
+
 def create_sessions_tsv_file(
-    input_path: Path,
+    bids_dir: Path,
     clinical_data_dir: Path,
     clinical_specifications_folder: Path,
 ) -> None:
@@ -157,8 +224,8 @@ def create_sessions_tsv_file(
 
     Parameters
     ----------
-    input_path : Path
-        The path to the input folder (BIDS directory).
+    bids_dir : Path
+        The path to the BIDS directory.
 
     clinical_data_dir : Path
         The path to the directory to the clinical data files.
@@ -168,42 +235,66 @@ def create_sessions_tsv_file(
     """
     import glob
 
-    from clinica.iotools.bids_utils import StudyName, bids_id_factory
+    from clinica.iotools.bids_utils import (
+        StudyName,
+        bids_id_factory,
+        get_bids_sess_list,
+        get_bids_subjs_list,
+    )
+    from clinica.iotools.converter_utils import viscode_to_session
 
+    study = StudyName.AIBL.value
     specifications = _load_specifications(
         clinical_specifications_folder, "sessions.tsv"
-    )
-    sessions_fields = specifications[StudyName.AIBL.value]
-    field_location = specifications[f"{StudyName.AIBL.value} location"]
-    sessions_fields_bids = specifications["BIDS CLINICA"]
-    fields_dataset = []
-    fields_bids = []
+    )[["BIDS CLINICA", f"{study} location", study]].dropna()
 
-    for i in range(0, len(sessions_fields)):
-        if not pd.isnull(sessions_fields[i]):
-            fields_bids.append(sessions_fields_bids[i])
-            fields_dataset.append(sessions_fields[i])
+    for bids_id in get_bids_subjs_list(bids_dir):
+        rid = int(bids_id_factory(study)(bids_id).to_original_study_id())
+        test = (
+            pd.DataFrame({"session_id": get_bids_sess_list(bids_dir / bids_id)})
+            .set_index("session_id", drop=False)
+            .sort_index()
+        )
 
-    files_to_read: List[str] = []
-    sessions_fields_to_read: List[str] = []
-    for i in range(0, len(sessions_fields)):
-        # If the i-th field is available
-        if not pd.isnull(sessions_fields[i]):
-            # Load the file
-            file_to_read_path = clinical_data_dir / field_location[i]
-            files_to_read.append(glob.glob(str(file_to_read_path))[0])
-            sessions_fields_to_read.append(sessions_fields[i])
+        for _, row in specifications.iterrows():
+            df = pd.read_csv(
+                glob.glob(str(clinical_data_dir / row[f"{study} location"]))[0],
+                dtype={"text": str},
+            )
+            extract = _extract_metadata_df(
+                input_df=df,
+                source_id=rid,
+                bids_metadata=row["BIDS CLINICA"],
+                source_metadata=row[study],
+            )
+            test = pd.concat([test, extract], axis=1)
 
-    rids = pd.read_csv(files_to_read[0], dtype={"text": str}, low_memory=False).RID
-    unique_rids = list(set(rids))
+        test = test.map(lambda x: _mapping_unknown(x))
+        test["diagnosis"] = test.diagnosis.apply(lambda x: _mapping_diagnosis(x))
+
+        test["age"] = test["age"].fillna(method="ffill")
+        for i, row in test.iterrows():
+            test.loc[i, "age"] = _compute_age_at_exam(row.age, row.examination_date)
+        # todo : anyway to do this with a apply sthg ?
+
+        # todo : handle exam date
+        # todo : put back months from ses id ?
+
+    files_to_read = [
+        glob.glob(str(clinical_data_dir / loc))[0]
+        for loc in specifications[f"{study} location"]
+    ]
+    sessions_fields_to_read = specifications[study].tolist()
+    unique_rids = [
+        int(bids_id_factory(study)(bids_id).to_original_study_id())
+        for bids_id in get_bids_subjs_list(bids_dir)
+    ]
     for rid in unique_rids:
         for file in files_to_read:
             df = pd.read_csv(file, dtype={"text": str})
-            if len(df.columns) == 1:
-                df = pd.read_csv(file, sep=";", low_memory=False)
-
-            visit_code = df.loc[(df["RID"] == rid), "VISCODE"]
-
+            visit_code = df.loc[
+                (df["RID"] == rid), "VISCODE"
+            ]  # todo :how to get it out of the loop ?
             for field in sessions_fields_to_read:
                 if field in list(df.columns.values) and field == "MMSCORE":
                     mm_score = df.loc[(df["RID"] == rid), field]
@@ -217,10 +308,7 @@ def create_sessions_tsv_file(
 
                 elif field in list(df.columns.values) and field == "DXCURREN":
                     dx_curren = df.loc[(df["RID"] == rid), field]
-                    dx_curren[dx_curren == -4] = "n/a"
-                    dx_curren[dx_curren == 1] = "CN"
-                    dx_curren[dx_curren == 2] = "MCI"
-                    dx_curren[dx_curren == 3] = "AD"
+                    dx_curren = dx_curren.apply(lambda x: _mapping_diagnosis(x))
 
                 elif field in list(df.columns.values) and field == "EXAMDATE":
                     exam_date = df.loc[(df["RID"] == rid), field]
@@ -239,12 +327,9 @@ def create_sessions_tsv_file(
         else:
             age = "n/a"
 
-        visit_code[visit_code == "bl"] = "M000"
-        visit_code = visit_code.str.upper()
-
         sessions = pd.DataFrame(
             {
-                "months": visit_code.str[1:],
+                "session_id": [viscode_to_session(code) for code in visit_code],
                 "age": age,
                 "MMS": mm_score,
                 "cdr_global": cd_global,
@@ -252,23 +337,17 @@ def create_sessions_tsv_file(
                 "examination_date": exam_dates,
             }
         )
-        # todo (LATER) : pretty sure there exists a function that converts viscode to session
-        sessions = sessions.assign(
-            session_id=lambda df: df.months.apply(lambda x: f"ses-M{int(x):03d}")
-        )
         cols = sessions.columns.tolist()
         sessions = sessions[cols[-1:] + cols[:-1]]
 
         bids_id = bids_id_factory(StudyName.AIBL).from_original_study_id(str(rid))
 
-        bids_paths = input_path / bids_id
-        if bids_paths.exists():
-            sessions.to_csv(
-                input_path / bids_id / f"{bids_id}_sessions.tsv",
-                sep="\t",
-                index=False,
-                encoding="utf8",
-            )
+        sessions.to_csv(
+            bids_dir / bids_id / f"{bids_id}_sessions.tsv",
+            sep="\t",
+            index=False,
+            encoding="utf8",
+        )
 
 
 def _clean_exam_dates(
@@ -422,7 +501,7 @@ def _compute_ages_at_each_exam(
     #  rq : what is the use of being so precise ? we are comparing a year with a full date.. that's false anyway
     #  we could give ages in years (int, >=0) and just subtract the years
 
-    # todo (LATER) : what happens if wrong format ? or exam < birth for some reason ?
+    # todo (LATER) : what happens if wrong format ?
 
     return ages
 
