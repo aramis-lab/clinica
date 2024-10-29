@@ -11,6 +11,8 @@ __all__ = [
     "create_sessions_tsv_file",
 ]
 
+from sqlalchemy.sql.operators import from_
+
 
 def create_participants_tsv_file(
     input_path: Path,
@@ -150,17 +152,8 @@ def _load_specifications(
     return pd.read_csv(specifications, sep="\t")
 
 
-def _mapping_unknown(input_value: Union[int, str]) -> str:
-    # todo :test
-    # todo : what happens if str -4 ?
-    if input_value == -4:
-        return "n/a"
-    else:
-        return input_value
-
-
 def _mapping_diagnosis(diagnosis: int) -> str:
-    # todo : what happens if str ?
+    # todo : what if str(1) ?
     if diagnosis == 1:
         return "CN"
     elif diagnosis == 2:
@@ -188,7 +181,9 @@ def _extract_metadata_df(
     return extract
 
 
-def _compute_age_at_exam(birth_date: str, exam_date: str) -> float:
+def _compute_age_at_exam(
+    birth_date: Union[float, str], exam_date: Union[float, str]
+) -> float:
     """Compute the ages of the patient at each exam date.
 
     Parameters
@@ -205,14 +200,14 @@ def _compute_age_at_exam(birth_date: str, exam_date: str) -> float:
         Age of the patient at exam date.
     """
     # todo : test
-    # todo (LATER) : what happens if wrong format ?
-
     from datetime import datetime
 
-    date_of_birth = datetime.strptime(birth_date, "/%Y")
-    exam_date = datetime.strptime(exam_date, "%m/%d/%Y")
-
-    return exam_date.year - date_of_birth.year
+    if not isinstance(birth_date, float) and not isinstance(exam_date, float):
+        date_of_birth = datetime.strptime(birth_date, "/%Y")
+        exam_date = datetime.strptime(exam_date, "%m/%d/%Y")
+        return exam_date.year - date_of_birth.year
+    else:
+        return np.nan
 
 
 def create_sessions_tsv_file(
@@ -241,7 +236,6 @@ def create_sessions_tsv_file(
         get_bids_sess_list,
         get_bids_subjs_list,
     )
-    from clinica.iotools.converter_utils import viscode_to_session
 
     study = StudyName.AIBL.value
     specifications = _load_specifications(
@@ -250,11 +244,9 @@ def create_sessions_tsv_file(
 
     for bids_id in get_bids_subjs_list(bids_dir):
         rid = int(bids_id_factory(study)(bids_id).to_original_study_id())
-        test = (
-            pd.DataFrame({"session_id": get_bids_sess_list(bids_dir / bids_id)})
-            .set_index("session_id", drop=False)
-            .sort_index()
-        )
+        test = pd.DataFrame(
+            {"session_id": get_bids_sess_list(bids_dir / bids_id)}
+        ).set_index("session_id", drop=False)
 
         for _, row in specifications.iterrows():
             df = pd.read_csv(
@@ -269,80 +261,23 @@ def create_sessions_tsv_file(
             )
             test = pd.concat([test, extract], axis=1)
 
-        test = test.map(lambda x: _mapping_unknown(x))
+        test.sort_index(inplace=True)
+        # -4 are considered missing values in AIBL
+        test.replace([-4, "-4"], np.nan, inplace=True)
         test["diagnosis"] = test.diagnosis.apply(lambda x: _mapping_diagnosis(x))
 
-        test["age"] = test["age"].fillna(method="ffill")
-        for i, row in test.iterrows():
-            test.loc[i, "age"] = _compute_age_at_exam(row.age, row.examination_date)
-        # todo : anyway to do this with a apply sthg ?
-
-        # todo : handle exam date
-        # todo : put back months from ses id ?
-
-    files_to_read = [
-        glob.glob(str(clinical_data_dir / loc))[0]
-        for loc in specifications[f"{study} location"]
-    ]
-    sessions_fields_to_read = specifications[study].tolist()
-    unique_rids = [
-        int(bids_id_factory(study)(bids_id).to_original_study_id())
-        for bids_id in get_bids_subjs_list(bids_dir)
-    ]
-    for rid in unique_rids:
-        for file in files_to_read:
-            df = pd.read_csv(file, dtype={"text": str})
-            visit_code = df.loc[
-                (df["RID"] == rid), "VISCODE"
-            ]  # todo :how to get it out of the loop ?
-            for field in sessions_fields_to_read:
-                if field in list(df.columns.values) and field == "MMSCORE":
-                    mm_score = df.loc[(df["RID"] == rid), field]
-                    mm_score[mm_score == -4] = "n/a"
-
-                elif field in list(df.columns.values) and field == "CDGLOBAL":
-                    cd_global = df.loc[(df["RID"] == rid), field]
-                    cd_global[
-                        cd_global == -4
-                    ] = "n/a"  # todo (LATER) : do that mapping later, same for other fields
-
-                elif field in list(df.columns.values) and field == "DXCURREN":
-                    dx_curren = df.loc[(df["RID"] == rid), field]
-                    dx_curren = dx_curren.apply(lambda x: _mapping_diagnosis(x))
-
-                elif field in list(df.columns.values) and field == "EXAMDATE":
-                    exam_date = df.loc[(df["RID"] == rid), field]
-
-                elif field in list(df.columns.values) and field == "PTDOB":
-                    patient_date_of_birth = df.loc[(df["RID"] == rid), field]
-
-        exam_dates = _clean_exam_dates(
-            rid, exam_date.to_list(), visit_code.to_list(), clinical_data_dir
+        # todo : handle exam date, see function below
+        # in general age metadata is present only for baseline session
+        test["age"] = test["age"].ffill()
+        test["age"] = test.apply(
+            lambda row: _compute_age_at_exam(row.age, row.examination_date), axis=1
         )
-
-        if not patient_date_of_birth.empty:
-            age = _compute_ages_at_each_exam(
-                patient_date_of_birth.values[0], exam_dates
-            )
-        else:
-            age = "n/a"
-
-        sessions = pd.DataFrame(
-            {
-                "session_id": [viscode_to_session(code) for code in visit_code],
-                "age": age,
-                "MMS": mm_score,
-                "cdr_global": cd_global,
-                "diagnosis": dx_curren,
-                "examination_date": exam_dates,
-            }
-        )
-        cols = sessions.columns.tolist()
-        sessions = sessions[cols[-1:] + cols[:-1]]
+        # in case there is a session in clinical data that was not actually converted
+        test.dropna(subset=["session_id"], inplace=True)
+        test.fillna("n/a", inplace=True)
 
         bids_id = bids_id_factory(StudyName.AIBL).from_original_study_id(str(rid))
-
-        sessions.to_csv(
+        test.to_csv(
             bids_dir / bids_id / f"{bids_id}_sessions.tsv",
             sep="\t",
             index=False,
@@ -350,54 +285,32 @@ def create_sessions_tsv_file(
         )
 
 
-def _clean_exam_dates(
-    rid: int,
-    exam_dates: List[Union[str, int]],
-    visit_codes: List[str],
-    clinical_data_dir: Path,
-) -> List[Union[str, int]]:
-    """Clean the exam dates when necessary by trying to compute them from other sources.
+def _find_exam_dates(
+    df: pd.DataFrame, session_id: str, rid: int, clinical_data_dir: Path
+) -> str:
+    # todo :test
 
-    Parameters
-    ----------
-    rid : int
-        Patient study/source id
-    exam_dates : List
-        Ex : ['10/12/2007', '05/29/2009', '10/25/2010', -4]
-    visit_codes : List
-        Ex : ['bl', 'm18', 'm36', 'm54']
-    clinical_data_dir : Path
+    # todo : finish from csv
+    # todo : finish interaction between 2
 
-    Returns
-    -------
-    List of cleaned exam dates
+    from_csv = _find_exam_date_in_other_csv_files(rid, session_id, clinical_data_dir)
 
-    """
+    try:
+        baseline_date = df.loc["ses-M000"]["examination_date"]
+    except KeyError:
+        from_baseline = None
+    else:
+        from_baseline = _compute_exam_date_from_baseline(session_id, baseline_date)
 
-    from clinica.utils.stream import cprint
-
-    exam_dates_cleaned: List[str] = []
-    for visit_code, exam_date in zip(visit_codes, exam_dates):
-        if exam_date == "-4":
-            exam_date = _find_exam_date_in_other_csv_files(
-                rid, visit_code, clinical_data_dir
-            ) or _compute_exam_date_from_baseline(visit_code, exam_dates, visit_codes)
-            if not exam_date:
-                cprint(
-                    f"No EXAMDATE for subject %{rid}, at session {visit_code}",
-                    lvl="debug",
-                )
-                exam_date = "-4"
-        exam_dates_cleaned.append(exam_date)
-
-    return exam_dates_cleaned
+    date = from_csv or from_baseline
+    return from_baseline
 
 
 def _find_exam_date_in_other_csv_files(
     rid: int, visit_code: str, clinical_data_dir: Path
 ) -> Optional[str]:
     """Try to find an alternative exam date by searching in other CSV files."""
-    # todo (LATER) : refactor and test depending on _get_csv_files
+    # todo (LATER) : refactor to use session_id
     for csv_file in _get_csv_files(clinical_data_dir):
         if "aibl_flutemeta" in csv_file:
             csv_data = pd.read_csv(
@@ -431,79 +344,27 @@ def _get_csv_files(clinical_data_dir: Path) -> List[str]:
 
 
 def _compute_exam_date_from_baseline(
-    visit_code: str, exam_dates: List[Union[str, int]], visit_codes: List[str]
+    session_id: str,
+    baseline_date: str,
 ) -> Optional[str]:
-    """Try to find an alternative exam date by computing the number of months from the visit code.
-
-    Parameters
-    ----------
-    visit_code : Visit code of the current analysed session
-    exam_dates : List of all the exam_dates for one subject (ex : ['01/01/2000', -4])
-    visit_codes : List of all the visit codes for one subject (ex : ['bl', 'm12']
-
-    Returns
-    -------
-    Either None or the calculated date (str)
-    """
-    # todo (LATER) : this function could use a refactor though,
-    # for the same output you could just use the visitcode and the date at baseline (no need to use the lists)
-    # assuming you know it. There it returns none if its baseline ? why not the baseline date ?
-
     import re
     from datetime import datetime
 
     from dateutil.relativedelta import relativedelta
 
-    if visit_code != "bl":
-        try:
-            months = int(re.match(r"m(\d*)", visit_code).group(1))
-        except AttributeError:
-            raise ValueError(
-                f"Unexpected visit code {visit_code}. Should be in format mX :"
-                "Ex: m0, m6, m12, m048..."
-            )
-        baseline_index = visit_codes.index("bl")
-        baseline_date = datetime.strptime(exam_dates[baseline_index], "%m/%d/%Y")
-        exam_date = baseline_date + relativedelta(months=+months)
-        return exam_date.strftime("%m/%d/%Y")
+    if session_id != "ses-M000":
+        if not bool(np.isnan(baseline_date)):
+            try:
+                months = int(re.match(r"ses-M(\d*)", session_id).group(1))
+            except AttributeError:
+                raise ValueError(
+                    f"Unexpected visit code {session_id}. Should be in format ses-MX :"
+                    "Ex: ses-M000, ses-M006, ses-M012..."
+                )
+            baseline_date = datetime.strptime(baseline_date, "%m/%d/%Y")
+            exam_date = baseline_date + relativedelta(months=+months)
+            return exam_date.strftime("%m/%d/%Y")
     return None
-
-
-def _compute_ages_at_each_exam(
-    patient_date_of_birth: str, exam_dates: List[str]
-) -> List[float]:
-    """Compute the ages of the patient at each exam date.
-
-    Parameters
-    ----------
-    patient_date_of_birth : str
-        Date of birth of patient ("/%Y" format)
-
-    exam_dates : list of str
-        List of exam dates ("%m/%d/%Y" format)
-
-    Return
-    ------
-    list of float
-        The ages of the patient at each exam date.
-    """
-    from datetime import datetime
-
-    ages: List[float] = []
-    date_of_birth = datetime.strptime(patient_date_of_birth, "/%Y")
-
-    for exam_date in exam_dates:
-        exam_date = datetime.strptime(exam_date, "%m/%d/%Y")
-        delta = exam_date.year - date_of_birth.year
-        ages.append(delta)
-
-    # todo (NOW) :
-    #  rq : what is the use of being so precise ? we are comparing a year with a full date.. that's false anyway
-    #  we could give ages in years (int, >=0) and just subtract the years
-
-    # todo (LATER) : what happens if wrong format ?
-
-    return ages
 
 
 def create_scans_tsv_file(

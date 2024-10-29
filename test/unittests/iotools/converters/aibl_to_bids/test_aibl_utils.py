@@ -25,21 +25,19 @@ def test_mapping_diagnosis(diagnosis, expected):
 
 
 @pytest.mark.parametrize(
-    "visit, visit_list, date_list, expected",
+    "session_id, baseline_date, expected",
     [
-        ("bl", ["bl", "m10"], ["01/01/2000", -4], None),
-        ("m10", ["bl", "m10"], ["01/01/2000", -4], "11/01/2000"),
-        ("m0006", ["bl"], ["01/01/2000"], "07/01/2000"),
+        ("ses-M000", "foo", None),
+        ("ses-M010", "01/01/2000", "11/01/2000"),
+        ("ses-M010", np.nan, None),
     ],
 )
-def test_compute_exam_date_from_baseline_success(
-    visit, date_list, visit_list, expected
-):
+def test_compute_exam_date_from_baseline_success(session_id, baseline_date, expected):
     from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
         _compute_exam_date_from_baseline,
     )
 
-    assert _compute_exam_date_from_baseline(visit, date_list, visit_list) == expected
+    assert _compute_exam_date_from_baseline(session_id, baseline_date) == expected
 
 
 def test_compute_exam_date_from_baseline_raiseValue():
@@ -118,25 +116,6 @@ def test_get_first_file_matching_pattern_error(tmp_path, pattern, msg):
 
     with pytest.raises(ValueError, match=msg):
         _get_first_file_matching_pattern(tmp_path, pattern)
-
-
-@pytest.mark.parametrize(
-    "birth_date, exam_date, age",
-    [
-        (
-            "/2000",
-            ["01/02/2000", "02/01/2000", "01/01/2001", "07/06/2003"],
-            [0, 0, 1, 3],
-        ),
-        ("/2001", ["12/30/2003"], [2]),
-    ],
-)
-def test_compute_age(birth_date, exam_date, age):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _compute_ages_at_each_exam,
-    )
-
-    assert _compute_ages_at_each_exam(birth_date, exam_date) == age
 
 
 def build_sessions_spec(tmp_path: Path) -> Path:
