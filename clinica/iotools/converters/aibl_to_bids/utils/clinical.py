@@ -1,6 +1,5 @@
-from ast import Index
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -10,8 +9,6 @@ __all__ = [
     "create_scans_tsv_file",
     "create_sessions_tsv_file",
 ]
-
-from sqlalchemy.sql.operators import from_
 
 
 def create_participants_tsv_file(
@@ -153,7 +150,6 @@ def _load_specifications(
 
 
 def _mapping_diagnosis(diagnosis: int) -> str:
-    # todo : what if str(1) ?
     if diagnosis == 1:
         return "CN"
     elif diagnosis == 2:
@@ -167,7 +163,6 @@ def _mapping_diagnosis(diagnosis: int) -> str:
 def _extract_metadata_df(
     input_df: pd.DataFrame, source_id: int, bids_metadata: str, source_metadata: str
 ) -> pd.DataFrame:
-    # todo :test
     from clinica.iotools.converter_utils import viscode_to_session
 
     extract = input_df.loc[(input_df["RID"] == source_id), ["VISCODE", source_metadata]]
@@ -182,32 +177,15 @@ def _extract_metadata_df(
 
 
 def _compute_age_at_exam(
-    birth_date: Union[float, str], exam_date: Union[float, str]
-) -> float:
-    """Compute the ages of the patient at each exam date.
-
-    Parameters
-    ----------
-    birth_date : str
-        Date of birth of patient ("/%Y" format)
-
-    exam_date : str
-        Exam date ("%m/%d/%Y" format)
-
-    Return
-    ------
-    float
-        Age of the patient at exam date.
-    """
-    # todo : test
+    birth_date: Optional[str], exam_date: Optional[str]
+) -> Optional[float]:
     from datetime import datetime
 
-    if not isinstance(birth_date, float) and not isinstance(exam_date, float):
+    if birth_date and exam_date:
         date_of_birth = datetime.strptime(birth_date, "/%Y")
         exam_date = datetime.strptime(exam_date, "%m/%d/%Y")
         return exam_date.year - date_of_birth.year
-    else:
-        return np.nan
+    return None
 
 
 def create_sessions_tsv_file(
@@ -228,6 +206,7 @@ def create_sessions_tsv_file(
     clinical_specifications_folder : Path
         The path to the folder containing the clinical specification files.
     """
+    # todo :rename test
     import glob
 
     from clinica.iotools.bids_utils import (
@@ -263,15 +242,21 @@ def create_sessions_tsv_file(
 
         test.sort_index(inplace=True)
         # -4 are considered missing values in AIBL
-        test.replace([-4, "-4"], np.nan, inplace=True)
+        test.replace([-4, "-4", np.nan], None, inplace=True)
         test["diagnosis"] = test.diagnosis.apply(lambda x: _mapping_diagnosis(x))
+        test["examination_date"] = test.apply(
+            lambda x: _complete_examination_dates(
+                rid, x.session_id, x.examination_date, clinical_data_dir
+            ),
+            axis=1,
+        )
 
-        # todo : handle exam date, see function below
         # in general age metadata is present only for baseline session
         test["age"] = test["age"].ffill()
         test["age"] = test.apply(
-            lambda row: _compute_age_at_exam(row.age, row.examination_date), axis=1
+            lambda x: _compute_age_at_exam(x.age, x.examination_date), axis=1
         )
+
         # in case there is a session in clinical data that was not actually converted
         test.dropna(subset=["session_id"], inplace=True)
         test.fillna("n/a", inplace=True)
@@ -285,86 +270,56 @@ def create_sessions_tsv_file(
         )
 
 
-def _find_exam_dates(
-    df: pd.DataFrame, session_id: str, rid: int, clinical_data_dir: Path
-) -> str:
-    # todo :test
-
-    # todo : finish from csv
-    # todo : finish interaction between 2
-
-    from_csv = _find_exam_date_in_other_csv_files(rid, session_id, clinical_data_dir)
-
-    try:
-        baseline_date = df.loc["ses-M000"]["examination_date"]
-    except KeyError:
-        from_baseline = None
-    else:
-        from_baseline = _compute_exam_date_from_baseline(session_id, baseline_date)
-
-    date = from_csv or from_baseline
-    return from_baseline
+def _complete_examination_dates(
+    rid: int,
+    session_id: Optional[str],
+    examination_date: Optional[str],
+    clinical_data_dir: Path,
+) -> Optional[str]:
+    if examination_date:
+        return examination_date
+    if session_id:
+        return _find_exam_date_in_other_csv_files(rid, session_id, clinical_data_dir)
+    return None
 
 
 def _find_exam_date_in_other_csv_files(
-    rid: int, visit_code: str, clinical_data_dir: Path
+    rid: int, session_id: str, clinical_data_dir: Path
 ) -> Optional[str]:
     """Try to find an alternative exam date by searching in other CSV files."""
-    # todo (LATER) : refactor to use session_id
-    for csv_file in _get_csv_files(clinical_data_dir):
-        if "aibl_flutemeta" in csv_file:
-            csv_data = pd.read_csv(
-                csv_file, low_memory=False, usecols=list(range(0, 36))
-            )
-        else:
-            csv_data = pd.read_csv(csv_file, low_memory=False)
-        exam_date = csv_data[(csv_data.RID == rid) & (csv_data.VISCODE == visit_code)]
+    from clinica.iotools.converter_utils import viscode_to_session
+
+    for csv in _get_csv_paths(clinical_data_dir):
+        csv_data = pd.read_csv(csv, low_memory=False)
+        csv_data["SESSION"] = csv_data.VISCODE.apply(lambda x: viscode_to_session(x))
+        exam_date = csv_data[(csv_data.RID == rid) & (csv_data.SESSION == session_id)]
         if not exam_date.empty and exam_date.iloc[0].EXAMDATE != "-4":
             return exam_date.iloc[0].EXAMDATE
     return None
 
 
-def _get_csv_files(clinical_data_dir: Path) -> List[str]:
+def _get_csv_paths(clinical_data_dir: Path) -> Tuple[str]:
     """Return a list of paths to CSV files in which an alternative exam date could be found."""
     import glob
-    # todo (LATER) : would be better to use a function similar to load_clinical_csv from ADNI
-    # bc there it does not check for existence and can return anything
 
-    return [
-        glob.glob(str(clinical_data_dir / pattern))[0]
-        for pattern in (
-            "aibl_mri3meta_*.csv",
-            "aibl_mrimeta_*.csv",
-            "aibl_cdr_*.csv",
-            "aibl_flutemeta_*.csv",
-            "aibl_mmse_*.csv",
-            "aibl_pibmeta_*.csv",
-        )
-    ]
+    pattern_list = (
+        "aibl_mri3meta_*.csv",
+        "aibl_mrimeta_*.csv",
+        "aibl_cdr_*.csv",
+        "aibl_flutemeta_*.csv",
+        "aibl_mmse_*.csv",
+        "aibl_pibmeta_*.csv",
+    )
 
+    paths_list = ()
 
-def _compute_exam_date_from_baseline(
-    session_id: str,
-    baseline_date: str,
-) -> Optional[str]:
-    import re
-    from datetime import datetime
-
-    from dateutil.relativedelta import relativedelta
-
-    if session_id != "ses-M000":
-        if not bool(np.isnan(baseline_date)):
-            try:
-                months = int(re.match(r"ses-M(\d*)", session_id).group(1))
-            except AttributeError:
-                raise ValueError(
-                    f"Unexpected visit code {session_id}. Should be in format ses-MX :"
-                    "Ex: ses-M000, ses-M006, ses-M012..."
-                )
-            baseline_date = datetime.strptime(baseline_date, "%m/%d/%Y")
-            exam_date = baseline_date + relativedelta(months=+months)
-            return exam_date.strftime("%m/%d/%Y")
-    return None
+    for pattern in pattern_list:
+        try:
+            path = glob.glob(str(clinical_data_dir / pattern))[0]
+            paths_list += (path,)
+        except IndexError:
+            pass
+    return paths_list
 
 
 def create_scans_tsv_file(
