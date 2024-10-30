@@ -206,7 +206,6 @@ def create_sessions_tsv_file(
     clinical_specifications_folder : Path
         The path to the folder containing the clinical specification files.
     """
-    # todo :rename test
     import glob
 
     from clinica.iotools.bids_utils import (
@@ -223,7 +222,7 @@ def create_sessions_tsv_file(
 
     for bids_id in get_bids_subjs_list(bids_dir):
         rid = int(bids_id_factory(study)(bids_id).to_original_study_id())
-        test = pd.DataFrame(
+        sessions = pd.DataFrame(
             {"session_id": get_bids_sess_list(bids_dir / bids_id)}
         ).set_index("session_id", drop=False)
 
@@ -238,13 +237,15 @@ def create_sessions_tsv_file(
                 bids_metadata=row["BIDS CLINICA"],
                 source_metadata=row[study],
             )
-            test = pd.concat([test, extract], axis=1)
+            sessions = pd.concat([sessions, extract], axis=1)
 
-        test.sort_index(inplace=True)
+        sessions.sort_index(inplace=True)
         # -4 are considered missing values in AIBL
-        test.replace([-4, "-4", np.nan], None, inplace=True)
-        test["diagnosis"] = test.diagnosis.apply(lambda x: _mapping_diagnosis(x))
-        test["examination_date"] = test.apply(
+        sessions.replace([-4, "-4", np.nan], None, inplace=True)
+        sessions["diagnosis"] = sessions.diagnosis.apply(
+            lambda x: _mapping_diagnosis(x)
+        )
+        sessions["examination_date"] = sessions.apply(
             lambda x: _complete_examination_dates(
                 rid, x.session_id, x.examination_date, clinical_data_dir
             ),
@@ -252,17 +253,17 @@ def create_sessions_tsv_file(
         )
 
         # in general age metadata is present only for baseline session
-        test["age"] = test["age"].ffill()
-        test["age"] = test.apply(
+        sessions["age"] = sessions["age"].ffill()
+        sessions["age"] = sessions.apply(
             lambda x: _compute_age_at_exam(x.age, x.examination_date), axis=1
         )
 
         # in case there is a session in clinical data that was not actually converted
-        test.dropna(subset=["session_id"], inplace=True)
-        test.fillna("n/a", inplace=True)
+        sessions.dropna(subset=["session_id"], inplace=True)
+        sessions.fillna("n/a", inplace=True)
 
         bids_id = bids_id_factory(StudyName.AIBL).from_original_study_id(str(rid))
-        test.to_csv(
+        sessions.to_csv(
             bids_dir / bids_id / f"{bids_id}_sessions.tsv",
             sep="\t",
             index=False,
