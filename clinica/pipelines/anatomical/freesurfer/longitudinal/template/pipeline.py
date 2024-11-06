@@ -2,6 +2,11 @@ from pathlib import Path
 from typing import List
 
 from clinica.pipelines.engine import Pipeline
+from clinica.utils.input_files import (
+    Parcellation,
+    QueryPatternName,
+    query_pattern_factory,
+)
 
 
 class T1FreeSurferTemplate(Pipeline):
@@ -17,7 +22,6 @@ class T1FreeSurferTemplate(Pipeline):
     ) -> List[str]:
         import re
 
-        from clinica.utils.input_files import T1_FS_T_DESTRIEUX
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.longitudinal import get_long_id
         from clinica.utils.participant import get_unique_subjects
@@ -28,11 +32,13 @@ class T1FreeSurferTemplate(Pipeline):
         list_long_id = [
             get_long_id(list_session_ids) for list_session_ids in list_list_session_ids
         ]
-
         image_ids: List[str] = []
         if caps_directory.is_dir():
+            pattern = query_pattern_factory(QueryPatternName.T1_FREESURFER_TEMPLATE)(
+                Parcellation.DESTRIEUX
+            )
             t1_freesurfer_files, _ = clinica_file_reader(
-                list_participant_id, list_long_id, caps_directory, T1_FS_T_DESTRIEUX
+                list_participant_id, list_long_id, caps_directory, pattern
             )
             image_ids = [
                 re.search(r"(sub-[a-zA-Z0-9]+)_(long-[a-zA-Z0-9]+)", file).group()
@@ -88,9 +94,7 @@ class T1FreeSurferTemplate(Pipeline):
         from clinica.pipelines.anatomical.freesurfer.longitudinal.utils import (
             save_part_sess_long_ids_to_tsv,
         )
-        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
-        from clinica.utils.input_files import T1_FS_DESTRIEUX
         from clinica.utils.inputs import clinica_file_filter
         from clinica.utils.longitudinal import (
             get_long_id,
@@ -149,11 +153,12 @@ class T1FreeSurferTemplate(Pipeline):
                 self.subjects, self.sessions = extract_subjects_sessions_from_filename(
                     to_process_ids
                 )
-
-        _, self.subjects, self.sessions = clinica_file_filter(
-            self.subjects, self.sessions, self.caps_directory, T1_FS_DESTRIEUX
+        pattern = query_pattern_factory(QueryPatternName.T1_FREESURFER_SEGMENTATION)(
+            Parcellation.DESTRIEUX
         )
-
+        _, self.subjects, self.sessions = clinica_file_filter(
+            self.subjects, self.sessions, self.caps_directory, pattern
+        )
         long_ids = get_participants_long_id(self.subjects, self.sessions)
         save_part_sess_long_ids_to_tsv(
             self.subjects, self.sessions, long_ids, self.base_dir / self.name

@@ -59,7 +59,11 @@ class T1FreeSurferLongitudinalCorrection(Pipeline):
             save_part_sess_long_ids_to_tsv,
         )
         from clinica.utils.exceptions import ClinicaException
-        from clinica.utils.input_files import T1_FS_DESTRIEUX, T1_FS_T_DESTRIEUX
+        from clinica.utils.input_files import (
+            Parcellation,
+            QueryPatternName,
+            query_pattern_factory,
+        )
         from clinica.utils.inputs import (
             clinica_file_reader,
             format_clinica_file_reader_errors,
@@ -119,19 +123,26 @@ class T1FreeSurferLongitudinalCorrection(Pipeline):
                 ) = extract_subject_session_longitudinal_ids_from_filename(
                     to_process_ids
                 )
-
+        pattern_segmentation = query_pattern_factory(
+            QueryPatternName.T1_FREESURFER_SEGMENTATION
+        )(Parcellation.DESTRIEUX)
         _, errors_destrieux = clinica_file_reader(
-            self.subjects, self.sessions, self.caps_directory, T1_FS_DESTRIEUX
+            self.subjects, self.sessions, self.caps_directory, pattern_segmentation
         )
+        pattern_template = query_pattern_factory(
+            QueryPatternName.T1_FREESURFER_TEMPLATE
+        )(Parcellation.DESTRIEUX)
         _, errors_t_destrieux = clinica_file_reader(
-            self.subjects, list_long_id, self.caps_directory, T1_FS_T_DESTRIEUX
+            self.subjects, list_long_id, self.caps_directory, pattern_template
         )
         all_errors = [errors_destrieux, errors_t_destrieux]
 
         if any(all_errors):
             message = "Clinica faced errors while trying to read files in your CAPS directory.\n"
-            for error, info in zip(all_errors, [T1_FS_DESTRIEUX, T1_FS_T_DESTRIEUX]):
-                message += format_clinica_file_reader_errors(error, info)
+            for error, pattern in zip(
+                all_errors, [pattern_segmentation, pattern_template]
+            ):
+                message += format_clinica_file_reader_errors(error, pattern)
             raise ClinicaException(message)
 
         save_part_sess_long_ids_to_tsv(

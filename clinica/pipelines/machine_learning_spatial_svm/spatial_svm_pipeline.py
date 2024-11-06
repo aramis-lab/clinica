@@ -1,6 +1,12 @@
+from pathlib import Path
 from typing import List
 
 from clinica.pipelines.engine import GroupPipeline
+from clinica.utils.input_files import (
+    QueryPattern,
+    QueryPatternName,
+    query_pattern_factory,
+)
 
 
 class SpatialSVM(GroupPipeline):
@@ -49,16 +55,10 @@ class SpatialSVM(GroupPipeline):
 
     def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        import os
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
-        from clinica.utils.input_files import (
-            pet_volume_normalized_suvr_pet,
-            t1_volume_final_group_template,
-        )
         from clinica.utils.inputs import (
             clinica_file_reader,
             clinica_group_reader,
@@ -80,19 +80,18 @@ class SpatialSVM(GroupPipeline):
             ),
         )
         all_errors = []
-
         if self.parameters["orig_input_data_ml"] == "t1-volume":
-            caps_files_information = {
-                "pattern": os.path.join(
-                    "t1",
-                    "spm",
-                    "dartel",
-                    str(self.group_id),
-                    "*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability.nii.gz",
+            pattern = QueryPattern(
+                str(
+                    Path("t1")
+                    / "spm"
+                    / "dartel"
+                    / str(self.group_id),
+                    / "*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability.nii.gz"
                 ),
-                "description": "graymatter tissue segmented in T1w MRI in Ixi549 space",
-                "needed_pipeline": "t1-volume-tissue-segmentation",
-            }
+                "graymatter tissue segmented in T1w MRI in Ixi549 space",
+                "t1-volume-tissue-segmentation",
+            )
         elif self.parameters["orig_input_data_ml"] == "pet-volume":
             if not (
                 self.parameters["acq_label"]
@@ -104,8 +103,11 @@ class SpatialSVM(GroupPipeline):
                     f"- suvr_reference_region: {self.parameters['suvr_reference_region']}\n"
                     f"- use_pvc_data: {self.parameters['use_pvc_data']}\n"
                 )
-            caps_files_information = pet_volume_normalized_suvr_pet(
-                acq_label=self.parameters["acq_label"],
+            pattern = query_pattern_factory(
+                QueryPatternName.PET_VOLUME_NORMALIZED_SUVR
+            )(
+                tracer=self.parameters["acq_label"],
+                group_label=self.parameters["group_label"],
                 suvr_reference_region=self.parameters["suvr_reference_region"],
                 use_brainmasked_image=False,
                 use_pvc_data=self.parameters["use_pvc_data"],
@@ -115,27 +117,18 @@ class SpatialSVM(GroupPipeline):
             raise ValueError(
                 f"Image type {self.parameters['orig_input_data_ml']} unknown."
             )
-
         input_image, caps_error = clinica_file_reader(
-            self.subjects,
-            self.sessions,
-            self.caps_directory,
-            caps_files_information,
+            self.subjects, self.sessions, self.caps_directory, pattern
         )
         if caps_error:
-            all_errors.append(
-                format_clinica_file_reader_errors(caps_error, caps_files_information)
-            )
-
+            all_errors.append(format_clinica_file_reader_errors(caps_error, pattern))
         try:
-            dartel_input = clinica_group_reader(
-                self.caps_directory,
-                t1_volume_final_group_template(self.group_label),
+            pattern = query_pattern_factory(QueryPatternName.T1_VOLUME_GROUP_TEMPLATE)(
+                self.group_label
             )
+            dartel_input = clinica_group_reader(self.caps_directory, pattern)
         except ClinicaException as e:
             all_errors.append(e)
-
-        # Raise all errors if some happened
         if any(all_errors):
             error_message = "Clinica faced errors while trying to read files in your CAPS directories.\n"
             for msg in all_errors:

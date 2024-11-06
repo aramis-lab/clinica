@@ -150,7 +150,7 @@ class CAPSVoxelBasedInput(CAPSInput):
         """
         Returns: a list of filenames
         """
-        from clinica.utils.input_files import pet_volume_normalized_suvr_pet
+        from clinica.utils.input_files import QueryPatternName, query_pattern_factory
         from clinica.utils.inputs import clinica_file_reader
 
         if self._images is not None:
@@ -183,8 +183,10 @@ class CAPSVoxelBasedInput(CAPSInput):
                     raise Exception("File %s doesn't exists." % image)
 
         elif self._input_params["image_type"] == "PET":
-            caps_files_information = pet_volume_normalized_suvr_pet(
-                acq_label=self._input_params["acq_label"],
+            pattern = query_pattern_factory(
+                QueryPatternName.PET_VOLUME_NORMALIZED_SUVR
+            )(
+                tracer=self._input_params["acq_label"],
                 group_label=self._input_params["group_label"],
                 suvr_reference_region=self._input_params["suvr_reference_region"],
                 use_brainmasked_image=True,
@@ -195,7 +197,7 @@ class CAPSVoxelBasedInput(CAPSInput):
                 self._subjects,
                 self._sessions,
                 self._input_params["caps_directory"],
-                caps_files_information,
+                pattern,
             )
         else:
             raise ValueError(
