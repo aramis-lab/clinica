@@ -676,9 +676,9 @@ def _create_file(
         if output_path.with_suffix(".nii.gz").exists():
             output_path.with_suffix(".nii.gz").unlink()
         output_image = _dicom_to_nii(output_path, image_path)
-        # todo : there, it does it whatever the modality
 
-        json_dict = BidsCompliantJson().build_dict(image_path, StudyName.AIBL)
+        # todo : there, it does it whatever the modality
+        json_dict = BidsCompliantJson().build_dict(image_path)
         write_json(output_path.with_suffix(".json"), json_dict)
 
     center_nifti_origin(output_image, output_image)

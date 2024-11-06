@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from turtledemo.penrose import start
 from typing import Tuple, Union
 
 import numpy as np
@@ -29,6 +30,7 @@ class BidsCompliantJson:
 
     def __init__(self):
         # todo : finish filling default value and verify dicom correspondence
+        # todo : there : optional + required fields for PET
         self.meta_collection = pd.DataFrame(
             columns=["BIDSname", "DCMtag", "Value"],
             data=[
@@ -74,7 +76,7 @@ class BidsCompliantJson:
                     "n/a",
                 ],
                 ["InjectedRadioactivity", ("RadionuclideTotalDose",), np.nan],
-                ["InjectedRadioactivityUnits", (), "MBq"],
+                ["InjectedRadioactivityUnits", (), "n/a"],
                 ["InjectedMass", (), "n/a"],
                 ["InjectedMassUnits", (), "n/a"],
                 [
@@ -82,9 +84,8 @@ class BidsCompliantJson:
                     ("RadiopharmaceuticalSpecificActivity",),
                     "n/a",
                 ],
-                ["SpecificRadioactivityUnits", (), "Bq/micromole"],
+                ["SpecificRadioactivityUnits", (), "n/a"],
                 ["ModeOfAdministration", (), "n/a"],
-                # todo : required if bolus-infusion (below)
                 ["InfusionRadioactivity", (), np.nan],  # todo : corresp ?
                 ["InfusionStart", ("RadiopharmaceuticalStartTime",), np.nan],
                 ["InfusionSpeed", (), np.nan],  # todo : corresp ?
@@ -92,6 +93,7 @@ class BidsCompliantJson:
                 ["InjectedVolume", ("RadiopharmaceuticalVolume",), np.nan],
                 # Reconstruction
                 ["AcquisitionMode", (), "n/a"],  # todo : corresp ?
+                # todo : DecayCorrection ?
                 [
                     "ImageDecayCorrected",
                     ("DecayCorrection",),
@@ -152,10 +154,30 @@ class BidsCompliantJson:
             if dcm_value := self._get_dcm_tag(metadata.DCMtag, dicom_header):
                 self.meta_collection.loc[metadata.BIDSname, "Value"] = dcm_value
 
-    def _get_admin_mode_from_study(self, study: StudyName) -> None:
-        # todo : should actually be inferred from time start vs injection
-        if study == StudyName.ADNI:
-            self.meta_collection.loc["ModeOfAdministration", "Value"] = "bolus-infusion"
+    def _get_admin_mode_from_study(self) -> None:
+        # todo : test
+        start_time = self.meta_collection.loc["TimeZero", "Value"]
+        injection_time = self.meta_collection.loc["InjectionStart", "Value"]
+
+        # todo : more check on injection_time ?? (np.isnan does not always work, mb write another function)
+
+        if start_time != "n/a" and not bool(np.isnan(injection_time)):
+            if injection_time - float(start_time):
+                self.meta_collection.loc[
+                    "ModeOfAdministration", "Value"
+                ] = "bolus-infusion"
+            self.meta_collection.loc["ModeOfAdministration", "Value"] = "bolus"
+
+    def _set_decay_tag(self) -> None:
+        corrected = self.meta_collection.loc["ImageDecayCorrected", "Value"]
+        self.meta_collection.loc["ImageDecayCorrected", "Value"] = (
+            not bool(np.isnan(corrected)) and corrected != "NONE"
+        )
+        # todo : more check on corrected
+
+    def _update_default_units(self) -> None:
+        self.meta_collection.loc["InjectedRadioactivityUnits", "Value"] = "MBq"
+        self.meta_collection.loc["SpecificRadioactivityUnits", "Value"] = "Bq/micromole"
 
     def _update_injected_mass(self) -> None:
         # todo :test
@@ -173,8 +195,10 @@ class BidsCompliantJson:
             data.BIDSname: data.Value for _, data in self.meta_collection.iterrows()
         }
 
-    def build_dict(self, dcm_dir: Path, study: StudyName) -> dict:
+    def build_dict(self, dcm_dir: Path) -> dict:
         self._update_from_dcm(dcm_dir)
-        self._get_admin_mode_from_study(study)
+        self._get_admin_mode_from_study()
+        self._update_default_units()
         self._update_injected_mass()
+        breakpoint()
         return self._translate_to_dict()
