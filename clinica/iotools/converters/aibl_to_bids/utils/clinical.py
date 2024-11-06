@@ -1,3 +1,4 @@
+from multiprocessing.managers import Value
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -149,7 +150,7 @@ def _load_specifications(
     return pd.read_csv(specifications, sep="\t")
 
 
-def _mapping_diagnosis(diagnosis: int) -> str:
+def _map_diagnosis(diagnosis: int) -> str:
     if diagnosis == 1:
         return "CN"
     elif diagnosis == 2:
@@ -160,7 +161,7 @@ def _mapping_diagnosis(diagnosis: int) -> str:
         return "n/a"
 
 
-def _extract_metadata_df(
+def _format_metadata_for_rid(
     input_df: pd.DataFrame, source_id: int, bids_metadata: str, source_metadata: str
 ) -> pd.DataFrame:
     from clinica.iotools.converter_utils import viscode_to_session
@@ -178,7 +179,7 @@ def _extract_metadata_df(
 
 def _compute_age_at_exam(
     birth_date: Optional[str], exam_date: Optional[str]
-) -> Optional[float]:
+) -> Optional[int]:
     from datetime import datetime
 
     if birth_date and exam_date:
@@ -186,6 +187,22 @@ def _compute_age_at_exam(
         exam_date = datetime.strptime(exam_date, "%m/%d/%Y")
         return exam_date.year - date_of_birth.year
     return None
+
+
+def _set_age_from_birth(df: pd.DataFrame) -> pd.DataFrame:
+    if "date_of_birth" not in df.columns or "examination_date" not in df.columns:
+        raise ValueError(
+            "Columns date_of_birth or/and examination_date were not found in the sessions metadata dataframe."
+            "Please check your study metadata."
+        )
+    if len(df["date_of_birth"].dropna().unique()) <= 1:
+        df["date_of_birth"] = df["date_of_birth"].ffill()
+        df["age"] = df.apply(
+            lambda x: _compute_age_at_exam(x.date_of_birth, x.examination_date), axis=1
+        )
+    else:
+        df["age"] = None
+    return df.drop(labels="date_of_birth", axis=1)
 
 
 def create_sessions_tsv_file(
@@ -227,36 +244,37 @@ def create_sessions_tsv_file(
         ).set_index("session_id", drop=False)
 
         for _, row in specifications.iterrows():
-            df = pd.read_csv(
-                glob.glob(str(clinical_data_dir / row[f"{study} location"]))[0],
-                dtype={"text": str},
-            )
-            extract = _extract_metadata_df(
+            try:
+                df = pd.read_csv(
+                    next(clinical_data_dir.glob(row[f"{study} location"])),
+                    dtype={"text": str},
+                )
+            except StopIteration:
+                raise FileNotFoundError(
+                    f"Clinical data file corresponding to pattern {row[f'{study} location']} was not found in folder "
+                    f"{clinical_data_dir}"
+                )
+
+            data = _format_metadata_for_rid(
                 input_df=df,
                 source_id=rid,
                 bids_metadata=row["BIDS CLINICA"],
                 source_metadata=row[study],
             )
-            sessions = pd.concat([sessions, extract], axis=1)
+            sessions = pd.concat([sessions, data], axis=1)
 
         sessions.sort_index(inplace=True)
+
         # -4 are considered missing values in AIBL
         sessions.replace([-4, "-4", np.nan], None, inplace=True)
-        sessions["diagnosis"] = sessions.diagnosis.apply(
-            lambda x: _mapping_diagnosis(x)
-        )
+        sessions["diagnosis"] = sessions.diagnosis.apply(lambda x: _map_diagnosis(x))
         sessions["examination_date"] = sessions.apply(
             lambda x: _complete_examination_dates(
-                rid, x.session_id, x.examination_date, clinical_data_dir
+                rid, clinical_data_dir, x.session_id, x.examination_date
             ),
             axis=1,
         )
-
-        # in general age metadata is present only for baseline session
-        sessions["age"] = sessions["age"].ffill()
-        sessions["age"] = sessions.apply(
-            lambda x: _compute_age_at_exam(x.age, x.examination_date), axis=1
-        )
+        sessions = _set_age_from_birth(sessions)
 
         # in case there is a session in clinical data that was not actually converted
         sessions.dropna(subset=["session_id"], inplace=True)
@@ -273,9 +291,9 @@ def create_sessions_tsv_file(
 
 def _complete_examination_dates(
     rid: int,
-    session_id: Optional[str],
-    examination_date: Optional[str],
     clinical_data_dir: Path,
+    session_id: Optional[str] = None,
+    examination_date: Optional[str] = None,
 ) -> Optional[str]:
     if examination_date:
         return examination_date
@@ -290,7 +308,7 @@ def _find_exam_date_in_other_csv_files(
     """Try to find an alternative exam date by searching in other CSV files."""
     from clinica.iotools.converter_utils import viscode_to_session
 
-    for csv in _get_csv_paths(clinical_data_dir):
+    for csv in _get_csv_files_for_alternative_exam_date(clinical_data_dir):
         csv_data = pd.read_csv(csv, low_memory=False)
         csv_data["SESSION"] = csv_data.VISCODE.apply(lambda x: viscode_to_session(x))
         exam_date = csv_data[(csv_data.RID == rid) & (csv_data.SESSION == session_id)]
@@ -299,11 +317,11 @@ def _find_exam_date_in_other_csv_files(
     return None
 
 
-def _get_csv_paths(clinical_data_dir: Path) -> Tuple[str]:
+def _get_csv_files_for_alternative_exam_date(clinical_data_dir: Path) -> Tuple[Path]:
     """Return a list of paths to CSV files in which an alternative exam date could be found."""
     import glob
 
-    pattern_list = (
+    patterns = (
         "aibl_mri3meta_*.csv",
         "aibl_mrimeta_*.csv",
         "aibl_cdr_*.csv",
@@ -312,15 +330,14 @@ def _get_csv_paths(clinical_data_dir: Path) -> Tuple[str]:
         "aibl_pibmeta_*.csv",
     )
 
-    paths_list = ()
+    paths = ()
 
-    for pattern in pattern_list:
+    for pattern in patterns:
         try:
-            path = glob.glob(str(clinical_data_dir / pattern))[0]
-            paths_list += (path,)
-        except IndexError:
+            paths += (next(clinical_data_dir.glob(pattern)),)
+        except StopIteration:
             pass
-    return paths_list
+    return paths
 
 
 def create_scans_tsv_file(

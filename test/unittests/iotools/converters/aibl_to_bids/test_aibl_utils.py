@@ -30,10 +30,10 @@ def test_compute_age_at_exam(birth_date, exam_date, expected):
 )
 def test_mapping_diagnosis(diagnosis, expected):
     from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _mapping_diagnosis,
+        _map_diagnosis,
     )
 
-    assert _mapping_diagnosis(diagnosis) == expected
+    assert _map_diagnosis(diagnosis) == expected
 
 
 def test_load_specifications_success(tmp_path):
@@ -106,7 +106,7 @@ def build_sessions_spec(tmp_path: Path) -> Path:
         {
             "BIDS CLINICA": [
                 "examination_date",
-                "age",
+                "date_of_birth",
                 "cdr_global",
                 "MMS",
                 "diagnosis",
@@ -232,7 +232,7 @@ def build_clinical_data(tmp_path: Path) -> Path:
 
 def test_extract_metadata_df(tmp_path):
     from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _extract_metadata_df,
+        _format_metadata_for_rid,
     )
 
     clinical_dir = build_clinical_data(tmp_path)
@@ -242,7 +242,7 @@ def test_extract_metadata_df(tmp_path):
             "examination_date": ["01/01/2109", "-4"],
         }
     ).set_index("session_id", drop=True)
-    result = _extract_metadata_df(
+    result = _format_metadata_for_rid(
         pd.read_csv(clinical_dir / "aibl_neurobat_230ct2024.csv", dtype={"text": str}),
         109,
         bids_metadata="examination_date",
@@ -273,13 +273,18 @@ def test_find_exam_date_in_other_csv_files(tmp_path, source_id, session_id, expe
     )
 
 
-def test_get_csv_paths(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import _get_csv_paths
+def test_get_csv_files_for_alternative_exam_date(tmp_path):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        _get_csv_files_for_alternative_exam_date,
+    )
 
-    assert _get_csv_paths(tmp_path) == ()
+    assert _get_csv_files_for_alternative_exam_date(tmp_path) == ()
 
     clinical_dir = build_clinical_data(tmp_path)
-    csv_paths = [Path(path).name for path in _get_csv_paths(clinical_dir)]
+    csv_paths = [
+        Path(path).name
+        for path in _get_csv_files_for_alternative_exam_date(clinical_dir)
+    ]
 
     assert set(csv_paths) == {
         "aibl_cdr_230ct2024.csv",
@@ -305,9 +310,76 @@ def test_complete_examination_dates(tmp_path, rid, session_id, exam_date, expect
 
     clinical_dir = build_clinical_data(tmp_path)
     assert (
-        _complete_examination_dates(rid, session_id, exam_date, clinical_dir)
+        _complete_examination_dates(rid, clinical_dir, session_id, exam_date)
         == expected
     )
+
+
+@pytest.mark.parametrize(
+    "input_df, expected_df",
+    [
+        (
+            pd.DataFrame(
+                {
+                    "date_of_birth": ["/2000", None],
+                    "examination_date": ["01/01/2024", "01/01/2026"],
+                }
+            ),
+            pd.DataFrame(
+                {"age": [24, 26], "examination_date": ["01/01/2024", "01/01/2026"]}
+            ),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "date_of_birth": [None, None],
+                    "examination_date": ["01/01/2024", "01/01/2026"],
+                }
+            ),
+            pd.DataFrame(
+                {"age": [None, None], "examination_date": ["01/01/2024", "01/01/2026"]}
+            ),
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "date_of_birth": ["/2000", "/2001"],
+                    "examination_date": ["01/01/2024", "01/01/2026"],
+                }
+            ),
+            pd.DataFrame(
+                {"age": [None, None], "examination_date": ["01/01/2024", "01/01/2026"]}
+            ),
+        ),
+    ],
+)
+def test_set_age_from_birth_success(input_df, expected_df):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        _set_age_from_birth,
+    )
+
+    assert_frame_equal(_set_age_from_birth(input_df), expected_df, check_like=True)
+
+
+@pytest.mark.parametrize(
+    "input_df",
+    [
+        pd.DataFrame(),
+        pd.DataFrame({"date_of_birth": ["foo"]}),
+        pd.DataFrame({"examination_date": ["bar"]}),
+    ],
+)
+def test_set_age_from_birth_raise(input_df):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        _set_age_from_birth,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Columns date_of_birth or/and examination_date were not found in the sessions metadata dataframe."
+        "Please check your study metadata.",
+    ):
+        _set_age_from_birth(input_df)
 
 
 def test_create_sessions_tsv(tmp_path):
@@ -370,3 +442,14 @@ def test_create_sessions_tsv(tmp_path):
     assert_frame_equal(result_sub1, expected_sub1, check_like=True)
     assert_frame_equal(result_sub100, expected_sub100, check_like=True)
     assert_frame_equal(result_sub109, expected_sub109, check_like=True)
+
+
+def test_create_sessions_tsv_clinical_not_found(tmp_path):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        create_sessions_tsv_file,
+    )
+
+    with pytest.raises(FileNotFoundError, match="Clinical data"):
+        create_sessions_tsv_file(
+            build_bids_dir(tmp_path), tmp_path, build_sessions_spec(tmp_path)
+        )
