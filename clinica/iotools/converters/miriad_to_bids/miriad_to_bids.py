@@ -10,25 +10,19 @@ import pandas as pd
 from clinica.utils.filemanip import UserProvidedPath
 
 def convert(
-    path_to_dataset: UserProvidedPath,
-    bids_dir: UserProvidedPath,
-    path_to_clinical: UserProvidedPath,
-    subjects: Optional[UserProvidedPath] = None,
+    path_to_dataset: str,
+    bids_dir: str,
+    path_to_clinical: str,
+    subjects: Optional[str] = None,
     n_procs: Optional[int] = 1,
     **kwargs,
 ):
-    """_summary_
-
-    Args:
-        path_to_dataset (UserProvidedPath): _description_
-        bids_dir (UserProvidedPath): _description_
-        path_to_clinical (UserProvidedPath): _description_
-        subjects (Optional[UserProvidedPath], optional): _description_. Defaults to None.
-        n_procs (Optional[int], optional): _description_. Defaults to 1.
-    """
-    from clinica.iotools.converters.miriad_to_bids.miriad_to_bids_utils import create_bids_structure, parse_filename
+    """Convert MIRIAD data to BIDS format without removing original .nii files."""
+    from clinica.iotools.converters.miriad_to_bids.miriad_to_bids_utils import create_bids_structure, parse_filename, convert_to_nii_gz
     metadata_csv = 'metadata.csv'
+    
     # Load clinical data
+    clinical_data_file = None
     for file in os.listdir(path_to_clinical):
         if file.endswith('.csv'):
             clinical_data_file = os.path.join(path_to_clinical, file)
@@ -42,7 +36,7 @@ def convert(
     # Prepare CSV
     with open(metadata_csv, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
-        csvwriter.writerow(['cohort', 'subject_id', 'diagnosis', 'gender', 'session', 'input_file', 'output_file'])
+        csvwriter.writerow(['cohort', 'subject_id', 'diagnosis', 'gender', 'session', 'run', 'input_file', 'output_file'])
         
         participants_data = {}
         sessions_data = []
@@ -51,23 +45,23 @@ def convert(
         for root, dirs, files in os.walk(path_to_dataset):
             for file in files:
                 if file.endswith('.nii'):
-                    # Example: miriad_215_AD_M_01_MR_1.nii
-                    parts = file.split('_')
-                    
                     # Extract information from filename
+                    parts = file.split('_')
                     cohort = parts[0]   # miriad
                     subject_id = parts[1]  # 215
                     diagnosis = parts[2]  # AD (Alzheimer's) or HC (Healthy Control)
                     gender = parts[3]     # M or F
-                    session = parts[4].lstrip('0')    # Session number
-                    session_alt = parts[4].lstrip('0')    # Session number
-                    scan_number = parts[6].replace('.nii', '')  # Scan number from MR_1 or MR_2
+                    session = parts[4].lstrip('0')  # Session number
+                    run_number = parts[6].replace('.nii', '')  # Scan number from MR_1 or MR_2
 
-                        # Parse subject ID, session ID, and run ID from the filename
-           # subject_id, session_id, run_id = parse_filename(file)
-
+                    bids_subject_id = f"sub-{subject_id}"
+                    bids_session_id = f"ses-{session}"
+                    
+                    # Original file path
+                    original_file_path = os.path.join(root, file)
+                    
                     # Extract MR ID
-                    mr_id = f"{cohort}_{subject_id}_{session}_MR_{scan_number}"
+                    mr_id = f"{cohort}_{subject_id}_{session}_MR_{run_number}"
 
                     # Extract relevant clinical information from the clinical data
                     clinical_row = clinical_data[clinical_data['MR ID'] == mr_id]
@@ -79,29 +73,25 @@ def convert(
                     group = clinical_row['Group'].values[0]  # HC or AD
                     gender_clinical = clinical_row['M/F'].values[0]  # M or F
 
-                    # Full path of input file
-                    input_file = os.path.join(root, file)
-                    
-                    # Create BIDS structure and move the file
-                    create_bids_structure(subject_id, session_alt, scan_number, cohort, diagnosis, gender, input_file, path_to_dataset, bids_dir, path_to_clinical)
-                    
-                    # Write the extracted information to CSV
-                    bids_filename = f"sub-MIRIAD{subject_id}_ses-{session}_T1w.nii.gz"
-                    output_file = os.path.join(f"sub-MIRIAD{subject_id}", f"ses-{session}", 'anat', bids_filename)
-                    csvwriter.writerow([cohort, subject_id, diagnosis, gender, session, input_file, output_file])
+                    # Write metadata CSV
+                    csvwriter.writerow([cohort, subject_id, diagnosis, gender, session, run_number, original_file_path, bids_subject_id])
 
-                     # Track the minimum age for the participant for baseline
+                    # Track baseline age (minimum age for each subject)
                     if subject_id not in participants_data or participants_data[subject_id]['age'] > age:
-                        participants_data[subject_id] = {'participant_id': f"sub-MIRIAD{subject_id}", 
-                                                        'sex': gender_clinical, 
-                                                        'diagnosis': group, 
-                                                        'age': age}
+                        participants_data[subject_id] = {
+                            'participant_id': f"sub-MIRIAD{subject_id}", 
+                            'sex': gender_clinical, 
+                            'diagnosis': group, 
+                            'age': age
+                        }
 
                     # Prepare sessions data
                     sessions_data.append([f"sub-MIRIAD{subject_id}", f"ses-{session}", age])
 
-                    
-# Write participants.csv with baseline age (minimum age for each subject)
+                    # Create BIDS structure and copy file with run number
+                    create_bids_structure(subject_id, session, run_number, cohort, diagnosis, gender, original_file_path, path_to_dataset, bids_dir, path_to_clinical)
+
+    # Write participants.csv with baseline age (minimum age for each subject)
     participants_csv = os.path.join(bids_dir, 'participants.csv')
     with open(participants_csv, 'w', newline='') as participants_file:
         participants_writer = csv.writer(participants_file)
