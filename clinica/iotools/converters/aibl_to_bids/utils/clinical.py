@@ -319,7 +319,6 @@ def _find_exam_date_in_other_csv_files(
 
 def _get_csv_files_for_alternative_exam_date(clinical_data_dir: Path) -> Tuple[Path]:
     """Return a list of paths to CSV files in which an alternative exam date could be found."""
-    import glob
 
     patterns = (
         "aibl_mri3meta_*.csv",
