@@ -24,21 +24,6 @@ __all__ = [
 ]
 
 
-# Helper function to create BIDS folders and move files
-def create_bids_structure(subject_id, session_label, input_file, output_dir):
-    sub_id = f"sub-KKI{subject_id}"
-    ses_id = f"ses-{session_label}"
-
-    # Create output directory for this subject/session
-    anat_dir = os.path.join(output_dir, sub_id, ses_id, 'anat')
-    os.makedirs(anat_dir, exist_ok=True)
-
-    # Destination filename in BIDS format
-    bids_filename = f"{sub_id}_{ses_id}_T1w.nii.gz"
-    
-    # Copy and rename the file to BIDS format
-    shutil.copy(input_file, os.path.join(anat_dir, bids_filename))
-
 # Function to recursively find all files with .nii extension in input directory
 def find_nii_files(directory):
     nii_files = []
@@ -54,8 +39,34 @@ def normalize_dashes(text):
         return re.sub(r'[\u2013\u2014\u2212]', '-', text)  # Replaces en dash, em dash, and other similar symbols
     return text
 
-# Function to replace dashes with underscores
-def replace_dashes_with_underscore(text):
-    if isinstance(text, str):
-        return text.replace('-', '_')
-    return text
+def convert_to_nii_gz(input_file):
+    """Convert a .nii file to .nii.gz format without deleting the original .nii file."""
+    if input_file.endswith(".nii.gz"):
+        return input_file
+    img = nib.load(input_file)
+    output_file = input_file.replace(".nii", ".nii.gz")
+    nib.save(img, output_file)
+    return output_file
+
+def replace_dashes_with_underscore(string):
+    """Replace dashes with underscores for standardized comparison."""
+    return string.replace("-", "_")
+
+# Helper function to create BIDS folders and move files
+def create_bids_structure(subject_id, session, input_file, output_dir):
+    """Create BIDS folder structure and move files into it."""
+    sub_id = f"sub-KKI{subject_id}"
+    ses_id = f"ses-{session}"
+
+    # Create output directory for this subject/session
+    anat_dir = os.path.join(output_dir, sub_id, ses_id, 'anat')
+    os.makedirs(anat_dir, exist_ok=True)
+    
+    # Convert the input file to .nii.gz if necessary
+    input_file_gz = convert_to_nii_gz(input_file)
+    
+    # Destination filename in BIDS format
+    bids_filename = f"{sub_id}_{ses_id}_T1w.nii.gz"
+    
+    # Copy and rename the file to BIDS format
+    shutil.copy(input_file_gz, os.path.join(anat_dir, bids_filename))
