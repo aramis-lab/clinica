@@ -1,6 +1,5 @@
-from multiprocessing.managers import Value
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Generator, Optional
 
 import numpy as np
 import pandas as pd
@@ -223,8 +222,6 @@ def create_sessions_tsv_file(
     clinical_specifications_folder : Path
         The path to the folder containing the clinical specification files.
     """
-    import glob
-
     from clinica.iotools.bids_utils import (
         StudyName,
         bids_id_factory,
@@ -317,26 +314,23 @@ def _find_exam_date_in_other_csv_files(
     return None
 
 
-def _get_csv_files_for_alternative_exam_date(clinical_data_dir: Path) -> Tuple[Path]:
+def _get_csv_files_for_alternative_exam_date(
+    clinical_data_dir: Path,
+) -> Generator[Path, None, None]:
     """Return a list of paths to CSV files in which an alternative exam date could be found."""
 
-    patterns = (
+    for pattern in (
         "aibl_mri3meta_*.csv",
         "aibl_mrimeta_*.csv",
         "aibl_cdr_*.csv",
         "aibl_flutemeta_*.csv",
         "aibl_mmse_*.csv",
         "aibl_pibmeta_*.csv",
-    )
-
-    paths = ()
-
-    for pattern in patterns:
+    ):
         try:
-            paths += (next(clinical_data_dir.glob(pattern)),)
+            yield next(clinical_data_dir.glob(pattern))
         except StopIteration:
-            pass
-    return paths
+            continue
 
 
 def create_scans_tsv_file(

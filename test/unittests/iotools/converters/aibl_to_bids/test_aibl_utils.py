@@ -28,7 +28,7 @@ def test_compute_age_at_exam(birth_date, exam_date, expected):
         (None, "n/a"),
     ],
 )
-def test_mapping_diagnosis(diagnosis, expected):
+def test_map_diagnosis(diagnosis, expected):
     from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
         _map_diagnosis,
     )
@@ -278,7 +278,11 @@ def test_get_csv_files_for_alternative_exam_date(tmp_path):
         _get_csv_files_for_alternative_exam_date,
     )
 
-    assert _get_csv_files_for_alternative_exam_date(tmp_path) == ()
+    csv_paths = [
+        Path(path).name for path in _get_csv_files_for_alternative_exam_date(tmp_path)
+    ]
+
+    assert csv_paths == []
 
     clinical_dir = build_clinical_data(tmp_path)
     csv_paths = [
