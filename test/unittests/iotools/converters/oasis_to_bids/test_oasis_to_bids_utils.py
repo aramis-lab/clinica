@@ -1,4 +1,3 @@
-from os import write
 from pathlib import Path
 
 import numpy as np
@@ -7,7 +6,8 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_utils import (
-    create_sessions_dict,
+    _convert_cdr_to_diagnosis,
+    create_sessions_df,
     write_scans_tsv,
     write_sessions_tsv,
 )
@@ -104,52 +104,76 @@ def _build_bids_dir(bids_dir: Path) -> None:
 
 
 @pytest.fixture
-def expected() -> dict:
+def expected() -> pd.DataFrame:
     expected = {
         "sub-OASIS10001": {
-            "M000": {
-                "session_id": "ses-M000",
-                "cdr_global": 0,
-                "MMS": 29,
-                "diagnosis": "CN",
-            },
+            "session_id": "ses-M000",
+            "cdr_global": 0,
+            "MMS": 29,
+            "diagnosis": "CN",
         },
         "sub-OASIS10002": {
-            "M000": {
-                "session_id": "ses-M000",
-                "cdr_global": 0,
-                "MMS": 29,
-                "diagnosis": "CN",
-            }
+            "session_id": "ses-M000",
+            "cdr_global": 0,
+            "MMS": 29,
+            "diagnosis": "CN",
         },
     }
+
+    expected = pd.DataFrame.from_dict(expected).T
+    expected.index.names = ["BIDS ID"]
 
     return expected
 
 
-def test_create_sessions_dict_success(
+def test_create_sessions_df_success(
     tmp_path,
     clinical_data_path: Path,
     sessions_path_success: Path,
-    expected: dict,
+    expected: pd.DataFrame,
 ):
-    result = create_sessions_dict(
+    result = create_sessions_df(
         clinical_data_path,
         sessions_path_success,
         ["sub-OASIS10001", "sub-OASIS10002"],
     )
+    assert_frame_equal(expected, result, check_like=True, check_dtype=False)
 
-    assert result == expected
+
+def test_create_sessions_df_missing_clinical_data(
+    tmp_path,
+    clinical_data_path: Path,
+    sessions_path_success: Path,
+    expected: pd.DataFrame,
+):
+    result = create_sessions_df(
+        clinical_data_path,
+        sessions_path_success,
+        ["sub-OASIS10001", "sub-OASIS10002", "sub-OASIS10004"],
+    )
+    missing_line = pd.DataFrame.from_dict(
+        {
+            "sub-OASIS10004": {
+                "session_id": "ses-M000",
+                "diagnosis": "n/a",
+                "cdr_global": "n/a",
+                "MMS": "n/a",
+            }
+        }
+    ).T
+    missing_line.index.names = ["BIDS ID"]
+
+    expected = pd.concat([expected, missing_line])
+    assert_frame_equal(expected, result, check_like=True, check_dtype=False)
 
 
-def test_create_sessions_dict_error(
+def test_create_sessions_df_file_not_found(
     tmp_path,
     clinical_data_path: Path,
     sessions_path_error: Path,
-    expected: dict,
 ):
     with pytest.raises(FileNotFoundError):
-        create_sessions_dict(
+        create_sessions_df(
             clinical_data_path,
             sessions_path_error,
             ["sub-OASIS10001", "sub-OASIS10002"],
@@ -161,22 +185,21 @@ def test_write_sessions_tsv(
     clinical_data_path: Path,
     bids_dir: Path,
     sessions_path_success: Path,
-    expected: dict,
+    expected: pd.DataFrame,
 ):
-    sessions = create_sessions_dict(
+    sessions = create_sessions_df(
         clinical_data_path,
         sessions_path_success,
         ["sub-OASIS10001", "sub-OASIS10002"],
     )
-    write_sessions_tsv(tmp_path / "BIDS", sessions)
-    sessions_files = list((tmp_path / "BIDS").rglob("*.tsv"))
+    write_sessions_tsv(bids_dir, sessions)
+    sessions_files = list(bids_dir.rglob("*.tsv"))
+
     assert len(sessions_files) == 2
     for file in sessions_files:
         assert_frame_equal(
-            pd.read_csv(file, sep="\t").set_index("session_id", drop=False),
-            pd.DataFrame(expected[file.parent.name]).T.set_index(
-                "session_id", drop=False
-            ),
+            pd.read_csv(file, sep="\t").reset_index(drop=True),
+            expected.loc[[file.parent.name]].reset_index(drop=True),
             check_like=True,
             check_dtype=False,
         )
@@ -211,3 +234,17 @@ def test_write_scans_tsv(tmp_path, bids_dir: Path) -> None:
                 assert file["filename"].loc[0] == f"anat/{image_path.name}"
             elif sub == "sub-OASIS10002":
                 assert file.empty
+
+
+@pytest.mark.parametrize(
+    "cdr,diagnosis",
+    [
+        (0, "CN"),
+        (12, "AD"),
+        (-2, "n/a"),
+        ("n/a", "n/a"),
+        ("foo", "n/a"),
+    ],
+)
+def test_convert_cdr_to_diagnosis(cdr, diagnosis):
+    assert diagnosis == _convert_cdr_to_diagnosis(cdr)
