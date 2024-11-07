@@ -139,9 +139,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
             cprint(
-                f"List available in {self.base_dir / self.name / 'participants.tsv'}"
-            )
-            cprint(
+                f"List available in {self.base_dir / self.name / 'participants.tsv'}\n"
                 "Computational time will depend of the number of volumes in your DWI dataset and the use of CUDA."
             )
 

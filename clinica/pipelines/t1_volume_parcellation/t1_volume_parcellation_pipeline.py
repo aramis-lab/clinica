@@ -46,9 +46,9 @@ class T1VolumeParcellation(GroupPipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
-        from clinica.utils.input_files import t1_volume_template_tpm_in_mni
-        from clinica.utils.inputs import clinica_file_filter, clinica_file_reader
+        from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.input_files import QueryPatternName, query_pattern_factory
+        from clinica.utils.inputs import clinica_file_filter
         from clinica.utils.stream import cprint
         from clinica.utils.ux import (
             print_groups_in_caps_directory,
@@ -61,16 +61,16 @@ class T1VolumeParcellation(GroupPipeline):
                 f"Group {self.group_label} does not exist. "
                 "Did you run t1-volume or t1-volume-create-dartel pipeline?"
             )
-
+        pattern = query_pattern_factory(QueryPatternName.T1_VOLUME_TEMPLATE_TPM_IN_MNI)(
+            group_label=self.group_label,
+            tissue_number=1,
+            modulation=self.parameters["modulate"],
+        )
         gm_mni, self.subjects, self.sessions = clinica_file_filter(
             self.subjects,
             self.sessions,
             self.caps_directory,
-            t1_volume_template_tpm_in_mni(
-                group_label=self.group_label,
-                tissue_number=1,
-                modulation=self.parameters["modulate"],
-            ),
+            pattern,
         )
 
         read_parameters_node = npe.Node(
