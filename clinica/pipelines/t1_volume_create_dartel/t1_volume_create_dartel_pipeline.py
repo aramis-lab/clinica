@@ -46,7 +46,7 @@ class T1VolumeCreateDartel(GroupPipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.utils.exceptions import ClinicaException
-        from clinica.utils.input_files import t1_volume_dartel_input_tissue
+        from clinica.utils.input_files import QueryPatternName, query_pattern_factory
         from clinica.utils.inputs import clinica_list_of_files_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import (
@@ -82,16 +82,18 @@ class T1VolumeCreateDartel(GroupPipeline):
                 fields=self.get_input_fields(), mandatory_inputs=True
             ),
         )
-
+        patterns = [
+            query_pattern_factory(QueryPatternName.T1_VOLUME_DARTEL_INPUT_TISSUE)(
+                tissue_number
+            )
+            for tissue_number in self.parameters["dartel_tissues"]
+        ]
         try:
             d_input = clinica_list_of_files_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
-                [
-                    t1_volume_dartel_input_tissue(tissue_number)
-                    for tissue_number in self.parameters["dartel_tissues"]
-                ],
+                patterns,
             )
             # d_input is a list of size len(self.parameters['dartel_tissues'])
             #     Each element of this list is a list of size len(self.subjects)

@@ -212,7 +212,7 @@ class PetSurface(PETPipeline):
         if pet_errors:
             all_errors.append(format_clinica_file_reader_errors(pet_errors))
 
-        patterns = [query_pattern_factory(QueryPatternName.T1_FREESURFER_ORIG_NU)]
+        patterns = [query_pattern_factory(QueryPatternName.T1_FREESURFER_ORIG_NU)()]
         patterns.extend(
             [
                 query_pattern_factory(

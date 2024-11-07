@@ -303,7 +303,7 @@ def get_dwi_preprocessed_brainmask(*args, **kwargs) -> QueryPattern:
 def get_dwi_fmap_phasediff_file(filetype: Union[str, DWIFileType]) -> QueryPattern:
     filetype = DWIFileType(filetype)
     return QueryPattern(
-        f"fmap/sub-*_ses-*_phasediff.{filetype.value}",
+        f"fmap/sub-*_ses-*_phasediff.{filetype.value}*",
         f"phasediff {filetype.value} file",
         "",
     )
