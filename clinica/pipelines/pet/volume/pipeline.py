@@ -140,7 +140,7 @@ class PETVolume(GroupPipeline, PETPipeline):
                 self.sessions,
                 self.caps_directory,
                 [
-                    query_pattern_factory(QueryPatternName.T1_VOLUME_NATIVE_TPM)(
+                    query_pattern_factory(QueryPatternName.T1_VOLUME_TPM)(
                         tissue_number, modulation=False, mni_space=True
                     )
                     for tissue_number in self.parameters["mask_tissues"]
@@ -196,7 +196,7 @@ class PETVolume(GroupPipeline, PETPipeline):
             # pvc tissues input
             try:
                 patterns = [
-                    query_pattern_factory(QueryPatternName.T1_VOLUME_NATIVE_TPM)(
+                    query_pattern_factory(QueryPatternName.T1_VOLUME_TPM)(
                         tissue_number, modulation=False, mni_space=False
                     )
                     for tissue_number in self.parameters["pvc_mask_tissues"]
