@@ -33,7 +33,7 @@ __all__ = [
     "get_t1_freesurfer_parcellation",
     "get_t1_freesurfer_template",
     "get_t1_freesurfer_longitudinal_parcellation",
-    "get_t1_volume_native_tpm",
+    "get_t1_volume_tpm",
     "get_t1_volume_dartel_input_tissue",
 ]
 
@@ -104,7 +104,7 @@ class QueryPatternName(Enum):
     T1_FREESURFER_LONG_PARCELLATION = auto()
     T1_FREESURFER_SEGMENTATION = auto()
     T1_FREESURFER_TEMPLATE = auto()
-    T1_VOLUME_NATIVE_TPM = auto()
+    T1_VOLUME_TPM = auto()
     T1_VOLUME_DARTEL_INPUT_TISSUE = auto()
     T1_VOLUME_DEFORMATION_TO_TEMPLATE = auto()
     T1_VOLUME_GROUP_TEMPLATE = auto()
@@ -170,8 +170,8 @@ def query_pattern_factory(
         return get_t1_freesurfer_white_matter_surface
     if name == QueryPatternName.T1_FREESURFER_LONG_SURFACE:
         return get_t1_freesurfer_longitudinal_white_matter_surface
-    if name == QueryPatternName.T1_VOLUME_NATIVE_TPM:
-        return get_t1_volume_native_tpm
+    if name == QueryPatternName.T1_VOLUME_TPM:
+        return get_t1_volume_tpm
     if name == QueryPatternName.T1_VOLUME_DARTEL_INPUT_TISSUE:
         return get_t1_volume_dartel_input_tissue
     if name == QueryPatternName.T1_VOLUME_DEFORMATION_TO_TEMPLATE:
@@ -589,7 +589,7 @@ def aggregator(func):
 
 
 @aggregator
-def get_t1_volume_native_tpm(
+def get_t1_volume_tpm(
     tissue_number: int, modulation: bool, mni_space: bool
 ) -> QueryPattern:
     tissue = get_spm_tissue_from_index(tissue_number)

@@ -76,7 +76,9 @@ class T1VolumeDartel2MNI(GroupPipeline):
         # Segmented Tissues
         # =================
         patterns = [
-            query_pattern_factory(QueryPatternName.T1_VOLUME_NATIVE_TPM)(tissue_number)
+            query_pattern_factory(QueryPatternName.T1_VOLUME_TPM)(
+                tissue_number, modulation=False, mni_space=False
+            )
             for tissue_number in self.parameters["tissues"]
         ]
         try:
