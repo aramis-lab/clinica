@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Generator, Optional
+from typing import Iterator, Optional
 
 import numpy as np
 import pandas as pd
@@ -316,7 +316,7 @@ def _find_exam_date_in_other_csv_files(
 
 def _get_csv_files_for_alternative_exam_date(
     clinical_data_dir: Path,
-) -> Generator[Path, None, None]:
+) -> Iterator[Path]:
     """Return a list of paths to CSV files in which an alternative exam date could be found."""
 
     for pattern in (
