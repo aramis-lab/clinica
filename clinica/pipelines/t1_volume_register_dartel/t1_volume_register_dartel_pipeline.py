@@ -44,12 +44,8 @@ class T1VolumeRegisterDartel(GroupPipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
-        from clinica.utils.input_files import (
-            t1_volume_dartel_input_tissue,
-            t1_volume_i_th_iteration_group_template,
-        )
+        from clinica.utils.input_files import QueryPatternName, query_pattern_factory
         from clinica.utils.inputs import (
-            clinica_file_reader,
             clinica_group_reader,
             clinica_list_of_files_reader,
         )
@@ -61,20 +57,21 @@ class T1VolumeRegisterDartel(GroupPipeline):
                 fields=self.get_input_fields(), mandatory_inputs=True
             ),
         )
-
         all_errors = []
-
         # Dartel Input Tissues
         # ====================
+        patterns = [
+            query_pattern_factory(QueryPatternName.T1_VOLUME_DARTEL_INPUT_TISSUE)(
+                tissue_number
+            )
+            for tissue_number in self.parameters["tissues"]
+        ]
         try:
             d_input = clinica_list_of_files_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
-                [
-                    t1_volume_dartel_input_tissue(tissue_number)
-                    for tissue_number in self.parameters["tissues"]
-                ],
+                patterns,
             )
             read_input_node.inputs.dartel_input_images = d_input
         except ClinicaException as e:
@@ -82,18 +79,20 @@ class T1VolumeRegisterDartel(GroupPipeline):
 
         # Dartel Templates
         # ================
+        patterns = [
+            query_pattern_factory(QueryPatternName.T1_VOLUME_ITERATION_GROUP_TEMPLATE)(
+                self.group_label, i
+            )
+            for i in range(1, 7)
+        ]
         dartel_iter_templates = []
-        for i in range(1, 7):
+        for pattern in patterns:
             try:
-                current_iter = clinica_group_reader(
-                    self.caps_directory,
-                    t1_volume_i_th_iteration_group_template(str(self.group_label), i),
+                dartel_iter_templates.append(
+                    clinica_group_reader(self.caps_directory, pattern)
                 )
-
-                dartel_iter_templates.append(current_iter)
             except ClinicaException as e:
                 all_errors.append(e)
-
         if any(all_errors):
             error_message = "Clinica faced error(s) while trying to read files in your CAPS/BIDS directories.\n"
             for msg in all_errors:
