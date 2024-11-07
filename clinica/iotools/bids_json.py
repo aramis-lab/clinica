@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from turtledemo.penrose import start
 from typing import Tuple, Union
 
 import numpy as np
@@ -10,17 +9,15 @@ from pydicom.tag import Tag
 
 from clinica.utils.stream import cprint
 
-from .bids_utils import StudyName
-
 # todo : can this be used for other than AIBL ?
 # todo : test
-# todo : should do specific construction depending on modality ?
 # todo : clarify class and use, what it will return...
 # Currently done there for AIBL, PET (applied for all though)
 
 
 def write_json(json_path: Path, json_dict: dict):
     # todo : maybe exists somewhere else in the code base
+    # todo : date format ?
     with open(json_path, "w") as f:
         f.write(json.dumps(json_dict, indent=4))
 
@@ -29,8 +26,6 @@ class BidsCompliantJson:
     """For BIDS 1.10 compliance ; json from dcm"""
 
     def __init__(self):
-        # todo : finish filling default value and verify dicom correspondence
-        # todo : there : optional + required fields for PET
         self.meta_collection = pd.DataFrame(
             columns=["BIDSname", "DCMtag", "Value"],
             data=[
@@ -50,9 +45,9 @@ class BidsCompliantJson:
                     "n/a",
                 ],
                 # Time
-                # #todo : definitions ??
+                # todo : definitions ??
                 ["TimeZero", ("AcquisitionTime",), "n/a"],
-                ["ScanStart", ("AcquisitionTime",), "n/a"],
+                ["ScanStart", (), "n/a"],  # same as acquisition time
                 ["InjectionStart", ("RadiopharmaceuticalStartTime",), np.nan],
                 ["FrameTimesStart", ("FrameReferenceTime",), []],
                 ["FrameDuration", ("ActualFrameDuration",), []],
@@ -62,7 +57,7 @@ class BidsCompliantJson:
                     (
                         "RadiopharmaceuticalInformationSequence",
                         "RadionuclideCodeSequence",
-                        "MappingResource",
+                        "MappingResourceName",
                     ),
                     "n/a",
                 ],
@@ -92,20 +87,12 @@ class BidsCompliantJson:
                 ["InfusionSpeedUnits", (), "n/a"],  # todo : corresp ?
                 ["InjectedVolume", ("RadiopharmaceuticalVolume",), np.nan],
                 # Reconstruction
-                ["AcquisitionMode", (), "n/a"],  # todo : corresp ?
-                # todo : DecayCorrection ?
-                [
-                    "ImageDecayCorrected",
-                    ("DecayCorrection",),
-                    np.nan,
-                ],  # todo : if DecayCorrection 'NONE' then False
-                ["ImageDecayCorrectionTime", (), np.nan],
+                ["AcquisitionMode", (), "n/a"],
+                ["ImageDecayCorrected", ("DecayCorrection",), "n/a"],
+                ["ImageDecayCorrectionTime", ("DecayCorrection",), np.nan],
                 ["ReconMethodName", ("ReconstructionMethod",), "n/a"],
-                [
-                    "ReconMethodParameterLabels",
-                    ("ReconstructionMethod",),
-                    [""],
-                ],  # todo : may use .VM on element to check for length
+                # todo : may use .VM on element to check for length
+                ["ReconMethodParameterLabels", ("ReconstructionMethod",), [""]],
                 ["ReconMethodParameterUnits", ("ReconstructionMethod",), [""]],
                 ["ReconMethodParameterValues", ("ReconstructionMethod",), [""]],
                 ["ReconFilterType", ("ConvolutionKernel",), "n/a"],
@@ -135,8 +122,10 @@ class BidsCompliantJson:
             get_result = None
         return get_result.value if get_result else None
 
-    def _update_from_dcm(self, dcm_dir: Path) -> None:
+    def _from_image(self, dcm_dir: Path) -> dict:
         from pydicom import dcmread
+
+        dict_json = {key: None for key in self.meta_collection.index}
 
         try:
             dcm_path = [f for f in dcm_dir.glob("*.dcm")][0]
@@ -147,58 +136,88 @@ class BidsCompliantJson:
                 lvl="warning",
             )
             # todo : kinda weird to be here and have no dicom though, does it ever happen ?
-            return
+        else:
+            # todo : use exception ?
+            for index, metadata in self.meta_collection.iterrows():
+                if dcm_value := self._get_dcm_tag(metadata.DCMtag, dicom_header):
+                    dict_json.update({index: dcm_value})
+        return dict_json
 
-        # todo : use exception ?
-        for _, metadata in self.meta_collection.iterrows():
-            if dcm_value := self._get_dcm_tag(metadata.DCMtag, dicom_header):
-                self.meta_collection.loc[metadata.BIDSname, "Value"] = dcm_value
+    @staticmethod
+    def _set_scan_start(dcm_result: dict) -> dict:
+        dcm_result["ScanStart"] = "0"
+        return dcm_result
 
-    def _get_admin_mode_from_study(self) -> None:
+    @staticmethod
+    def _set_injection_start(dcm_result: dict) -> dict:
+        if (injection := dcm_result["InjectionStart"]) and (
+            acquisition := dcm_result["TimeZero"]
+        ):
+            dcm_result["InjectionStart"] = injection - float(acquisition)
+        return dcm_result
+
+    @staticmethod
+    def _get_admin_mode_from_start_time(dcm_result: dict) -> dict:
         # todo : test
-        start_time = self.meta_collection.loc["TimeZero", "Value"]
-        injection_time = self.meta_collection.loc["InjectionStart", "Value"]
+        if (injection := dcm_result["InjectionStart"]) and (
+            acquisition := dcm_result["TimeZero"]
+        ):
+            if injection - float(acquisition):
+                dcm_result["ModeOfAdministration"] = "bolus-infusion"
+            dcm_result["ModeOfAdministration"] = "bolus"
+        return dcm_result
 
-        # todo : more check on injection_time ?? (np.isnan does not always work, mb write another function)
+    @staticmethod
+    def _check_decay_correction(dcm_result: dict) -> dict:
+        # todo : test
+        corrected = dcm_result["ImageDecayCorrected"]
+        if corrected == "NONE":
+            dcm_result["ImageDecayCorrected"] = False
+        elif corrected:
+            dcm_result["ImageDecayCorrected"] = True
+        return dcm_result
 
-        if start_time != "n/a" and not bool(np.isnan(injection_time)):
-            if injection_time - float(start_time):
-                self.meta_collection.loc[
-                    "ModeOfAdministration", "Value"
-                ] = "bolus-infusion"
-            self.meta_collection.loc["ModeOfAdministration", "Value"] = "bolus"
+    @staticmethod
+    def _set_decay_time(dcm_result: dict) -> dict:
+        correction = dcm_result["ImageDecayCorrectionTime"]
+        if correction == "START":
+            dcm_result["ImageDecayCorrectionTime"] = dcm_result["ScanStart"]
+        elif correction == "ADMIN":
+            dcm_result["ImageDecayCorrectionTime"] = dcm_result["InjectionStart"]
+        return dcm_result
 
-    def _set_decay_tag(self) -> None:
-        corrected = self.meta_collection.loc["ImageDecayCorrected", "Value"]
-        self.meta_collection.loc["ImageDecayCorrected", "Value"] = (
-            not bool(np.isnan(corrected)) and corrected != "NONE"
-        )
-        # todo : more check on corrected
+    @staticmethod
+    def _update_default_units(dcm_result: dict) -> dict:
+        dcm_result["InjectedRadioactivityUnits"] = "MBq"
+        dcm_result["SpecificRadioactivityUnits"] = "Bq/micromole"
+        return dcm_result
 
-    def _update_default_units(self) -> None:
-        self.meta_collection.loc["InjectedRadioactivityUnits", "Value"] = "MBq"
-        self.meta_collection.loc["SpecificRadioactivityUnits", "Value"] = "Bq/micromole"
-
-    def _update_injected_mass(self) -> None:
+    @staticmethod
+    def _update_injected_mass(dcm_result: dict) -> dict:
         # todo :test
-        injected = self.meta_collection.loc["InjectedRadioactivity", "Value"]
-        specific = self.meta_collection.loc["SpecificRadioactivity", "Value"]
+        injected = dcm_result["InjectedRadioactivity"]
+        specific = dcm_result["SpecificRadioactivity"]
+        if injected and specific:
+            dcm_result["InjectedMass"] = injected / float(specific)
+            dcm_result["InjectedMassUnits"] = "mole"
+        return dcm_result
 
-        if not bool(np.isnan(injected)) and specific != "n/a":
-            self.meta_collection.loc["InjectedMass", "Value"] = injected / float(
-                specific
-            )
-            self.meta_collection.loc["InjectedMassUnits", "Value"] = "mole"
-
-    def _translate_to_dict(self) -> dict:
-        return {
-            data.BIDSname: data.Value for _, data in self.meta_collection.iterrows()
-        }
+    def _get_default_bids(self, dcm_result: dict) -> dict:
+        for key in dcm_result:
+            if not dcm_result[key]:
+                dcm_result[key] = self.meta_collection.loc[key, "Value"]
+        return dcm_result
 
     def build_dict(self, dcm_dir: Path) -> dict:
-        self._update_from_dcm(dcm_dir)
-        self._get_admin_mode_from_study()
-        self._update_default_units()
-        self._update_injected_mass()
-        breakpoint()
-        return self._translate_to_dict()
+        dict_json = self._from_image(dcm_dir)
+
+        dict_json = self._get_admin_mode_from_start_time(dict_json)
+        dict_json = self._update_default_units(dict_json)
+        dict_json = self._update_injected_mass(dict_json)
+        dict_json = self._check_decay_correction(dict_json)
+        dict_json = self._set_decay_time(dict_json)
+        dict_json = self._set_scan_start(dict_json)
+        dict_json = self._set_injection_start(dict_json)
+
+        dict_json = self._get_default_bids(dict_json)
+        return dict_json
