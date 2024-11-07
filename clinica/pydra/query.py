@@ -273,18 +273,18 @@ class CAPSFileQuery(CAPSQuery):
 
     _query_makers = {
         "tissues": partial(
-            query_pattern_factory(QueryPatternName.T1_VOLUME_NATIVE_TPM),
+            query_pattern_factory(QueryPatternName.T1_VOLUME_TPM),
             mni_space=False,
             modulation=False,
         ),
         "mask_tissues": partial(
-            query_pattern_factory(QueryPatternName.T1_VOLUME_NATIVE_TPM), mni_space=True
+            query_pattern_factory(QueryPatternName.T1_VOLUME_TPM), mni_space=True
         ),
         "flow_fields": query_pattern_factory(
             QueryPatternName.T1_VOLUME_DEFORMATION_TO_TEMPLATE
         ),
         "pvc_mask_tissues": partial(
-            query_pattern_factory(QueryPatternName.T1_VOLUME_NATIVE_TPM),
+            query_pattern_factory(QueryPatternName.T1_VOLUME_TPM),
             mni_space=False,
             modulation=False,
         ),
