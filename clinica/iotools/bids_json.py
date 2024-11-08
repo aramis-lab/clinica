@@ -27,7 +27,7 @@ class BidsCompliantJson:
 
     def __init__(self):
         self.meta_collection = pd.DataFrame(
-            columns=["BIDSname", "DCMtag", "Value"],
+            columns=["BIDSname", "DCMtag", "Default"],
             data=[
                 # Hardware
                 ["DeviceSerialNumber", ("DeviceSerialNumber",), "n/a"],
@@ -48,7 +48,11 @@ class BidsCompliantJson:
                 # todo : definitions ??
                 ["TimeZero", ("AcquisitionTime",), "n/a"],
                 ["ScanStart", (), "n/a"],  # same as acquisition time
-                ["InjectionStart", ("RadiopharmaceuticalStartTime",), np.nan],
+                [
+                    "InjectionStart",
+                    ("RadiopharmaceuticalStartTime",),
+                    np.nan,
+                ],  # diff between "RadiopharmaceuticalStartTime" and acquisition time
                 ["FrameTimesStart", ("FrameReferenceTime",), []],
                 ["FrameDuration", ("ActualFrameDuration",), []],
                 # Radiochemistry
@@ -80,7 +84,11 @@ class BidsCompliantJson:
                     "n/a",
                 ],
                 ["SpecificRadioactivityUnits", (), "n/a"],
-                ["ModeOfAdministration", (), "n/a"],
+                [
+                    "ModeOfAdministration",
+                    ("RadiopharmaceuticalStartTime",),
+                    "n/a",
+                ],  # uses "RadiopharmaceuticalStartTime" to decide on admin mode
                 ["InfusionRadioactivity", (), np.nan],  # todo : corresp ?
                 ["InfusionStart", ("RadiopharmaceuticalStartTime",), np.nan],
                 ["InfusionSpeed", (), np.nan],  # todo : corresp ?
@@ -122,7 +130,7 @@ class BidsCompliantJson:
             get_result = None
         return get_result.value if get_result else None
 
-    def _from_image(self, dcm_dir: Path) -> dict:
+    def _from_image_dicoms(self, dcm_dir: Path) -> dict:
         from pydicom import dcmread
 
         dict_json = {key: None for key in self.meta_collection.index}
@@ -159,7 +167,7 @@ class BidsCompliantJson:
     @staticmethod
     def _get_admin_mode_from_start_time(dcm_result: dict) -> dict:
         # todo : test
-        if (injection := dcm_result["InjectionStart"]) and (
+        if (injection := dcm_result["ModeOfAdministration"]) and (
             acquisition := dcm_result["TimeZero"]
         ):
             if injection - float(acquisition):
@@ -180,10 +188,13 @@ class BidsCompliantJson:
     @staticmethod
     def _set_decay_time(dcm_result: dict) -> dict:
         correction = dcm_result["ImageDecayCorrectionTime"]
+
         if correction == "START":
             dcm_result["ImageDecayCorrectionTime"] = dcm_result["ScanStart"]
         elif correction == "ADMIN":
             dcm_result["ImageDecayCorrectionTime"] = dcm_result["InjectionStart"]
+        else:
+            dcm_result["ImageDecayCorrectionTime"] = None
         return dcm_result
 
     @staticmethod
@@ -205,11 +216,11 @@ class BidsCompliantJson:
     def _get_default_bids(self, dcm_result: dict) -> dict:
         for key in dcm_result:
             if not dcm_result[key]:
-                dcm_result[key] = self.meta_collection.loc[key, "Value"]
+                dcm_result[key] = self.meta_collection.loc[key, "Default"]
         return dcm_result
 
     def build_dict(self, dcm_dir: Path) -> dict:
-        dict_json = self._from_image(dcm_dir)
+        dict_json = self._from_image_dicoms(dcm_dir)
 
         dict_json = self._get_admin_mode_from_start_time(dict_json)
         dict_json = self._update_default_units(dict_json)
@@ -218,6 +229,8 @@ class BidsCompliantJson:
         dict_json = self._set_decay_time(dict_json)
         dict_json = self._set_scan_start(dict_json)
         dict_json = self._set_injection_start(dict_json)
+
+        breakpoint()
 
         dict_json = self._get_default_bids(dict_json)
         return dict_json
