@@ -2,60 +2,78 @@
 
 See CAPS specifications for details about groups.
 """
-from os import PathLike
-from typing import List
+from collections import UserString
+from pathlib import Path
+from typing import Union
+
+__all__ = [
+    "GroupLabel",
+    "GroupID",
+    "extract_group_ids",
+]
 
 
-def check_group_label(group_label: str) -> None:
-    """Check that `group_label` is compliant with specifications.
+class GroupLabel(UserString):
+    """This is the type defining a label for groups in Clinica.
 
-    The group label must be a string composed of alphanumeric
-    characters (alphabets or numbers). This means that a group
-    label cannot contain spaces nor special characters.
-
-    Parameters
-    ----------
-    group_label : str
-        The group label to verify.
-
-    Raises
-    ------
-    ValueError :
-        If the provided group label is not compliant.
+    The group label must be a string composed of alphanumeric characters (alphabets or numbers).
+    This means that a group label cannot contain spaces nor special characters.
     """
-    if not group_label.isalnum():
+
+    def __init__(self, value: str):
+        super().__init__(self.validate(value))
+
+    @classmethod
+    def validate(cls, value: str) -> str:
+        if value.isalnum():
+            return value
         raise ValueError(
-            "Not valid group_label value: it must be composed only by letters "
-            f"and/or numbers (given value: {group_label})."
+            f"Group label '{value}' is not a valid group label: it must be composed only by letters and/or numbers."
         )
 
 
-def _check_group_dir(group_directory: PathLike) -> None:
-    from pathlib import Path
+class GroupID(UserString):
+    """This is the type defining a group ID in Clinica.
 
-    group_directory = Path(group_directory)
-    if group_directory.name.startswith("group-"):
-        check_group_label(group_directory.name.lstrip("group-"))
-    else:
-        raise ValueError(f"Group directory {group_directory} is not valid.")
+    It is basically a group label with a 'group-' prefix.
+    """
+
+    def __init__(self, value: str):
+        super().__init__(self.validate(value))
+
+    @classmethod
+    def validate(cls, value: str) -> str:
+        if not value.startswith("group-"):
+            raise ValueError(
+                f"Group ID '{value}' is not a valid group ID: it must start with 'group-'."
+            )
+        GroupLabel.validate(value.removeprefix("group-"))
+        return value
+
+    @property
+    def label(self) -> GroupLabel:
+        return GroupLabel(str(self).removeprefix("group-"))
+
+    @classmethod
+    def from_label(cls, label: Union[str, GroupLabel]):
+        return cls(f"group-{GroupLabel(label)}")
 
 
-def extract_group_ids(caps_directory: PathLike) -> List[str]:
+def extract_group_ids(caps_directory: Path) -> list[GroupID]:
     """Extract a list of group IDs from a CAPS folder.
 
     The function searches for sub-folders of `caps_directory/groups`.
     According to the CAPS specifications, these sub-folders should be named
     with their group IDs (e.g. ['group-AD', 'group-HC']).
 
-
     Parameters
     ----------
-    caps_directory : str
-        The CAPS folder to search for group IDs.
+    caps_directory : Path
+        The path to the CAPS folder to search for group IDs.
 
     Returns
     -------
-    list of str :
+    list of GroupID :
         The sorted list of group IDs found inside the provided CAPS folder.
 
     Raises
@@ -64,17 +82,10 @@ def extract_group_ids(caps_directory: PathLike) -> List[str]:
         If `caps_directory/groups` contains folders which do not
         respect the CAPS naming specifications ("group-{groupID}").
     """
-    from pathlib import Path
-
-    caps_directory = Path(caps_directory)
-
     try:
         groups = [
             group for group in (caps_directory / "groups").iterdir() if group.is_dir()
         ]
     except FileNotFoundError:
         return []
-    for group in groups:
-        _check_group_dir(group)
-
-    return sorted([group.name for group in groups])
+    return sorted([GroupID(group.name) for group in groups])
