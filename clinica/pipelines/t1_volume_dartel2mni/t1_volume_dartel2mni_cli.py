@@ -52,7 +52,6 @@ def cli(
     from .t1_volume_dartel2mni_pipeline import T1VolumeDartel2MNI
 
     parameters = {
-        "group_label": group_label,
         "tissues": tissues,
         "voxel_size": voxel_size,
         "modulate": modulate,
@@ -67,6 +66,7 @@ def cli(
         parameters=parameters,
         name=pipeline_name,
         caps_name=caps_name,
+        group_label=group_label,
     )
 
     exec_pipeline = (

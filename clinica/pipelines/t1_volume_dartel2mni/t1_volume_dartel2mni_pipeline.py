@@ -1,9 +1,9 @@
 from typing import List
 
-from clinica.pipelines.engine import Pipeline
+from clinica.pipelines.engine import GroupPipeline
 
 
-class T1VolumeDartel2MNI(Pipeline):
+class T1VolumeDartel2MNI(GroupPipeline):
     """T1VolumeDartel2MNI - Dartel template to MNI.
 
     Returns:
@@ -12,15 +12,10 @@ class T1VolumeDartel2MNI(Pipeline):
 
     def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
-        from clinica.utils.group import check_group_label
-
-        if "group_label" not in self.parameters.keys():
-            raise KeyError("Missing compulsory group_label key in pipeline parameter.")
         self.parameters.setdefault("tissues", [1, 2, 3])
         self.parameters.setdefault("voxel_size", None)
         self.parameters.setdefault("modulate", True)
         self.parameters.setdefault("smooth", [8])
-        check_group_label(self.parameters["group_label"])
 
     def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
@@ -69,12 +64,10 @@ class T1VolumeDartel2MNI(Pipeline):
             print_images_to_process,
         )
 
-        if not (
-            self.caps_directory / "groups" / f"group-{self.parameters['group_label']}"
-        ).exists():
+        if not self.group_directory.exists():
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
-                f"Group {self.parameters['group_label']} does not exist. "
+                f"Group {self.group_label} does not exist. "
                 "Did you run t1-volume or t1-volume-create-dartel pipeline?"
             )
 
@@ -114,7 +107,7 @@ class T1VolumeDartel2MNI(Pipeline):
             self.subjects,
             self.sessions,
             self.caps_directory,
-            t1_volume_deformation_to_template(self.parameters["group_label"]),
+            t1_volume_deformation_to_template(self.group_label),
         )
         if flowfield_errors:
             all_errors.append(format_clinica_file_reader_errors(flowfield_errors))
@@ -124,7 +117,7 @@ class T1VolumeDartel2MNI(Pipeline):
         try:
             read_input_node.inputs.template_file = clinica_group_reader(
                 self.caps_directory,
-                t1_volume_final_group_template(self.parameters["group_label"]),
+                t1_volume_final_group_template(self.group_label),
             )
         except ClinicaException as e:
             all_errors.append(e)
@@ -174,8 +167,7 @@ class T1VolumeDartel2MNI(Pipeline):
             + self.subjects[i]
             + "/"
             + self.sessions[i]
-            + "/t1/spm/dartel/group-"
-            + self.parameters["group_label"]
+            + f"/t1/spm/dartel/{self.group_id}"
             for i in range(len(self.subjects))
         ]
         write_normalized_node.inputs.regexp_substitutions = [

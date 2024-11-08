@@ -1,9 +1,9 @@
 from typing import List
 
-from clinica.pipelines.engine import Pipeline
+from clinica.pipelines.engine import GroupPipeline
 
 
-class T1VolumeCreateDartel(Pipeline):
+class T1VolumeCreateDartel(GroupPipeline):
     """T1VolumeCreateDartel - Create new Dartel template.
 
     Returns:
@@ -12,12 +12,7 @@ class T1VolumeCreateDartel(Pipeline):
 
     def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
-        from clinica.utils.group import check_group_label
-
-        if "group_label" not in self.parameters.keys():
-            raise KeyError("Missing compulsory group_label key in pipeline parameter.")
         self.parameters.setdefault("dartel_tissues", [1, 2, 3])
-        check_group_label(self.parameters["group_label"])
 
     def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
@@ -61,16 +56,12 @@ class T1VolumeCreateDartel(Pipeline):
         )
 
         representative_output = (
-            self.caps_directory
-            / "groups"
-            / f"group-{self.parameters['group_label']}"
-            / "t1"
-            / f"group-{self.parameters['group_label']}_template.nii.gz"
+            self.group_directory / "t1" / f"{self.group_id}_template.nii.gz"
         )
         if representative_output.exists():
             cprint(
                 msg=(
-                    f"DARTEL template for {self.parameters['group_label']} already exists. "
+                    f"DARTEL template for {self.group_label} already exists. "
                     "Currently, Clinica does not propose to overwrite outputs for this pipeline."
                 ),
                 lvl="warning",
@@ -113,7 +104,7 @@ class T1VolumeCreateDartel(Pipeline):
             cprint(
                 "Computational time for DARTEL creation will depend on the number of images."
             )
-            print_begin_image(f"group-{self.parameters['group_label']}")
+            print_begin_image(str(self.group_id))
 
         self.connect(
             [
@@ -147,8 +138,7 @@ class T1VolumeCreateDartel(Pipeline):
             + self.subjects[i]
             + "/"
             + self.sessions[i]
-            + "/t1/spm/dartel/group-"
-            + self.parameters["group_label"]
+            + f"/t1/spm/dartel/{self.group_id}"
             for i in range(len(self.subjects))
         ]
         write_flowfields_node.inputs.regexp_substitutions = [
@@ -164,7 +154,7 @@ class T1VolumeCreateDartel(Pipeline):
             (
                 r"(.*)flow_fields/u_(sub-.*)_segm-.*(\.nii(\.gz)?)$",
                 r"\1\2_target-"
-                + re.escape(self.parameters["group_label"])
+                + re.escape(str(self.group_label))
                 + r"_transformation-forward_deformation\3",
             ),
             (r"trait_added", r""),
@@ -174,19 +164,17 @@ class T1VolumeCreateDartel(Pipeline):
         write_template_node.inputs.parameterization = False
         write_template_node.inputs.base_directory = str(self.caps_directory)
         write_template_node.inputs.container = op.join(
-            "groups", f"group-{self.parameters['group_label']}", "t1"
+            "groups", str(self.group_id), "t1"
         )
         write_template_node.inputs.regexp_substitutions = [
             (
                 r"(.*)final_template_file/.*(\.nii(\.gz)?)$",
-                r"\1group-"
-                + re.escape(self.parameters["group_label"])
-                + r"_template\2",
+                r"\1group-" + re.escape(str(self.group_label)) + r"_template\2",
             ),
             (
                 r"(.*)template_files/.*([0-9])(\.nii(\.gz)?)$",
                 r"\1group-"
-                + re.escape(self.parameters["group_label"])
+                + re.escape(str(self.group_label))
                 + r"_iteration-\2_template\3",
             ),
         ]

@@ -19,13 +19,12 @@ def _check_pipeline_parameters(parameters: dict) -> dict:
     dict :
         Cleaned dictionary of parameters.
     """
-    from clinica.utils.group import check_group_label
+    from clinica.utils.group import GroupLabel
 
-    if "group_label" not in parameters.keys():
+    if "group_label" not in parameters:
         raise KeyError("Missing compulsory group_label key in pipeline parameter.")
+    parameters["group_label"] = GroupLabel(parameters["group_label"])
     parameters.setdefault("dartel_tissues", [1, 2, 3])
-
-    check_group_label(parameters["group_label"])
 
     return parameters
 

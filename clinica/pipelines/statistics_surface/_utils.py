@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Optional
 
+from clinica.utils.group import GroupID, GroupLabel
+
 __all__ = [
     "init_input_node",
     "run_clinica_surfstat",
@@ -39,7 +41,7 @@ def get_pet_surface_custom_file(acq_label: str, suvr_reference_region: str) -> s
     )
 
 
-def init_input_node(parameters: dict, base_dir, subjects_visits_tsv):
+def init_input_node(parameters: dict, group_id: GroupID, base_dir, subjects_visits_tsv):
     """Initialize the pipeline.
 
     This function will:
@@ -53,6 +55,9 @@ def init_input_node(parameters: dict, base_dir, subjects_visits_tsv):
     parameters : dict
         The pipeline's parameters.
 
+    group_id: GroupID
+        The group ID.
+
     base_dir : Path
         The path to the pipeline's base directory.
         This is a pathlib Path. No type hints because of Nipype.
@@ -63,9 +68,6 @@ def init_input_node(parameters: dict, base_dir, subjects_visits_tsv):
 
     Returns
     -------
-    group_label : str
-        The group label.
-
     surfstat_results_dir : Path
         The folder which will contain the results for SurfStat.
     """
@@ -75,8 +77,7 @@ def init_input_node(parameters: dict, base_dir, subjects_visits_tsv):
     from clinica.pipelines.statistics_surface._utils import create_glm_info_dictionary
     from clinica.utils.ux import print_begin_image
 
-    group_id = "group-" + parameters["group_label"]
-    surfstat_results_dir = base_dir / group_id
+    surfstat_results_dir = base_dir / str(group_id)
     surfstat_results_dir.mkdir(parents=True, exist_ok=True)
 
     # Save pipeline parameters in JSON file
@@ -97,10 +98,9 @@ def init_input_node(parameters: dict, base_dir, subjects_visits_tsv):
         str(parameters["full_width_at_half_maximum"]),
         str(parameters["cluster_threshold"]),
     ]
-    group_id = "group-" + parameters["group_label"]
     print_begin_image(group_id, list_keys, list_values)
 
-    return parameters["group_label"], surfstat_results_dir
+    return surfstat_results_dir
 
 
 def _get_string_format_from_tsv(tsv_file: Path) -> str:
@@ -189,6 +189,7 @@ def run_clinica_surfstat(
     output_dir,  # Path. no type hint because of Nipype self-contained requirement
     subjects_visits_tsv,  # Path. no type hint because of Nipype self-contained requirement
     pipeline_parameters: dict,
+    group_label: GroupLabel,
 ):
     """Call clinica_surfstat function.
 
@@ -205,6 +206,9 @@ def run_clinica_surfstat(
 
     pipeline_parameters : dict
         Parameters of StatisticsSurface pipeline.
+
+    group_label: GroupLabel
+        The group label.
 
     Returns
     -------
@@ -224,7 +228,7 @@ def run_clinica_surfstat(
         ),
         pipeline_parameters["contrast"],
         pipeline_parameters["glm_type"],
-        pipeline_parameters["group_label"],
+        str(group_label),
         get_freesurfer_home(),
         pipeline_parameters["measure_label"],
         surface_file=pipeline_parameters["custom_file"],
@@ -234,7 +238,9 @@ def run_clinica_surfstat(
     return output_dir
 
 
-def create_glm_info_dictionary(tsv_file: Path, pipeline_parameters: dict) -> dict:
+def create_glm_info_dictionary(
+    tsv_file: Path, group_label: GroupLabel, pipeline_parameters: dict
+) -> dict:
     """Create dictionary containing the GLM information that will be stored in a JSON file."""
     glm_info = {
         # Clinica compulsory arguments
@@ -245,7 +251,7 @@ def create_glm_info_dictionary(tsv_file: Path, pipeline_parameters: dict) -> dic
         ),
         "StringFormatTSV": _get_string_format_from_tsv(tsv_file),
         "Contrast": pipeline_parameters["contrast"],
-        "GroupLabel": pipeline_parameters["group_label"],
+        "GroupLabel": str(group_label),
         # Optional arguments
         "Covariates": pipeline_parameters["covariates"],
         "FWHM": pipeline_parameters["full_width_at_half_maximum"],
@@ -272,7 +278,7 @@ def save_to_caps(
     source_dir,  # Path. no type hint because of Nipype self-contained requirement
     caps_dir,  # Path. no type hint because of Nipype self-contained requirement
     overwrite_caps: bool,
-    group_label: str,
+    group_id: GroupID,
     glm_type: str,
 ) -> None:
     """Save `source_dir`/ to CAPS folder.
@@ -307,7 +313,7 @@ def save_to_caps(
     destination_dir = (
         caps_dir.expanduser()
         / "groups"
-        / f"group-{group_label}"
+        / str(group_id)
         / "statistics"
         / surfstat_folder
     )
@@ -315,4 +321,4 @@ def save_to_caps(
     if overwrite_caps:
         raise NotImplementedError("save_to_caps(overwrite_caps=True) not implemented")
     shutil.copytree(source_dir, destination_dir, symlinks=True)
-    print_end_image(f"group-{group_label}")
+    print_end_image(str(group_id))

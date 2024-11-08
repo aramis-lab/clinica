@@ -98,7 +98,6 @@ def cli(
     from .pipeline import PETVolume
 
     parameters = {
-        "group_label": group_label,
         "acq_label": acq_label,
         "suvr_reference_region": suvr_reference_region,
         "reconstruction_method": reconstruction_method,
@@ -117,6 +116,7 @@ def cli(
         base_dir=working_directory,
         parameters=parameters,
         name=pipeline_name,
+        group_label=group_label,
     )
 
     exec_pipeline = (
