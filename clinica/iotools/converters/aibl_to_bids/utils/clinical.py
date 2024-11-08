@@ -1,6 +1,7 @@
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Iterator, Optional
 
+import numpy as np
 import pandas as pd
 
 __all__ = [
@@ -148,8 +149,63 @@ def _load_specifications(
     return pd.read_csv(specifications, sep="\t")
 
 
+def _map_diagnosis(diagnosis: int) -> str:
+    if diagnosis == 1:
+        return "CN"
+    elif diagnosis == 2:
+        return "MCI"
+    elif diagnosis == 3:
+        return "AD"
+    else:
+        return "n/a"
+
+
+def _format_metadata_for_rid(
+    input_df: pd.DataFrame, source_id: int, bids_metadata: str, source_metadata: str
+) -> pd.DataFrame:
+    from clinica.iotools.converter_utils import viscode_to_session
+
+    extract = input_df.loc[(input_df["RID"] == source_id), ["VISCODE", source_metadata]]
+    extract.rename(columns={source_metadata: bids_metadata}, inplace=True)
+    extract = extract.assign(
+        session_id=extract.VISCODE.apply(lambda x: viscode_to_session(x))
+    )
+    extract.drop(labels="VISCODE", inplace=True, axis=1)
+    extract.set_index("session_id", inplace=True, drop=True)
+
+    return extract
+
+
+def _compute_age_at_exam(
+    birth_date: Optional[str], exam_date: Optional[str]
+) -> Optional[int]:
+    from datetime import datetime
+
+    if birth_date and exam_date:
+        date_of_birth = datetime.strptime(birth_date, "/%Y")
+        exam_date = datetime.strptime(exam_date, "%m/%d/%Y")
+        return exam_date.year - date_of_birth.year
+    return None
+
+
+def _set_age_from_birth(df: pd.DataFrame) -> pd.DataFrame:
+    if "date_of_birth" not in df.columns or "examination_date" not in df.columns:
+        raise ValueError(
+            "Columns date_of_birth or/and examination_date were not found in the sessions metadata dataframe."
+            "Please check your study metadata."
+        )
+    if len(df["date_of_birth"].dropna().unique()) <= 1:
+        df["date_of_birth"] = df["date_of_birth"].ffill()
+        df["age"] = df.apply(
+            lambda x: _compute_age_at_exam(x.date_of_birth, x.examination_date), axis=1
+        )
+    else:
+        df["age"] = None
+    return df.drop(labels="date_of_birth", axis=1)
+
+
 def create_sessions_tsv_file(
-    input_path: Path,
+    bids_dir: Path,
     clinical_data_dir: Path,
     clinical_specifications_folder: Path,
 ) -> None:
@@ -157,8 +213,8 @@ def create_sessions_tsv_file(
 
     Parameters
     ----------
-    input_path : Path
-        The path to the input folder (BIDS directory).
+    bids_dir : Path
+        The path to the BIDS directory.
 
     clinical_data_dir : Path
         The path to the directory to the clinical data files.
@@ -166,265 +222,115 @@ def create_sessions_tsv_file(
     clinical_specifications_folder : Path
         The path to the folder containing the clinical specification files.
     """
-    import glob
+    from clinica.iotools.bids_utils import (
+        StudyName,
+        bids_id_factory,
+        get_bids_sess_list,
+        get_bids_subjs_list,
+    )
 
-    from clinica.iotools.bids_utils import StudyName, bids_id_factory
-
+    study = StudyName.AIBL.value
     specifications = _load_specifications(
         clinical_specifications_folder, "sessions.tsv"
-    )
-    sessions_fields = specifications[StudyName.AIBL.value]
-    field_location = specifications[f"{StudyName.AIBL.value} location"]
-    sessions_fields_bids = specifications["BIDS CLINICA"]
-    fields_dataset = []
-    fields_bids = []
+    )[["BIDS CLINICA", f"{study} location", study]].dropna()
 
-    for i in range(0, len(sessions_fields)):
-        if not pd.isnull(sessions_fields[i]):
-            fields_bids.append(sessions_fields_bids[i])
-            fields_dataset.append(sessions_fields[i])
-
-    files_to_read: List[str] = []
-    sessions_fields_to_read: List[str] = []
-    for i in range(0, len(sessions_fields)):
-        # If the i-th field is available
-        if not pd.isnull(sessions_fields[i]):
-            # Load the file
-            file_to_read_path = clinical_data_dir / field_location[i]
-            files_to_read.append(glob.glob(str(file_to_read_path))[0])
-            sessions_fields_to_read.append(sessions_fields[i])
-
-    rids = pd.read_csv(files_to_read[0], dtype={"text": str}, low_memory=False).RID
-    unique_rids = list(set(rids))
-    for rid in unique_rids:
-        for file in files_to_read:
-            df = pd.read_csv(file, dtype={"text": str})
-            if len(df.columns) == 1:
-                df = pd.read_csv(file, sep=";", low_memory=False)
-
-            visit_code = df.loc[(df["RID"] == rid), "VISCODE"]
-
-            for field in sessions_fields_to_read:
-                if field in list(df.columns.values) and field == "MMSCORE":
-                    mm_score = df.loc[(df["RID"] == rid), field]
-                    mm_score[mm_score == -4] = "n/a"
-
-                elif field in list(df.columns.values) and field == "CDGLOBAL":
-                    cd_global = df.loc[(df["RID"] == rid), field]
-                    cd_global[
-                        cd_global == -4
-                    ] = "n/a"  # todo (LATER) : do that mapping later, same for other fields
-
-                elif field in list(df.columns.values) and field == "DXCURREN":
-                    dx_curren = df.loc[(df["RID"] == rid), field]
-                    dx_curren[dx_curren == -4] = "n/a"
-                    dx_curren[dx_curren == 1] = "CN"
-                    dx_curren[dx_curren == 2] = "MCI"
-                    dx_curren[dx_curren == 3] = "AD"
-
-                elif field in list(df.columns.values) and field == "EXAMDATE":
-                    exam_date = df.loc[(df["RID"] == rid), field]
-
-                elif field in list(df.columns.values) and field == "PTDOB":
-                    patient_date_of_birth = df.loc[(df["RID"] == rid), field]
-
-        exam_dates = _clean_exam_dates(
-            rid, exam_date.to_list(), visit_code.to_list(), clinical_data_dir
-        )
-
-        if not patient_date_of_birth.empty:
-            age = _compute_ages_at_each_exam(
-                patient_date_of_birth.values[0], exam_dates
-            )
-        else:
-            age = "n/a"
-
-        visit_code[visit_code == "bl"] = "M000"
-        visit_code = visit_code.str.upper()
-
+    for bids_id in get_bids_subjs_list(bids_dir):
+        rid = int(bids_id_factory(study)(bids_id).to_original_study_id())
         sessions = pd.DataFrame(
-            {
-                "months": visit_code.str[1:],
-                "age": age,
-                "MMS": mm_score,
-                "cdr_global": cd_global,
-                "diagnosis": dx_curren,
-                "examination_date": exam_dates,
-            }
+            {"session_id": get_bids_sess_list(bids_dir / bids_id)}
+        ).set_index("session_id", drop=False)
+
+        for _, row in specifications.iterrows():
+            try:
+                df = pd.read_csv(
+                    next(clinical_data_dir.glob(row[f"{study} location"])),
+                    dtype={"text": str},
+                )
+            except StopIteration:
+                raise FileNotFoundError(
+                    f"Clinical data file corresponding to pattern {row[f'{study} location']} was not found in folder "
+                    f"{clinical_data_dir}"
+                )
+
+            data = _format_metadata_for_rid(
+                input_df=df,
+                source_id=rid,
+                bids_metadata=row["BIDS CLINICA"],
+                source_metadata=row[study],
+            )
+            sessions = pd.concat([sessions, data], axis=1)
+
+        sessions.sort_index(inplace=True)
+
+        # -4 are considered missing values in AIBL
+        sessions.replace([-4, "-4", np.nan], None, inplace=True)
+        sessions["diagnosis"] = sessions.diagnosis.apply(lambda x: _map_diagnosis(x))
+        sessions["examination_date"] = sessions.apply(
+            lambda x: _complete_examination_dates(
+                rid, clinical_data_dir, x.session_id, x.examination_date
+            ),
+            axis=1,
         )
-        # todo (LATER) : pretty sure there exists a function that converts viscode to session
-        sessions = sessions.assign(
-            session_id=lambda df: df.months.apply(lambda x: f"ses-M{int(x):03d}")
-        )
-        cols = sessions.columns.tolist()
-        sessions = sessions[cols[-1:] + cols[:-1]]
+        sessions = _set_age_from_birth(sessions)
+
+        # in case there is a session in clinical data that was not actually converted
+        sessions.dropna(subset=["session_id"], inplace=True)
+        sessions.fillna("n/a", inplace=True)
 
         bids_id = bids_id_factory(StudyName.AIBL).from_original_study_id(str(rid))
-
-        bids_paths = input_path / bids_id
-        if bids_paths.exists():
-            sessions.to_csv(
-                input_path / bids_id / f"{bids_id}_sessions.tsv",
-                sep="\t",
-                index=False,
-                encoding="utf8",
-            )
+        sessions.to_csv(
+            bids_dir / bids_id / f"{bids_id}_sessions.tsv",
+            sep="\t",
+            index=False,
+            encoding="utf8",
+        )
 
 
-def _clean_exam_dates(
+def _complete_examination_dates(
     rid: int,
-    exam_dates: List[Union[str, int]],
-    visit_codes: List[str],
     clinical_data_dir: Path,
-) -> List[Union[str, int]]:
-    """Clean the exam dates when necessary by trying to compute them from other sources.
-
-    Parameters
-    ----------
-    rid : int
-        Patient study/source id
-    exam_dates : List
-        Ex : ['10/12/2007', '05/29/2009', '10/25/2010', -4]
-    visit_codes : List
-        Ex : ['bl', 'm18', 'm36', 'm54']
-    clinical_data_dir : Path
-
-    Returns
-    -------
-    List of cleaned exam dates
-
-    """
-
-    from clinica.utils.stream import cprint
-
-    exam_dates_cleaned: List[str] = []
-    for visit_code, exam_date in zip(visit_codes, exam_dates):
-        if exam_date == "-4":
-            exam_date = _find_exam_date_in_other_csv_files(
-                rid, visit_code, clinical_data_dir
-            ) or _compute_exam_date_from_baseline(visit_code, exam_dates, visit_codes)
-            if not exam_date:
-                cprint(
-                    f"No EXAMDATE for subject %{rid}, at session {visit_code}",
-                    lvl="debug",
-                )
-                exam_date = "-4"
-        exam_dates_cleaned.append(exam_date)
-
-    return exam_dates_cleaned
+    session_id: Optional[str] = None,
+    examination_date: Optional[str] = None,
+) -> Optional[str]:
+    if examination_date:
+        return examination_date
+    if session_id:
+        return _find_exam_date_in_other_csv_files(rid, session_id, clinical_data_dir)
+    return None
 
 
 def _find_exam_date_in_other_csv_files(
-    rid: int, visit_code: str, clinical_data_dir: Path
+    rid: int, session_id: str, clinical_data_dir: Path
 ) -> Optional[str]:
     """Try to find an alternative exam date by searching in other CSV files."""
-    # todo (LATER) : refactor and test depending on _get_csv_files
-    for csv_file in _get_csv_files(clinical_data_dir):
-        if "aibl_flutemeta" in csv_file:
-            csv_data = pd.read_csv(
-                csv_file, low_memory=False, usecols=list(range(0, 36))
-            )
-        else:
-            csv_data = pd.read_csv(csv_file, low_memory=False)
-        exam_date = csv_data[(csv_data.RID == rid) & (csv_data.VISCODE == visit_code)]
+    from clinica.iotools.converter_utils import viscode_to_session
+
+    for csv in _get_csv_files_for_alternative_exam_date(clinical_data_dir):
+        csv_data = pd.read_csv(csv, low_memory=False)
+        csv_data["SESSION"] = csv_data.VISCODE.apply(lambda x: viscode_to_session(x))
+        exam_date = csv_data[(csv_data.RID == rid) & (csv_data.SESSION == session_id)]
         if not exam_date.empty and exam_date.iloc[0].EXAMDATE != "-4":
             return exam_date.iloc[0].EXAMDATE
     return None
 
 
-def _get_csv_files(clinical_data_dir: Path) -> List[str]:
+def _get_csv_files_for_alternative_exam_date(
+    clinical_data_dir: Path,
+) -> Iterator[Path]:
     """Return a list of paths to CSV files in which an alternative exam date could be found."""
-    import glob
-    # todo (LATER) : would be better to use a function similar to load_clinical_csv from ADNI
-    # bc there it does not check for existence and can return anything
 
-    return [
-        glob.glob(str(clinical_data_dir / pattern))[0]
-        for pattern in (
-            "aibl_mri3meta_*.csv",
-            "aibl_mrimeta_*.csv",
-            "aibl_cdr_*.csv",
-            "aibl_flutemeta_*.csv",
-            "aibl_mmse_*.csv",
-            "aibl_pibmeta_*.csv",
-        )
-    ]
-
-
-def _compute_exam_date_from_baseline(
-    visit_code: str, exam_dates: List[Union[str, int]], visit_codes: List[str]
-) -> Optional[str]:
-    """Try to find an alternative exam date by computing the number of months from the visit code.
-
-    Parameters
-    ----------
-    visit_code : Visit code of the current analysed session
-    exam_dates : List of all the exam_dates for one subject (ex : ['01/01/2000', -4])
-    visit_codes : List of all the visit codes for one subject (ex : ['bl', 'm12']
-
-    Returns
-    -------
-    Either None or the calculated date (str)
-    """
-    # todo (LATER) : this function could use a refactor though,
-    # for the same output you could just use the visitcode and the date at baseline (no need to use the lists)
-    # assuming you know it. There it returns none if its baseline ? why not the baseline date ?
-
-    import re
-    from datetime import datetime
-
-    from dateutil.relativedelta import relativedelta
-
-    if visit_code != "bl":
+    for pattern in (
+        "aibl_mri3meta_*.csv",
+        "aibl_mrimeta_*.csv",
+        "aibl_cdr_*.csv",
+        "aibl_flutemeta_*.csv",
+        "aibl_mmse_*.csv",
+        "aibl_pibmeta_*.csv",
+    ):
         try:
-            months = int(re.match(r"m(\d*)", visit_code).group(1))
-        except AttributeError:
-            raise ValueError(
-                f"Unexpected visit code {visit_code}. Should be in format mX :"
-                "Ex: m0, m6, m12, m048..."
-            )
-        baseline_index = visit_codes.index("bl")
-        baseline_date = datetime.strptime(exam_dates[baseline_index], "%m/%d/%Y")
-        exam_date = baseline_date + relativedelta(months=+months)
-        return exam_date.strftime("%m/%d/%Y")
-    return None
-
-
-def _compute_ages_at_each_exam(
-    patient_date_of_birth: str, exam_dates: List[str]
-) -> List[float]:
-    """Compute the ages of the patient at each exam date.
-
-    Parameters
-    ----------
-    patient_date_of_birth : str
-        Date of birth of patient ("/%Y" format)
-
-    exam_dates : list of str
-        List of exam dates ("%m/%d/%Y" format)
-
-    Return
-    ------
-    list of float
-        The ages of the patient at each exam date.
-    """
-    from datetime import datetime
-
-    ages: List[float] = []
-    date_of_birth = datetime.strptime(patient_date_of_birth, "/%Y")
-
-    for exam_date in exam_dates:
-        exam_date = datetime.strptime(exam_date, "%m/%d/%Y")
-        delta = exam_date.year - date_of_birth.year
-        ages.append(delta)
-
-    # todo (NOW) :
-    #  rq : what is the use of being so precise ? we are comparing a year with a full date.. that's false anyway
-    #  we could give ages in years (int, >=0) and just subtract the years
-
-    # todo (LATER) : what happens if wrong format ? or exam < birth for some reason ?
-
-    return ages
+            yield next(clinical_data_dir.glob(pattern))
+        except StopIteration:
+            continue
 
 
 def create_scans_tsv_file(
