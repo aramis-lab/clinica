@@ -682,7 +682,7 @@ def largest_eigenvalue_heat_3D_tensor2(g, h, epsilon: float = 1e-6):
     :param g: metric tensor
     :param h: space step
     :param epsilon: stop criterion (default: 1e-6)
-    :return: lamba = the largest eigenvalues
+    :return: lambda = the largest eigenvalues
 
     """
     import cmath
