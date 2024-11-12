@@ -27,7 +27,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.14"
+python = ">=3.10,<3.14"
 nibabel = "^5"
 nipype = ">=1.8.6"
 argcomplete = "^1.9.4"
@@ -39,7 +39,7 @@ scikit-learn = "^1.0"
 nilearn = "^0.10.3"
 colorlog = "^5"
 xgboost = "*"
-scipy = "^1.12"
+scipy = "^1.14.1"
 matplotlib = "*"
 scikit-image = "*"
 pydicom = "*"
