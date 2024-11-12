@@ -80,7 +80,7 @@ def extract_group_ids(caps_directory: Path) -> list[GroupID]:
     ------
     ValueError :
         If `caps_directory/groups` contains folders which do not
-        respect the CAPS naming specifications ("group-{groupID}").
+        respect the CAPS naming specifications ("group-{groupLabel}").
     """
     try:
         groups = [

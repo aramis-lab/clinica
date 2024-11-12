@@ -87,7 +87,7 @@ class T1VolumeRegisterDartel(GroupPipeline):
             try:
                 current_iter = clinica_group_reader(
                     self.caps_directory,
-                    t1_volume_i_th_iteration_group_template(self.group_label, i),
+                    t1_volume_i_th_iteration_group_template(str(self.group_label), i),
                 )
 
                 dartel_iter_templates.append(current_iter)
