@@ -86,7 +86,7 @@ class SpatialSVM(GroupPipeline):
                     Path("t1")
                     / "spm"
                     / "dartel"
-                    / str(self.group_id),
+                    / str(self.group_id)
                     / "*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability.nii.gz"
                 ),
                 "graymatter tissue segmented in T1w MRI in Ixi549 space",
