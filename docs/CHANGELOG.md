@@ -6,6 +6,12 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.9.3
+
+### Fixed
+
+- [PETLinear] Fix the SUVR normalization step (see PR [#1348](https://github.com/aramis-lab/clinica/pull/1348))
+
 ## Clinica 0.9.2
 
 ### Fixed
