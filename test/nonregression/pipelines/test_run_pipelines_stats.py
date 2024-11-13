@@ -85,7 +85,6 @@ def run_statistics_surface(
     shutil.copytree(input_dir / "caps", caps_dir, copy_function=shutil.copy)
 
     parameters = {
-        "group_label": "UnitTest",
         "orig_input_data": "t1-freesurfer",
         "glm_type": "group_comparison",
         "contrast": "group",
@@ -95,6 +94,7 @@ def run_statistics_surface(
         caps_directory=caps_dir,
         tsv_file=tsv,
         base_dir=working_dir,
+        group_label="UnitTest",
         parameters=parameters,
     )
     pipeline.build()
@@ -154,10 +154,8 @@ def run_statistics_volume_pet(
     # Copy necessary data from in to out
     shutil.copytree(input_dir / "caps", caps_dir, copy_function=shutil.copy)
 
-    # Instantiate pipeline and run()
     parameters = {
         # Clinica compulsory parameters
-        "group_label": "UnitTest",
         "orig_input_data_volume": "pet-volume",
         "contrast": "group",
         # Optional arguments for inputs from pet-volume pipeline
@@ -165,14 +163,13 @@ def run_statistics_volume_pet(
         "use_pvc_data": False,
         "suvr_reference_region": SUVRReferenceRegion.PONS,
     }
-
     pipeline = StatisticsVolume(
         caps_directory=fspath(caps_dir),
         tsv_file=fspath(tsv),
         base_dir=fspath(working_dir),
+        group_label="UnitTest",
         parameters=parameters,
     )
-
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 2}, bypass_check=True)
 
     output_t_stat = (
@@ -217,21 +214,16 @@ def run_statistics_volume_t1(
     # Copy necessary data from in to out
     shutil.copytree(input_dir / "caps", caps_dir, copy_function=shutil.copy)
 
-    # Instantiate pipeline and run()
-    parameters = {
-        # Clinica compulsory parameters
-        "group_label": "UnitTest",
-        "orig_input_data_volume": "t1-volume",
-        "contrast": "group",
-    }
-
     pipeline = StatisticsVolume(
         caps_directory=fspath(caps_dir),
         tsv_file=fspath(tsv),
         base_dir=fspath(working_dir),
-        parameters=parameters,
+        group_label="UnitTest",
+        parameters={
+            "orig_input_data_volume": "t1-volume",
+            "contrast": "group",
+        },
     )
-
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 2}, bypass_check=True)
 
     output_t_stat = (

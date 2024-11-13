@@ -24,7 +24,6 @@ def run_pet_volume(
     region = SUVRReferenceRegion.PONS
 
     parameters = {
-        "group_label": "UnitTest",
         "acq_label": tracer,
         "suvr_reference_region": region,
         "skip_question": True,
@@ -34,6 +33,7 @@ def run_pet_volume(
         caps_directory=fspath(output_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
+        group_label="UnitTest",
         parameters=parameters,
     )
     pipeline.build()
