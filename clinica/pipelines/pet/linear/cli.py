@@ -24,6 +24,12 @@ pipeline_name = "pet-linear"
     help="Do not crop the image with template (cropped image are suggested for using with DL models)",
 )
 @cli_param.option.option(
+    "-rb",
+    "--remove_background",
+    is_flag=True,
+    help="Remove the background according to a dilated binary MNI mask",
+)
+@cli_param.option.option(
     "--save_pet_in_t1w_space",
     is_flag=True,
     help="Save the PET image in the T1w space computed in the intermediate step of the pipeline",
@@ -41,6 +47,7 @@ def cli(
     suvr_reference_region: str,
     reconstruction_method: Optional[str] = None,
     uncropped_image: bool = False,
+    remove_background: bool = False,
     save_pet_in_t1w_space: bool = False,
     random_seed: Optional[int] = None,
     subjects_sessions_tsv: Optional[str] = None,
@@ -70,6 +77,7 @@ def cli(
         "suvr_reference_region": suvr_reference_region,
         "reconstruction_method": reconstruction_method,
         "uncropped_image": uncropped_image,
+        "remove_background": remove_background,
         "save_PETinT1w": save_pet_in_t1w_space,
         "random_seed": random_seed,
     }
