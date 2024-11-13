@@ -112,7 +112,21 @@ def remove_mni_background(
     pet_image_path: Path,
     mni_mask_path: Path,
 ) -> Path:
-    """ """
+    """Remove background according to a dilated binary mask.
+
+    Parameters
+    ----------
+    pet_image_path : Path
+        The path to the image to be processed.
+
+    mni_mask_path : Path
+        The path to the dilated MNI binary mask.
+
+    Returns
+    -------
+    output_img : Path
+        The path to the normalized nifti image.
+    """
     import nibabel as nib
 
     from clinica.utils.filemanip import get_filename_no_ext
@@ -135,7 +149,18 @@ def remove_mni_background(
 def clip_img(
     pet_image_path: Path,
 ) -> Path:
-    """ """
+    """Clip PET images to remove preprocessing artifacts leading to negative values
+
+    Parameters
+    ----------
+    pet_image_path : Path
+        The path to the image to be processed.
+
+    Returns
+    -------
+    output_img : Path
+        The path to the normalized nifti image.
+    """
     import nibabel as nib
     import numpy as np
 
