@@ -307,11 +307,7 @@ class PETLinear(PETPipeline):
 
         # The core (processing) nodes
 
-<<<<<<< HEAD
         # 0. Clipping node
-=======
-        # 0. Optional, clipping node
->>>>>>> Added node to clip the image
         clipping_node = npe.Node(
             name="clipping",
             interface=nutil.Function(
