@@ -4,7 +4,6 @@ from typing import List
 from nipype import config
 
 from clinica.pipelines.engine import Pipeline
-from clinica.utils.input_files import QueryPattern
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
@@ -24,18 +23,17 @@ class T1FreeSurfer(Pipeline):
         from clinica.utils.filemanip import extract_image_ids
         from clinica.utils.input_files import (
             Parcellation,
-            QueryPatternName,
-            query_pattern_factory,
+            get_t1_freesurfer_segmentation,
         )
         from clinica.utils.inputs import clinica_file_reader
 
         image_ids: List[str] = []
         if caps_directory.is_dir():
-            pattern = query_pattern_factory(
-                QueryPatternName.T1_FREESURFER_SEGMENTATION
-            )(Parcellation.DESTRIEUX)
             t1_freesurfer_files, _ = clinica_file_reader(
-                subjects, sessions, caps_directory, pattern
+                subjects,
+                sessions,
+                caps_directory,
+                get_t1_freesurfer_segmentation(Parcellation.DESTRIEUX),
             )
             image_ids = extract_image_ids(t1_freesurfer_files)
         return image_ids
@@ -104,7 +102,7 @@ class T1FreeSurfer(Pipeline):
             extract_subjects_sessions_from_filename,
             save_participants_sessions,
         )
-        from clinica.utils.input_files import QueryPatternName, query_pattern_factory
+        from clinica.utils.input_files import get_t1w_mri
         from clinica.utils.inputs import clinica_file_filter
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
@@ -138,11 +136,9 @@ class T1FreeSurfer(Pipeline):
                     to_process_ids
                 )
 
-        pattern = query_pattern_factory(QueryPatternName.T1W)()
         t1w_files, self.subjects, self.sessions = clinica_file_filter(
-            self.subjects, self.sessions, self.bids_directory, pattern
+            self.subjects, self.sessions, self.bids_directory, get_t1w_mri()
         )
-
         if not t1w_files:
             raise ClinicaException("Empty dataset or already processed")
 

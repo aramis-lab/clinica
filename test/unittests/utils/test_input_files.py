@@ -3,11 +3,7 @@ from pathlib import Path
 import pytest
 
 from clinica.utils.dwi import DTIBasedMeasure
-from clinica.utils.input_files import (
-    QueryPattern,
-    QueryPatternName,
-    query_pattern_factory,
-)
+from clinica.utils.input_files import QueryPattern
 from clinica.utils.pet import ReconstructionMethod, Tracer
 
 
@@ -45,63 +41,105 @@ def test_aggregator():
         toy_func_3((1, 2, 3), z=(4, 5))
 
 
-@pytest.mark.parametrize(
-    "query_name,expected_pattern,expected_description,expected_pipelines",
-    [
-        (QueryPatternName.T1W, "sub-*_ses-*_t1w.nii*", "T1w MRI", ""),
-        (QueryPatternName.T2W, "sub-*_ses-*_flair.nii*", "FLAIR T2w MRI", ""),
-        (
-            QueryPatternName.T1_FREESURFER_WHITE_MATTER,
-            "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/wm.seg.mgz",
-            "segmentation of white matter (mri/wm.seg.mgz).",
-            "t1-freesurfer",
-        ),
-        (
-            QueryPatternName.T1_FREESURFER_BRAIN,
-            "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/brain.mgz",
-            "extracted brain from T1w MRI (mri/brain.mgz).",
-            "t1-freesurfer",
-        ),
-        (
-            QueryPatternName.T1_FREESURFER_ORIG_NU,
-            "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/orig_nu.mgz",
-            (
-                "intensity normalized volume generated after correction for"
-                " non-uniformity in FreeSurfer (mri/orig_nu.mgz)."
-            ),
-            "t1-freesurfer",
-        ),
-        (
-            QueryPatternName.T1_FREESURFER_LONG_ORIG_NU,
-            "t1/long-*/freesurfer_longitudinal/sub-*_ses-*.long.sub-*_*/mri/orig_nu.mgz",
-            (
-                "intensity normalized volume generated after correction for non-uniformity "
-                "in FreeSurfer (orig_nu.mgz) in longitudinal"
-            ),
-            "t1-freesurfer and t1-freesurfer longitudinal",
-        ),
-        (
-            QueryPatternName.T1W_TO_MNI_TRANSFORM,
-            "*space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
-            "Transformation matrix from T1W image to MNI space using t1-linear pipeline",
-            "t1-linear",
-        ),
-        (
-            QueryPatternName.DWI_PREPROC_BRAINMASK,
-            "dwi/preprocessing/sub-*_ses-*_space-*_brainmask.nii*",
-            "b0 brainmask",
-            "dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap",
-        ),
-    ],
-)
-def test_query_factory(
-    query_name, expected_pattern, expected_description, expected_pipelines
-):
-    query = query_pattern_factory(query_name)()
+def test_get_t1w_mri():
+    from clinica.utils.input_files import get_t1w_mri
 
-    assert query.pattern == expected_pattern
-    assert query.description == expected_description
-    assert query.needed_pipeline == expected_pipelines
+    pattern = get_t1w_mri()
+
+    assert pattern.pattern == "sub-*_ses-*_t1w.nii*"
+    assert pattern.description == "T1w MRI"
+    assert pattern.needed_pipeline == ""
+
+
+def test_get_t2w_mri():
+    from clinica.utils.input_files import get_t2w_mri
+
+    pattern = get_t2w_mri()
+
+    assert pattern.pattern == "sub-*_ses-*_flair.nii*"
+    assert pattern.description == "FLAIR T2w MRI"
+    assert pattern.needed_pipeline == ""
+
+
+def test_get_t1_freesurfer_segmentation_white_matter():
+    from clinica.utils.input_files import get_t1_freesurfer_segmentation_white_matter
+
+    pattern = get_t1_freesurfer_segmentation_white_matter()
+
+    assert pattern.pattern == "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/wm.seg.mgz"
+    assert pattern.description == "segmentation of white matter (mri/wm.seg.mgz)."
+    assert pattern.needed_pipeline == "t1-freesurfer"
+
+
+def test_get_t1_freesurfer_extracted_brain():
+    from clinica.utils.input_files import get_t1_freesurfer_extracted_brain
+
+    pattern = get_t1_freesurfer_extracted_brain()
+
+    assert pattern.pattern == "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/brain.mgz"
+    assert pattern.description == "extracted brain from T1w MRI (mri/brain.mgz)."
+    assert pattern.needed_pipeline == "t1-freesurfer"
+
+
+def test_get_t1_freesurfer_intensity_normalized_volume_after_nu():
+    from clinica.utils.input_files import (
+        get_t1_freesurfer_intensity_normalized_volume_after_nu,
+    )
+
+    pattern = get_t1_freesurfer_intensity_normalized_volume_after_nu()
+
+    assert (
+        pattern.pattern == "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/orig_nu.mgz"
+    )
+    assert pattern.description == (
+        "intensity normalized volume generated after correction for"
+        " non-uniformity in FreeSurfer (mri/orig_nu.mgz)."
+    )
+    assert pattern.needed_pipeline == "t1-freesurfer"
+
+
+def test_get_t1_freesurfer_longitudinal_intensity_normalized_volume_after_nu():
+    from clinica.utils.input_files import (
+        get_t1_freesurfer_longitudinal_intensity_normalized_volume_after_nu,
+    )
+
+    pattern = get_t1_freesurfer_longitudinal_intensity_normalized_volume_after_nu()
+
+    assert (
+        pattern.pattern
+        == "t1/long-*/freesurfer_longitudinal/sub-*_ses-*.long.sub-*_*/mri/orig_nu.mgz"
+    )
+    assert pattern.description == (
+        "intensity normalized volume generated after correction for non-uniformity "
+        "in FreeSurfer (orig_nu.mgz) in longitudinal"
+    )
+    assert pattern.needed_pipeline == "t1-freesurfer and t1-freesurfer longitudinal"
+
+
+def test_get_t1w_to_mni_transform():
+    from clinica.utils.input_files import get_t1w_to_mni_transform
+
+    pattern = get_t1w_to_mni_transform()
+
+    assert pattern.pattern == "*space-MNI152NLin2009cSym_res-1x1x1_affine.mat"
+    assert (
+        pattern.description
+        == "Transformation matrix from T1W image to MNI space using t1-linear pipeline"
+    )
+    assert pattern.needed_pipeline == "t1-linear"
+
+
+def test_get_dwi_preprocessed_brainmask():
+    from clinica.utils.input_files import get_dwi_preprocessed_brainmask
+
+    pattern = get_dwi_preprocessed_brainmask()
+
+    assert pattern.pattern == "dwi/preprocessing/sub-*_ses-*_space-*_brainmask.nii*"
+    assert pattern.description == "b0 brainmask"
+    assert (
+        pattern.needed_pipeline
+        == "dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap"
+    )
 
 
 @pytest.mark.parametrize(

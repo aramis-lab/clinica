@@ -1,11 +1,10 @@
-from pathlib import Path
 from typing import List
 
 from clinica.pipelines.engine import GroupPipeline
 from clinica.utils.input_files import (
-    QueryPattern,
-    QueryPatternName,
-    query_pattern_factory,
+    get_pet_volume_normalized_suvr,
+    get_t1_volume_group_template,
+    get_t1_volume_template_tpm_in_mni,
 )
 
 
@@ -64,6 +63,7 @@ class SpatialSVM(GroupPipeline):
             clinica_group_reader,
             format_clinica_file_reader_errors,
         )
+        from clinica.utils.spm import SPMTissue
         from clinica.utils.ux import print_groups_in_caps_directory
 
         if not self.group_directory.exists():
@@ -81,16 +81,8 @@ class SpatialSVM(GroupPipeline):
         )
         all_errors = []
         if self.parameters["orig_input_data_ml"] == "t1-volume":
-            pattern = QueryPattern(
-                str(
-                    Path("t1")
-                    / "spm"
-                    / "dartel"
-                    / str(self.group_id)
-                    / "*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability.nii.gz"
-                ),
-                "graymatter tissue segmented in T1w MRI in Ixi549 space",
-                "t1-volume-tissue-segmentation",
+            pattern = get_t1_volume_template_tpm_in_mni(
+                self.group_id, SPMTissue.GRAY_MATTER, modulation=True
             )
         elif self.parameters["orig_input_data_ml"] == "pet-volume":
             if not (
@@ -103,11 +95,9 @@ class SpatialSVM(GroupPipeline):
                     f"- suvr_reference_region: {self.parameters['suvr_reference_region']}\n"
                     f"- use_pvc_data: {self.parameters['use_pvc_data']}\n"
                 )
-            pattern = query_pattern_factory(
-                QueryPatternName.PET_VOLUME_NORMALIZED_SUVR
-            )(
+            pattern = get_pet_volume_normalized_suvr(
                 tracer=self.parameters["acq_label"],
-                group_label=self.parameters["group_label"],
+                group_id=self.group_id,
                 suvr_reference_region=self.parameters["suvr_reference_region"],
                 use_brainmasked_image=False,
                 use_pvc_data=self.parameters["use_pvc_data"],
@@ -123,10 +113,9 @@ class SpatialSVM(GroupPipeline):
         if caps_error:
             all_errors.append(format_clinica_file_reader_errors(caps_error, pattern))
         try:
-            pattern = query_pattern_factory(QueryPatternName.T1_VOLUME_GROUP_TEMPLATE)(
-                self.group_label
+            dartel_input = clinica_group_reader(
+                self.caps_directory, get_t1_volume_group_template(self.group_id)
             )
-            dartel_input = clinica_group_reader(self.caps_directory, pattern)
         except ClinicaException as e:
             all_errors.append(e)
         if any(all_errors):

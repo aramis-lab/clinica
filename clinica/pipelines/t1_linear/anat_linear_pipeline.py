@@ -72,17 +72,16 @@ class AnatLinear(Pipeline):
         caps_directory: Path, subjects: List[str], sessions: List[str]
     ) -> List[str]:
         from clinica.utils.filemanip import extract_image_ids
-        from clinica.utils.input_files import QueryPatternName, query_pattern_factory
+        from clinica.utils.input_files import get_t1w_linear
         from clinica.utils.inputs import clinica_file_reader
 
         image_ids: List[str] = []
         if caps_directory.is_dir():
-            pattern = query_pattern_factory(QueryPatternName.T1W_LINEAR)(cropped=True)
             cropped_files, _ = clinica_file_reader(
                 subjects,
                 sessions,
                 caps_directory,
-                pattern,
+                get_t1w_linear(cropped=True),
             )
             image_ids = extract_image_ids(cropped_files)
         return image_ids
@@ -122,7 +121,7 @@ class AnatLinear(Pipeline):
 
         from clinica.utils.filemanip import extract_subjects_sessions_from_filename
         from clinica.utils.image import get_mni_template
-        from clinica.utils.input_files import QueryPatternName, query_pattern_factory
+        from clinica.utils.input_files import get_t1w_mri, get_t2w_mri
         from clinica.utils.inputs import clinica_file_filter
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
@@ -155,9 +154,7 @@ class AnatLinear(Pipeline):
         # Inputs from anat/ folder
         # ========================
         # anat image file:
-        pattern = query_pattern_factory(
-            QueryPatternName.T1W if self.name == "t1-linear" else QueryPatternName.T2W
-        )()
+        pattern = get_t1w_mri() if self.name == "t1-linear" else get_t2w_mri()
         anat_files, filtered_subjects, filtered_sessions = clinica_file_filter(
             self.subjects, self.sessions, self.bids_directory, pattern
         )

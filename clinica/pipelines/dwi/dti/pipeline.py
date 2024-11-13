@@ -70,18 +70,18 @@ class DwiDti(Pipeline):
         from clinica.utils.filemanip import save_participants_sessions
         from clinica.utils.input_files import (
             DWIFileType,
-            QueryPatternName,
-            query_pattern_factory,
+            get_dwi_preprocessed_brainmask,
+            get_dwi_preprocessed_file,
         )
         from clinica.utils.inputs import clinica_list_of_files_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
         patterns = [
-            query_pattern_factory(QueryPatternName.DWI_PREPROC)(file_type)
+            get_dwi_preprocessed_file(file_type)
             for file_type in (DWIFileType.NII, DWIFileType.BVEC, DWIFileType.BVAL)
         ]
-        patterns.append(query_pattern_factory(QueryPatternName.DWI_PREPROC_BRAINMASK)())
+        patterns.append(get_dwi_preprocessed_brainmask())
         list_caps_files = clinica_list_of_files_reader(
             self.subjects,
             self.sessions,

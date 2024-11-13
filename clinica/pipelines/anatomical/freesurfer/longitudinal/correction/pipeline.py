@@ -61,8 +61,8 @@ class T1FreeSurferLongitudinalCorrection(Pipeline):
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.input_files import (
             Parcellation,
-            QueryPatternName,
-            query_pattern_factory,
+            get_t1_freesurfer_segmentation,
+            get_t1_freesurfer_template,
         )
         from clinica.utils.inputs import (
             clinica_file_reader,
@@ -123,15 +123,11 @@ class T1FreeSurferLongitudinalCorrection(Pipeline):
                 ) = extract_subject_session_longitudinal_ids_from_filename(
                     to_process_ids
                 )
-        pattern_segmentation = query_pattern_factory(
-            QueryPatternName.T1_FREESURFER_SEGMENTATION
-        )(Parcellation.DESTRIEUX)
+        pattern_segmentation = get_t1_freesurfer_segmentation(Parcellation.DESTRIEUX)
         _, errors_destrieux = clinica_file_reader(
             self.subjects, self.sessions, self.caps_directory, pattern_segmentation
         )
-        pattern_template = query_pattern_factory(
-            QueryPatternName.T1_FREESURFER_TEMPLATE
-        )(Parcellation.DESTRIEUX)
+        pattern_template = get_t1_freesurfer_template(Parcellation.DESTRIEUX)
         _, errors_t_destrieux = clinica_file_reader(
             self.subjects, list_long_id, self.caps_directory, pattern_template
         )

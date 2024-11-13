@@ -119,10 +119,9 @@ class StatisticsSurface(GroupPipeline):
         # Note(AR): if the user wants to compare Cortical Thickness measure with PET measure
         # using the group_id, Clinica won't allow it.
         # TODO: Modify this behaviour
-        group_folder = self.caps_directory / "groups" / str(self.group_id)
-        if group_folder.exists():
+        if self.group_directory.exists():
             raise ClinicaException(
-                f"Group label {self.group_label} already exists (found in {group_folder})."
+                f"Group label {self.group_label} already exists (found in {self.group_directory})."
                 "Please choose another one or delete the existing folder and "
                 "also the working directory and rerun the pipeline."
             )

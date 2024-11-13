@@ -4,6 +4,7 @@ from typing import List
 from nipype import config
 
 from clinica.pipelines.engine import Pipeline
+from clinica.utils.input_files import QueryPattern
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
@@ -54,6 +55,35 @@ class DwiConnectome(Pipeline):
         """
         return ["response", "fod", "tracts", "nodes", "connectomes"]
 
+    @staticmethod
+    def _get_input_patterns() -> list[QueryPattern]:
+        from clinica.utils.input_files import (
+            DWIFileType,
+            Parcellation,
+            get_dwi_preprocessed_brainmask,
+            get_dwi_preprocessed_file,
+            get_t1_freesurfer_extracted_brain,
+            get_t1_freesurfer_segmentation,
+            get_t1_freesurfer_segmentation_white_matter,
+        )
+
+        patterns = [get_t1_freesurfer_segmentation_white_matter()]
+        patterns.extend(
+            [
+                get_t1_freesurfer_segmentation(p)
+                for p in (Parcellation.DESIKAN, Parcellation.DESTRIEUX)
+            ]
+        )
+        patterns.append(get_t1_freesurfer_extracted_brain())
+        patterns.extend(
+            [
+                get_dwi_preprocessed_file(file_type)
+                for file_type in (DWIFileType.NII, DWIFileType.BVEC, DWIFileType.BVAL)
+            ]
+        )
+        patterns.append(get_dwi_preprocessed_brainmask())
+        return patterns
+
     def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import re
@@ -63,41 +93,16 @@ class DwiConnectome(Pipeline):
 
         from clinica.utils.exceptions import ClinicaCAPSError
         from clinica.utils.filemanip import save_participants_sessions
-        from clinica.utils.input_files import (
-            DWIFileType,
-            Parcellation,
-            QueryPatternName,
-            query_pattern_factory,
-        )
         from clinica.utils.inputs import clinica_list_of_files_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
-        # Read CAPS files
-        patterns = [
-            query_pattern_factory(QueryPatternName.T1_FREESURFER_WHITE_MATTER)()
-        ]
-        patterns.extend(
-            [
-                query_pattern_factory(QueryPatternName.T1_FREESURFER_SEGMENTATION)(p)
-                for p in (Parcellation.DESIKAN, Parcellation.DESTRIEUX)
-            ]
-        )
-        patterns.append(query_pattern_factory(QueryPatternName.T1_FREESURFER_BRAIN)())
-        patterns.extend(
-            [
-                query_pattern_factory(QueryPatternName.DWI_PREPROC)(file_type)
-                for file_type in (DWIFileType.NII, DWIFileType.BVEC, DWIFileType.BVAL)
-            ]
-        )
-        patterns.append(query_pattern_factory(QueryPatternName.DWI_PREPROC_BRAINMASK)())
         list_caps_files = clinica_list_of_files_reader(
             self.subjects,
             self.sessions,
             self.caps_directory,
-            patterns,
+            self._get_input_patterns(),
         )
-
         # Check space of DWI dataset
         dwi_file_spaces = [
             re.search(

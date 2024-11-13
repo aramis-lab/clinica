@@ -47,7 +47,11 @@ class T1VolumeDartel2MNI(GroupPipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
-        from clinica.utils.input_files import QueryPatternName, query_pattern_factory
+        from clinica.utils.input_files import (
+            get_t1_volume_deformation_to_template,
+            get_t1_volume_group_template,
+            get_t1_volume_tpm,
+        )
         from clinica.utils.inputs import (
             clinica_file_reader,
             clinica_group_reader,
@@ -76,9 +80,7 @@ class T1VolumeDartel2MNI(GroupPipeline):
         # Segmented Tissues
         # =================
         patterns = [
-            query_pattern_factory(QueryPatternName.T1_VOLUME_TPM)(
-                tissue_number, modulation=False, mni_space=False
-            )
+            get_t1_volume_tpm(tissue_number, modulation=False, mni_space=False)
             for tissue_number in self.parameters["tissues"]
         ]
         try:
@@ -100,9 +102,7 @@ class T1VolumeDartel2MNI(GroupPipeline):
 
         # Flow Fields
         # ===========
-        pattern = query_pattern_factory(
-            QueryPatternName.T1_VOLUME_DEFORMATION_TO_TEMPLATE
-        )(self.group_label)
+        pattern = get_t1_volume_deformation_to_template(self.group_id)
         read_input_node.inputs.flowfield_files, flowfield_errors = clinica_file_reader(
             self.subjects,
             self.sessions,
@@ -110,16 +110,15 @@ class T1VolumeDartel2MNI(GroupPipeline):
             pattern,
         )
         if flowfield_errors:
-            all_errors.append(format_clinica_file_reader_errors(flowfield_errors))
+            all_errors.append(
+                format_clinica_file_reader_errors(flowfield_errors, pattern)
+            )
 
         # Dartel Template
         # ================
-        pattern = query_pattern_factory(QueryPatternName.T1_VOLUME_GROUP_TEMPLATE)(
-            self.group_label
-        )
         try:
             read_input_node.inputs.template_file = clinica_group_reader(
-                self.caps_directory, pattern
+                self.caps_directory, get_t1_volume_group_template(self.group_id)
             )
         except ClinicaException as e:
             all_errors.append(e)

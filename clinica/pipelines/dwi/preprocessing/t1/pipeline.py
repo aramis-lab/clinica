@@ -6,8 +6,9 @@ from nipype import config
 from clinica.pipelines.dwi.preprocessing.engine import DWIPreprocessingPipeline
 from clinica.utils.input_files import (
     DWIFileType,
-    QueryPatternName,
-    query_pattern_factory,
+    get_dwi_file,
+    get_dwi_preprocessed_file,
+    get_t1w_mri,
 )
 from clinica.utils.inputs import clinica_file_reader
 
@@ -43,11 +44,11 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
 
         image_ids: List[str] = []
         if caps_directory.is_dir():
-            pattern = query_pattern_factory(QueryPatternName.DWI_PREPROC)(
-                DWIFileType.NII
-            )
             preproc_files, _ = clinica_file_reader(
-                subjects, sessions, caps_directory, pattern
+                subjects,
+                sessions,
+                caps_directory,
+                get_dwi_preprocessed_file(DWIFileType.NII),
             )
             image_ids = extract_image_ids(preproc_files)
         return image_ids
@@ -103,7 +104,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         subjects = []
         sessions = []
         patterns = [
-            query_pattern_factory(QueryPatternName.DWI)(file_type)
+            get_dwi_file(file_type)
             for file_type in (DWIFileType.NII, DWIFileType.BVEC, DWIFileType.BVAL)
         ]
         list_bids_files = clinica_list_of_files_reader(
@@ -145,7 +146,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         from clinica.utils.ux import print_images_to_process
 
         patterns = [
-            query_pattern_factory(QueryPatternName.DWI)(file_type)
+            get_dwi_file(file_type)
             for file_type in (
                 DWIFileType.NII,
                 DWIFileType.JSON,
@@ -153,7 +154,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
                 DWIFileType.BVAL,
             )
         ]
-        patterns.insert(0, query_pattern_factory(QueryPatternName.T1W)())
+        patterns.insert(0, get_t1w_mri())
         list_bids_files = clinica_list_of_files_reader(
             self.subjects,
             self.sessions,

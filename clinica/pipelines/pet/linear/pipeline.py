@@ -5,6 +5,7 @@ from typing import List
 from nipype import config
 
 from clinica.pipelines.pet.engine import PETPipeline
+from clinica.utils.input_files import get_t1w_linear
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
@@ -62,7 +63,11 @@ class PETLinear(PETPipeline):
         from clinica.pipelines.pet.utils import get_suvr_mask
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
         from clinica.utils.image import get_mni_template
-        from clinica.utils.input_files import QueryPatternName, query_pattern_factory
+        from clinica.utils.input_files import (
+            get_t1w_linear,
+            get_t1w_mri,
+            get_t1w_to_mni_transform,
+        )
         from clinica.utils.inputs import (
             clinica_file_reader,
             format_clinica_file_reader_errors,
@@ -86,8 +91,7 @@ class PETLinear(PETPipeline):
                     pet_errors, self._get_pet_scans_query()
                 )
             )
-
-        pattern = query_pattern_factory(QueryPatternName.T1W)()
+        pattern = get_t1w_mri()
         t1w_files, t1w_errors = clinica_file_reader(
             self.subjects, self.sessions, self.bids_directory, pattern
         )
@@ -95,14 +99,11 @@ class PETLinear(PETPipeline):
             raise ClinicaBIDSError(
                 format_clinica_file_reader_errors(t1w_errors, pattern)
             )
-
-        # Inputs from t1-linear pipeline
-        # T1w images registered
-        pattern = query_pattern_factory(QueryPatternName.T1W_LINEAR)(
+        t1w_linear_file_pattern = get_t1w_linear(
             cropped=not self.parameters.get("uncropped_image", False)
         )
         t1w_linear_files, t1w_linear_errors = clinica_file_reader(
-            self.subjects, self.sessions, self.caps_directory, pattern
+            self.subjects, self.sessions, self.caps_directory, t1w_linear_file_pattern
         )
         if t1w_linear_errors:
             raise ClinicaCAPSError(
@@ -110,8 +111,7 @@ class PETLinear(PETPipeline):
                     t1w_linear_errors, t1w_linear_file_pattern
                 )
             )
-        # Transformation files from T1w files to MNI:
-        pattern = query_pattern_factory(QueryPatternName.T1W_TO_MNI_TRANSFORM)()
+        pattern = get_t1w_to_mni_transform()
         t1w_to_mni_transformation_files, t1w_to_mni_errors = clinica_file_reader(
             self.subjects, self.sessions, self.caps_directory, pattern
         )
@@ -119,7 +119,6 @@ class PETLinear(PETPipeline):
             raise ClinicaCAPSError(
                 format_clinica_file_reader_errors(t1w_to_mni_errors, pattern)
             )
-
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
             cprint("The pipeline will last approximately 3 minutes per image.")

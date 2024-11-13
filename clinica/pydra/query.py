@@ -1,12 +1,7 @@
 import abc
-from functools import partial
 from typing import Callable, Dict, Optional
 
-from clinica.utils.input_files import (
-    QueryPattern,
-    QueryPatternName,
-    query_pattern_factory,
-)
+from clinica.utils.input_files import QueryPattern
 
 
 class Query:
@@ -269,35 +264,32 @@ class CAPSFileQuery(CAPSQuery):
 
     from functools import partial
 
-    from clinica.utils.input_files import QueryPatternName, query_pattern_factory
+    from clinica.utils.input_files import (
+        get_pet_volume_normalized_suvr,
+        get_t1_volume_dartel_input_tissue,
+        get_t1_volume_deformation_to_template,
+        get_t1_volume_template_tpm_in_mni,
+        get_t1_volume_tpm,
+        get_t1w_to_mni_transform,
+    )
 
     _query_makers = {
         "tissues": partial(
-            query_pattern_factory(QueryPatternName.T1_VOLUME_TPM),
+            get_t1_volume_tpm,
             mni_space=False,
             modulation=False,
         ),
-        "mask_tissues": partial(
-            query_pattern_factory(QueryPatternName.T1_VOLUME_TPM), mni_space=True
-        ),
-        "flow_fields": query_pattern_factory(
-            QueryPatternName.T1_VOLUME_DEFORMATION_TO_TEMPLATE
-        ),
+        "mask_tissues": partial(get_t1_volume_tpm, mni_space=True),
+        "flow_fields": get_t1_volume_deformation_to_template,
         "pvc_mask_tissues": partial(
-            query_pattern_factory(QueryPatternName.T1_VOLUME_TPM),
+            get_t1_volume_tpm,
             mni_space=False,
             modulation=False,
         ),
-        "dartel_input_tissue": query_pattern_factory(
-            QueryPatternName.T1_VOLUME_DARTEL_INPUT_TISSUE
-        ),
-        "t1w_to_mni": query_pattern_factory(QueryPatternName.T1W_TO_MNI_TRANSFORM),
-        "pet_volume": query_pattern_factory(
-            QueryPatternName.PET_VOLUME_NORMALIZED_SUVR
-        ),
-        "t1_volume": query_pattern_factory(
-            QueryPatternName.T1_VOLUME_TEMPLATE_TPM_IN_MNI
-        ),
+        "dartel_input_tissue": get_t1_volume_dartel_input_tissue,
+        "t1w_to_mni": get_t1w_to_mni_transform,
+        "pet_volume": get_pet_volume_normalized_suvr,
+        "t1_volume": get_t1_volume_template_tpm_in_mni,
     }
 
 
@@ -324,15 +316,14 @@ class CAPSGroupQuery(CAPSQuery):
     }
     """
 
-    from clinica.utils.input_files import QueryPatternName, query_pattern_factory
+    from clinica.utils.input_files import (
+        get_t1_volume_group_template,
+        get_t1_volume_i_th_iteration_group_template,
+    )
 
     _query_makers = {
-        "dartel_template": query_pattern_factory(
-            QueryPatternName.T1_VOLUME_GROUP_TEMPLATE
-        ),
-        "dartel_iteration_templates": query_pattern_factory(
-            QueryPatternName.T1_VOLUME_ITERATION_GROUP_TEMPLATE
-        ),
+        "dartel_template": get_t1_volume_group_template,
+        "dartel_iteration_templates": get_t1_volume_i_th_iteration_group_template,
     }
 
 

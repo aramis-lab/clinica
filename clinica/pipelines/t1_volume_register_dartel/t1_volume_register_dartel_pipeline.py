@@ -44,7 +44,10 @@ class T1VolumeRegisterDartel(GroupPipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
-        from clinica.utils.input_files import QueryPatternName, query_pattern_factory
+        from clinica.utils.input_files import (
+            get_t1_volume_dartel_input_tissue,
+            get_t1_volume_i_th_iteration_group_template,
+        )
         from clinica.utils.inputs import (
             clinica_group_reader,
             clinica_list_of_files_reader,
@@ -61,9 +64,7 @@ class T1VolumeRegisterDartel(GroupPipeline):
         # Dartel Input Tissues
         # ====================
         patterns = [
-            query_pattern_factory(QueryPatternName.T1_VOLUME_DARTEL_INPUT_TISSUE)(
-                tissue_number
-            )
+            get_t1_volume_dartel_input_tissue(tissue_number)
             for tissue_number in self.parameters["tissues"]
         ]
         try:
@@ -79,14 +80,11 @@ class T1VolumeRegisterDartel(GroupPipeline):
 
         # Dartel Templates
         # ================
-        patterns = [
-            query_pattern_factory(QueryPatternName.T1_VOLUME_ITERATION_GROUP_TEMPLATE)(
-                self.group_label, i
-            )
-            for i in range(1, 7)
-        ]
         dartel_iter_templates = []
-        for pattern in patterns:
+        for pattern in [
+            get_t1_volume_i_th_iteration_group_template(self.group_id, i)
+            for i in range(1, 7)
+        ]:
             try:
                 dartel_iter_templates.append(
                     clinica_group_reader(self.caps_directory, pattern)

@@ -6,8 +6,10 @@ from nipype import config
 from clinica.pipelines.dwi.preprocessing.engine import DWIPreprocessingPipeline
 from clinica.utils.input_files import (
     DWIFileType,
-    QueryPatternName,
-    query_pattern_factory,
+    get_dwi_file,
+    get_dwi_fmap_magnitude1_file,
+    get_dwi_fmap_phasediff_file,
+    get_dwi_preprocessed_file,
 )
 
 # Use hash instead of parameters for iterables folder names
@@ -39,11 +41,11 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
 
         image_ids: List[str] = []
         if caps_directory.is_dir():
-            pattern = query_pattern_factory(QueryPatternName.DWI_PREPROC)(
-                DWIFileType.NII
-            )
             preproc_files, _ = clinica_file_reader(
-                subjects, sessions, caps_directory, pattern
+                subjects,
+                sessions,
+                caps_directory,
+                get_dwi_preprocessed_file(DWIFileType.NII),
             )
             image_ids = extract_image_ids(preproc_files)
         return image_ids
@@ -109,7 +111,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
         from clinica.utils.ux import print_images_to_process
 
         patterns = [
-            query_pattern_factory(QueryPatternName.DWI)(file_type)
+            get_dwi_file(file_type)
             for file_type in (
                 DWIFileType.NII,
                 DWIFileType.BVEC,
@@ -117,12 +119,10 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
                 DWIFileType.JSON,
             )
         ]
-        patterns.append(
-            query_pattern_factory(QueryPatternName.DWI_FMAP_MAGNITUDE1)(DWIFileType.NII)
-        )
+        patterns.append(get_dwi_fmap_magnitude1_file(DWIFileType.NII))
         patterns.extend(
             [
-                query_pattern_factory(QueryPatternName.DWI_FMAP_PHASEDIFF)(file_type)
+                get_dwi_fmap_phasediff_file(file_type)
                 for file_type in (DWIFileType.NII, DWIFileType.JSON)
             ]
         )

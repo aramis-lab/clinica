@@ -6,35 +6,51 @@ These dictionaries describe files to grab.
 import functools
 from collections.abc import Iterable
 from dataclasses import dataclass
-from enum import Enum, auto
+from enum import Enum
 from pathlib import Path
-from typing import Callable, Optional, Union
+from typing import Optional, Union
 
 from clinica.utils.dwi import DTIBasedMeasure
+from clinica.utils.group import GroupID
 from clinica.utils.image import HemiSphere
 from clinica.utils.pet import ReconstructionMethod, SUVRReferenceRegion, Tracer
 
-from .spm import get_spm_tissue_from_index
+from .spm import SPMTissue, get_spm_tissue_from_index
 
 __all__ = [
     "DWIFileType",
     "Parcellation",
     "QueryPattern",
-    "QueryPatternName",
-    "query_pattern_factory",
+    "get_t1w_mri",
+    "get_t2w_mri",
+    "get_t1_freesurfer_segmentation_white_matter",
+    "get_t1_freesurfer_extracted_brain",
+    "get_t1_freesurfer_intensity_normalized_volume_after_nu",
+    "get_t1_freesurfer_longitudinal_intensity_normalized_volume_after_nu",
+    "get_t1w_to_mni_transform",
     "get_dwi_file",
     "get_dwi_preprocessed_file",
+    "get_dwi_preprocessed_brainmask",
     "get_dwi_fmap_phasediff_file",
     "get_dwi_fmap_magnitude1_file",
     "get_t1w_linear",
     "get_t1_freesurfer_white_matter_surface",
     "get_t1_freesurfer_longitudinal_white_matter_surface",
     "get_t1_freesurfer_segmentation",
+    "get_t1_freesurfer_statistics",
     "get_t1_freesurfer_parcellation",
     "get_t1_freesurfer_template",
     "get_t1_freesurfer_longitudinal_parcellation",
     "get_t1_volume_tpm",
     "get_t1_volume_dartel_input_tissue",
+    "get_t1_volume_template_tpm_in_mni",
+    "get_t1_volume_deformation_to_template",
+    "get_t1_volume_i_th_iteration_group_template",
+    "get_t1_volume_group_template",
+    "get_dwi_dti",
+    "get_pet_nifti",
+    "get_pet_volume_normalized_suvr",
+    "get_pet_linear_nifti",
 ]
 
 
@@ -78,49 +94,6 @@ class QueryPattern:
         }
 
 
-class QueryPatternName(Enum):
-    """The different names for usual pattern in Clinica.
-
-    T1W : Get T1W MRI in BIDS
-    T2W : Get T2W FLAIR MRI in BIDS
-    T1_FS_WM : GET Freesurfer segmentation of white matter
-    T1_FS_BRAIN :  Get Freesurfer extracted brain from T1w MRI
-    T1_FS_ORIG_NU : Get Freesurfer intensity normalized volume after correction for non-uniformity
-    T1_FS_WM_SURF : Get white matter border surface files from the Freesurfer output
-    T1_FS_LONG_SURF : Get white matter border surface files from the Freesurfer longitudinal output
-    """
-
-    T1W = auto()
-    T1W_LINEAR = auto()
-    T1W_TO_MNI_TRANSFORM = auto()
-    T2W = auto()
-    T1_FREESURFER_WHITE_MATTER = auto()
-    T1_FREESURFER_BRAIN = auto()
-    T1_FREESURFER_ORIG_NU = auto()
-    T1_FREESURFER_LONG_ORIG_NU = auto()
-    T1_FREESURFER_WHITE_MATTER_SURFACE = auto()
-    T1_FREESURFER_LONG_SURFACE = auto()
-    T1_FREESURFER_PARCELLATION = auto()
-    T1_FREESURFER_LONG_PARCELLATION = auto()
-    T1_FREESURFER_SEGMENTATION = auto()
-    T1_FREESURFER_TEMPLATE = auto()
-    T1_VOLUME_TPM = auto()
-    T1_VOLUME_DARTEL_INPUT_TISSUE = auto()
-    T1_VOLUME_DEFORMATION_TO_TEMPLATE = auto()
-    T1_VOLUME_GROUP_TEMPLATE = auto()
-    T1_VOLUME_ITERATION_GROUP_TEMPLATE = auto()
-    T1_VOLUME_TEMPLATE_TPM_IN_MNI = auto()
-    DWI = auto()
-    DWI_PREPROC = auto()
-    DWI_PREPROC_BRAINMASK = auto()
-    DWI_FMAP_PHASEDIFF = auto()
-    DWI_FMAP_MAGNITUDE1 = auto()
-    DWI_DTI = auto()
-    PET_NII = auto()
-    PET_LINEAR_NII = auto()
-    PET_VOLUME_NORMALIZED_SUVR = auto()
-
-
 class Parcellation(str, Enum):
     """The possible atlas names used for deriving parcellations and segmentations."""
 
@@ -135,96 +108,17 @@ class DWIFileType(str, Enum):
     BVAL = "bval"
 
 
-QueryPatternBuilderInterface = Callable[..., QueryPattern]
-
-
-def query_pattern_factory(
-    name: Union[str, QueryPatternName],
-) -> QueryPatternBuilderInterface:
-    """Return the query pattern builder corresponding to the provided name.
-
-    Parameters
-    ----------
-    name : str or QueryPatternName
-        The name of the desired pattern.
-
-    Returns
-    -------
-    QueryPatternBuilderInterface :
-        The desired query pattern builder.
-    """
-    name = QueryPatternName(name)
-    if name == QueryPatternName.T1W:
-        return get_t1w_mri
-    if name == QueryPatternName.T2W:
-        return get_t2w_mri
-    if name == QueryPatternName.T1_FREESURFER_WHITE_MATTER:
-        return get_t1_freesurfer_segmentation_white_matter
-    if name == QueryPatternName.T1_FREESURFER_BRAIN:
-        return get_t1_freesurfer_extracted_brain
-    if name == QueryPatternName.T1_FREESURFER_ORIG_NU:
-        return get_t1_freesurfer_intensity_normalized_volume_after_nu
-    if name == QueryPatternName.T1_FREESURFER_LONG_ORIG_NU:
-        return get_t1_freesurfer_longitudinal_intensity_normalized_volume_after_nu
-    if name == QueryPatternName.T1_FREESURFER_WHITE_MATTER_SURFACE:
-        return get_t1_freesurfer_white_matter_surface
-    if name == QueryPatternName.T1_FREESURFER_LONG_SURFACE:
-        return get_t1_freesurfer_longitudinal_white_matter_surface
-    if name == QueryPatternName.T1_VOLUME_TPM:
-        return get_t1_volume_tpm
-    if name == QueryPatternName.T1_VOLUME_DARTEL_INPUT_TISSUE:
-        return get_t1_volume_dartel_input_tissue
-    if name == QueryPatternName.T1_VOLUME_DEFORMATION_TO_TEMPLATE:
-        return get_t1_volume_deformation_to_template
-    if name == QueryPatternName.T1_VOLUME_GROUP_TEMPLATE:
-        return get_t1_volume_group_template
-    if name == QueryPatternName.T1_VOLUME_ITERATION_GROUP_TEMPLATE:
-        return get_t1_volume_i_th_iteration_group_template
-    if name == QueryPatternName.T1_VOLUME_TEMPLATE_TPM_IN_MNI:
-        return get_t1_volume_template_tpm_in_mni
-    if name == QueryPatternName.T1W_LINEAR:
-        return get_t1w_linear
-    if name == QueryPatternName.T1W_TO_MNI_TRANSFORM:
-        return get_t1w_to_mni_transform
-    if name == QueryPatternName.T1_FREESURFER_PARCELLATION:
-        return get_t1_freesurfer_parcellation
-    if name == QueryPatternName.T1_FREESURFER_LONG_PARCELLATION:
-        return get_t1_freesurfer_longitudinal_parcellation
-    if name == QueryPatternName.T1_FREESURFER_SEGMENTATION:
-        return get_t1_freesurfer_segmentation
-    if name == QueryPatternName.T1_FREESURFER_TEMPLATE:
-        return get_t1_freesurfer_template
-    if name == QueryPatternName.DWI:
-        return get_dwi_file
-    if name == QueryPatternName.DWI_PREPROC:
-        return get_dwi_preprocessed_file
-    if name == QueryPatternName.DWI_PREPROC_BRAINMASK:
-        return get_dwi_preprocessed_brainmask
-    if name == QueryPatternName.DWI_FMAP_PHASEDIFF:
-        return get_dwi_fmap_phasediff_file
-    if name == QueryPatternName.DWI_FMAP_MAGNITUDE1:
-        return get_dwi_fmap_magnitude1_file
-    if name == QueryPatternName.DWI_DTI:
-        return get_dwi_dti
-    if name == QueryPatternName.PET_NII:
-        return get_pet_nifti
-    if name == QueryPatternName.PET_LINEAR_NII:
-        return get_pet_linear_nifti
-    if name == QueryPatternName.PET_VOLUME_NORMALIZED_SUVR:
-        return get_pet_volume_normalized_suvr
-
-
-def get_t1w_mri(*args, **kwargs) -> QueryPattern:
+def get_t1w_mri() -> QueryPattern:
     """Get T1W MRI in BIDS."""
     return QueryPattern("sub-*_ses-*_t1w.nii*", "T1w MRI", "")
 
 
-def get_t2w_mri(*args, **kwargs) -> QueryPattern:
+def get_t2w_mri() -> QueryPattern:
     """Get T2W FLAIR MRI in BIDS."""
     return QueryPattern("sub-*_ses-*_flair.nii*", "FLAIR T2w MRI", "")
 
 
-def get_t1_freesurfer_segmentation_white_matter(*args, **kwargs) -> QueryPattern:
+def get_t1_freesurfer_segmentation_white_matter() -> QueryPattern:
     """GET Freesurfer segmentation of white matter."""
     return QueryPattern(
         "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/wm.seg.mgz",
@@ -233,7 +127,7 @@ def get_t1_freesurfer_segmentation_white_matter(*args, **kwargs) -> QueryPattern
     )
 
 
-def get_t1_freesurfer_extracted_brain(*args, **kwargs) -> QueryPattern:
+def get_t1_freesurfer_extracted_brain() -> QueryPattern:
     return QueryPattern(
         "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/brain.mgz",
         "extracted brain from T1w MRI (mri/brain.mgz).",
@@ -241,9 +135,7 @@ def get_t1_freesurfer_extracted_brain(*args, **kwargs) -> QueryPattern:
     )
 
 
-def get_t1_freesurfer_intensity_normalized_volume_after_nu(
-    *args, **kwargs
-) -> QueryPattern:
+def get_t1_freesurfer_intensity_normalized_volume_after_nu() -> QueryPattern:
     return QueryPattern(
         "t1/freesurfer_cross_sectional/sub-*_ses-*/mri/orig_nu.mgz",
         (
@@ -254,9 +146,9 @@ def get_t1_freesurfer_intensity_normalized_volume_after_nu(
     )
 
 
-def get_t1_freesurfer_longitudinal_intensity_normalized_volume_after_nu(
-    *args, **kwargs
-) -> QueryPattern:
+def get_t1_freesurfer_longitudinal_intensity_normalized_volume_after_nu() -> (
+    QueryPattern
+):
     return QueryPattern(
         "t1/long-*/freesurfer_longitudinal/sub-*_ses-*.long.sub-*_*/mri/orig_nu.mgz",
         (
@@ -267,7 +159,7 @@ def get_t1_freesurfer_longitudinal_intensity_normalized_volume_after_nu(
     )
 
 
-def get_t1w_to_mni_transform(*args, **kwargs) -> QueryPattern:
+def get_t1w_to_mni_transform() -> QueryPattern:
     return QueryPattern(
         "*space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
         "Transformation matrix from T1W image to MNI space using t1-linear pipeline",
@@ -292,7 +184,7 @@ def get_dwi_preprocessed_file(filetype: Union[str, DWIFileType]) -> QueryPattern
     )
 
 
-def get_dwi_preprocessed_brainmask(*args, **kwargs) -> QueryPattern:
+def get_dwi_preprocessed_brainmask() -> QueryPattern:
     return QueryPattern(
         "dwi/preprocessing/sub-*_ses-*_space-*_brainmask.nii*",
         "b0 brainmask",
@@ -397,6 +289,17 @@ def get_t1_freesurfer_segmentation(parcellation: Parcellation) -> QueryPattern:
     return QueryPattern(
         f"t1/freesurfer_cross_sectional/sub-*_ses-*/mri/{filename}",
         f"{parcellation.value}-based segmentation (mri/{filename}).",
+        "t1-freesurfer",
+    )
+
+
+def get_t1_freesurfer_statistics(
+    atlas: str, hemisphere: Union[str, HemiSphere]
+) -> QueryPattern:
+    hemisphere = HemiSphere(hemisphere)
+    return QueryPattern(
+        f"t1/freesurfer_cross_sectional/sub-*_ses-*/stats/{hemisphere.value}.{atlas}.stats",
+        f"{atlas}-based segmentation",
         "t1-freesurfer",
     )
 
@@ -633,18 +536,21 @@ def get_t1_volume_dartel_input_tissue(tissue_number: int) -> QueryPattern:
 
 
 def get_t1_volume_template_tpm_in_mni(
-    group_label: str, tissue_number: int, modulation: bool, fwhm: Optional[int] = None
+    group_id: GroupID,
+    tissue: Union[int, SPMTissue],
+    modulation: bool,
+    fwhm: Optional[int] = None,
 ) -> QueryPattern:
     """Build the pattern required by clinica_file_reader to get the tissue
     probability maps based on group template in MNI space.
 
     Parameters
     ----------
-    group_label : str
-        Label used for the group of interest.
+    group_id : GroupID
+        The ID for the group of interest.
 
-    tissue_number : int
-        An integer defining the tissue of interest.
+    tissue : int or SPMTissue
+        Either the tissue of interest, or an integer defining the tissue of interest.
 
     modulation : {"on", "off"}
         Whether modulation is on or off.
@@ -659,7 +565,7 @@ def get_t1_volume_template_tpm_in_mni(
     """
     from .spm import get_spm_tissue_from_index
 
-    tissue = get_spm_tissue_from_index(tissue_number)
+    tissue = get_spm_tissue_from_index(tissue)
     pattern_modulation = "on" if modulation else "off"
     description_modulation = "with" if modulation else "without"
     fwhm_key_value = f"_fwhm-{fwhm}mm" if fwhm else ""
@@ -670,56 +576,53 @@ def get_t1_volume_template_tpm_in_mni(
             Path("t1")
             / "spm"
             / "dartel"
-            / f"group-{group_label}"
+            / str(group_id)
             / f"*_T1w_segm-{tissue.value}_space-Ixi549Space_modulated-{pattern_modulation}{fwhm_key_value}_probability.nii*"
         ),
         (
-            f"Tissue probability map {tissue.value} based on {group_label} template in MNI space "
+            f"Tissue probability map {tissue.value} based on {group_id.label} template in MNI space "
             f"(Ixi549) {description_modulation} modulation and {fwhm_description}."
         ),
         "t1-volume",
     )
 
 
-def get_t1_volume_deformation_to_template(group_label: str) -> QueryPattern:
+def get_t1_volume_deformation_to_template(group_id: GroupID) -> QueryPattern:
     return QueryPattern(
         str(
             Path("t1")
             / "spm"
             / "dartel"
-            / f"group-{group_label}"
-            / f"sub-*_ses-*_T1w_target-{group_label}_transformation-forward_deformation.nii*"
+            / str(group_id)
+            / f"sub-*_ses-*_T1w_target-{group_id.label}_transformation-forward_deformation.nii*"
         ),
-        f"Deformation from native space to group template {group_label} space.",
+        f"Deformation from native space to group template {group_id.label} space.",
         "t1-volume-create-dartel",
     )
 
 
 @aggregator
 def get_t1_volume_i_th_iteration_group_template(
-    group_label: str, i: int
+    group_id: GroupID, i: int
 ) -> QueryPattern:
     return QueryPattern(
-        str(
-            Path(f"group-{group_label}")
-            / "t1"
-            / f"group-{group_label}_iteration-{i}_template.nii*"
-        ),
-        f"Iteration #{i} of Dartel template {group_label}",
+        str(Path(str(group_id)) / "t1" / f"{group_id}_iteration-{i}_template.nii*"),
+        f"Iteration #{i} of Dartel template {group_id.label}",
         "t1-volume or t1-volume-create-dartel",
     )
 
 
-def get_t1_volume_group_template(group_label: str) -> QueryPattern:
+def get_t1_volume_group_template(group_id: GroupID) -> QueryPattern:
     return QueryPattern(
-        str(Path(f"group-{group_label}") / "t1" / f"group-{group_label}_template.nii*"),
-        f"T1w template file of group {group_label}",
+        str(Path(str(group_id)) / "t1" / f"{group_id}_template.nii*"),
+        f"T1w template file of group {group_id.label}",
         "t1-volume or t1-volume-create-dartel",
     )
 
 
 def get_dwi_dti(
-    measure: Union[str, DTIBasedMeasure], space: Optional[str] = None
+    measure: Union[str, DTIBasedMeasure],
+    space: Optional[str] = None,
 ) -> QueryPattern:
     """Return the query pattern required to capture DWI DTI images.
 
@@ -793,7 +696,7 @@ def get_pet_nifti(
 
 def get_pet_volume_normalized_suvr(
     tracer: Union[str, Tracer],
-    group_label: str,
+    group_id: GroupID,
     suvr_reference_region: Union[str, SUVRReferenceRegion],
     use_brainmasked_image: bool,
     use_pvc_data: bool,
@@ -826,12 +729,12 @@ def get_pet_volume_normalized_suvr(
         str(
             Path("pet")
             / "preprocessing"
-            / f"group-{group_label}"
+            / str(group_id)
             / f"*_trc-{tracer.value}_pet_space-Ixi549Space{pvc_key_value}{suvr_key_value}{mask_key_value}{fwhm_key_value}_pet.nii*"
         ),
         (
             f"{mask_description} SUVR map (using {region.value} region) of {tracer.value}-PET "
-            f"{pvc_description} and {fwhm_description} in Ixi549Space space based on {group_label} DARTEL template"
+            f"{pvc_description} and {fwhm_description} in Ixi549Space space based on {group_id.label} DARTEL template"
         ),
         "pet-volume",
     )

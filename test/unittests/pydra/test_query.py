@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from clinica.pydra.query import BIDSQuery, CAPSFileQuery, CAPSGroupQuery, Query
+from clinica.utils.group import GroupID
 from clinica.utils.input_files import QueryPattern
 
 
@@ -69,7 +70,7 @@ def test_caps_file_query():
     q = CAPSFileQuery(
         {
             "mask_tissues": {"tissue_number": (1, 2), "modulation": False},
-            "flow_fields": {"group_label": "UnitTest"},
+            "flow_fields": {"group_id": GroupID("group-UnitTest")},
         }
     )
     assert len(q) == 2
@@ -113,7 +114,7 @@ def test_caps_file_query():
 
 
 def test_caps_group_query():
-    q = CAPSGroupQuery({"dartel_template": {"group_label": "UnitTest"}})
+    q = CAPSGroupQuery({"dartel_template": {"group_id": GroupID("group-UnitTest")}})
     assert len(q) == 1
     assert q.query == {
         "dartel_template": QueryPattern(

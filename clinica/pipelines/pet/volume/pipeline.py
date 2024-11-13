@@ -1,10 +1,15 @@
-from typing import List, Optional
+from typing import List
 
 from nipype import config
 
 from clinica.pipelines.engine import GroupPipeline
 from clinica.pipelines.pet.engine import PETPipeline
-from clinica.utils.input_files import QueryPatternName, query_pattern_factory
+from clinica.utils.input_files import (
+    get_t1_volume_deformation_to_template,
+    get_t1_volume_group_template,
+    get_t1_volume_tpm,
+    get_t1w_mri,
+)
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
@@ -127,7 +132,7 @@ class PETVolume(GroupPipeline, PETPipeline):
                 self.bids_directory,
                 [
                     self._get_pet_scans_query(),
-                    query_pattern_factory(QueryPatternName.T1W)(),
+                    get_t1w_mri(),
                 ],
             )
         except ClinicaException as e:
@@ -140,9 +145,7 @@ class PETVolume(GroupPipeline, PETPipeline):
                 self.sessions,
                 self.caps_directory,
                 [
-                    query_pattern_factory(QueryPatternName.T1_VOLUME_TPM)(
-                        tissue_number, modulation=False, mni_space=True
-                    )
+                    get_t1_volume_tpm(tissue_number, modulation=False, mni_space=True)
                     for tissue_number in self.parameters["mask_tissues"]
                 ],
             )
@@ -157,9 +160,7 @@ class PETVolume(GroupPipeline, PETPipeline):
             all_errors += e
 
         # Flowfields
-        pattern = query_pattern_factory(
-            QueryPatternName.T1_VOLUME_DEFORMATION_TO_TEMPLATE
-        )(self.group_label)
+        pattern = get_t1_volume_deformation_to_template(self.group_id)
         flowfields_caps, flowfields_errors = clinica_file_reader(
             self.subjects,
             self.sessions,
@@ -173,10 +174,9 @@ class PETVolume(GroupPipeline, PETPipeline):
 
         # Dartel Template
         try:
-            pattern = query_pattern_factory(QueryPatternName.T1_VOLUME_GROUP_TEMPLATE)(
-                self.group_label
+            final_template = clinica_group_reader(
+                self.caps_directory, get_t1_volume_group_template(self.group_id)
             )
-            final_template = clinica_group_reader(self.caps_directory, pattern)
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -196,9 +196,7 @@ class PETVolume(GroupPipeline, PETPipeline):
             # pvc tissues input
             try:
                 patterns = [
-                    query_pattern_factory(QueryPatternName.T1_VOLUME_TPM)(
-                        tissue_number, modulation=False, mni_space=False
-                    )
+                    get_t1_volume_tpm(tissue_number, modulation=False, mni_space=False)
                     for tissue_number in self.parameters["pvc_mask_tissues"]
                 ]
                 pvc_tissues_input = clinica_list_of_files_reader(
