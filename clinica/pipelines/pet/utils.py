@@ -33,8 +33,22 @@ def get_suvr_mask(region: Union[str, SUVRReferenceRegion]) -> Path:
 
 
 def get_mni_mask() -> Path:
-    """ """
-    return Path(__file__).resolve().parents[2] / "resources" / "masks" / ""
+    """Returns the path to the dilated MNI binary mask.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+    Path :
+        The path to the dilated MNI binary mask.
+    """
+    return (
+        Path(__file__).resolve().parents[2]
+        / "resources"
+        / "masks"
+        / "dilated_MNI_binary_mask.nii.gz"
+    )
 
 
 def _get_suvr_reference_region_labels_filename(region: SUVRReferenceRegion) -> str:
