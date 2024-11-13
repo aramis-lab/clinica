@@ -150,12 +150,12 @@ def run_spatial_svm(
     # Copy necessary data from in to out
     shutil.copytree(input_dir / "caps", caps_dir, copy_function=shutil.copy)
 
-    parameters = {"group_label": "ADNIbl", "orig_input_data_ml": "t1-volume"}
     pipeline = SpatialSVM(
         caps_directory=fspath(caps_dir),
         tsv_file=fspath(tsv),
         base_dir=fspath(working_dir),
-        parameters=parameters,
+        group_label="ADNIbl",
+        parameters={"orig_input_data_ml": "t1-volume"},
     )
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
