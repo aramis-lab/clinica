@@ -1,7 +1,8 @@
-from typing import List
+from typing import List, Optional
 
 from nipype import config
 
+from clinica.pipelines.engine import GroupPipeline
 from clinica.pipelines.pet.engine import PETPipeline
 
 # Use hash instead of parameters for iterables folder names
@@ -10,7 +11,7 @@ cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
 
 
-class PETVolume(PETPipeline):
+class PETVolume(GroupPipeline, PETPipeline):
     """PETVolume - Volume-based processing of PET images using SPM.
 
     Returns:
@@ -20,11 +21,8 @@ class PETVolume(PETPipeline):
     def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
         from clinica.utils.atlas import T1AndPetVolumeAtlasName
-        from clinica.utils.group import check_group_label
 
         super()._check_pipeline_parameters()
-        self.parameters.setdefault("group_label", None)
-        check_group_label(self.parameters["group_label"])
         self.parameters.setdefault("pvc_psf_tsv", None)
         self.parameters.setdefault("mask_tissues", [1, 2, 3])
         self.parameters.setdefault("mask_threshold", 0.3)
@@ -110,12 +108,10 @@ class PETVolume(PETPipeline):
         )
 
         # Check that group already exists
-        if not (
-            self.caps_directory / "groups" / f"group-{self.parameters['group_label']}"
-        ).exists():
+        if not self.group_directory.exists():
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
-                f"Group {self.parameters['group_label']} does not exist. "
+                f"Group {self.group_label} does not exist. "
                 "Did you run t1-volume or t1-volume-create-dartel pipeline?"
             )
 
@@ -170,13 +166,13 @@ class PETVolume(PETPipeline):
             self.subjects,
             self.sessions,
             self.caps_directory,
-            t1_volume_deformation_to_template(self.parameters["group_label"]),
+            t1_volume_deformation_to_template(self.group_label),
         )
         if flowfields_errors:
             all_errors.append(
                 format_clinica_file_reader_errors(
                     flowfields_errors,
-                    t1_volume_deformation_to_template(self.parameters["group_label"]),
+                    t1_volume_deformation_to_template(self.group_label),
                 )
             )
 
@@ -184,7 +180,7 @@ class PETVolume(PETPipeline):
         try:
             final_template = clinica_group_reader(
                 self.caps_directory,
-                t1_volume_final_group_template(self.parameters["group_label"]),
+                t1_volume_final_group_template(self.group_label),
             )
         except ClinicaException as e:
             all_errors.append(e)
@@ -411,7 +407,7 @@ class PETVolume(PETPipeline):
                                 fix_join,
                                 "pet",
                                 "preprocessing",
-                                f"group-{self.parameters['group_label']}",
+                                str(self.group_id),
                             ),
                             "container",
                         )
@@ -450,7 +446,7 @@ class PETVolume(PETPipeline):
                                 fix_join,
                                 "pet",
                                 "preprocessing",
-                                f"group-{self.parameters['group_label']}",
+                                str(self.group_id),
                             ),
                             "container",
                         )

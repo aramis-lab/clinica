@@ -1,9 +1,9 @@
 from typing import List
 
-from clinica.pipelines.engine import Pipeline
+from clinica.pipelines.engine import GroupPipeline
 
 
-class StatisticsSurface(Pipeline):
+class StatisticsSurface(GroupPipeline):
     """StatisticsSurface - Surface-based mass-univariate analysis with BrainStat.
 
     See documentation at https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/Stats_Surface/
@@ -19,13 +19,9 @@ class StatisticsSurface(Pipeline):
     def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
         from clinica.utils.exceptions import ClinicaException
-        from clinica.utils.group import check_group_label
 
         from ._utils import get_pet_surface_custom_file, get_t1_freesurfer_custom_file
         from .surfstat import get_t1_freesurfer_custom_file_template
-
-        self.parameters.setdefault("group_label", None)
-        check_group_label(self.parameters["group_label"])
 
         for compulsory_parameter_name in ("orig_input_data", "contrast"):
             if compulsory_parameter_name not in self.parameters:
@@ -122,14 +118,12 @@ class StatisticsSurface(Pipeline):
         # Note(AR): if the user wants to compare Cortical Thickness measure with PET measure
         # using the group_id, Clinica won't allow it.
         # TODO: Modify this behaviour
-        group_folder = (
-            self.caps_directory / "groups" / f"group-{self.parameters['group_label']}"
-        )
+        group_folder = self.caps_directory / "groups" / str(self.group_id)
         if group_folder.exists():
             raise ClinicaException(
-                f"Group label {self.parameters['group_label']} already exists (found in {group_folder})."
+                f"Group label {self.group_label} already exists (found in {group_folder})."
                 "Please choose another one or delete the existing folder and "
-                "also the working directory and rerun the pipeline"
+                "also the working directory and rerun the pipeline."
             )
 
         # Check input files
@@ -170,7 +164,7 @@ class StatisticsSurface(Pipeline):
                     "source_dir",
                     "caps_dir",
                     "overwrite_caps",
-                    "group_label",
+                    "group_id",
                     "glm_type",
                 ],
                 function=save_to_caps,
@@ -179,7 +173,7 @@ class StatisticsSurface(Pipeline):
         )
         save_to_caps.inputs.caps_dir = self.caps_directory
         save_to_caps.inputs.overwrite_caps = self.overwrite_caps
-        save_to_caps.inputs.group_label = self.parameters["group_label"]
+        save_to_caps.inputs.group_id = self.group_id
         save_to_caps.inputs.glm_type = self.parameters["glm_type"]
 
         self.connect(
@@ -197,13 +191,19 @@ class StatisticsSurface(Pipeline):
 
         init_input = npe.Node(
             interface=nutil.Function(
-                input_names=["parameters", "base_dir", "subjects_visits_tsv"],
-                output_names=["group_label", "surfstat_results_dir"],
+                input_names=[
+                    "parameters",
+                    "group_id",
+                    "base_dir",
+                    "subjects_visits_tsv",
+                ],
+                output_names=["surfstat_results_dir"],
                 function=init_input_node,
             ),
             name="0-InitPipeline",
         )
         init_input.inputs.parameters = self.parameters
+        init_input.inputs.group_id = self.group_id
         init_input.inputs.base_dir = self.base_dir / self.name
         init_input.inputs.subjects_visits_tsv = self.tsv_file
 
@@ -215,6 +215,7 @@ class StatisticsSurface(Pipeline):
                     "output_dir",
                     "subjects_visits_tsv",
                     "pipeline_parameters",
+                    "group_label",
                 ],
                 output_names=["output_dir"],
                 function=run_clinica_surfstat,
@@ -223,6 +224,7 @@ class StatisticsSurface(Pipeline):
         surfstat.inputs.caps_dir = self.caps_directory
         surfstat.inputs.subjects_visits_tsv = self.tsv_file
         surfstat.inputs.pipeline_parameters = self.parameters
+        surfstat.inputs.group_label = self.group_label
 
         self.connect(
             [

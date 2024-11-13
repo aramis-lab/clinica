@@ -1,9 +1,9 @@
 from typing import List
 
-from clinica.pipelines.engine import Pipeline
+from clinica.pipelines.engine import GroupPipeline
 
 
-class T1VolumeRegisterDartel(Pipeline):
+class T1VolumeRegisterDartel(GroupPipeline):
     """T1VolumeExistingDartel - Reuse existing Dartel template.
 
     Returns:
@@ -16,12 +16,7 @@ class T1VolumeRegisterDartel(Pipeline):
 
     def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
-        from clinica.utils.group import check_group_label
-
-        if "group_label" not in self.parameters.keys():
-            raise KeyError("Missing compulsory group_label key in pipeline parameter.")
         self.parameters.setdefault("tissues", [1, 2, 3])
-        check_group_label(self.parameters["group_label"])
 
     def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
@@ -92,9 +87,7 @@ class T1VolumeRegisterDartel(Pipeline):
             try:
                 current_iter = clinica_group_reader(
                     self.caps_directory,
-                    t1_volume_i_th_iteration_group_template(
-                        self.parameters["group_label"], i
-                    ),
+                    t1_volume_i_th_iteration_group_template(str(self.group_label), i),
                 )
 
                 dartel_iter_templates.append(current_iter)
@@ -148,8 +141,7 @@ class T1VolumeRegisterDartel(Pipeline):
             + self.subjects[i]
             + "/"
             + self.sessions[i]
-            + "/t1/spm/dartel/group-"
-            + self.parameters["group_label"]
+            + f"/t1/spm/dartel/{self.group_id}"
             for i in range(len(self.subjects))
         ]
         write_flowfields_node.inputs.regexp_substitutions = [
@@ -165,7 +157,7 @@ class T1VolumeRegisterDartel(Pipeline):
             (
                 r"(.*)flow_fields/u_(sub-.*)_segm-.*(\.nii(\.gz)?)$",
                 r"\1\2_target-"
-                + re.escape(self.parameters["group_label"])
+                + re.escape(str(self.group_label))
                 + r"_transformation-forward_deformation\3",
             ),
             (r"trait_added", r""),

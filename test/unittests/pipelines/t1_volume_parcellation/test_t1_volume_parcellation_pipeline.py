@@ -10,7 +10,7 @@ def test_t1_volume_parcellation_info_loading(tmp_path):
         tmp_path / "caps",
         {"pipelines": ["t1-volume-parcellation"], "subjects": {"sub-01": ["ses-M000"]}},
     )
-    pipeline = T1VolumeParcellation(caps_directory=str(caps))
+    pipeline = T1VolumeParcellation(caps_directory=str(caps), group_label="test")
 
     assert pipeline.info == {
         "id": "aramislab/t1-volume-parcellation",
@@ -31,6 +31,6 @@ def test_t1_volume_parcellation_dependencies(tmp_path):
         tmp_path / "caps",
         {"pipelines": ["t1-volume-parcellation"], "subjects": {"sub-01": ["ses-M000"]}},
     )
-    pipeline = T1VolumeParcellation(caps_directory=str(caps))
+    pipeline = T1VolumeParcellation(caps_directory=str(caps), group_label="test")
 
     assert pipeline.dependencies == []

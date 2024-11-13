@@ -12,6 +12,7 @@ from nipype.interfaces.utility import IdentityInterface
 from nipype.pipeline.engine import Node, Workflow
 
 from clinica.utils.check_dependency import SoftwareDependency, ThirdPartySoftware
+from clinica.utils.group import GroupID, GroupLabel
 from clinica.utils.stream import log_and_warn
 
 
@@ -1029,3 +1030,33 @@ class Pipeline(Workflow):
     @abc.abstractmethod
     def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
+
+
+class GroupPipeline(Pipeline):
+    def __init__(
+        self,
+        caps_directory: str,
+        group_label: str,
+        bids_directory: Optional[str] = None,
+        tsv_file: Optional[str] = None,
+        overwrite_caps: Optional[bool] = False,
+        base_dir: Optional[str] = None,
+        parameters: Optional[dict] = None,
+        name: Optional[str] = None,
+        ignore_dependencies: Optional[List[str]] = None,
+        caps_name: Optional[str] = None,
+    ):
+        super().__init__(
+            bids_directory=bids_directory,
+            caps_directory=caps_directory,
+            tsv_file=tsv_file,
+            overwrite_caps=overwrite_caps,
+            base_dir=base_dir,
+            parameters=parameters,
+            name=name,
+            ignore_dependencies=ignore_dependencies,
+            caps_name=caps_name,
+        )
+        self.group_label: GroupLabel = GroupLabel(group_label)
+        self.group_id: GroupID = GroupID.from_label(self.group_label)
+        self.group_directory: Path = self.caps_directory / "groups" / str(self.group_id)

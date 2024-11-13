@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 
@@ -6,9 +8,11 @@ import pytest
     ["A", "a1", "123", "0xY2", "mygroup"],
 )
 def test_check_group_label(label):
-    from clinica.utils.group import check_group_label
+    from clinica.utils.group import GroupLabel
 
-    assert check_group_label(label) is None
+    label = GroupLabel(label)
+
+    assert label == label
 
 
 @pytest.mark.parametrize(
@@ -26,33 +30,37 @@ def test_check_group_label(label):
     ],
 )
 def test_check_group_label_errors(label):
-    from clinica.utils.group import check_group_label
+    from clinica.utils.group import GroupLabel
 
     with pytest.raises(
         ValueError,
-        match="Not valid group_label value",
+        match=re.escape(
+            f"Group label '{label}' is not a valid group label: it must be composed only by letters and/or numbers."
+        ),
     ):
-        check_group_label(label)
+        GroupLabel(label)
 
 
 @pytest.mark.parametrize("folder_name", ["group-AD", "group-foo", "group-foo12bar"])
-def test_check_group_dir(tmp_path, folder_name):
-    from clinica.utils.group import _check_group_dir
+def test_group_id(folder_name: str):
+    from clinica.utils.group import GroupID
 
-    assert _check_group_dir(tmp_path / folder_name) is None
+    assert GroupID(folder_name) == folder_name
 
 
 @pytest.mark.parametrize(
-    "folder_name", ["foo", "foo-group", "groupfoo12bar", "foo.txt"]
+    "folder_name", ["foo bar", "", "foo$", "foo-group", "group_foo_12_bar", "foo.txt"]
 )
-def test_check_group_dir_errors(tmp_path, folder_name):
-    from clinica.utils.group import _check_group_dir
+def test_group_id_errors(folder_name):
+    from clinica.utils.group import GroupID
 
     with pytest.raises(
         ValueError,
-        match="Group directory",
+        match=re.escape(
+            f"Group ID '{folder_name}' is not a valid group ID: it must start with 'group-'."
+        ),
     ):
-        _check_group_dir(tmp_path / folder_name)
+        GroupID(folder_name)
 
 
 def test_extract_group_ids_empty(tmp_path):
@@ -90,6 +98,7 @@ def test_extract_group_ids_errors(tmp_path):
         (groups_folder / group_id).mkdir()
 
     with pytest.raises(
-        ValueError, match=f"Group directory {groups_folder / 'foo'} is not valid"
+        ValueError,
+        match="Group ID 'foo' is not a valid group ID: it must start with 'group-'.",
     ):
         extract_group_ids(tmp_path)

@@ -34,10 +34,11 @@ def _check_pipeline_parameters(parameters: dict) -> dict:
         Cleaned dictionary of parameters.
     """
     from clinica.utils.atlas import T1AndPetVolumeAtlasName
-    from clinica.utils.group import check_group_label
+    from clinica.utils.group import GroupLabel
 
     parameters.setdefault("group_label", None)
-    check_group_label(parameters["group_label"])
+    if parameters["group_label"]:
+        parameters["group_label"] = GroupLabel(parameters["group_label"])
     if "acq_label" not in parameters.keys():
         raise KeyError("Missing compulsory acq_label key in pipeline parameter.")
     parameters.setdefault("pvc_psf_tsv", None)

@@ -132,7 +132,6 @@ def cli(
 
     parameters = {
         # Clinica compulsory arguments
-        "group_label": group_label,
         "orig_input_data": orig_input_data,
         "glm_type": glm_type,
         "contrast": contrast,
@@ -154,6 +153,7 @@ def cli(
         tsv_file=subject_visits_with_covariates_tsv,
         base_dir=working_directory,
         parameters=parameters,
+        group_label=group_label,
         name=pipeline_name,
     )
 

@@ -77,7 +77,7 @@ def run_create_dartel(base_dir: Path, output_dir: Path, working_dir: Path) -> No
         caps_directory=fspath(tmp_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
-        parameters={"group_label": "UnitTest"},
+        group_label="UnitTest",
     ).build()
 
 
@@ -96,7 +96,7 @@ def run_dartel_to_mni(base_dir: Path, output_dir: Path, working_dir: Path) -> No
         caps_directory=fspath(tmp_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
-        parameters={"group_label": "UnitTest"},
+        group_label="UnitTest",
     ).build()
 
 
@@ -115,7 +115,7 @@ def run_register_dartel(base_dir: Path, output_dir: Path, working_dir: Path) -> 
         caps_directory=fspath(tmp_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
-        parameters={"group_label": "UnitTest"},
+        group_label="UnitTest",
     ).build()
 
 
@@ -135,7 +135,7 @@ def test_instantiate_t1_volume_parcellation(cmdopt, tmp_path):
         caps_directory=fspath(tmp_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
-        parameters={"group_label": "UnitTest"},
+        group_label="UnitTest",
     ).build()
 
 
@@ -229,8 +229,8 @@ def run_pet_volume(base_dir: Path, output_dir: Path, working_dir: Path) -> None:
         caps_directory=fspath(tmp_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
+        group_label="UnitTest",
         parameters={
-            "group_label": "UnitTest",
             "acq_label": Tracer.FDG,
             "suvr_reference_region": SUVRReferenceRegion.PONS,
             "skip_question": True,
@@ -275,8 +275,8 @@ def test_instantiate_statistics_surface(cmdopt, tmp_path):
         caps_directory=fspath(tmp_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
+        group_label="UnitTest",
         parameters={
-            "group_label": "UnitTest",
             "orig_input_data": "t1-freesurfer",
             "glm_type": "group_comparison",
             "contrast": "group",
@@ -425,10 +425,8 @@ def test_instantiate_spatial_svm(cmdopt, tmp_path):
         caps_directory=fspath(tmp_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
-        parameters={
-            "group_label": "ADNIbl",
-            "orig_input_data_ml": "t1-volume",
-        },
+        group_label="ADNIbl",
+        parameters={"orig_input_data_ml": "t1-volume"},
     ).build()
 
 
@@ -503,8 +501,8 @@ def test_instantiate_statistics_volume(cmdopt, tmp_path):
         caps_directory=fspath(tmp_dir / "caps"),
         tsv_file=fspath(input_dir / "group-UnitTest_covariates.tsv"),
         base_dir=fspath(working_dir),
+        group_label="UnitTest",
         parameters={
-            "group_label": "UnitTest",
             "orig_input_data_volume": "pet-volume",
             "contrast": "group",
             "acq_label": Tracer.FDG,
