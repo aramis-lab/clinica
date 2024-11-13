@@ -307,7 +307,7 @@ class PETLinear(PETPipeline):
 
         # The core (processing) nodes
 
-        # 0. Optional, clipping node
+        # 0. Clipping node
         clipping_node = npe.Node(
             name="clipping",
             interface=nutil.Function(
@@ -372,7 +372,7 @@ class PETLinear(PETPipeline):
                     "normalizing_image_path",
                     "reference_mask_path",
                 ],
-                output_names=["output_img"],
+                output_names=["output_image"],
             ),
         )
         normalize_intensity_node.inputs.reference_mask_path = self.ref_mask
@@ -486,12 +486,13 @@ class PETLinear(PETPipeline):
                 (
                     normalize_intensity_node,
                     self.output_node,
-                    [("output_img", "suvr_pet")],
+                    [("output_image", "suvr_pet")],
                 ),
                 (self.input_node, print_end_message, [("pet", "pet")]),
             ]
         )
         # STEP 4
+        # Case 1: crop image and don't remove the background
         if not (self.parameters.get("uncropped_image")) and not (
             self.parameters.get("remove_background")
         ):
@@ -500,20 +501,17 @@ class PETLinear(PETPipeline):
                     (
                         normalize_intensity_node,
                         crop_nifti_node,
-                        [("output_img", "input_image")],
+                        [("output_image", "input_image")],
                     ),
                     (
                         crop_nifti_node,
                         self.output_node,
                         [("output_image", "outfile_crop")],
                     ),
-                    (
-                        crop_nifti_node,
-                        print_end_message,
-                        [("output_image", "final_file")],
-                    ),
                 ]
             )
+            last_node = crop_nifti_node
+        # Case 2: crop image and remove the background
         elif not (self.parameters.get("uncropped_image")) and (
             self.parameters.get("remove_background")
         ):
@@ -522,7 +520,7 @@ class PETLinear(PETPipeline):
                     (
                         normalize_intensity_node,
                         crop_nifti_node,
-                        [("output_img", "input_image")],
+                        [("output_image", "input_image")],
                     ),
                     (
                         crop_nifti_node,
@@ -536,13 +534,10 @@ class PETLinear(PETPipeline):
                             ("output_image", "outfile_crop_no_bkgd")
                         ],  # to implement in out node
                     ),
-                    (
-                        remove_background_node,
-                        print_end_message,
-                        [("output_image", "final_file")],
-                    ),
                 ]
             )
+            last_node = remove_background_node
+        # Case 3: don't crop the image and remove the background
         elif (self.parameters.get("uncropped_image")) and (
             self.parameters.get("remove_background")
         ):
@@ -551,32 +546,31 @@ class PETLinear(PETPipeline):
                     (
                         normalize_intensity_node,
                         remove_background_node,
-                        [("output_img", "input_image")],
+                        [("output_image", "input_image")],
                     ),
                     (
                         remove_background_node,
                         self.output_node,
                         [
-                            ("output_image", "outfile_no_bcgd")
+                            ("output_image", "outfile_no_bkgd")
                         ],  # to implement in out node
                     ),
-                    (
-                        remove_background_node,
-                        print_end_message,
-                        [("output_image", "final_file")],
-                    ),
                 ]
             )
+            last_node = remove_background_node
+        # Case 4:  don't crop the image and don't remove the background
         else:
-            self.connect(
-                [
-                    (
-                        normalize_intensity_node,
-                        print_end_message,
-                        [("output_img", "final_file")],
-                    ),
-                ]
-            )
+            last_node = normalize_intensity_node
+
+        self.connect(
+            [
+                (
+                    last_node,
+                    print_end_message,
+                    [("output_image", "final_file")],
+                ),
+            ]
+        )
 
         # STEP 6: Optional argument
         if self.parameters.get("save_PETinT1w"):
