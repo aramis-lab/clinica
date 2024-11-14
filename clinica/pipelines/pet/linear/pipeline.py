@@ -227,36 +227,37 @@ class PETLinear(PETPipeline):
                 ),
             ]
         )
-        if not (self.parameters.get("uncropped_image")):
-            self.connect(
-                [
-                    (
-                        self.output_node,
-                        rename_files,
-                        [("outfile_crop", "pet_preprocessed_image_filename")],
-                    ),
-                    (
-                        rename_files,
-                        write_node,
-                        [("pet_filename_caps", "@registered_pet")],
-                    ),
-                ]
-            )
+        # Case 1: crop image and don't remove the background
+        if not (self.parameters.get("uncropped_image")) and not (
+            self.parameters.get("remove_background")
+        ):
+            node_out_name = "outfile_crop"
+        # Case 2: crop image and remove the background
+        elif not (self.parameters.get("uncropped_image")) and (
+            self.parameters.get("remove_background")
+        ):
+            node_out_name = "outfile_crop_no_bkgd"
+        # Case 3: don't crop the image and remove the background
+        elif (self.parameters.get("uncropped_image")) and (
+            self.parameters.get("remove_background")
+        ):
+            node_out_name = "outfile_no_bkgd"
         else:
-            self.connect(
-                [
-                    (
-                        self.output_node,
-                        rename_files,
-                        [("suvr_pet", "pet_preprocessed_image_filename")],
-                    ),
-                    (
-                        rename_files,
-                        write_node,
-                        [("pet_filename_caps", "@registered_pet")],
-                    ),
-                ]
-            )
+            node_out_name = "suvr_pet"
+        self.connect(
+            [
+                (
+                    self.output_node,
+                    rename_files,
+                    [(node_out_name, "pet_preprocessed_image_filename")],
+                ),
+                (
+                    rename_files,
+                    write_node,
+                    [("pet_filename_caps", "@registered_pet")],
+                ),
+            ]
+        )
         if self.parameters.get("save_PETinT1w"):
             self.connect(
                 [
@@ -393,11 +394,11 @@ class PETLinear(PETPipeline):
             name="removeBackground",
             interface=nutil.Function(
                 function=remove_mni_background_task,
-                input_names=["input_image"],
+                input_names=["input_image", "mni_mask_path"],
                 output_names=["output_image"],
             ),
         )
-        remove_background_node.mni_mask_path = self.mni_mask
+        remove_background_node.inputs.mni_mask_path = self.mni_mask
 
         # 6. Print end message
         print_end_message = npe.Node(
