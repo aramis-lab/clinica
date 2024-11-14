@@ -103,9 +103,11 @@ class StatisticsVolume(GroupPipeline):
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_begin_image, print_images_to_process
 
-        dartel_group_id = GroupID.from_label(
-            GroupLabel(self.parameters["group_label_dartel"])
-        )
+        dartel_group_id = None
+        if self.parameters["group_label_dartel"] != "*":
+            dartel_group_id = GroupID.from_label(
+                GroupLabel(self.parameters["group_label_dartel"])
+            )
         if self.parameters["orig_input_data_volume"] == "pet-volume":
             if not (
                 self.parameters["acq_label"]

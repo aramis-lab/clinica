@@ -150,44 +150,38 @@ class CAPSVoxelBasedInput(CAPSInput):
         """
         Returns: a list of filenames
         """
-        from clinica.utils.input_files import QueryPatternName, query_pattern_factory
+        from clinica.utils.group import GroupID, GroupLabel
+        from clinica.utils.input_files import (
+            get_pet_volume_normalized_suvr,
+            get_t1_volume_template_tpm_in_mni,
+        )
         from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.spm import SPMTissue
 
         if self._images is not None:
             return self._images
 
+        group_id = GroupID.from_label(GroupLabel(self._input_params["group_label"]))
         if self._input_params["image_type"] == "T1w":
-            if self._input_params["fwhm"] == 0:
-                fwhm_key_value = ""
-            else:
-                fwhm_key_value = f"_fwhm-{self._input_params['fwhm']}mm"
-
-            self._images = [
-                path.join(
-                    self._input_params["caps_directory"],
-                    "subjects",
-                    self._subjects[i],
-                    self._sessions[i],
-                    "t1",
-                    "spm",
-                    "dartel",
-                    f"group-{self._input_params['group_label']}",
-                    f"{self._subjects[i]}_{self._sessions[i]}_T1w"
-                    f"_segm-graymatter_space-Ixi549Space_modulated-{self._input_params['modulated']}{fwhm_key_value}_probability.nii.gz",
-                )
-                for i in range(len(self._subjects))
-            ]
-
+            pattern = get_t1_volume_template_tpm_in_mni(
+                group_id=group_id,
+                tissue=SPMTissue.GRAY_MATTER,
+                modulation=self._input_params["modulated"],
+                fwhm=self._input_params["fwhm"],
+            )
+            self._images, _ = clinica_file_reader(
+                self._subjects,
+                self._sessions,
+                self._input_params["caps_directory"],
+                pattern,
+            )
             for image in self._images:
                 if not path.exists(image):
                     raise Exception("File %s doesn't exists." % image)
-
         elif self._input_params["image_type"] == "PET":
-            pattern = query_pattern_factory(
-                QueryPatternName.PET_VOLUME_NORMALIZED_SUVR
-            )(
+            pattern = get_pet_volume_normalized_suvr(
                 tracer=self._input_params["acq_label"],
-                group_label=self._input_params["group_label"],
+                group_id=group_id,
                 suvr_reference_region=self._input_params["suvr_reference_region"],
                 use_brainmasked_image=True,
                 use_pvc_data=self._input_params["use_pvc_data"],

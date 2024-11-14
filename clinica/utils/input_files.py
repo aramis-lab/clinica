@@ -4,6 +4,7 @@ These dictionaries describe files to grab.
 """
 
 import functools
+from collections import UserString
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
@@ -447,12 +448,12 @@ def aggregator(func):
         arg_sizes = [
             len(arg)
             for arg in args
-            if (isinstance(arg, Iterable) and not isinstance(arg, str))
+            if (isinstance(arg, Iterable) and not isinstance(arg, (str, UserString)))
         ]
         arg_sizes += [
             len(arg)
             for k, arg in kwargs.items()
-            if (isinstance(arg, Iterable) and not isinstance(arg, str))
+            if (isinstance(arg, Iterable) and not isinstance(arg, (str, UserString)))
         ]
 
         # If iterable args/kwargs have different lengths, raise
@@ -467,7 +468,9 @@ def aggregator(func):
         arg_size = arg_sizes[0]
         new_args = []
         for arg in args:
-            if not (isinstance(arg, Iterable) and not isinstance(arg, str)):
+            if not (
+                isinstance(arg, Iterable) and not isinstance(arg, (str, UserString))
+            ):
                 new_args.append((arg,) * arg_size)
             else:
                 new_args.append(arg)
@@ -476,7 +479,9 @@ def aggregator(func):
         new_kwargs = [{} for _ in range(arg_size)]
         for k, arg in kwargs.items():
             for i in range(len(new_kwargs)):
-                if not (isinstance(arg, Iterable) and not isinstance(arg, str)):
+                if not (
+                    isinstance(arg, Iterable) and not isinstance(arg, (str, UserString))
+                ):
                     new_kwargs[i][k] = arg
                 else:
                     new_kwargs[i][k] = arg[i]
@@ -568,8 +573,11 @@ def get_t1_volume_template_tpm_in_mni(
     tissue = get_spm_tissue_from_index(tissue)
     pattern_modulation = "on" if modulation else "off"
     description_modulation = "with" if modulation else "without"
-    fwhm_key_value = f"_fwhm-{fwhm}mm" if fwhm else ""
-    fwhm_description = f"with {fwhm}mm smoothing" if fwhm else "with no smoothing"
+    fwhm_key_value = ""
+    fwhm_description = "with no smoothing"
+    if fwhm is not None and fwhm != 0:
+        fwhm_key_value = f"_fwhm-{fwhm}mm"
+        fwhm_description = f"with {fwhm}mm smoothing"
 
     return QueryPattern(
         str(
@@ -695,16 +703,30 @@ def get_pet_nifti(
 
 
 def get_pet_volume_normalized_suvr(
-    tracer: Union[str, Tracer],
-    group_id: GroupID,
-    suvr_reference_region: Union[str, SUVRReferenceRegion],
-    use_brainmasked_image: bool,
-    use_pvc_data: bool,
+    tracer: Optional[Union[str, Tracer]] = None,
+    group_id: Optional[GroupID] = None,
+    suvr_reference_region: Optional[Union[str, SUVRReferenceRegion]] = None,
+    use_brainmasked_image: bool = False,
+    use_pvc_data: bool = False,
     fwhm: int = 0,
 ) -> QueryPattern:
-    tracer = Tracer(tracer)
-    region = SUVRReferenceRegion(suvr_reference_region)
-
+    group_description = "any available template found"
+    if group_id:
+        group_description = f"{group_id.label} DARTEL template"
+    else:
+        group_id = "*"
+    tracer_key_value = ""
+    tracer_description = ""
+    if tracer:
+        tracer = Tracer(tracer)
+        tracer_key_value = f"_trc-{tracer.value}"
+        tracer_description = f" of {tracer.value}-PET"
+    suvr_key_value = ""
+    region_description = ""
+    if suvr_reference_region:
+        region = SUVRReferenceRegion(suvr_reference_region)
+        suvr_key_value = f"_suvr-{region.value}"
+        region_description = f" (using {region.value} region)"
     if use_brainmasked_image:
         mask_key_value = "_mask-brain"
         mask_description = "brain-masked"
@@ -723,18 +745,17 @@ def get_pet_volume_normalized_suvr(
     else:
         fwhm_key_value = ""
         fwhm_description = "with no smoothing"
-    suvr_key_value = f"_suvr-{region.value}"
 
     return QueryPattern(
         str(
             Path("pet")
             / "preprocessing"
             / str(group_id)
-            / f"*_trc-{tracer.value}_pet_space-Ixi549Space{pvc_key_value}{suvr_key_value}{mask_key_value}{fwhm_key_value}_pet.nii*"
+            / f"*{tracer_key_value}_pet_space-Ixi549Space{pvc_key_value}{suvr_key_value}{mask_key_value}{fwhm_key_value}_pet.nii*"
         ),
         (
-            f"{mask_description} SUVR map (using {region.value} region) of {tracer.value}-PET "
-            f"{pvc_description} and {fwhm_description} in Ixi549Space space based on {group_id.label} DARTEL template"
+            f"{mask_description} SUVR map{region_description}{tracer_description} "
+            f"{pvc_description} and {fwhm_description} in Ixi549Space space based on {group_description}"
         ),
         "pet-volume",
     )
