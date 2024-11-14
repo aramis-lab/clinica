@@ -578,7 +578,7 @@ def create_scans_dict(
                 # case, we just remove the erroneous content and replace it with -4 which AIBL uses as n/a value.
                 on_bad_lines = (  # noqa: E731
                     lambda bad_line: bad_line[:-3] + [-4, bad_line[-1]]
-                    if "flutemeta" in file_path and study_name == StudyName.AIBL
+                    if "flutemeta" in file_path.name and study_name == StudyName.AIBL
                     else "error"
                 )
 
