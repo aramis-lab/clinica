@@ -7,7 +7,7 @@ import functools
 from collections.abc import Iterable
 from typing import Optional, Union
 
-from clinica.pipelines.dwi.dti.utils import DTIBasedMeasure
+from clinica.utils.dwi import DTIBasedMeasure
 from clinica.utils.pet import ReconstructionMethod, SUVRReferenceRegion, Tracer
 
 # BIDS
