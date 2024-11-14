@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from clinica.pipelines.dwi.dti.utils import DTIBasedMeasure
+from clinica.utils.dwi import DTIBasedMeasure
 from clinica.utils.pet import ReconstructionMethod, Tracer
 
 
