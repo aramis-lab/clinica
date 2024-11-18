@@ -135,3 +135,11 @@ A **voxel** represents a value on a regular grid in three-dimensional space.
 ##### References
 
 - [wikipedia](https://en.wikipedia.org/wiki/Voxel)
+
+#### MRI
+
+Magnetic resonance imaging (MRI) is a medical imaging technique used in radiology to form pictures of the anatomy and the physiological processes inside the body.
+
+##### References
+
+- [wikipedia](https://en.wikipedia.org/wiki/Magnetic_resonance_imaging)
