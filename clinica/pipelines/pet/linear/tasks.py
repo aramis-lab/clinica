@@ -32,6 +32,16 @@ def remove_mni_background_task(
     )
 
 
+def remove_background_otsu_task(
+    input_image: str,
+) -> str:
+    from pathlib import Path
+
+    from clinica.pipelines.pet.linear.utils import remove_background_otsu
+
+    return str(remove_background_otsu(Path(input_image)))
+
+
 def clip_task(
     input_pet: str,
 ) -> str:

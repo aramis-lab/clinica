@@ -125,7 +125,7 @@ def remove_mni_background(
     Returns
     -------
     output_img : Path
-        The path to the normalized nifti image.
+        The path to the nifti image with the background removed.
     """
     import nibabel as nib
 
@@ -140,8 +140,42 @@ def remove_mni_background(
     output_image = (
         Path.cwd() / f"{get_filename_no_ext(pet_image_path)}_remove_background.nii.gz"
     )
-    normalized_img = nib.Nifti1Image(data, pet_image.affine, header=pet_image.header)
-    normalized_img.to_filename(output_image)
+    no_bkgd_img = nib.Nifti1Image(data, pet_image.affine, header=pet_image.header)
+    no_bkgd_img.to_filename(output_image)
+
+    return output_image
+
+
+def remove_background_otsu(
+    pet_image_path: Path,
+):
+    """Remove background using OTSU thresholding.
+
+    Parameters
+    ----------
+    pet_image_path : Path
+        The path to the image to be processed.
+
+    Returns
+    -------
+    output_img : Path
+         The path to the nifti image with the background removed.
+    """
+    import nibabel as nib
+    from skimage.filters import threshold_otsu
+
+    from clinica.utils.filemanip import get_filename_no_ext
+
+    pet_image = nib.load(pet_image_path)
+
+    data = pet_image.get_fdata(dtype="float32")
+    threshold = threshold_otsu(data)
+    data[data < threshold] = 0
+    output_image = (
+        Path.cwd() / f"{get_filename_no_ext(pet_image_path)}_remove_background.nii.gz"
+    )
+    no_bkgd_img = nib.Nifti1Image(data, pet_image.affine, header=pet_image.header)
+    no_bkgd_img.to_filename(output_image)
 
     return output_image
 

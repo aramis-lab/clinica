@@ -81,7 +81,7 @@ class PETLinear(PETPipeline):
 
         self.ref_template = get_mni_template("t1")
         self.ref_mask = get_suvr_mask(self.parameters["suvr_reference_region"])
-        self.mni_mask = get_mni_mask()
+        # self.mni_mask = get_mni_mask()
 
         # Inputs from BIDS directory
         pet_files, pet_errors = clinica_file_reader(
@@ -285,6 +285,7 @@ class PETLinear(PETPipeline):
         from .tasks import (
             clip_task,
             perform_suvr_normalization_task,
+            remove_background_otsu_task,
             remove_mni_background_task,
         )
         from .utils import concatenate_transforms, init_input_node, print_end_pipeline
@@ -389,16 +390,26 @@ class PETLinear(PETPipeline):
         )
         crop_nifti_node.inputs.output_path = self.base_dir
 
-        # 5. Remove background
+        # 5. Remove background using MNI mask
+        # remove_background_node = npe.Node(
+        #     name="removeBackground",
+        #     interface=nutil.Function(
+        #         function=remove_mni_background_task,
+        #         input_names=["input_image", "mni_mask_path"],
+        #         output_names=["output_image"],
+        #     ),
+        # )
+        # remove_background_node.inputs.mni_mask_path = self.mni_mask
+
+        # 5. Remove background using OTSU thresholding
         remove_background_node = npe.Node(
             name="removeBackground",
             interface=nutil.Function(
-                function=remove_mni_background_task,
-                input_names=["input_image", "mni_mask_path"],
+                function=remove_background_otsu_task,
+                input_names=["input_image"],
                 output_names=["output_image"],
             ),
         )
-        remove_background_node.inputs.mni_mask_path = self.mni_mask
 
         # 6. Print end message
         print_end_message = npe.Node(
