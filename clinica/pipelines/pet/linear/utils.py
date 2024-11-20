@@ -205,7 +205,7 @@ def clip_img(
     unique, counts = np.unique(
         pet_image.get_fdata().reshape(-1), axis=0, return_counts=True
     )
-    clip_threshold = min(0.0, unique[np.argmax(counts)])
+    clip_threshold = max(0.0, unique[np.argmax(counts)])
 
     data = np.clip(
         pet_image.get_fdata(dtype="float32"), a_min=clip_threshold, a_max=None
