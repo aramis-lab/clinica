@@ -425,26 +425,17 @@ class PETLinear(PETPipeline):
         )
         ants_applytransform_optional_node.inputs.dimension = 3
 
-        self.connect([(self.input_node, init_node, [("pet", "pet")])])
-        # STEP 0: Optional
-        if self.parameters.get("clip_min_0"):
-            self.connect(
-                [
-                    (init_node, clipping_node, ["pet", "input_pet"]),
-                    (
-                        clipping_node,
-                        ants_registration_node,
-                        ["output_image", "moving_image"],
-                    ),
-                ]
-            )
-        else:
-            self.connect(
-                [(init_node, ants_registration_node, [("pet", "moving_image")])]
-            )
         self.connect(
             [
+                (self.input_node, init_node, [("pet", "pet")]),
+                # STEP 0:
+                (init_node, clipping_node, [("pet", "input_pet")]),
                 # STEP 1
+                (
+                    clipping_node,
+                    ants_registration_node,
+                    [("output_image", "moving_image")],
+                ),
                 (self.input_node, ants_registration_node, [("t1w", "fixed_image")]),
                 # STEP 2
                 (
