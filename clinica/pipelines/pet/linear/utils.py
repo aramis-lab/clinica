@@ -202,7 +202,14 @@ def clip_img(
 
     pet_image = nib.load(pet_image_path)
 
-    data = np.clip(pet_image.get_fdata(dtype="float32"), a_min=0, a_max=None)
+    unique, counts = np.unique(
+        pet_image.get_fdata().reshape(-1), axis=0, return_counts=True
+    )
+    clip_threshold = unique[np.argmax(counts)]
+
+    data = np.clip(
+        pet_image.get_fdata(dtype="float32"), a_min=clip_threshold, a_max=None
+    )
 
     output_image = Path.cwd() / f"{get_filename_no_ext(pet_image_path)}_clipped.nii.gz"
     clipped_pet = nib.Nifti1Image(data, pet_image.affine, header=pet_image.header)
