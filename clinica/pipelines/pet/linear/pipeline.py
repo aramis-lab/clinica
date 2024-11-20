@@ -448,7 +448,11 @@ class PETLinear(PETPipeline):
                     concatenate_node,
                     [("t1w_to_mni", "t1w_to_mni_transform")],
                 ),
-                (self.input_node, ants_applytransform_node, [("pet", "input_image")]),
+                (
+                    clipping_node,
+                    ants_applytransform_node,
+                    [("output_image", "input_image")],
+                ),
                 (
                     concatenate_node,
                     ants_applytransform_node,
@@ -580,9 +584,9 @@ class PETLinear(PETPipeline):
             self.connect(
                 [
                     (
-                        self.input_node,
+                        clipping_node,
                         ants_applytransform_optional_node,
-                        [("pet", "input_image"), ("t1w", "reference_image")],
+                        [("output_image", "input_image"), ("t1w", "reference_image")],
                     ),
                     (
                         ants_registration_node,
