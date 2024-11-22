@@ -18,12 +18,16 @@ def perform_suvr_normalization_task(
 
 def clip_task(
     input_pet: str,
+    output_dir: str = None,
 ) -> str:
     from pathlib import Path
 
     from clinica.pipelines.pet.linear.utils import clip_img
 
-    return str(clip_img(Path(input_pet)))
+    if output_dir:
+        output_dir = Path(output_dir)
+
+    return str(clip_img(Path(input_pet), output_dir=output_dir))
 
 
 def rename_into_caps_task(
