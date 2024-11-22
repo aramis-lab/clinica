@@ -298,10 +298,11 @@ class PETLinear(PETPipeline):
             name="clipping",
             interface=nutil.Function(
                 function=clip_task,
-                input_names=["input_pet"],
+                input_names=["input_pet", "output_dir"],
                 output_names=["output_image"],
             ),
         )
+        clipping_node.inputs.output_dir = self.base_dir
 
         # 2. `RegistrationSynQuick` by *ANTS*. It uses nipype interface.
         ants_registration_node = npe.Node(
