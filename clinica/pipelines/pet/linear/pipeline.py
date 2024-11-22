@@ -59,7 +59,7 @@ class PETLinear(PETPipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.pipelines.pet.utils import get_mni_mask, get_suvr_mask
+        from clinica.pipelines.pet.utils import get_suvr_mask
         from clinica.utils.exceptions import (
             ClinicaBIDSError,
             ClinicaCAPSError,
@@ -81,7 +81,6 @@ class PETLinear(PETPipeline):
 
         self.ref_template = get_mni_template("t1")
         self.ref_mask = get_suvr_mask(self.parameters["suvr_reference_region"])
-        # self.mni_mask = get_mni_mask()
 
         # Inputs from BIDS directory
         pet_files, pet_errors = clinica_file_reader(
@@ -227,21 +226,8 @@ class PETLinear(PETPipeline):
                 ),
             ]
         )
-        # Case 1: crop image and don't remove the background
-        if not (self.parameters.get("uncropped_image")) and not (
-            self.parameters.get("remove_background")
-        ):
+        if not (self.parameters.get("uncropped_image")):
             node_out_name = "outfile_crop"
-        # Case 2: crop image and remove the background
-        elif not (self.parameters.get("uncropped_image")) and (
-            self.parameters.get("remove_background")
-        ):
-            node_out_name = "outfile_crop_no_bkgd"
-        # Case 3: don't crop the image and remove the background
-        elif (self.parameters.get("uncropped_image")) and (
-            self.parameters.get("remove_background")
-        ):
-            node_out_name = "outfile_no_bkgd"
         else:
             node_out_name = "suvr_pet"
         self.connect(
@@ -285,8 +271,6 @@ class PETLinear(PETPipeline):
         from .tasks import (
             clip_task,
             perform_suvr_normalization_task,
-            remove_background_otsu_task,
-            remove_mni_background_task,
         )
         from .utils import concatenate_transforms, init_input_node, print_end_pipeline
 
@@ -309,7 +293,7 @@ class PETLinear(PETPipeline):
 
         # The core (processing) nodes
 
-        # 0. Clipping node
+        # 1. Clipping node
         clipping_node = npe.Node(
             name="clipping",
             interface=nutil.Function(
@@ -319,21 +303,21 @@ class PETLinear(PETPipeline):
             ),
         )
 
-        # 1. `RegistrationSynQuick` by *ANTS*. It uses nipype interface.
+        # 2. `RegistrationSynQuick` by *ANTS*. It uses nipype interface.
         ants_registration_node = npe.Node(
             name="antsRegistration", interface=ants.RegistrationSynQuick()
         )
         ants_registration_node.inputs.dimension = 3
         ants_registration_node.inputs.transform_type = "r"
 
-        # 2. `ApplyTransforms` by *ANTS*. It uses nipype interface. PET to MRI
+        # 3. `ApplyTransforms` by *ANTS*. It uses nipype interface. PET to MRI
         ants_applytransform_node = npe.Node(
             name="antsApplyTransformPET2MNI", interface=ants.ApplyTransforms()
         )
         ants_applytransform_node.inputs.dimension = 3
         ants_applytransform_node.inputs.reference_image = self.ref_template
 
-        # 3. Normalize the image (using nifti). It uses custom interface, from utils file
+        # 4. Normalize the image (using nifti). It uses custom interface, from utils file
         ants_registration_nonlinear_node = npe.Node(
             name="antsRegistrationT1W2MNI", interface=ants.Registration()
         )
@@ -379,7 +363,7 @@ class PETLinear(PETPipeline):
         )
         normalize_intensity_node.inputs.reference_mask_path = self.ref_mask
 
-        # 4. Crop image (using nifti). It uses custom interface, from utils file
+        # 5. Crop image (using nifti). It uses custom interface, from utils file
         crop_nifti_node = npe.Node(
             name="cropNifti",
             interface=nutil.Function(
@@ -389,27 +373,6 @@ class PETLinear(PETPipeline):
             ),
         )
         crop_nifti_node.inputs.output_path = self.base_dir
-
-        # 5. Remove background using MNI mask
-        # remove_background_node = npe.Node(
-        #     name="removeBackground",
-        #     interface=nutil.Function(
-        #         function=remove_mni_background_task,
-        #         input_names=["input_image", "mni_mask_path"],
-        #         output_names=["output_image"],
-        #     ),
-        # )
-        # remove_background_node.inputs.mni_mask_path = self.mni_mask
-
-        # 5. Remove background using OTSU thresholding
-        remove_background_node = npe.Node(
-            name="removeBackground",
-            interface=nutil.Function(
-                function=remove_background_otsu_task,
-                input_names=["input_image"],
-                output_names=["output_image"],
-            ),
-        )
 
         # 6. Print end message
         print_end_message = npe.Node(
@@ -428,16 +391,16 @@ class PETLinear(PETPipeline):
         self.connect(
             [
                 (self.input_node, init_node, [("pet", "pet")]),
-                # STEP 0:
+                # STEP 1:
                 (init_node, clipping_node, [("pet", "input_pet")]),
-                # STEP 1
+                # STEP 2
                 (
                     clipping_node,
                     ants_registration_node,
                     [("output_image", "moving_image")],
                 ),
                 (self.input_node, ants_registration_node, [("t1w", "fixed_image")]),
-                # STEP 2
+                # STEP 3
                 (
                     ants_registration_node,
                     concatenate_node,
@@ -458,7 +421,7 @@ class PETLinear(PETPipeline):
                     ants_applytransform_node,
                     [("transforms_list", "transforms")],
                 ),
-                # STEP 3
+                # STEP 4
                 (
                     self.input_node,
                     ants_registration_nonlinear_node,
@@ -498,11 +461,9 @@ class PETLinear(PETPipeline):
                 (self.input_node, print_end_message, [("pet", "pet")]),
             ]
         )
-        # STEP 4
-        # Case 1: crop image and don't remove the background
-        if not (self.parameters.get("uncropped_image")) and not (
-            self.parameters.get("remove_background")
-        ):
+        # STEP 5
+        # Case 1: crop the image
+        if not (self.parameters.get("uncropped_image")):
             self.connect(
                 [
                     (
@@ -518,57 +479,9 @@ class PETLinear(PETPipeline):
                 ]
             )
             last_node = crop_nifti_node
-        # Case 2: crop image and remove the background
-        elif not (self.parameters.get("uncropped_image")) and (
-            self.parameters.get("remove_background")
-        ):
-            self.connect(
-                [
-                    (
-                        normalize_intensity_node,
-                        remove_background_node,
-                        [("output_image", "input_image")],
-                    ),
-                    (
-                        remove_background_node,
-                        crop_nifti_node,
-                        [("output_image", "input_image")],
-                    ),
-                    (
-                        crop_nifti_node,
-                        self.output_node,
-                        [
-                            ("output_image", "outfile_crop_no_bkgd")
-                        ],  # to implement in out node
-                    ),
-                ]
-            )
-            last_node = crop_nifti_node
-        # Case 3: don't crop the image and remove the background
-        elif (self.parameters.get("uncropped_image")) and (
-            self.parameters.get("remove_background")
-        ):
-            self.connect(
-                [
-                    (
-                        normalize_intensity_node,
-                        remove_background_node,
-                        [("output_image", "input_image")],
-                    ),
-                    (
-                        remove_background_node,
-                        self.output_node,
-                        [
-                            ("output_image", "outfile_no_bkgd")
-                        ],  # to implement in out node
-                    ),
-                ]
-            )
-            last_node = remove_background_node
-        # Case 4:  don't crop the image and don't remove the background
+        # Case 2:  don't crop the image
         else:
             last_node = normalize_intensity_node
-
         self.connect(
             [
                 (
