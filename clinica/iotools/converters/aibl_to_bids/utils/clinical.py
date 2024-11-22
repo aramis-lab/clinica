@@ -1,8 +1,10 @@
 from pathlib import Path
-from typing import Iterator, Optional
+from typing import Iterator, List, Optional
 
 import numpy as np
 import pandas as pd
+
+from clinica.iotools.bids_utils import StudyName, bids_id_factory
 
 __all__ = [
     "create_participants_tsv_file",
@@ -41,8 +43,6 @@ def create_participants_tsv_file(
     from os import path
 
     import numpy as np
-
-    from clinica.iotools.bids_utils import StudyName, bids_id_factory
 
     fields_bids = ["participant_id"]
     fields_dataset = []
@@ -333,6 +333,7 @@ def _get_csv_files_for_alternative_exam_date(
             continue
 
 
+# todo : test
 def create_scans_tsv_file(
     input_path: Path,
     clinical_data_dir: Path,
@@ -354,11 +355,11 @@ def create_scans_tsv_file(
     import glob
     from os import path
 
-    import clinica.iotools.bids_utils as bids
+    study = StudyName.AIBL.value
 
     specifications = _load_specifications(clinical_specifications_folder, "scans.tsv")
-    scans_fields = specifications[bids.StudyName.AIBL.value]
-    field_location = specifications[f"{bids.StudyName.AIBL.value} location"]
+    scans_fields = specifications[study]
+    field_location = specifications[f"{study} location"]
     scans_fields_bids = specifications["BIDS CLINICA"]
     fields_dataset = []
     fields_bids = []
@@ -385,13 +386,228 @@ def create_scans_tsv_file(
         bids_id: {"M000": "bl", "M018": "m18", "M036": "m36", "M054": "m54"}
         for bids_id in bids_ids
     }
-    scans_dict = bids.create_scans_dict(
+    scans_dict = create_scans_dict(
         clinical_data_dir,
-        bids.StudyName.AIBL,
         clinical_specifications_folder,
         bids_ids,
         "RID",
         "VISCODE",
         ses_dict,
     )
-    bids.write_scans_tsv(input_path, bids_ids, scans_dict)
+    write_scans_tsv(input_path, bids_ids, scans_dict)
+
+
+# todo : test
+def create_scans_dict(
+    clinical_data_dir: Path,
+    clinical_specifications_folder: Path,
+    bids_ids: list[str],
+    name_column_ids: str,
+    name_column_ses: str,
+    ses_dict: dict,
+) -> pd.DataFrame:
+    """[summary].
+
+    Parameters
+    ----------
+    clinical_data_dir : Path
+        The path to the directory where the clinical data are stored.
+
+    clinical_specifications_folder : Path
+        The path to the folder containing the clinical specification files.
+
+    bids_ids : list of str
+        A list of bids ids.
+
+    name_column_ids : str
+        The name of the column where the subject id is contained.
+
+    name_column_ses : str
+        The name of the column where the viscode of the session is contained.
+
+    ses_dict : dict
+        The links the session id to the viscode of the session.
+
+    Returns
+    -------
+    pd.DataFrame :
+        A pandas DataFrame that contains the scans information for all sessions of all participants.
+    """
+    import datetime
+    import os
+
+    from clinica.utils.pet import Tracer
+    from clinica.utils.stream import cprint
+
+    scans_dict = {}
+    prev_file = ""
+    prev_sheet = ""
+
+    study = StudyName.AIBL.value
+
+    # Init the dictionary with the subject ids
+    for bids_id in bids_ids:
+        scans_dict[bids_id] = dict()
+        for session_id in {"ses-" + key for key in ses_dict[bids_id].keys()}:
+            scans_dict[bids_id][session_id] = {
+                "T1/DWI/fMRI/FMAP": {},
+                Tracer.PIB: {},
+                Tracer.AV45: {},
+                Tracer.FMM: {},
+                Tracer.FDG: {},
+            }
+
+    scans_specs = pd.read_csv(clinical_specifications_folder / "scans.tsv", sep="\t")
+    fields_dataset = []
+    fields_location = []
+    fields_bids = []
+    fields_mod = []
+
+    # Extract the fields available and the corresponding bids name, location and type
+    for i in range(0, len(scans_specs[study])):
+        field = scans_specs[study][i]
+        if not pd.isnull(field):
+            fields_dataset.append(field)
+            fields_bids.append(scans_specs["BIDS CLINICA"][i])
+            fields_location.append(scans_specs[f"{study} location"][i])
+            fields_mod.append(scans_specs["Modalities related"][i])
+
+    # For each field available extract the original name, extract from the file all the values and fill a data structure
+    for i in range(0, len(fields_dataset)):
+        # Location is composed by file/sheet
+        location = fields_location[i].split("/")
+        file_name = location[0]
+        sheet = location[1] if len(location) > 1 else ""
+        # Check if the file to read is already opened
+        if file_name == prev_file and sheet == prev_sheet:
+            pass
+        else:
+            file_ext = os.path.splitext(file_name)[1]
+            files_to_read = [f for f in clinical_data_dir.glob(file_name)]
+            if file_ext == ".xlsx":
+                file_to_read = pd.read_excel(files_to_read[0], sheet_name=sheet)
+            elif file_ext == ".csv":
+                file_path = files_to_read[0]
+
+                # Fix for malformed flutemeta file in AIBL (see #796).
+                # Some flutemeta lines contain a non-coded string value at the second-to-last position. This value
+                # contains a comma which adds an extra column and shifts the remaining values to the right. In this
+                # case, we just remove the erroneous content and replace it with -4 which AIBL uses as n/a value.
+                on_bad_lines = lambda x: "error"  # noqa
+                if "flutemeta" in file_path.name:
+                    on_bad_lines = lambda bad_line: bad_line[:-3] + [-4, bad_line[-1]]  # noqa
+                file_to_read = pd.read_csv(
+                    file_path,
+                    sep=",",
+                    engine="python",
+                    on_bad_lines=on_bad_lines,
+                )
+            prev_file = file_name
+            prev_sheet = sheet
+
+        for bids_id in bids_ids:
+            original_id = bids_id.replace(
+                f"sub-{study}", ""
+            )  # todo : when refactoring function use BIDS id modelisation
+            for session_name in {"ses-" + key for key in ses_dict[bids_id].keys()}:
+                # When comparing sessions, remove the "-ses" prefix IF it exists
+                row_to_extract = file_to_read[
+                    (file_to_read[name_column_ids] == int(original_id))
+                    & (
+                        list(
+                            filter(
+                                None, file_to_read[name_column_ses].str.split("ses-")
+                            )
+                        )[0][0]
+                        == ses_dict[bids_id][
+                            list(filter(None, session_name.split("ses-")))[0]
+                        ]
+                    )
+                ].index.tolist()
+                if len(row_to_extract) > 0:
+                    row_to_extract = row_to_extract[0]
+                    # Fill the dictionary with all the information
+                    value = file_to_read.iloc[row_to_extract][fields_dataset[i]]
+
+                    # Deal with special format in AIBL
+                    if value == "-4":
+                        value = "n/a"
+                    elif fields_bids[i] == "acq_time":
+                        date_obj = datetime.datetime.strptime(value, "%m/%d/%Y")
+                        value = date_obj.strftime("%Y-%m-%dT%H:%M:%S")
+
+                    scans_dict[bids_id][session_name][fields_mod[i]][
+                        fields_bids[i]
+                    ] = value
+                else:
+                    cprint(
+                        f"Scans information for {bids_id} {session_name} not found.",
+                        lvl="info",
+                    )
+                    scans_dict[bids_id][session_name][fields_mod[i]][
+                        fields_bids[i]
+                    ] = "n/a"
+
+    return scans_dict
+
+
+# todo : test
+def write_scans_tsv(
+    bids_dir: Path, participant_ids: List[str], scans_dict: dict
+) -> None:
+    """Write the scans dict into TSV files.
+
+    Parameters
+    ----------
+    bids_dir : Path
+        The path to the BIDS directory.
+
+    participant_ids : List[str]
+        List of participant ids for which to write the scans TSV files.
+
+    scans_dict : dict
+        Dictionary containing scans metadata.
+
+        .. note::
+            This is the output of the function
+            `clinica.iotools.bids_utils.create_scans_dict`.
+
+    See also
+    --------
+    write_sessions_tsv
+    """
+
+    from clinica.iotools.bids_utils import _get_pet_tracer_from_filename
+
+    supported_modalities = ("anat", "dwi", "func", "pet")
+
+    for sub in participant_ids:
+        for session_path in (bids_dir / sub).glob("ses-*"):
+            scans_df = pd.DataFrame()
+            tsv_file = (
+                bids_dir
+                / sub
+                / session_path.name
+                / f"{sub}_{session_path.name}_scans.tsv"
+            )
+            tsv_file.unlink(missing_ok=True)
+
+            for mod in (bids_dir / sub / session_path.name).glob("*"):
+                if mod.name in supported_modalities:
+                    for file in [
+                        file for file in mod.iterdir() if mod.suffix != ".json"
+                    ]:
+                        f_type = (
+                            "T1/DWI/fMRI/FMAP"
+                            if mod.name in ("anat", "dwi", "func")
+                            else _get_pet_tracer_from_filename(file.name).value
+                        )
+                        row_to_append = pd.DataFrame(
+                            scans_dict[sub][session_path.name][f_type], index=[0]
+                        )
+                        row_to_append.insert(
+                            0, "filename", str(Path(mod.name) / Path(file.name))
+                        )
+                        scans_df = pd.concat([scans_df, row_to_append])
+            scans_df = scans_df.set_index("filename").fillna("n/a")
+            scans_df.to_csv(tsv_file, sep="\t", encoding="utf8")
