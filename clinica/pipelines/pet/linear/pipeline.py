@@ -227,35 +227,23 @@ class PETLinear(PETPipeline):
             ]
         )
         if not (self.parameters.get("uncropped_image")):
-            self.connect(
-                [
-                    (
-                        self.output_node,
-                        rename_files,
-                        [("outfile_crop", "pet_preprocessed_image_filename")],
-                    ),
-                    (
-                        rename_files,
-                        write_node,
-                        [("pet_filename_caps", "@registered_pet")],
-                    ),
-                ]
-            )
+            node_out_name = "outfile_crop"
         else:
-            self.connect(
-                [
-                    (
-                        self.output_node,
-                        rename_files,
-                        [("suvr_pet", "pet_preprocessed_image_filename")],
-                    ),
-                    (
-                        rename_files,
-                        write_node,
-                        [("pet_filename_caps", "@registered_pet")],
-                    ),
-                ]
-            )
+            node_out_name = "suvr_pet"
+        self.connect(
+            [
+                (
+                    self.output_node,
+                    rename_files,
+                    [(node_out_name, "pet_preprocessed_image_filename")],
+                ),
+                (
+                    rename_files,
+                    write_node,
+                    [("pet_filename_caps", "@registered_pet")],
+                ),
+            ]
+        )
         if self.parameters.get("save_PETinT1w"):
             self.connect(
                 [
@@ -280,7 +268,10 @@ class PETLinear(PETPipeline):
 
         from clinica.pipelines.tasks import crop_nifti_task
 
-        from .tasks import perform_suvr_normalization_task
+        from .tasks import (
+            clip_task,
+            perform_suvr_normalization_task,
+        )
         from .utils import concatenate_transforms, init_input_node, print_end_pipeline
 
         init_node = npe.Node(
@@ -302,21 +293,31 @@ class PETLinear(PETPipeline):
 
         # The core (processing) nodes
 
-        # 1. `RegistrationSynQuick` by *ANTS*. It uses nipype interface.
+        # 1. Clipping node
+        clipping_node = npe.Node(
+            name="clipping",
+            interface=nutil.Function(
+                function=clip_task,
+                input_names=["input_pet"],
+                output_names=["output_image"],
+            ),
+        )
+
+        # 2. `RegistrationSynQuick` by *ANTS*. It uses nipype interface.
         ants_registration_node = npe.Node(
             name="antsRegistration", interface=ants.RegistrationSynQuick()
         )
         ants_registration_node.inputs.dimension = 3
         ants_registration_node.inputs.transform_type = "r"
 
-        # 2. `ApplyTransforms` by *ANTS*. It uses nipype interface. PET to MRI
+        # 3. `ApplyTransforms` by *ANTS*. It uses nipype interface. PET to MRI
         ants_applytransform_node = npe.Node(
             name="antsApplyTransformPET2MNI", interface=ants.ApplyTransforms()
         )
         ants_applytransform_node.inputs.dimension = 3
         ants_applytransform_node.inputs.reference_image = self.ref_template
 
-        # 3. Normalize the image (using nifti). It uses custom interface, from utils file
+        # 4. Normalize the image (using nifti). It uses custom interface, from utils file
         ants_registration_nonlinear_node = npe.Node(
             name="antsRegistrationT1W2MNI", interface=ants.Registration()
         )
@@ -357,12 +358,12 @@ class PETLinear(PETPipeline):
                     "normalizing_image_path",
                     "reference_mask_path",
                 ],
-                output_names=["output_img"],
+                output_names=["output_image"],
             ),
         )
         normalize_intensity_node.inputs.reference_mask_path = self.ref_mask
 
-        # 4. Crop image (using nifti). It uses custom interface, from utils file
+        # 5. Crop image (using nifti). It uses custom interface, from utils file
         crop_nifti_node = npe.Node(
             name="cropNifti",
             interface=nutil.Function(
@@ -373,7 +374,7 @@ class PETLinear(PETPipeline):
         )
         crop_nifti_node.inputs.output_path = self.base_dir
 
-        # 5. Print end message
+        # 6. Print end message
         print_end_message = npe.Node(
             interface=nutil.Function(
                 input_names=["pet", "final_file"], function=print_end_pipeline
@@ -381,7 +382,7 @@ class PETLinear(PETPipeline):
             name="WriteEndMessage",
         )
 
-        # 6. Optional node: compute PET image in T1w
+        # 7. Optional node: compute PET image in T1w
         ants_applytransform_optional_node = npe.Node(
             name="antsApplyTransformPET2T1w", interface=ants.ApplyTransforms()
         )
@@ -390,10 +391,16 @@ class PETLinear(PETPipeline):
         self.connect(
             [
                 (self.input_node, init_node, [("pet", "pet")]),
-                # STEP 1
-                (self.input_node, ants_registration_node, [("t1w", "fixed_image")]),
-                (init_node, ants_registration_node, [("pet", "moving_image")]),
+                # STEP 1:
+                (init_node, clipping_node, [("pet", "input_pet")]),
                 # STEP 2
+                (
+                    clipping_node,
+                    ants_registration_node,
+                    [("output_image", "moving_image")],
+                ),
+                (self.input_node, ants_registration_node, [("t1w", "fixed_image")]),
+                # STEP 3
                 (
                     ants_registration_node,
                     concatenate_node,
@@ -404,13 +411,17 @@ class PETLinear(PETPipeline):
                     concatenate_node,
                     [("t1w_to_mni", "t1w_to_mni_transform")],
                 ),
-                (self.input_node, ants_applytransform_node, [("pet", "input_image")]),
+                (
+                    clipping_node,
+                    ants_applytransform_node,
+                    [("output_image", "input_image")],
+                ),
                 (
                     concatenate_node,
                     ants_applytransform_node,
                     [("transforms_list", "transforms")],
                 ),
-                # STEP 3
+                # STEP 4
                 (
                     self.input_node,
                     ants_registration_nonlinear_node,
@@ -445,50 +456,50 @@ class PETLinear(PETPipeline):
                 (
                     normalize_intensity_node,
                     self.output_node,
-                    [("output_img", "suvr_pet")],
+                    [("output_image", "suvr_pet")],
                 ),
                 (self.input_node, print_end_message, [("pet", "pet")]),
             ]
         )
-        # STEP 4
+        # STEP 5
+        # Case 1: crop the image
         if not (self.parameters.get("uncropped_image")):
             self.connect(
                 [
                     (
                         normalize_intensity_node,
                         crop_nifti_node,
-                        [("output_img", "input_image")],
+                        [("output_image", "input_image")],
                     ),
                     (
                         crop_nifti_node,
                         self.output_node,
                         [("output_image", "outfile_crop")],
                     ),
-                    (
-                        crop_nifti_node,
-                        print_end_message,
-                        [("output_image", "final_file")],
-                    ),
                 ]
             )
+            last_node = crop_nifti_node
+        # Case 2:  don't crop the image
         else:
-            self.connect(
-                [
-                    (
-                        normalize_intensity_node,
-                        print_end_message,
-                        [("output_img", "final_file")],
-                    ),
-                ]
-            )
+            last_node = normalize_intensity_node
+        self.connect(
+            [
+                (
+                    last_node,
+                    print_end_message,
+                    [("output_image", "final_file")],
+                ),
+            ]
+        )
+
         # STEP 6: Optional argument
         if self.parameters.get("save_PETinT1w"):
             self.connect(
                 [
                     (
-                        self.input_node,
+                        clipping_node,
                         ants_applytransform_optional_node,
-                        [("pet", "input_image"), ("t1w", "reference_image")],
+                        [("output_image", "input_image"), ("t1w", "reference_image")],
                     ),
                     (
                         ants_registration_node,

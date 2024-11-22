@@ -108,6 +108,44 @@ def perform_suvr_normalization(
     return output_image
 
 
+def clip_img(
+    pet_image_path: Path,
+) -> Path:
+    """Clip PET images to remove preprocessing artifacts leading to negative values
+
+    Parameters
+    ----------
+    pet_image_path : Path
+        The path to the image to be processed.
+
+    Returns
+    -------
+    output_img : Path
+        The path to the normalized nifti image.
+    """
+    import nibabel as nib
+    import numpy as np
+
+    from clinica.utils.filemanip import get_filename_no_ext
+
+    pet_image = nib.load(pet_image_path)
+
+    unique, counts = np.unique(
+        pet_image.get_fdata().reshape(-1), axis=0, return_counts=True
+    )
+    clip_threshold = max(0.0, unique[np.argmax(counts)])
+
+    data = np.clip(
+        pet_image.get_fdata(dtype="float32"), a_min=clip_threshold, a_max=None
+    )
+
+    output_image = Path.cwd() / f"{get_filename_no_ext(pet_image_path)}_clipped.nii.gz"
+    clipped_pet = nib.Nifti1Image(data, pet_image.affine, header=pet_image.header)
+    clipped_pet.to_filename(output_image)
+
+    return output_image
+
+
 def rename_into_caps(
     pet_bids_image_filename: Path,
     pet_preprocessed_image_filename: Path,
