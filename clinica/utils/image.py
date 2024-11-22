@@ -15,6 +15,7 @@ __all__ = [
     "merge_nifti_images_in_time_dimension",
     "remove_dummy_dimension_from_image",
     "crop_nifti",
+    "clip_nifti",
     "get_mni_template",
     "get_mni_cropped_template",
 ]
@@ -94,6 +95,59 @@ def get_new_image_like(old_image: PathLike, new_image_data: np.ndarray) -> Nifti
     hdr.set_data_dtype(np.float32)
 
     return nib.Nifti1Image(new_image_data, old_img.affine, hdr)
+
+
+def clip_nifti(
+    input_image: Path,
+    new_image_suffix: str = "_clipped",
+    low: Optional[float] = None,
+    high: Optional[float] = None,
+    output_dir: Optional[Path] = None,
+) -> Path:
+    """Build a new nifti image from the clipped values of the provided image.
+
+    Parameters
+    ----------
+    input_image : Path
+        The path to the nifti image to be clipped.
+
+    new_image_suffix : str, optional
+        The suffix for building the new image file name.
+        By default, it is '_clipped' such that the output image file name
+        of an image named 'image.nii.gz' will be 'image_clipped.nii.gz'.
+
+    low : float, optional
+        The low threshold for clipping.
+        If None, no thresholding will be applied.
+
+    high : float, optional
+        The high threshold for clipping.
+        If None, no thresholding will be applied.
+
+    output_dir : Path, optional
+        The path to the folder in which the output image should be written.
+        If None, the image will be written in the current directory.
+
+    Returns
+    -------
+    output_image : Path
+        The path to the output clipped image.
+    """
+    from .filemanip import get_filename_no_ext
+
+    clipped = get_new_image_like(
+        input_image,
+        np.clip(
+            nib.load(input_image).get_fdata(dtype="float32"),
+            a_min=low,
+            a_max=high,
+        ),
+    )
+    output_image = (
+        output_dir or Path.cwd()
+    ) / f"{get_filename_no_ext(input_image)}{new_image_suffix}.nii.gz"
+    clipped.to_filename(output_image)
+    return output_image
 
 
 def merge_nifti_images_in_time_dimension(
