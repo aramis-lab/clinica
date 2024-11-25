@@ -1,13 +1,14 @@
 import re
-from typing import Optional
 
 import nibabel as nib
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
 
-from clinica.utils.image import Bbox3D
-from clinica.utils.testing_utils import assert_nifti_equal
+from clinica.utils.testing_utils import (
+    assert_nifti_equal,
+    build_test_image_cubic_object,
+)
 
 
 @pytest.mark.parametrize(
@@ -287,19 +288,6 @@ def test_crop_nifti(tmp_path):
     )
 
 
-def build_test_image(
-    shape: tuple[int, int, int],
-    background_value: float,
-    object_value: float,
-    object_bbox: Bbox3D,
-    affine: Optional[np.ndarray] = None,
-) -> nib.Nifti1Image:
-    data = np.ones(shape, dtype=np.float32) * background_value
-    x, y, z = object_bbox.get_slices()
-    data[x, y, z] = object_value
-    return nib.Nifti1Image(data, affine=(affine or np.eye(4)))
-
-
 @pytest.mark.parametrize(
     "input_background,input_object,threshold_low,threshold_high,expected_background,expected_object",
     [
@@ -328,23 +316,22 @@ def test_clip_nifti(
 ):
     from clinica.utils.image import clip_nifti
 
-    bbox = Bbox3D.from_coordinates(4, 6, 4, 6, 4, 6)
-    build_test_image(
+    build_test_image_cubic_object(
         shape=(10, 10, 10),
         background_value=input_background,
         object_value=input_object,
-        object_bbox=bbox,
+        object_size=2,
     ).to_filename(tmp_path / "input.nii.gz")
 
     clipped = clip_nifti(
         tmp_path / "input.nii.gz", low=threshold_low, high=threshold_high
     )
 
-    build_test_image(
+    build_test_image_cubic_object(
         shape=(10, 10, 10),
         background_value=expected_background,
         object_value=expected_object,
-        object_bbox=bbox,
+        object_size=2,
     ).to_filename(tmp_path / "expected.nii.gz")
 
     assert_nifti_equal(clipped, tmp_path / "expected.nii.gz")

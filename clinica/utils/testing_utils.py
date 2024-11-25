@@ -11,6 +11,7 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 from clinica.pipelines.dwi.utils import DWIDataset
 
 __all__ = [
+    "build_test_image_cubic_object",
     "build_bids_directory",
     "build_caps_directory",
     "build_dwi_dataset",
@@ -19,6 +20,55 @@ __all__ = [
     "assert_nifti_almost_equal",
     "assert_large_nifti_almost_equal",
 ]
+
+
+def build_test_image_cubic_object(
+    shape: tuple[int, int, int],
+    background_value: float,
+    object_value: float,
+    object_size: int,
+    affine: Optional[np.ndarray] = None,
+) -> nib.Nifti1Image:
+    """Returns a 3D nifti image of a centered cube.
+
+    Parameters
+    ----------
+    shape : (int, int, int)
+        The shape of the image to generate.
+
+    background_value : float
+        The value that should be put in the background.
+
+    object_value : float
+        The value that should be put in the cubic object.
+
+    object_size : int
+        The size of the cube (in number of voxels).
+
+    affine : np.ndarray, optional
+        The affine to use for the generated image.
+        If None, np.eye(4) is used.
+
+    Returns
+    -------
+    nib.Nifti1Image :
+        The test image.
+    """
+    from clinica.utils.image import Bbox3D
+
+    if object_size > min(shape):
+        raise ValueError(
+            f"Cannot generate an image of dimension {shape} with an object of size {object_size} in it..."
+        )
+    bbox_coordinates = []
+    for c in (dim / 2 for dim in shape):
+        bbox_coordinates.append(int(c - object_size / 2))
+        bbox_coordinates.append(int(c + object_size / 2))
+    bbox = Bbox3D.from_coordinates(*bbox_coordinates)
+    data = np.ones(shape, dtype=np.float32) * background_value
+    x, y, z = bbox.get_slices()
+    data[x, y, z] = object_value
+    return nib.Nifti1Image(data, affine=(affine or np.eye(4)))
 
 
 def build_bids_directory(

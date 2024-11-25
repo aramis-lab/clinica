@@ -126,17 +126,24 @@ def clip_img(pet_image_path: Path, output_dir: Optional[Path] = None) -> Path:
     output_img : Path
         The path to the normalized nifti image.
     """
+    from clinica.utils.image import clip_nifti
+
+    return clip_nifti(
+        pet_image_path,
+        low=_compute_clipping_threshold(pet_image_path),
+        output_dir=output_dir,
+    )
+
+
+def _compute_clipping_threshold(pet_image_path: Path) -> float:
+    """Compute the clipping threshold for PET images background cleaning."""
     import nibabel as nib
     import numpy as np
-
-    from clinica.utils.image import clip_nifti
 
     unique, counts = np.unique(
         nib.load(pet_image_path).get_fdata().reshape(-1), axis=0, return_counts=True
     )
-    clip_threshold = max(0.0, unique[np.argmax(counts)])
-
-    return clip_nifti(pet_image_path, low=clip_threshold, output_dir=output_dir)
+    return max(0.0, unique[np.argmax(counts)])
 
 
 def rename_into_caps(
