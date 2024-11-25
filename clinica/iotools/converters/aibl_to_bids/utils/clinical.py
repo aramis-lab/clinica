@@ -370,7 +370,7 @@ def create_scans_dict(
     clinical_data_dir: Path,
     clinical_specifications_folder: Path,
     bids_ids: List[str],
-) -> pd.DataFrame:
+) -> dict:
     """[summary].
 
     Parameters
@@ -391,50 +391,41 @@ def create_scans_dict(
     """
     import datetime
 
+    from clinica.iotools.converter_utils import viscode_to_session
     from clinica.utils.pet import Tracer
-    from clinica.utils.stream import cprint
 
     scans_dict = {}
-
     study = StudyName.AIBL.value
 
     ses_dict = {
-        bids_id: {"M000": "bl", "M018": "m18", "M036": "m36", "M054": "m54"}
-        for bids_id in bids_ids
+        "ses-M000": "bl",
+        "ses-M018": "m18",
+        "ses-M036": "m36",
+        "ses-M054": "m54",
     }
-    # todo : why ? way to initialize ?
-    # possibility : test = [path.basename(sub_path) for sub_path in glob.glob(str(bids_path / bids_id / "ses-M*"))]
+    # todo : why ? test = [path.basename(sub_path) for sub_path in glob.glob(str(bids_path / bids_id / "ses-M*"))]
 
     # Init the dictionary with the subject ids
     for bids_id in bids_ids:
         scans_dict[bids_id] = dict()
-        for session_id in {"ses-" + key for key in ses_dict[bids_id].keys()}:
+        # todo : init with actual sessions taken from BIDS
+        for session_id in ses_dict.keys():
             scans_dict[bids_id][session_id] = {
                 "T1/DWI/fMRI/FMAP": {},
                 Tracer.PIB: {},
                 Tracer.AV45: {},
                 Tracer.FMM: {},
-                Tracer.FDG: {},
+                Tracer.FDG: {},  # todo : is there a file that has FDG exam dates ?
             }
 
     scans_specs = pd.read_csv(clinical_specifications_folder / "scans.tsv", sep="\t")[
         [study, f"{study} location", "BIDS CLINICA", "Modalities related"]
     ].dropna()
-    fields_dataset = scans_specs[
-        study
-    ].tolist()  # todo : tuple(scans_specs[study]) could be used also ?
-    fields_location = scans_specs[f"{study} location"].tolist()
-    fields_bids = scans_specs["BIDS CLINICA"].tolist()
-    fields_mod = scans_specs[
-        "Modalities related"
-    ].tolist()  # todo : why no tracer FDG ?
 
-    # For each field available extract the original name, extract from the file all the values and fill a data structure
-    for i in range(0, len(fields_dataset)):
-        file_name = fields_location[i]
+    for _, row in scans_specs.iterrows():
+        file_name = row[f"{study} location"]
         # todo : more robust
-        files_to_read = [f for f in clinical_data_dir.glob(file_name)]
-        file_path = files_to_read[0]
+        file_path = [f for f in clinical_data_dir.glob(file_name)][0]
         # Fix for malformed flutemeta file in AIBL (see #796).
         # Some flutemeta lines contain a non-coded string value at the second-to-last position. This value
         # contains a comma which adds an extra column and shifts the remaining values to the right. In this
@@ -448,44 +439,36 @@ def create_scans_dict(
             engine="python",
             on_bad_lines=on_bad_lines,
         )
+        file_to_read["session_id"] = file_to_read["VISCODE"].apply(
+            lambda x: viscode_to_session(x)
+        )
 
         for bids_id in bids_ids:
             original_id = bids_id_factory(StudyName.AIBL)(
                 bids_id
             ).to_original_study_id()
-            for session_name in {"ses-" + key for key in ses_dict[bids_id].keys()}:
-                # When comparing sessions, remove the "-ses" prefix IF it exists
-                row_to_extract = file_to_read[
+            for session_name in scans_dict[bids_id].keys():
+                values_to_extract = file_to_read[
                     (file_to_read["RID"] == int(original_id))
-                    & (
-                        list(filter(None, file_to_read["VISCODE"].str.split("ses-")))[
-                            0
-                        ][0]
-                        == ses_dict[bids_id][
-                            list(filter(None, session_name.split("ses-")))[0]
-                        ]
-                    )
-                ].index.tolist()
-                if len(row_to_extract) > 0:
-                    row_to_extract = row_to_extract[0]
-                    # Fill the dictionary with all the information
-                    value = file_to_read.iloc[row_to_extract][fields_dataset[i]]
+                    & (file_to_read["session_id"] == session_name)
+                ][row[study]].tolist()
 
+                if values_to_extract:
+                    value = values_to_extract[0]
                     # Deal with special format in AIBL
                     if value == "-4":
                         value = "n/a"
-                    elif fields_bids[i] == "acq_time":
+                    elif row["BIDS CLINICA"] == "acq_time":
                         date_obj = datetime.datetime.strptime(value, "%m/%d/%Y")
                         value = date_obj.strftime("%Y-%m-%dT%H:%M:%S")
-
-                    scans_dict[bids_id][session_name][fields_mod[i]][
-                        fields_bids[i]
-                    ] = value
                 else:
-                    scans_dict[bids_id][session_name][fields_mod[i]][
-                        fields_bids[i]
-                    ] = "n/a"
+                    value = "n/a"
 
+                scans_dict[bids_id][session_name][row["Modalities related"]][
+                    row["BIDS CLINICA"]
+                ] = value
+
+    # todo : case where it gets written over ?
     return scans_dict
 
 
@@ -543,9 +526,7 @@ def write_scans_tsv(
                         row_to_append = pd.DataFrame(
                             scans_dict[sub][session_path.name][f_type], index=[0]
                         )
-                        row_to_append.insert(
-                            0, "filename", str(Path(mod.name) / Path(file.name))
-                        )
+                        row_to_append.insert(0, "filename", f"{mod.name} / {file.name}")
                         scans_df = pd.concat([scans_df, row_to_append])
-            scans_df = scans_df.set_index("filename").fillna("n/a")
-            scans_df.to_csv(tsv_file, sep="\t", encoding="utf8")
+            scans_df = scans_df.fillna("n/a")
+            scans_df.to_csv(tsv_file, sep="\t", encoding="utf8", index=False)
