@@ -223,8 +223,6 @@ def create_sessions_tsv_file(
         The path to the folder containing the clinical specification files.
     """
     from clinica.iotools.bids_utils import (
-        StudyName,
-        bids_id_factory,
         get_bids_sess_list,
         get_bids_subjs_list,
     )
@@ -335,7 +333,7 @@ def _get_csv_files_for_alternative_exam_date(
 
 # todo : test
 def create_scans_tsv_file(
-    input_path: Path,
+    bids_path: Path,
     clinical_data_dir: Path,
     clinical_specifications_folder: Path,
 ) -> None:
@@ -343,8 +341,8 @@ def create_scans_tsv_file(
 
     Parameters
     ----------
-    input_path : Path
-        The path to the input folder.
+    bids_path : Path
+        The path to the BIDS folder.
 
     clinical_data_dir : Path
         The path to the directory to the clinical data files.
@@ -355,56 +353,23 @@ def create_scans_tsv_file(
     import glob
     from os import path
 
-    study = StudyName.AIBL.value
-
-    specifications = _load_specifications(clinical_specifications_folder, "scans.tsv")
-    scans_fields = specifications[study]
-    field_location = specifications[f"{study} location"]
-    scans_fields_bids = specifications["BIDS CLINICA"]
-    fields_dataset = []
-    fields_bids = []
-
-    # Keep only fields for which there are AIBL fields
-    for i in range(0, len(scans_fields)):
-        if not pd.isnull(scans_fields[i]):
-            fields_bids.append(scans_fields_bids[i])
-            fields_dataset.append(scans_fields[i])
-
-    files_to_read = []
-    sessions_fields_to_read = []
-    for i in range(0, len(scans_fields)):
-        # If the i-th field is available
-        if not pd.isnull(scans_fields[i]):
-            file_to_read_path = clinical_data_dir / field_location[i]
-            files_to_read.append(glob.glob(str(file_to_read_path))[0])
-            sessions_fields_to_read.append(scans_fields[i])
-
     bids_ids = [
-        path.basename(sub_path) for sub_path in glob.glob(str(input_path / "sub-AIBL*"))
+        path.basename(sub_path) for sub_path in glob.glob(str(bids_path / "sub-AIBL*"))
     ]
-    ses_dict = {
-        bids_id: {"M000": "bl", "M018": "m18", "M036": "m36", "M054": "m54"}
-        for bids_id in bids_ids
-    }
+
     scans_dict = create_scans_dict(
         clinical_data_dir,
         clinical_specifications_folder,
         bids_ids,
-        "RID",
-        "VISCODE",
-        ses_dict,
     )
-    write_scans_tsv(input_path, bids_ids, scans_dict)
+    write_scans_tsv(bids_path, bids_ids, scans_dict)
 
 
 # todo : test
 def create_scans_dict(
     clinical_data_dir: Path,
     clinical_specifications_folder: Path,
-    bids_ids: list[str],
-    name_column_ids: str,
-    name_column_ses: str,
-    ses_dict: dict,
+    bids_ids: List[str],
 ) -> pd.DataFrame:
     """[summary].
 
@@ -419,31 +384,26 @@ def create_scans_dict(
     bids_ids : list of str
         A list of bids ids.
 
-    name_column_ids : str
-        The name of the column where the subject id is contained.
-
-    name_column_ses : str
-        The name of the column where the viscode of the session is contained.
-
-    ses_dict : dict
-        The links the session id to the viscode of the session.
-
     Returns
     -------
     pd.DataFrame :
         A pandas DataFrame that contains the scans information for all sessions of all participants.
     """
     import datetime
-    import os
 
     from clinica.utils.pet import Tracer
     from clinica.utils.stream import cprint
 
     scans_dict = {}
-    prev_file = ""
-    prev_sheet = ""
 
     study = StudyName.AIBL.value
+
+    ses_dict = {
+        bids_id: {"M000": "bl", "M018": "m18", "M036": "m36", "M054": "m54"}
+        for bids_id in bids_ids
+    }
+    # todo : why ? way to initialize ?
+    # possibility : test = [path.basename(sub_path) for sub_path in glob.glob(str(bids_path / bids_id / "ses-M*"))]
 
     # Init the dictionary with the subject ids
     for bids_id in bids_ids:
@@ -457,68 +417,50 @@ def create_scans_dict(
                 Tracer.FDG: {},
             }
 
-    scans_specs = pd.read_csv(clinical_specifications_folder / "scans.tsv", sep="\t")
-    fields_dataset = []
-    fields_location = []
-    fields_bids = []
-    fields_mod = []
-
-    # Extract the fields available and the corresponding bids name, location and type
-    for i in range(0, len(scans_specs[study])):
-        field = scans_specs[study][i]
-        if not pd.isnull(field):
-            fields_dataset.append(field)
-            fields_bids.append(scans_specs["BIDS CLINICA"][i])
-            fields_location.append(scans_specs[f"{study} location"][i])
-            fields_mod.append(scans_specs["Modalities related"][i])
+    scans_specs = pd.read_csv(clinical_specifications_folder / "scans.tsv", sep="\t")[
+        [study, f"{study} location", "BIDS CLINICA", "Modalities related"]
+    ].dropna()
+    fields_dataset = scans_specs[
+        study
+    ].tolist()  # todo : tuple(scans_specs[study]) could be used also ?
+    fields_location = scans_specs[f"{study} location"].tolist()
+    fields_bids = scans_specs["BIDS CLINICA"].tolist()
+    fields_mod = scans_specs[
+        "Modalities related"
+    ].tolist()  # todo : why no tracer FDG ?
 
     # For each field available extract the original name, extract from the file all the values and fill a data structure
     for i in range(0, len(fields_dataset)):
-        # Location is composed by file/sheet
-        location = fields_location[i].split("/")
-        file_name = location[0]
-        sheet = location[1] if len(location) > 1 else ""
-        # Check if the file to read is already opened
-        if file_name == prev_file and sheet == prev_sheet:
-            pass
-        else:
-            file_ext = os.path.splitext(file_name)[1]
-            files_to_read = [f for f in clinical_data_dir.glob(file_name)]
-            if file_ext == ".xlsx":
-                file_to_read = pd.read_excel(files_to_read[0], sheet_name=sheet)
-            elif file_ext == ".csv":
-                file_path = files_to_read[0]
-
-                # Fix for malformed flutemeta file in AIBL (see #796).
-                # Some flutemeta lines contain a non-coded string value at the second-to-last position. This value
-                # contains a comma which adds an extra column and shifts the remaining values to the right. In this
-                # case, we just remove the erroneous content and replace it with -4 which AIBL uses as n/a value.
-                on_bad_lines = lambda x: "error"  # noqa
-                if "flutemeta" in file_path.name:
-                    on_bad_lines = lambda bad_line: bad_line[:-3] + [-4, bad_line[-1]]  # noqa
-                file_to_read = pd.read_csv(
-                    file_path,
-                    sep=",",
-                    engine="python",
-                    on_bad_lines=on_bad_lines,
-                )
-            prev_file = file_name
-            prev_sheet = sheet
+        file_name = fields_location[i]
+        # todo : more robust
+        files_to_read = [f for f in clinical_data_dir.glob(file_name)]
+        file_path = files_to_read[0]
+        # Fix for malformed flutemeta file in AIBL (see #796).
+        # Some flutemeta lines contain a non-coded string value at the second-to-last position. This value
+        # contains a comma which adds an extra column and shifts the remaining values to the right. In this
+        # case, we just remove the erroneous content and replace it with -4 which AIBL uses as n/a value.
+        on_bad_lines = lambda x: "error"  # noqa
+        if "flutemeta" in file_path.name:
+            on_bad_lines = lambda bad_line: bad_line[:-3] + [-4, bad_line[-1]]  # noqa
+        file_to_read = pd.read_csv(
+            file_path,
+            sep=",",
+            engine="python",
+            on_bad_lines=on_bad_lines,
+        )
 
         for bids_id in bids_ids:
-            original_id = bids_id.replace(
-                f"sub-{study}", ""
-            )  # todo : when refactoring function use BIDS id modelisation
+            original_id = bids_id_factory(StudyName.AIBL)(
+                bids_id
+            ).to_original_study_id()
             for session_name in {"ses-" + key for key in ses_dict[bids_id].keys()}:
                 # When comparing sessions, remove the "-ses" prefix IF it exists
                 row_to_extract = file_to_read[
-                    (file_to_read[name_column_ids] == int(original_id))
+                    (file_to_read["RID"] == int(original_id))
                     & (
-                        list(
-                            filter(
-                                None, file_to_read[name_column_ses].str.split("ses-")
-                            )
-                        )[0][0]
+                        list(filter(None, file_to_read["VISCODE"].str.split("ses-")))[
+                            0
+                        ][0]
                         == ses_dict[bids_id][
                             list(filter(None, session_name.split("ses-")))[0]
                         ]
@@ -540,10 +482,6 @@ def create_scans_dict(
                         fields_bids[i]
                     ] = value
                 else:
-                    cprint(
-                        f"Scans information for {bids_id} {session_name} not found.",
-                        lvl="info",
-                    )
                     scans_dict[bids_id][session_name][fields_mod[i]][
                         fields_bids[i]
                     ] = "n/a"
