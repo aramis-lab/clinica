@@ -25,6 +25,19 @@ Each record consists of the same number of fields, and these are separated by co
 
 - [wikipedia](https://en.wikipedia.org/wiki/Comma-separated_values)
 
+#### fMRI
+
+**fMRI** stands for *functional Magnetic Resonance Imaging*.
+
+It measures brain activity by detecting changes associated with blood flow. This technique relies on the
+fact that cerebral blood flow and neuronal activation are coupled. When an area of the brain is in use, blood flow
+to that region also increases. An fMRI is based on the same technology as [magnetic resonance imaging (MRI)](#mri).
+
+##### References
+
+- [wikipedia](https://en.wikipedia.org/wiki/Functional_magnetic_resonance_imaging)
+- [PsychCentral](https://psychcentral.com/lib/what-is-functional-magnetic-resonance-imaging-fmri)
+
 #### FWHM
 
 **FWHM** stands for *Full Width at Half Maximum*.
