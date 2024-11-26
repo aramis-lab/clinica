@@ -5,6 +5,11 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
 
+from clinica.utils.testing_utils import (
+    assert_nifti_equal,
+    build_test_image_cubic_object,
+)
+
 
 @pytest.mark.parametrize(
     "aggregator,expected_value",
@@ -281,3 +286,52 @@ def test_crop_nifti(tmp_path):
     assert_array_equal(
         cropped.get_fdata(), nib.load(get_mni_cropped_template()).get_fdata()
     )
+
+
+@pytest.mark.parametrize(
+    "input_background,input_object,threshold_low,threshold_high,expected_background,expected_object",
+    [
+        (-0.01, 1.0, 0.0, None, 0.0, 1.0),
+        (1.1, 1.0, 1.1, None, 1.1, 1.1),
+        (0.0, 0.0, 1.0, None, 1.0, 1.0),
+        (0.0, 0.0, 0.0, None, 0.0, 0.0),
+        (0.0, 0.0, -0.1, None, 0.0, 0.0),
+        (10.0, 1.0, 5.0, None, 10.0, 5.0),
+        (-0.01, 1.0, None, 0.0, -0.01, 0.0),
+        (-0.01, 1.0, None, 1.0, -0.01, 1.0),
+        (10.0, 1.0, None, 2.0, 2.0, 1.0),
+        (10.0, 1.0, 2.0, 4.0, 4.0, 2.0),
+        (0.0, 0.0, 2.0, 4.0, 2.0, 2.0),
+        (10.0, 1.0, 1.0, 10.0, 10.0, 1.0),
+    ],
+)
+def test_clip_nifti(
+    tmp_path,
+    input_background: float,
+    input_object: float,
+    threshold_low: float,
+    threshold_high: float,
+    expected_background: float,
+    expected_object: float,
+):
+    from clinica.utils.image import clip_nifti
+
+    build_test_image_cubic_object(
+        shape=(10, 10, 10),
+        background_value=input_background,
+        object_value=input_object,
+        object_size=2,
+    ).to_filename(tmp_path / "input.nii.gz")
+
+    clipped = clip_nifti(
+        tmp_path / "input.nii.gz", low=threshold_low, high=threshold_high
+    )
+
+    build_test_image_cubic_object(
+        shape=(10, 10, 10),
+        background_value=expected_background,
+        object_value=expected_object,
+        object_size=2,
+    ).to_filename(tmp_path / "expected.nii.gz")
+
+    assert_nifti_equal(clipped, tmp_path / "expected.nii.gz")

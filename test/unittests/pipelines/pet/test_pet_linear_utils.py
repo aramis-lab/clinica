@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 
 from clinica.utils.pet import SUVRReferenceRegion
@@ -67,3 +65,34 @@ def test_rename_into_caps(tmp_path):
     )
     assert b == tmp_path / "sub-01_ses-M000_run-01_space-T1w_rigid.mat"
     assert c is None
+
+
+@pytest.mark.parametrize(
+    "background_value,object_value,expected_threshold",
+    [
+        (-0.01, 0.01, 0.0),
+        (0.0, 0.01, 0.0),
+        (0.01, 0.01, 0.01),
+        (0.6, 0.01, 0.6),
+        (-1.0, -1.0, 0.0),
+    ],
+)
+def test_compute_clipping_threshold(
+    tmp_path,
+    background_value: float,
+    object_value: float,
+    expected_threshold: float,
+):
+    from clinica.pipelines.pet.linear.utils import _compute_clipping_threshold
+    from clinica.utils.testing_utils import build_test_image_cubic_object
+
+    build_test_image_cubic_object(
+        shape=(10, 10, 10),
+        background_value=background_value,
+        object_value=object_value,
+        object_size=4,
+    ).to_filename(tmp_path / "test.nii.gz")
+
+    assert _compute_clipping_threshold(tmp_path / "test.nii.gz") == pytest.approx(
+        expected_threshold
+    )
