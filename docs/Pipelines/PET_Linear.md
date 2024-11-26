@@ -2,8 +2,10 @@
 # `pet-linear` - Linear processing of PET images
 
 This pipeline performs spatial normalization to the MNI space and intensity normalization of [PET](../glossary.md#pet) images.
+
 Its steps include:
 
+- clipping of the background to remove noisy values which can deteriorate further processing.
 - affine registration to the [MNI152NLin2009cSym](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html#template-based-coordinate-systems) template [Fonov et al., [2011](https://doi.org/10.1016/j.neuroimage.2010.07.033), [2009](https://doi.org/10.1016/S1053-8119(09)70884-5)] in MNI space with the SyN algorithm [[Avants et al., 2008](https://doi.org/10.1016/j.media.2007.06.004)] from the [ANTs](http://stnava.github.io/ANTs/) software package [[Avants et al., 2014](https://doi.org/10.3389/fninf.2014.00044)]
 - intensity normalization using the average [PET](../glossary.md#pet) uptake in reference regions resulting in a standardized uptake value ratio ([SUVR](../glossary.md#suvr)) map
 - cropping of the registered images to remove the background
