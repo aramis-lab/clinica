@@ -12,9 +12,19 @@ __all__ = [
     "BIDS_VERSION",
     "Extension",
     "Suffix",
+    "Visit",
 ]
 
 BIDS_VERSION = Version("1.7.0")
+
+
+@dataclass
+class Visit:
+    subject: str
+    session: str
+
+    def __str__(self) -> str:
+        return f"{self.subject} {self.session}"
 
 
 class Extension(str, Enum):
