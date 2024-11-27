@@ -16,6 +16,31 @@ def build_bids_dir(tmp_path: Path) -> Path:
     return bids_dir
 
 
+def build_scans_spec(tmp_path: Path) -> Path:
+    spec = pd.DataFrame(
+        {
+            "BIDS CLINICA": ["acq_time"] * 5,
+            "AIBL": ["EXAMDATE"] * 5,
+            "AIBL location": [
+                "aibl_mrimeta_*.csv",
+                "aibl_mri3meta_*.csv",
+                "aibl_av45meta_*.csv",
+                "aibl_pibmeta_*.csv",
+                "aibl_flutemeta_*.csv",
+            ],
+            "Modalities related": [
+                "T1/DWI/fMRI/FMAP",
+                "T1/DWI/fMRI/FMAP",
+                "18FAV45",
+                "11CPIB",
+                "18FFMM",
+            ],
+        }
+    )
+    spec.to_csv(tmp_path / "scans.tsv", index=False, sep="\t")
+    return tmp_path
+
+
 def build_sessions_spec(tmp_path: Path) -> Path:
     spec = pd.DataFrame(
         {
@@ -131,6 +156,27 @@ def build_clinical_data(tmp_path: Path) -> Path:
         }
     )
     mri3.to_csv(data_path / "aibl_mri3meta_230ct2024.csv", index=False)
+
+    mri = pd.DataFrame(
+        {
+            "RID": [3, 4, 6, 8, 8, 10, 10],  # %m/%d/%Y
+            "VISCODE": ["bl", "bl", "bl", "bl", "m12", "bl", "m06"],
+            "EXAMDATE": [
+                "01/01/2001",
+                "01/01/2002",
+                "01/01/2012",
+                "01/01/2100",
+                "12/01/2100",
+                "01/01/2109",
+                -4,
+            ],
+        }
+    )
+    mri.to_csv(data_path / "aibl_mrimeta_230ct2024.csv", index=False)
+    mri.to_csv(data_path / "aibl_av45meta_230ct2024.csv", index=False)
+    mri.to_csv(data_path / "aibl_pibmeta_230ct2024.csv", index=False)
+    mri.to_csv(data_path / "aibl_flutemeta_230ct2024.csv", index=False)
+
     return data_path
 
 
@@ -361,6 +407,9 @@ def test_get_csv_files_for_alternative_exam_date(tmp_path):
         "aibl_cdr_230ct2024.csv",
         "aibl_mmse_230ct2024.csv",
         "aibl_mri3meta_230ct2024.csv",
+        "aibl_mrimeta_230ct2024.csv",
+        "aibl_flutemeta_230ct2024.csv",
+        "aibl_pibmeta_230ct2024.csv",
     }
 
 
@@ -593,3 +642,55 @@ def test_load_metadata_from_pattern_optional(tmp_path):
             }
         ),
     )
+
+
+def test_create_scans_dict(tmp_path):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import create_scans_dict
+    from clinica.utils.pet import Tracer
+
+    result = create_scans_dict(
+        clinical_data_dir=build_clinical_data(tmp_path),
+        clinical_specifications_folder=build_scans_spec(tmp_path),
+        bids_path=build_bids_dir(tmp_path),
+    )
+
+    expected = {
+        "sub-AIBL1": {
+            "ses-M000": {
+                "T1/DWI/fMRI/FMAP": {"acq_time": "2001-01-01T00:00:00"},
+                Tracer.PIB: {"acq_time": "n/a"},
+                Tracer.AV45: {"acq_time": "n/a"},
+                Tracer.FMM: {"acq_time": "n/a"},
+            }
+        },
+        "sub-AIBL100": {
+            "ses-M000": {
+                "T1/DWI/fMRI/FMAP": {"acq_time": "2100-01-01T00:00:00"},
+                Tracer.PIB: {"acq_time": "n/a"},
+                Tracer.AV45: {"acq_time": "n/a"},
+                Tracer.FMM: {"acq_time": "n/a"},
+            },
+            "ses-M012": {
+                "T1/DWI/fMRI/FMAP": {"acq_time": "2100-12-01T00:00:00"},
+                Tracer.PIB: {"acq_time": "n/a"},
+                Tracer.AV45: {"acq_time": "n/a"},
+                Tracer.FMM: {"acq_time": "n/a"},
+            },
+        },
+        "sub-AIBL109": {
+            "ses-M000": {
+                "T1/DWI/fMRI/FMAP": {"acq_time": "2109-01-01T00:00:00"},
+                Tracer.PIB: {"acq_time": "n/a"},
+                Tracer.AV45: {"acq_time": "n/a"},
+                Tracer.FMM: {"acq_time": "n/a"},
+            },
+            "ses-M006": {
+                "T1/DWI/fMRI/FMAP": {"acq_time": "n/a"},
+                Tracer.PIB: {"acq_time": "n/a"},
+                Tracer.AV45: {"acq_time": "n/a"},
+                Tracer.FMM: {"acq_time": "n/a"},
+            },
+        },
+    }
+
+    assert result == expected
