@@ -73,6 +73,18 @@ It is a commonly used data format with diverse uses in electronic data interchan
 
 - [wikipedia](https://en.wikipedia.org/wiki/JSON)
 
+
+#### MRI 
+
+***MRI*** stands for *Magnetic Resonance Imaging*.
+
+It is a medical imaging technique used in radiology to form pictures of the anatomy and the physiological processes inside the body.
+MRI scanners use strong magnetic fields, magnetic field gradients, and radio waves to generate images of the organs in the body.
+
+##### References
+
+- [wikipedia](https://en.wikipedia.org/wiki/Magnetic_resonance_imaging)
+
 #### PET
 
 **PET** stands for *Positron Emission Tomography*.
