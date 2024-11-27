@@ -1,10 +1,12 @@
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
+from pathlib import Path
 from typing import List
 
 from nipype import config
 
 from clinica.pipelines.pet.engine import PETPipeline
+from clinica.utils.bids import Visit
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
@@ -29,6 +31,26 @@ class PETLinear(PETPipeline):
     def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
         pass
+
+    def get_processed_images(self) -> list[Visit]:
+        from clinica.utils.filemanip import extract_visits
+        from clinica.utils.input_files import pet_linear_nii
+        from clinica.utils.inputs import clinica_file_reader
+
+        processed_visits: list[Visit] = []
+        if self.caps_directory.is_dir():
+            cropped_files, _ = clinica_file_reader(
+                self.subjects,
+                self.sessions,
+                self.caps_directory,
+                pet_linear_nii(
+                    acq_label=self.parameters["acq_label"],
+                    suvr_reference_region=self.parameters["suvr_reference_region"],
+                    uncropped_image=self.parameters["uncropped_image"],
+                ),
+            )
+            processed_visits.extend(extract_visits(cropped_files))
+        return processed_visits
 
     def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
