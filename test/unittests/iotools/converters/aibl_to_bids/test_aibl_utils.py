@@ -5,100 +5,15 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 
-@pytest.mark.parametrize(
-    "birth_date, exam_date, expected",
-    [(None, "foo", None), ("foo", None, None), ("/2000", "01/01/2012", 12)],
-)
-def test_compute_age_at_exam(birth_date, exam_date, expected):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _compute_age_at_exam,
-    )
-
-    assert _compute_age_at_exam(birth_date, exam_date) == expected
-
-
-@pytest.mark.parametrize(
-    "diagnosis, expected",
-    [
-        (-4, "n/a"),
-        (1, "CN"),
-        (2, "MCI"),
-        (3, "AD"),
-        (0, "n/a"),
-        (None, "n/a"),
-    ],
-)
-def test_map_diagnosis(diagnosis, expected):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _map_diagnosis,
-    )
-
-    assert _map_diagnosis(diagnosis) == expected
-
-
-def test_load_specifications_success(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _load_specifications,
-    )
-
-    filename = "foo.tsv"
-    file = pd.DataFrame(columns=["foo"])
-    file.to_csv(tmp_path / filename, sep="\t", index=False)
-    assert _load_specifications(tmp_path, filename).equals(file)
-
-
-def test_load_specifications_error_tmp_path(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _load_specifications,
-    )
-
-    with pytest.raises(
-        FileNotFoundError,
-        match=f"The specifications for bar.tsv were not found. "
-        f"The should be located in {tmp_path/'bar.tsv'}.",
-    ):
-        _load_specifications(tmp_path, "bar.tsv")
-
-
-def test_listdir_nohidden(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.bids import _listdir_nohidden
-
-    (tmp_path / "file").touch()
-    (tmp_path / ".hidden_file").touch()
-    (tmp_path / "dir").mkdir()
-    (tmp_path / ".hidden_dir").mkdir()
-
-    assert _listdir_nohidden(tmp_path) == ["dir"]
-
-
-def test_get_first_file_matching_pattern(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.bids import (
-        _get_first_file_matching_pattern,
-    )
-
-    (tmp_path / "foo_bar.nii.gz").touch()
-    (tmp_path / "foo_bar_baz.nii").touch()
-
-    assert (
-        _get_first_file_matching_pattern(tmp_path, "foo*.nii*")
-        == tmp_path / "foo_bar.nii.gz"
-    )
-
-
-@pytest.mark.parametrize(
-    "pattern,msg",
-    [("", "Pattern is not valid."), ("foo*.txt*", "No file matching pattern")],
-)
-def test_get_first_file_matching_pattern_error(tmp_path, pattern, msg):
-    from clinica.iotools.converters.aibl_to_bids.utils.bids import (
-        _get_first_file_matching_pattern,
-    )
-
-    (tmp_path / "foo_bar.nii.gz").touch()
-    (tmp_path / "foo_bar_baz.nii").touch()
-
-    with pytest.raises(ValueError, match=msg):
-        _get_first_file_matching_pattern(tmp_path, pattern)
+def build_bids_dir(tmp_path: Path) -> Path:
+    bids_dir = tmp_path / "BIDS"
+    bids_dir.mkdir()
+    (bids_dir / "sub-AIBL1" / "ses-M000").mkdir(parents=True)
+    (bids_dir / "sub-AIBL100" / "ses-M000").mkdir(parents=True)
+    (bids_dir / "sub-AIBL100" / "ses-M012").mkdir(parents=True)
+    (bids_dir / "sub-AIBL109" / "ses-M000").mkdir(parents=True)
+    (bids_dir / "sub-AIBL109" / "ses-M006").mkdir(parents=True)
+    return bids_dir
 
 
 def build_sessions_spec(tmp_path: Path) -> Path:
@@ -123,17 +38,6 @@ def build_sessions_spec(tmp_path: Path) -> Path:
     )
     spec.to_csv(tmp_path / "sessions.tsv", index=False, sep="\t")
     return tmp_path
-
-
-def build_bids_dir(tmp_path: Path) -> Path:
-    bids_dir = tmp_path / "BIDS"
-    bids_dir.mkdir()
-    (bids_dir / "sub-AIBL1" / "ses-M000").mkdir(parents=True)
-    (bids_dir / "sub-AIBL100" / "ses-M000").mkdir(parents=True)
-    (bids_dir / "sub-AIBL100" / "ses-M012").mkdir(parents=True)
-    (bids_dir / "sub-AIBL109" / "ses-M000").mkdir(parents=True)
-    (bids_dir / "sub-AIBL109" / "ses-M006").mkdir(parents=True)
-    return bids_dir
 
 
 def build_clinical_data(tmp_path: Path) -> Path:
@@ -228,6 +132,169 @@ def build_clinical_data(tmp_path: Path) -> Path:
     )
     mri3.to_csv(data_path / "aibl_mri3meta_230ct2024.csv", index=False)
     return data_path
+
+
+def test_init_scans_dict(tmp_path):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        _init_scans_dict,
+    )
+    from clinica.utils.pet import Tracer
+
+    bids_dir = build_bids_dir(tmp_path)
+    (bids_dir / "sub-AIBL1_foo.txt").touch()
+
+    expected = {
+        "sub-AIBL1": {
+            "ses-M000": {
+                "T1/DWI/fMRI/FMAP": {},
+                Tracer.PIB: {},
+                Tracer.AV45: {},
+                Tracer.FMM: {},
+            }
+        },
+        "sub-AIBL100": {
+            "ses-M000": {
+                "T1/DWI/fMRI/FMAP": {},
+                Tracer.PIB: {},
+                Tracer.AV45: {},
+                Tracer.FMM: {},
+            },
+            "ses-M012": {
+                "T1/DWI/fMRI/FMAP": {},
+                Tracer.PIB: {},
+                Tracer.AV45: {},
+                Tracer.FMM: {},
+            },
+        },
+        "sub-AIBL109": {
+            "ses-M000": {
+                "T1/DWI/fMRI/FMAP": {},
+                Tracer.PIB: {},
+                Tracer.AV45: {},
+                Tracer.FMM: {},
+            },
+            "ses-M006": {
+                "T1/DWI/fMRI/FMAP": {},
+                Tracer.PIB: {},
+                Tracer.AV45: {},
+                Tracer.FMM: {},
+            },
+        },
+    }
+
+    assert expected == _init_scans_dict(bids_dir)
+
+
+@pytest.mark.parametrize(
+    "line, expected",
+    [
+        (["1", "foo", "bar"], None),
+        (["1", "measured", "AUSTIN AC CT Brain  H19s", "1"], ["1", "-4", "1"]),
+        (["1", "measured", "AUSTIN AC CT Brain H19s", "1"], None),
+    ],
+)
+def test_flutemeta_badline(line, expected):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        _flutemeta_badline,
+    )
+
+    assert _flutemeta_badline(line) == expected
+
+
+@pytest.mark.parametrize(
+    "birth_date, exam_date, expected",
+    [(None, "foo", None), ("foo", None, None), ("/2000", "01/01/2012", 12)],
+)
+def test_compute_age_at_exam(birth_date, exam_date, expected):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        _compute_age_at_exam,
+    )
+
+    assert _compute_age_at_exam(birth_date, exam_date) == expected
+
+
+@pytest.mark.parametrize(
+    "diagnosis, expected",
+    [
+        (-4, "n/a"),
+        (1, "CN"),
+        (2, "MCI"),
+        (3, "AD"),
+        (0, "n/a"),
+        (None, "n/a"),
+    ],
+)
+def test_map_diagnosis(diagnosis, expected):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        _map_diagnosis,
+    )
+
+    assert _map_diagnosis(diagnosis) == expected
+
+
+def test_load_specifications_success(tmp_path):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        _load_specifications,
+    )
+
+    filename = "foo.tsv"
+    file = pd.DataFrame(columns=["foo"])
+    file.to_csv(tmp_path / filename, sep="\t", index=False)
+    assert _load_specifications(tmp_path, filename).equals(file)
+
+
+def test_load_specifications_error_tmp_path(tmp_path):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        _load_specifications,
+    )
+
+    with pytest.raises(
+        FileNotFoundError,
+        match=f"The specifications for bar.tsv were not found. "
+        f"The should be located in {tmp_path/'bar.tsv'}.",
+    ):
+        _load_specifications(tmp_path, "bar.tsv")
+
+
+def test_listdir_nohidden(tmp_path):
+    from clinica.iotools.converters.aibl_to_bids.utils.bids import _listdir_nohidden
+
+    (tmp_path / "file").touch()
+    (tmp_path / ".hidden_file").touch()
+    (tmp_path / "dir").mkdir()
+    (tmp_path / ".hidden_dir").mkdir()
+
+    assert _listdir_nohidden(tmp_path) == ["dir"]
+
+
+def test_get_first_file_matching_pattern(tmp_path):
+    from clinica.iotools.converters.aibl_to_bids.utils.bids import (
+        _get_first_file_matching_pattern,
+    )
+
+    (tmp_path / "foo_bar.nii.gz").touch()
+    (tmp_path / "foo_bar_baz.nii").touch()
+
+    assert (
+        _get_first_file_matching_pattern(tmp_path, "foo*.nii*")
+        == tmp_path / "foo_bar.nii.gz"
+    )
+
+
+@pytest.mark.parametrize(
+    "pattern,msg",
+    [("", "Pattern is not valid."), ("foo*.txt*", "No file matching pattern")],
+)
+def test_get_first_file_matching_pattern_error(tmp_path, pattern, msg):
+    from clinica.iotools.converters.aibl_to_bids.utils.bids import (
+        _get_first_file_matching_pattern,
+    )
+
+    (tmp_path / "foo_bar.nii.gz").touch()
+    (tmp_path / "foo_bar_baz.nii").touch()
+
+    with pytest.raises(ValueError, match=msg):
+        _get_first_file_matching_pattern(tmp_path, pattern)
 
 
 def test_extract_metadata_df(tmp_path):

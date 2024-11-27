@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterator, List, Optional
+from typing import Iterator, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -331,7 +331,6 @@ def _get_csv_files_for_alternative_exam_date(
             continue
 
 
-# todo : test
 def create_scans_tsv_file(
     bids_path: Path,
     clinical_data_dir: Path,
@@ -350,28 +349,62 @@ def create_scans_tsv_file(
     clinical_specifications_folder : Path
         The path to the folder containing the clinical specification files.
     """
-    import glob
-    from os import path
-
-    bids_ids = [
-        path.basename(sub_path) for sub_path in glob.glob(str(bids_path / "sub-AIBL*"))
-    ]
 
     scans_dict = create_scans_dict(
         clinical_data_dir,
         clinical_specifications_folder,
-        bids_ids,
+        bids_path,
     )
-    write_scans_tsv(bids_path, bids_ids, scans_dict)
+    write_scans_tsv(bids_path, scans_dict)
 
 
-# todo : test
+def _flutemeta_badline(line: List[str]) -> Optional[List[str]]:
+    # Fix for malformed flutemeta file in AIBL (see #796).
+    # Some flutemeta lines contain a non-coded string value at the second-to-last position. This value
+    # contains a comma which adds an extra column and shifts the remaining values to the right. In this
+    # case, we just remove the erroneous content and replace it with -4 which AIBL uses as n/a value.
+
+    # Example : bad_line = ['618', '1', 'm18', ... , '1', 'measured', 'AUSTIN AC CT Brain  H19s', '0']
+
+    # todo : RQ : means should be always at the same place
+
+    if line[-3] == "measured" and line[-2] == "AUSTIN AC CT Brain  H19s":
+        return line[:-3] + ["-4", line[-1]]
+
+
+def _init_scans_dict(bids_path: Path) -> dict:
+    from clinica.utils.pet import Tracer
+
+    bids_ids = (
+        sub_path.name
+        for sub_path in bids_path.rglob("./sub-AIBL*")
+        if sub_path.is_dir()
+    )
+
+    scans_dict = {}
+    for bids_id in bids_ids:
+        scans_dict[bids_id] = dict()
+        ses_list = (
+            ses_path.name
+            for ses_path in (bids_path / bids_id).rglob("ses-M*")
+            if ses_path.is_dir()
+        )
+        for session in ses_list:
+            scans_dict[bids_id][session] = {
+                "T1/DWI/fMRI/FMAP": {},
+                Tracer.PIB: {},
+                Tracer.AV45: {},
+                Tracer.FMM: {},
+            }
+    return scans_dict
+
+
 def create_scans_dict(
     clinical_data_dir: Path,
     clinical_specifications_folder: Path,
-    bids_ids: List[str],
+    bids_path: Path,
 ) -> dict:
-    """[summary].
+    """Create a dictionary containing metadata per subject/session to write in scans.tsv.
 
     Parameters
     ----------
@@ -381,8 +414,8 @@ def create_scans_dict(
     clinical_specifications_folder : Path
         The path to the folder containing the clinical specification files.
 
-    bids_ids : list of str
-        A list of bids ids.
+    bids_path: Path
+        The path to the BIDS directory.
 
     Returns
     -------
@@ -392,32 +425,10 @@ def create_scans_dict(
     import datetime
 
     from clinica.iotools.converter_utils import viscode_to_session
-    from clinica.utils.pet import Tracer
 
-    scans_dict = {}
+    scans_dict = _init_scans_dict(bids_path)
+
     study = StudyName.AIBL.value
-
-    ses_dict = {
-        "ses-M000": "bl",
-        "ses-M018": "m18",
-        "ses-M036": "m36",
-        "ses-M054": "m54",
-    }
-    # todo : why ? test = [path.basename(sub_path) for sub_path in glob.glob(str(bids_path / bids_id / "ses-M*"))]
-
-    # Init the dictionary with the subject ids
-    for bids_id in bids_ids:
-        scans_dict[bids_id] = dict()
-        # todo : init with actual sessions taken from BIDS
-        for session_id in ses_dict.keys():
-            scans_dict[bids_id][session_id] = {
-                "T1/DWI/fMRI/FMAP": {},
-                Tracer.PIB: {},
-                Tracer.AV45: {},
-                Tracer.FMM: {},
-                Tracer.FDG: {},  # todo : is there a file that has FDG exam dates ?
-            }
-
     scans_specs = pd.read_csv(clinical_specifications_folder / "scans.tsv", sep="\t")[
         [study, f"{study} location", "BIDS CLINICA", "Modalities related"]
     ].dropna()
@@ -426,13 +437,10 @@ def create_scans_dict(
         file_name = row[f"{study} location"]
         # todo : more robust
         file_path = [f for f in clinical_data_dir.glob(file_name)][0]
-        # Fix for malformed flutemeta file in AIBL (see #796).
-        # Some flutemeta lines contain a non-coded string value at the second-to-last position. This value
-        # contains a comma which adds an extra column and shifts the remaining values to the right. In this
-        # case, we just remove the erroneous content and replace it with -4 which AIBL uses as n/a value.
+
         on_bad_lines = lambda x: "error"  # noqa
         if "flutemeta" in file_path.name:
-            on_bad_lines = lambda bad_line: bad_line[:-3] + [-4, bad_line[-1]]  # noqa
+            on_bad_lines = lambda bad_line: _flutemeta_badline(bad_line)  # noqa
         file_to_read = pd.read_csv(
             file_path,
             sep=",",
@@ -443,19 +451,18 @@ def create_scans_dict(
             lambda x: viscode_to_session(x)
         )
 
-        for bids_id in bids_ids:
+        for bids_id in scans_dict.keys():
             original_id = bids_id_factory(StudyName.AIBL)(
                 bids_id
             ).to_original_study_id()
-            for session_name in scans_dict[bids_id].keys():
+            for session in scans_dict[bids_id].keys():
                 values_to_extract = file_to_read[
                     (file_to_read["RID"] == int(original_id))
-                    & (file_to_read["session_id"] == session_name)
+                    & (file_to_read["session_id"] == session)
                 ][row[study]].tolist()
 
                 if values_to_extract:
                     value = values_to_extract[0]
-                    # Deal with special format in AIBL
                     if value == "-4":
                         value = "n/a"
                     elif row["BIDS CLINICA"] == "acq_time":
@@ -464,7 +471,7 @@ def create_scans_dict(
                 else:
                     value = "n/a"
 
-                scans_dict[bids_id][session_name][row["Modalities related"]][
+                scans_dict[bids_id][session][row["Modalities related"]][
                     row["BIDS CLINICA"]
                 ] = value
 
@@ -473,18 +480,13 @@ def create_scans_dict(
 
 
 # todo : test
-def write_scans_tsv(
-    bids_dir: Path, participant_ids: List[str], scans_dict: dict
-) -> None:
+def write_scans_tsv(bids_dir: Path, scans_dict: dict) -> None:
     """Write the scans dict into TSV files.
 
     Parameters
     ----------
     bids_dir : Path
         The path to the BIDS directory.
-
-    participant_ids : List[str]
-        List of participant ids for which to write the scans TSV files.
 
     scans_dict : dict
         Dictionary containing scans metadata.
@@ -502,18 +504,13 @@ def write_scans_tsv(
 
     supported_modalities = ("anat", "dwi", "func", "pet")
 
-    for sub in participant_ids:
-        for session_path in (bids_dir / sub).glob("ses-*"):
+    for sub in scans_dict.keys():
+        for session in scans_dict[sub].keys():
             scans_df = pd.DataFrame()
-            tsv_file = (
-                bids_dir
-                / sub
-                / session_path.name
-                / f"{sub}_{session_path.name}_scans.tsv"
-            )
+            tsv_file = bids_dir / sub / session / f"{sub}_{session}_scans.tsv"
             tsv_file.unlink(missing_ok=True)
 
-            for mod in (bids_dir / sub / session_path.name).glob("*"):
+            for mod in (bids_dir / sub / session).glob("*"):
                 if mod.name in supported_modalities:
                     for file in [
                         file for file in mod.iterdir() if mod.suffix != ".json"
@@ -524,7 +521,7 @@ def write_scans_tsv(
                             else _get_pet_tracer_from_filename(file.name).value
                         )
                         row_to_append = pd.DataFrame(
-                            scans_dict[sub][session_path.name][f_type], index=[0]
+                            scans_dict[sub][session][f_type], index=[0]
                         )
                         row_to_append.insert(0, "filename", f"{mod.name} / {file.name}")
                         scans_df = pd.concat([scans_df, row_to_append])
