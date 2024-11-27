@@ -6,6 +6,7 @@ from typing import List, Optional
 from nipype import config
 
 from clinica.pipelines.engine import Pipeline
+from clinica.utils.bids import Visit
 from clinica.utils.check_dependency import ThirdPartySoftware
 from clinica.utils.stream import log_and_warn
 
@@ -67,24 +68,21 @@ class AnatLinear(Pipeline):
             caps_name=caps_name,
         )
 
-    @staticmethod
-    def get_processed_images(
-        caps_directory: Path, subjects: List[str], sessions: List[str]
-    ) -> List[str]:
-        from clinica.utils.filemanip import extract_image_ids
+    def get_processed_images(self) -> list[Visit]:
+        from clinica.utils.filemanip import extract_visits
         from clinica.utils.input_files import T1W_LINEAR_CROPPED
         from clinica.utils.inputs import clinica_file_reader
 
-        image_ids: List[str] = []
-        if caps_directory.is_dir():
+        processed_visits: list[Visit] = []
+        if self.caps_directory.is_dir():
             cropped_files, _ = clinica_file_reader(
-                subjects,
-                sessions,
-                caps_directory,
+                self.subjects,
+                self.sessions,
+                self.caps_directory,
                 T1W_LINEAR_CROPPED,
             )
-            image_ids = extract_image_ids(cropped_files)
-        return image_ids
+            processed_visits.extend(extract_visits(cropped_files))
+        return processed_visits
 
     def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
@@ -119,8 +117,6 @@ class AnatLinear(Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
-        from clinica.utils.filemanip import extract_subjects_sessions_from_filename
         from clinica.utils.image import get_mni_template
         from clinica.utils.input_files import T1W_NII, Flair_T2W_NII
         from clinica.utils.inputs import clinica_file_filter
@@ -130,27 +126,6 @@ class AnatLinear(Pipeline):
         self.ref_template = get_mni_template(
             "t1" if self.name == "t1-linear" else "flair"
         )
-
-        # Display image(s) already present in CAPS folder
-        # ===============================================
-        processed_ids = self.get_processed_images(
-            self.caps_directory, self.subjects, self.sessions
-        )
-        if len(processed_ids) > 0:
-            cprint(
-                msg=f"Clinica found {len(processed_ids)} image(s) already processed in CAPS directory:",
-                lvl="warning",
-            )
-            for image_id in processed_ids:
-                cprint(msg=f"{image_id.replace('_', ' | ')}", lvl="warning")
-            cprint(msg=f"Image(s) will be ignored by Clinica.", lvl="warning")
-            input_ids = [
-                f"{p_id}_{s_id}" for p_id, s_id in zip(self.subjects, self.sessions)
-            ]
-            to_process_ids = list(set(input_ids) - set(processed_ids))
-            self.subjects, self.sessions = extract_subjects_sessions_from_filename(
-                to_process_ids
-            )
 
         # Inputs from anat/ folder
         # ========================
