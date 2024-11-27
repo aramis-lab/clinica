@@ -515,12 +515,81 @@ def test_create_sessions_tsv(tmp_path):
     assert_frame_equal(result_sub109, expected_sub109, check_like=True)
 
 
-def test_create_sessions_tsv_clinical_not_found(tmp_path):
+def test_load_metadata_from_pattern_success(tmp_path):
     from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        create_sessions_tsv_file,
+        _load_metadata_from_pattern,
+    )
+
+    result = _load_metadata_from_pattern(
+        build_clinical_data(tmp_path), pattern="aibl_neurobat_*.csv"
+    )
+
+    expected = pd.DataFrame(
+        {
+            "RID": [1, 2, 12, 100, 100, 109, 109],
+            "VISCODE": ["bl", "bl", "bl", "bl", "m12", "bl", "m06"],
+            "EXAMDATE": [
+                "01/01/2001",
+                "01/01/2002",
+                "01/01/2012",
+                "01/01/2100",
+                "12/01/2100",
+                "01/01/2109",
+                "-4",
+            ],
+        }
+    )
+
+    assert_frame_equal(expected, result, check_like=True)
+
+
+def test_load_metadata_from_pattern_not_found(tmp_path):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        _load_metadata_from_pattern,
     )
 
     with pytest.raises(FileNotFoundError, match="Clinical data"):
-        create_sessions_tsv_file(
-            build_bids_dir(tmp_path), tmp_path, build_sessions_spec(tmp_path)
+        _load_metadata_from_pattern(
+            clinical_dir=tmp_path,
+            pattern="aibl_neurobat_*.csv",
         )
+
+    with pytest.raises(FileNotFoundError, match="Clinical data"):
+        _load_metadata_from_pattern(
+            clinical_dir=build_clinical_data(tmp_path),
+            pattern="foo",
+        )
+
+
+def test_load_metadata_from_pattern_optional(tmp_path):
+    from io import StringIO
+
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        _flutemeta_badline,
+        _load_metadata_from_pattern,
+    )
+
+    csv_content = """col1,col2,col3,col4
+    1,1,1,1
+    1,1,1,1
+    1,1,measured,AUSTIN AC CT Brain  H19s,1
+    1,1,1,1
+    """
+    with open(tmp_path / "bad_line.csv", "w") as f:
+        f.write(csv_content)
+
+    assert_frame_equal(
+        _load_metadata_from_pattern(
+            clinical_dir=tmp_path,
+            pattern="bad_line.csv",
+            on_bad_lines=_flutemeta_badline,
+        ),
+        pd.DataFrame(
+            {
+                "col1": [1, 1, 1, 1],
+                "col2": [1, 1, 1, 1],
+                "col3": [1, 1, -4, 1],
+                "col4": [1, 1, 1, 1],
+            }
+        ),
+    )

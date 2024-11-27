@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterator, List, Optional, Union
+from typing import Callable, Iterator, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -149,6 +149,26 @@ def _load_specifications(
     return pd.read_csv(specifications, sep="\t")
 
 
+def _load_metadata_from_pattern(
+    clinical_dir: Path,
+    pattern: str,
+    on_bad_lines: Optional[Union[str, Callable]] = "error",
+) -> pd.DataFrame:
+    try:
+        return pd.read_csv(
+            next(clinical_dir.glob(pattern)),
+            dtype={"text": str},
+            sep=",",
+            engine="python",
+            on_bad_lines=on_bad_lines,
+        )
+    except StopIteration:
+        raise FileNotFoundError(
+            f"Clinical data file corresponding to pattern {pattern} was not found in folder "
+            f"{clinical_dir}"
+        )
+
+
 def _map_diagnosis(diagnosis: int) -> str:
     if diagnosis == 1:
         return "CN"
@@ -239,17 +259,9 @@ def create_sessions_tsv_file(
         ).set_index("session_id", drop=False)
 
         for _, row in specifications.iterrows():
-            try:
-                df = pd.read_csv(
-                    next(clinical_data_dir.glob(row[f"{study} location"])),
-                    dtype={"text": str},
-                )
-            except StopIteration:
-                raise FileNotFoundError(
-                    f"Clinical data file corresponding to pattern {row[f'{study} location']} was not found in folder "
-                    f"{clinical_data_dir}"
-                )
-
+            df = _load_metadata_from_pattern(
+                clinical_data_dir, row[f"{study} location"]
+            )
             data = _format_metadata_for_rid(
                 input_df=df,
                 source_id=rid,
@@ -399,6 +411,13 @@ def _init_scans_dict(bids_path: Path) -> dict:
     return scans_dict
 
 
+def _format_time(time: str) -> str:
+    import datetime
+
+    date_obj = datetime.datetime.strptime(time, "%m/%d/%Y")
+    return date_obj.strftime("%Y-%m-%dT%H:%M:%S")
+
+
 def create_scans_dict(
     clinical_data_dir: Path,
     clinical_specifications_folder: Path,
@@ -422,60 +441,49 @@ def create_scans_dict(
     pd.DataFrame :
         A pandas DataFrame that contains the scans information for all sessions of all participants.
     """
-    import datetime
-
     from clinica.iotools.converter_utils import viscode_to_session
 
     scans_dict = _init_scans_dict(bids_path)
 
     study = StudyName.AIBL.value
-    scans_specs = pd.read_csv(clinical_specifications_folder / "scans.tsv", sep="\t")[
+
+    scans_specs = _load_specifications(clinical_specifications_folder, "scans.tsv")[
         [study, f"{study} location", "BIDS CLINICA", "Modalities related"]
     ].dropna()
 
     for _, row in scans_specs.iterrows():
-        file_name = row[f"{study} location"]
-        # todo : more robust
-        file_path = [f for f in clinical_data_dir.glob(file_name)][0]
-
-        on_bad_lines = lambda x: "error"  # noqa
-        if "flutemeta" in file_path.name:
-            on_bad_lines = lambda bad_line: _flutemeta_badline(bad_line)  # noqa
-        file_to_read = pd.read_csv(
-            file_path,
-            sep=",",
-            engine="python",
-            on_bad_lines=on_bad_lines,
+        on_bad_lines = (
+            _flutemeta_badline if "flutemeta" in row[f"{study} location"] else "error"
         )
-        file_to_read["session_id"] = file_to_read["VISCODE"].apply(
-            lambda x: viscode_to_session(x)
+        file = _load_metadata_from_pattern(
+            clinical_data_dir, row[f"{study} location"], on_bad_lines
         )
+        file["session_id"] = file["VISCODE"].apply(lambda x: viscode_to_session(x))
 
         for bids_id in scans_dict.keys():
             original_id = bids_id_factory(StudyName.AIBL)(
                 bids_id
             ).to_original_study_id()
             for session in scans_dict[bids_id].keys():
-                values_to_extract = file_to_read[
-                    (file_to_read["RID"] == int(original_id))
-                    & (file_to_read["session_id"] == session)
-                ][row[study]].tolist()
-
-                if values_to_extract:
-                    value = values_to_extract[0]
+                try:
+                    value = file[
+                        (file["RID"] == int(original_id))
+                        & (file["session_id"] == session)
+                    ][row[study]].item()
                     if value == "-4":
                         value = "n/a"
                     elif row["BIDS CLINICA"] == "acq_time":
-                        date_obj = datetime.datetime.strptime(value, "%m/%d/%Y")
-                        value = date_obj.strftime("%Y-%m-%dT%H:%M:%S")
-                else:
+                        value = _format_time(value)
+                except ValueError:
                     value = "n/a"
 
-                scans_dict[bids_id][session][row["Modalities related"]][
-                    row["BIDS CLINICA"]
-                ] = value
+                modality = scans_dict[bids_id][session][row["Modalities related"]]
 
-    # todo : case where it gets written over ?
+                # Avoid writing over in case of modality "T1/..." because it is used twice
+                if (row["BIDS CLINICA"] not in modality) or (
+                    modality[row["BIDS CLINICA"]] == "n/a"
+                ):
+                    modality[row["BIDS CLINICA"]] = value
     return scans_dict
 
 
