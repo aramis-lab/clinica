@@ -3,6 +3,7 @@
 from pathlib import Path
 from typing import List, Optional
 
+import nipype.pipeline.engine as npe
 from nipype import config
 
 from clinica.pipelines.engine import Pipeline
@@ -254,13 +255,7 @@ class AnatLinear(Pipeline):
     def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.utility as nutil
-        import nipype.pipeline.engine as npe
-        from nipype.interfaces import ants
 
-        from clinica.pipelines.t1_linear.tasks import (
-            run_ants_registration_task,
-            run_n4biasfieldcorrection_task,
-        )
         from clinica.pipelines.tasks import crop_nifti_task, get_filename_no_ext_task
 
         from .anat_linear_utils import print_end_pipeline
@@ -273,65 +268,8 @@ class AnatLinear(Pipeline):
             ),
             name="ImageID",
         )
-
-        # 1. N4biascorrection by ANTS. It uses nipype interface.
-        n4biascorrection = npe.Node(
-            name="n4biascorrection",
-            interface=(
-                nutil.Function(
-                    function=run_n4biasfieldcorrection_task,
-                    input_names=[
-                        "input_image",
-                        "bspline_fitting_distance",
-                        "output_prefix",
-                        "output_dir",
-                        "save_bias",
-                        "verbose",
-                    ],
-                    output_names=["output_image"],
-                )
-                if self.use_antspy
-                else ants.N4BiasFieldCorrection(dimension=3)
-            ),
-        )
-        n4biascorrection.inputs.save_bias = True
-        if self.use_antspy:
-            n4biascorrection.inputs.output_dir = str(self.base_dir)
-            n4biascorrection.inputs.verbose = True
-        if self.name == "t1-linear":
-            n4biascorrection.inputs.bspline_fitting_distance = 600
-        else:
-            n4biascorrection.inputs.bspline_fitting_distance = 100
-
-        # 2. `RegistrationSynQuick` by *ANTS*. It uses nipype interface.
-        ants_registration_node = npe.Node(
-            name="antsRegistrationSynQuick",
-            interface=(
-                nutil.Function(
-                    function=run_ants_registration_task,
-                    input_names=[
-                        "fixed_image",
-                        "moving_image",
-                        "random_seed",
-                        "output_prefix",
-                        "output_dir",
-                    ],
-                    output_names=["warped_image", "out_matrix"],
-                )
-                if self.use_antspy
-                else ants.RegistrationSynQuick()
-            ),
-        )
-        ants_registration_node.inputs.fixed_image = self.ref_template
-        if not self.use_antspy:
-            ants_registration_node.inputs.transform_type = "a"
-            ants_registration_node.inputs.dimension = 3
-
-        random_seed = self.parameters.get("random_seed", None)
-        ants_registration_node.inputs.random_seed = random_seed or 0
-
-        # 3. Crop image (using nifti). It uses custom interface, from utils file
-
+        n4biascorrection = self._build_n4biascorrection_node()
+        ants_registration_node = self._build_ants_registration_node()
         cropnifti = npe.Node(
             name="cropnifti",
             interface=nutil.Function(
@@ -341,8 +279,6 @@ class AnatLinear(Pipeline):
             ),
         )
         cropnifti.inputs.output_path = self.base_dir
-
-        # 4. Print end message
         print_end_message = npe.Node(
             interface=nutil.Function(
                 input_names=["anat", "final_file"], function=print_end_pipeline
@@ -410,3 +346,78 @@ class AnatLinear(Pipeline):
                     ),
                 ]
             )
+
+    def _build_n4biascorrection_node(self) -> npe.Node:
+        import nipype.interfaces.utility as nutil
+        from nipype.interfaces import ants
+
+        from clinica.pipelines.tasks import run_n4biasfieldcorrection_task
+
+        n4biascorrection = npe.Node(
+            name="n4biascorrection",
+            interface=(
+                nutil.Function(
+                    function=run_n4biasfieldcorrection_task,
+                    input_names=[
+                        "input_image",
+                        "bspline_fitting_distance",
+                        "output_prefix",
+                        "output_dir",
+                        "save_bias",
+                        "verbose",
+                    ],
+                    output_names=["output_image"],
+                )
+                if self.use_antspy
+                else ants.N4BiasFieldCorrection(dimension=3)
+            ),
+        )
+        n4biascorrection.inputs.save_bias = True
+        if self.use_antspy:
+            n4biascorrection.inputs.output_dir = str(self.base_dir)
+            n4biascorrection.inputs.verbose = True
+        n4biascorrection.inputs.bspline_fitting_distance = (
+            600 if self.name == "t1-linear" else 100
+        )
+
+        return n4biascorrection
+
+    def _build_ants_registration_node(self) -> npe.Node:
+        import nipype.interfaces.utility as nutil
+        from nipype.interfaces import ants
+
+        from clinica.pipelines.tasks import run_ants_registration_synquick_task
+        from clinica.pipelines.utils import AntsRegistrationSynQuickTransformType
+
+        ants_registration_node = npe.Node(
+            name="antsRegistrationSynQuick",
+            interface=(
+                nutil.Function(
+                    function=run_ants_registration_synquick_task,
+                    input_names=[
+                        "fixed_image",
+                        "moving_image",
+                        "random_seed",
+                        "transform_type",
+                        "output_prefix",
+                        "output_dir",
+                    ],
+                    output_names=["warped_image", "out_matrix"],
+                )
+                if self.use_antspy
+                else ants.RegistrationSynQuick()
+            ),
+        )
+        ants_registration_node.inputs.fixed_image = self.ref_template
+        if self.use_antspy:
+            ants_registration_node.inputs.output_dir = str(self.base_dir)
+            ants_registration_node.inputs.transform_type = (
+                AntsRegistrationSynQuickTransformType.AFFINE
+            )
+        else:
+            ants_registration_node.inputs.dimension = 3
+            ants_registration_node.inputs.transform_type = "a"
+        random_seed = self.parameters.get("random_seed", None)
+        ants_registration_node.inputs.random_seed = random_seed or 0
+
+        return ants_registration_node
