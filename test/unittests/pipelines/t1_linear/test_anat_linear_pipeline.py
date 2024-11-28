@@ -3,6 +3,7 @@ import re
 import pytest
 from packaging.version import Version
 
+from clinica.utils.bids import Visit
 from clinica.utils.testing_utils import build_bids_directory, build_caps_directory
 
 
@@ -115,3 +116,131 @@ def test_anat_linear_dependencies(tmp_path, mocker):
     )
 
     assert pipeline.dependencies == []
+
+
+@pytest.mark.parametrize(
+    "config,expected",
+    [
+        ({}, []),
+        (
+            {
+                "pipelines": {"t1_linear": {"uncropped_image": False}},
+                "subjects": {"sub-01": ["ses-M006"]},
+            },
+            [Visit("sub-01", "ses-M006")],
+        ),
+        (
+            {
+                "pipelines": {"t1_linear": {"uncropped_image": False}},
+                "subjects": {"sub-01": ["ses-M000", "ses-M006"]},
+            },
+            [Visit("sub-01", "ses-M000"), Visit("sub-01", "ses-M006")],
+        ),
+        (
+            {
+                "pipelines": {"t1_linear": {"uncropped_image": False}},
+                "subjects": {
+                    "sub-01": ["ses-M000", "ses-M006"],
+                    "sub-02": ["ses-M000"],
+                },
+            },
+            [
+                Visit("sub-01", "ses-M000"),
+                Visit("sub-01", "ses-M006"),
+                Visit("sub-02", "ses-M000"),
+            ],
+        ),
+    ],
+)
+def test_anat_linear_get_processed_visits_uncropped_images(
+    tmp_path, mocker, config, expected
+):
+    from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
+
+    mocker.patch(
+        "clinica.utils.check_dependency._get_ants_version",
+        return_value=Version("2.2.1"),
+    )
+    bids = build_bids_directory(
+        tmp_path / "bids", {"sub-01": ["ses-M000", "ses-M006"], "sub-02": ["ses-M000"]}
+    )
+    caps = build_caps_directory(tmp_path / "caps", config)
+    pipeline = AnatLinear(
+        bids_directory=str(bids),
+        caps_directory=str(caps),
+        parameters={"uncropped_image": False},
+    )
+    pipeline2 = AnatLinear(
+        bids_directory=str(bids),
+        caps_directory=str(caps),
+        parameters={"uncropped_image": True},
+    )
+
+    assert pipeline.get_processed_images() == expected
+    # pipeline2 always find an empty list of processed images because we want un-cropped images
+    # and the CAPS folder only contains cropped images
+    assert pipeline2.get_processed_images() == []
+
+
+@pytest.mark.parametrize(
+    "config,expected",
+    [
+        ({}, []),
+        (
+            {
+                "pipelines": {"t1_linear": {"uncropped_image": True}},
+                "subjects": {"sub-01": ["ses-M006"]},
+            },
+            [Visit("sub-01", "ses-M006")],
+        ),
+        (
+            {
+                "pipelines": {"t1_linear": {"uncropped_image": True}},
+                "subjects": {"sub-01": ["ses-M000", "ses-M006"]},
+            },
+            [Visit("sub-01", "ses-M000"), Visit("sub-01", "ses-M006")],
+        ),
+        (
+            {
+                "pipelines": {"t1_linear": {"uncropped_image": True}},
+                "subjects": {
+                    "sub-01": ["ses-M000", "ses-M006"],
+                    "sub-02": ["ses-M000"],
+                },
+            },
+            [
+                Visit("sub-01", "ses-M000"),
+                Visit("sub-01", "ses-M006"),
+                Visit("sub-02", "ses-M000"),
+            ],
+        ),
+    ],
+)
+def test_anat_linear_get_processed_visits_cropped_images(
+    tmp_path, mocker, config, expected
+):
+    from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
+
+    mocker.patch(
+        "clinica.utils.check_dependency._get_ants_version",
+        return_value=Version("2.2.1"),
+    )
+    bids = build_bids_directory(
+        tmp_path / "bids", {"sub-01": ["ses-M000", "ses-M006"], "sub-02": ["ses-M000"]}
+    )
+    caps = build_caps_directory(tmp_path / "caps", config)
+    pipeline = AnatLinear(
+        bids_directory=str(bids),
+        caps_directory=str(caps),
+        parameters={"uncropped_image": False},
+    )
+    pipeline2 = AnatLinear(
+        bids_directory=str(bids),
+        caps_directory=str(caps),
+        parameters={"uncropped_image": True},
+    )
+
+    assert pipeline2.get_processed_images() == expected
+    # pipeline always find an empty list of processed images because we want cropped images
+    # and the CAPS folder only contains un-cropped images
+    assert pipeline.get_processed_images() == []
