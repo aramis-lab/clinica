@@ -631,7 +631,7 @@ def test_clinica_file_reader_caps_directory(tmp_path):
     from clinica.utils.inputs import clinica_file_reader
 
     config = {
-        "pipelines": ["t1_linear"],
+        "pipelines": {"t1_linear": {"uncropped_image": True}},
         "subjects": {
             "sub-01": ["ses-M00"],
             "sub-02": ["ses-M00", "ses-M06"],

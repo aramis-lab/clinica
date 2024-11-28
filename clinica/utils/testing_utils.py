@@ -186,13 +186,13 @@ def _build_groups(directory: Path, configuration: dict) -> None:
         (directory / "groups").mkdir()
         for group_label in configuration["groups"]:
             (directory / "groups" / f"group-{group_label}").mkdir()
-            for pipeline in configuration["pipelines"]:
-                (directory / "groups" / f"group-{group_label}" / pipeline).mkdir()
+            for pipeline_name, pipeline_config in configuration["pipelines"].items():
+                (directory / "groups" / f"group-{group_label}" / pipeline_name).mkdir()
                 (
                     directory
                     / "groups"
                     / f"group-{group_label}"
-                    / pipeline
+                    / pipeline_name
                     / f"group-{group_label}_template.nii.gz"
                 ).touch()
 
@@ -205,23 +205,26 @@ def _build_subjects(directory: Path, configuration: dict) -> None:
             (directory / "subjects" / sub).mkdir()
             for ses in sessions:
                 (directory / "subjects" / sub / ses).mkdir()
-                for pipeline in configuration["pipelines"]:
-                    (directory / "subjects" / sub / ses / pipeline).mkdir()
-                    if pipeline == "t1_linear":
-                        _build_t1_linear(directory, sub, ses)
-                    if pipeline == "t1":
+                for pipeline_name, pipeline_config in configuration[
+                    "pipelines"
+                ].items():
+                    (directory / "subjects" / sub / ses / pipeline_name).mkdir()
+                    if pipeline_name == "t1_linear":
+                        _build_t1_linear(directory, sub, ses, pipeline_config)
+                    if pipeline_name == "t1":
                         _build_t1(directory, sub, ses, configuration)
 
 
-def _build_t1_linear(directory: Path, sub: str, ses: str) -> None:
+def _build_t1_linear(directory: Path, sub: str, ses: str, config: dict) -> None:
     """Build a fake t1-linear file structure in a CAPS directory."""
+    uncropped = config.get("uncropped_image", False)
     (
         directory
         / "subjects"
         / sub
         / ses
         / "t1_linear"
-        / f"{sub}_{ses}_T1w_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz"
+        / f"{sub}_{ses}_space-MNI152NLin2009cSym{'' if uncropped else '_desc-Crop'}_res-1x1x1_T1w.nii.gz"
     ).touch()
 
 

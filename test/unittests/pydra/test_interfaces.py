@@ -63,7 +63,7 @@ def test_caps_reader(tmp_path):
 
     structure = {
         "groups": ["UnitTest"],
-        "pipelines": ["t1"],
+        "pipelines": {"t1": {}},
         "subjects": {
             "sub-01": ["ses-M00", "ses-M06"],
             "sub-03": ["ses-M00"],
