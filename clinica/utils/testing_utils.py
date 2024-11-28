@@ -201,17 +201,21 @@ def _build_groups(directory: Path, configuration: dict) -> None:
 def _build_subjects(directory: Path, configuration: dict) -> None:
     """Build a fake subjects file structure in a CAPS directory if requested."""
     if "subjects" in configuration:
-        (directory / "subjects").mkdir()
+        (directory / "subjects").mkdir(exist_ok=True)
         for sub, sessions in configuration["subjects"].items():
-            (directory / "subjects" / sub).mkdir()
+            (directory / "subjects" / sub).mkdir(exist_ok=True)
             for ses in sessions:
-                (directory / "subjects" / sub / ses).mkdir()
+                (directory / "subjects" / sub / ses).mkdir(exist_ok=True)
                 for pipeline_name, pipeline_config in configuration[
                     "pipelines"
                 ].items():
-                    (directory / "subjects" / sub / ses / pipeline_name).mkdir()
+                    (directory / "subjects" / sub / ses / pipeline_name).mkdir(
+                        exist_ok=True
+                    )
                     if pipeline_name == "t1_linear":
                         _build_t1_linear(directory, sub, ses, pipeline_config)
+                    if pipeline_name == "pet_linear":
+                        _build_pet_linear(directory, sub, ses, pipeline_config)
                     if pipeline_name == "t1":
                         _build_t1(directory, sub, ses, configuration)
 
@@ -227,6 +231,19 @@ def _build_t1_linear(directory: Path, sub: str, ses: str, config: dict) -> None:
         / "t1_linear"
         / f"{sub}_{ses}_space-MNI152NLin2009cSym{'' if uncropped else '_desc-Crop'}_res-1x1x1_T1w.nii.gz"
     ).touch()
+
+
+def _build_pet_linear(directory: Path, sub: str, ses: str, config: dict) -> None:
+    """Build a fake pet-linear file structure in a CAPS directory."""
+    from clinica.utils.pet import SUVRReferenceRegion, Tracer
+
+    tracer = Tracer(config["acq_label"])
+    suvr = SUVRReferenceRegion(config["suvr_reference_region"])
+    for filename in (
+        f"{sub}_{ses}_trc-{tracer.value}_pet_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-{suvr.value}_pet.nii.gz",
+        f"{sub}_{ses}_trc-{tracer.value}_pet_space-T1w_rigid.mat",
+    ):
+        (directory / "subjects" / sub / ses / "pet_linear" / filename).touch()
 
 
 def _build_t1(directory: Path, sub: str, ses: str, configuration: dict) -> None:
