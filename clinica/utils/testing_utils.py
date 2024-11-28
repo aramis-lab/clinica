@@ -150,7 +150,8 @@ def build_caps_directory(directory: Path, configuration: dict) -> Path:
         Dictionary containing the configuration for building the fake CAPS
         directory. It should have the following structure:
             - "groups": ["group_labels"...]
-            - "pipelines": ["pipeline_names"...]
+            - "pipelines": {"pipeline_names": config}, where config is a dictionary
+              specifying more details for the files that should be written.
             - "subjects": {"subject_labels": ["session_labels"...]}.
 
     Returns
