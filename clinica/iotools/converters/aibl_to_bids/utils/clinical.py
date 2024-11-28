@@ -512,12 +512,13 @@ def write_scans_tsv(bids_dir: Path, scans_dict: dict) -> None:
 
     supported_modalities = ("anat", "dwi", "func", "pet")
 
+    # todo : what happens now is if it is not a recognized modality it will still write something... not worth it
+
     for sub in scans_dict.keys():
         for session in scans_dict[sub].keys():
             scans_df = pd.DataFrame()
             tsv_file = bids_dir / sub / session / f"{sub}_{session}_scans.tsv"
             tsv_file.unlink(missing_ok=True)
-
             for mod in (bids_dir / sub / session).glob("*"):
                 if mod.name in supported_modalities:
                     for file in [

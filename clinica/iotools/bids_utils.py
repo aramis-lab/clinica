@@ -557,7 +557,6 @@ def write_modality_agnostic_files(
     _write_bidsignore(bids_dir)
 
 
-# todo : test + open issue for usability across converters (though may not be useful if json from dicom)
 def _get_pet_tracer_from_filename(filename: str) -> Tracer:
     """Return the PET tracer from the provided filename.
 
