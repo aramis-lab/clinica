@@ -70,7 +70,7 @@ class AnatLinear(Pipeline):
 
     def get_processed_images(self) -> list[Visit]:
         from clinica.utils.filemanip import extract_visits
-        from clinica.utils.input_files import T1W_LINEAR_CROPPED
+        from clinica.utils.input_files import T1W_LINEAR, T1W_LINEAR_CROPPED
         from clinica.utils.inputs import clinica_file_reader
 
         processed_visits: list[Visit] = []
@@ -79,7 +79,9 @@ class AnatLinear(Pipeline):
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
-                T1W_LINEAR_CROPPED,
+                T1W_LINEAR
+                if self.parameters.get("uncropped_image", False)
+                else T1W_LINEAR_CROPPED,
             )
             processed_visits.extend(extract_visits(cropped_files))
         return processed_visits
