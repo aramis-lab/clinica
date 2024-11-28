@@ -176,10 +176,10 @@ def test_anat_linear_get_processed_visits_uncropped_images(
         parameters={"uncropped_image": True},
     )
 
-    assert pipeline.get_processed_images() == expected
+    assert pipeline.get_processed_visits() == expected
     # pipeline2 always find an empty list of processed images because we want un-cropped images
     # and the CAPS folder only contains cropped images
-    assert pipeline2.get_processed_images() == []
+    assert pipeline2.get_processed_visits() == []
 
 
 @pytest.mark.parametrize(
@@ -240,10 +240,10 @@ def test_anat_linear_get_processed_visits_cropped_images(
         parameters={"uncropped_image": True},
     )
 
-    assert pipeline2.get_processed_images() == expected
+    assert pipeline2.get_processed_visits() == expected
     # pipeline always find an empty list of processed images because we want cropped images
     # and the CAPS folder only contains un-cropped images
-    assert pipeline.get_processed_images() == []
+    assert pipeline.get_processed_visits() == []
 
 
 @pytest.mark.parametrize(

@@ -62,7 +62,7 @@ def test_pet_linear_get_processed_visits_empty(tmp_path, mocker):
             "uncropped_image": False,
         },
     )
-    assert pipeline.get_processed_images() == []
+    assert pipeline.get_processed_visits() == []
 
 
 def test_pet_linear_get_processed_visits(tmp_path, mocker):
@@ -151,7 +151,7 @@ def test_pet_linear_get_processed_visits(tmp_path, mocker):
         },
     )
 
-    assert pipeline.get_processed_images() == [
+    assert pipeline.get_processed_visits() == [
         Visit("sub-01", "ses-M006"),
         Visit("sub-02", "ses-M000"),
     ]

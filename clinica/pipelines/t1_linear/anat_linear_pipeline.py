@@ -68,7 +68,7 @@ class AnatLinear(Pipeline):
             caps_name=caps_name,
         )
 
-    def get_processed_images(self) -> list[Visit]:
+    def get_processed_visits(self) -> list[Visit]:
         from clinica.utils.filemanip import extract_visits
         from clinica.utils.input_files import T1W_LINEAR, T1W_LINEAR_CROPPED
         from clinica.utils.inputs import clinica_file_reader

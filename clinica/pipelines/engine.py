@@ -622,7 +622,7 @@ class Pipeline(Workflow):
         """
         from clinica.utils.stream import log_and_warn
 
-        visits_already_processed = self.get_processed_images()
+        visits_already_processed = self.get_processed_visits()
         if len(visits_already_processed) == 0:
             return
         message = (
@@ -636,10 +636,9 @@ class Pipeline(Workflow):
             visit for visit in self.visits if visit not in visits_already_processed
         ]
 
-    @abc.abstractmethod
-    def get_processed_images(self) -> list[Visit]:
-        """Extract processed image IDs in `caps_directory` based on `subjects`_`sessions`."""
-        raise NotImplemented
+    def get_processed_visits(self) -> list[Visit]:
+        """Examine the files present in the CAPS output folder and return the visits for which processing has already been done."""
+        return []
 
     def _init_nodes(self) -> None:
         """Init the basic workflow and I/O nodes necessary before build."""

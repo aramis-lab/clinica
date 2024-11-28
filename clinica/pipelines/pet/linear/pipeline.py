@@ -32,7 +32,7 @@ class PETLinear(PETPipeline):
         """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
-    def get_processed_images(self) -> list[Visit]:
+    def get_processed_visits(self) -> list[Visit]:
         from clinica.utils.filemanip import extract_visits
         from clinica.utils.input_files import pet_linear_nii
         from clinica.utils.inputs import clinica_file_reader
