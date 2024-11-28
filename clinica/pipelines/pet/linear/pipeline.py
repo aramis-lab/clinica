@@ -46,7 +46,7 @@ class PETLinear(PETPipeline):
                 pet_linear_nii(
                     acq_label=self.parameters["acq_label"],
                     suvr_reference_region=self.parameters["suvr_reference_region"],
-                    uncropped_image=self.parameters["uncropped_image"],
+                    uncropped_image=self.parameters.get("uncropped_image", False),
                 ),
             )
             processed_visits.extend(extract_visits(cropped_files))
