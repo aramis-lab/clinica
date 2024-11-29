@@ -155,3 +155,17 @@ def test_pet_linear_get_processed_visits(tmp_path, mocker):
         Visit("sub-01", "ses-M006"),
         Visit("sub-02", "ses-M000"),
     ]
+
+    # We remove the transformation matrix of the tracer of interest for sub-01 and session M006
+    (
+        caps
+        / "subjects"
+        / "sub-01"
+        / "ses-M006"
+        / "pet_linear"
+        / "sub-01_ses-M006_trc-18FFDG_pet_space-T1w_rigid.mat"
+    ).unlink()
+
+    # The corresponding visit is not considered as "processed" anymore because the transformation is
+    # missing (even though the pet image is still here...)
+    assert pipeline.get_processed_visits() == [Visit("sub-02", "ses-M000")]

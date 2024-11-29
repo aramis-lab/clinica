@@ -33,24 +33,47 @@ class PETLinear(PETPipeline):
         pass
 
     def get_processed_visits(self) -> list[Visit]:
+        """Return a list of visits for which the pipeline is assumed to have run already.
+
+        Before running the pipeline, for a given visit, if both the PET SUVR registered image
+        and the rigid transformation files already exist, then the visit is added to this list.
+        The pipeline will further skip these visits and run processing only for the remaining
+        visits.
+        """
         from clinica.utils.filemanip import extract_visits
-        from clinica.utils.input_files import pet_linear_nii
+        from clinica.utils.input_files import (
+            pet_linear_nii,
+            pet_linear_transformation_matrix,
+        )
         from clinica.utils.inputs import clinica_file_reader
 
-        processed_visits: list[Visit] = []
-        if self.caps_directory.is_dir():
-            cropped_files, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                pet_linear_nii(
-                    acq_label=self.parameters["acq_label"],
-                    suvr_reference_region=self.parameters["suvr_reference_region"],
-                    uncropped_image=self.parameters.get("uncropped_image", False),
-                ),
+        if not self.caps_directory.is_dir():
+            return []
+        pet_registered_image, _ = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.caps_directory,
+            pet_linear_nii(
+                acq_label=self.parameters["acq_label"],
+                suvr_reference_region=self.parameters["suvr_reference_region"],
+                uncropped_image=self.parameters.get("uncropped_image", False),
+            ),
+        )
+        visits_having_pet_image = extract_visits(pet_registered_image)
+        transformation, _ = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.caps_directory,
+            pet_linear_transformation_matrix(tracer=self.parameters["acq_label"]),
+        )
+        visits_having_transformation = extract_visits(transformation)
+        return sorted(
+            list(
+                set(visits_having_pet_image).intersection(
+                    set(visits_having_transformation)
+                )
             )
-            processed_visits.extend(extract_visits(cropped_files))
-        return processed_visits
+        )
 
     def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
