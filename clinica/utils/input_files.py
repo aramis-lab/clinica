@@ -704,6 +704,18 @@ def pet_linear_nii(
     return information
 
 
+def pet_linear_transformation_matrix(tracer: Union[str, Tracer]) -> dict:
+    from pathlib import Path
+
+    tracer = Tracer(tracer)
+
+    return {
+        "pattern": Path("pet_linear") / f"*_trc-{tracer.value}_pet_space-T1w_rigid.mat",
+        "description": "Rigid transformation matrix between the PET and T1w images estimated with ANTs.",
+        "needed_pipeline": "pet-linear",
+    }
+
+
 # CUSTOM
 def custom_pipeline(pattern, description):
     information = {"pattern": pattern, "description": description}
