@@ -223,14 +223,11 @@ def _build_subjects(directory: Path, configuration: dict) -> None:
 def _build_t1_linear(directory: Path, sub: str, ses: str, config: dict) -> None:
     """Build a fake t1-linear file structure in a CAPS directory."""
     uncropped = config.get("uncropped_image", False)
-    (
-        directory
-        / "subjects"
-        / sub
-        / ses
-        / "t1_linear"
-        / f"{sub}_{ses}_space-MNI152NLin2009cSym{'' if uncropped else '_desc-Crop'}_res-1x1x1_T1w.nii.gz"
-    ).touch()
+    for filename in (
+        f"{sub}_{ses}_space-MNI152NLin2009cSym{'' if uncropped else '_desc-Crop'}_res-1x1x1_T1w.nii.gz",
+        f"{sub}_{ses}_space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
+    ):
+        (directory / "subjects" / sub / ses / "t1_linear" / filename).touch()
 
 
 def _build_pet_linear(directory: Path, sub: str, ses: str, config: dict) -> None:

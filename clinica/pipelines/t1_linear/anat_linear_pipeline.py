@@ -69,22 +69,45 @@ class AnatLinear(Pipeline):
         )
 
     def get_processed_visits(self) -> list[Visit]:
+        """Return a list of visits for which the pipeline is assumed to have run already.
+
+        Before running the pipeline, for a given visit, if both the T1w image registered
+        to the MNI152NLin2009cSym template and the affine transformation estimated with ANTs
+        already exist, then the visit is added to this list.
+        The pipeline will further skip these visits and run processing only for the remaining
+        visits.
+        """
         from clinica.utils.filemanip import extract_visits
-        from clinica.utils.input_files import T1W_LINEAR, T1W_LINEAR_CROPPED
+        from clinica.utils.input_files import (
+            T1W_LINEAR,
+            T1W_LINEAR_CROPPED,
+            T1W_TO_MNI_TRANSFORM,
+        )
         from clinica.utils.inputs import clinica_file_reader
 
-        processed_visits: list[Visit] = []
-        if self.caps_directory.is_dir():
-            cropped_files, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                T1W_LINEAR
-                if self.parameters.get("uncropped_image", False)
-                else T1W_LINEAR_CROPPED,
+        if not self.caps_directory.is_dir():
+            return []
+        images, _ = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.caps_directory,
+            T1W_LINEAR
+            if self.parameters.get("uncropped_image", False)
+            else T1W_LINEAR_CROPPED,
+        )
+        visits_having_image = extract_visits(images)
+        transformation, _ = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.caps_directory,
+            T1W_TO_MNI_TRANSFORM,
+        )
+        visits_having_transformation = extract_visits(transformation)
+        return sorted(
+            list(
+                set(visits_having_image).intersection(set(visits_having_transformation))
             )
-            processed_visits.extend(extract_visits(cropped_files))
-        return processed_visits
+        )
 
     def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
