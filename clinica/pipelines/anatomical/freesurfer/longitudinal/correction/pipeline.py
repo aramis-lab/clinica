@@ -1,5 +1,4 @@
 from clinica.pipelines.engine import Pipeline
-from clinica.utils.bids import Visit
 
 
 class T1FreeSurferLongitudinalCorrection(Pipeline):
