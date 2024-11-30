@@ -6,7 +6,26 @@ from collections import namedtuple
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Callable, Iterable, List, Optional, Sequence, Tuple, Union
+
+from .input_files import QueryPattern
+
+__all__ = [
+    "DatasetType",
+    "RemoteFileStructure",
+    "InvalidSubjectSession",
+    "determine_caps_or_bids",
+    "check_bids_folder",
+    "check_caps_folder",
+    "clinica_file_filter",
+    "format_clinica_file_reader_errors",
+    "clinica_file_reader",
+    "clinica_list_of_files_reader",
+    "clinica_group_reader",
+    "compute_sha256_hash",
+    "fetch_file",
+    "get_file_from_server",
+]
 
 
 class DatasetType(str, Enum):
@@ -20,7 +39,9 @@ RemoteFileStructure = namedtuple("RemoteFileStructure", ["filename", "url", "che
 InvalidSubjectSession = namedtuple("InvalidSubjectSession", ["subject", "session"])
 
 
-def insensitive_glob(pattern_glob: str, recursive: Optional[bool] = False) -> List[str]:
+def _insensitive_glob(
+    pattern_glob: str, recursive: Optional[bool] = False
+) -> List[str]:
     """This function is the glob.glob() function that is insensitive to the case.
 
     Parameters
@@ -271,14 +292,14 @@ def check_caps_folder(caps_directory: Union[str, os.PathLike]) -> None:
         raise ClinicaCAPSError(error_string)
 
 
-def find_images_path(
+def _find_images_path(
     input_directory: os.PathLike,
     subject: str,
     session: str,
     errors: List[InvalidSubjectSession],
     valid_paths: List[str],
     is_bids: bool,
-    pattern: str,
+    pattern: QueryPattern,
 ) -> None:
     """Appends the resulting path corresponding to subject, session and pattern in valid_paths.
     If an error is encountered, its (subject,session) couple is added to the list `errors`.
@@ -311,7 +332,7 @@ def find_images_path(
         True if `input_dir` is a BIDS folder, False if `input_dir` is a
         CAPS folder.
 
-    pattern : str
+    pattern : QueryPattern
         Define the pattern of the final file.
     """
     from clinica.utils.stream import cprint
@@ -322,8 +343,8 @@ def find_images_path(
     else:
         origin_pattern = input_directory / "subjects" / subject / session
 
-    current_pattern = origin_pattern / "**" / pattern
-    current_glob_found = insensitive_glob(str(current_pattern), recursive=True)
+    current_pattern = origin_pattern / "**" / pattern.pattern
+    current_glob_found = _insensitive_glob(str(current_pattern), recursive=True)
     if len(current_glob_found) > 1:
         # If we have more than one file at this point, there are two possibilities:
         #   - there is a problem somewhere which made us catch too many files
@@ -429,7 +450,7 @@ def _get_entities(files: List[Path], common_suffix: str) -> dict:
 
 
 def _check_common_properties_of_files(
-    files: List[Path],
+    files: Iterable[Path],
     property_name: str,
     property_extractor: Callable,
 ) -> str:
@@ -437,7 +458,7 @@ def _check_common_properties_of_files(
 
     Parameters
     ----------
-    files : List of Paths
+    files : Iterable of Paths
         List of file paths for which to verify common property.
 
     property_name : str
@@ -501,7 +522,7 @@ _check_common_suffix = partial(
 )
 
 
-def _select_run(files: List[str]) -> str:
+def _select_run(files: Sequence[str]) -> str:
     import numpy as np
 
     runs = [int(_get_run_number(f)) for f in files]
@@ -517,68 +538,19 @@ def _get_run_number(filename: str) -> str:
     raise ValueError(f"Filename {filename} should contain one and only one run entity.")
 
 
-def _check_information(information: Dict) -> None:
-    if not isinstance(information, (dict, list)):
-        raise TypeError(
-            "A dict or list of dicts must be provided for the argument 'information'"
-        )
-
-    if isinstance(information, list):
-        for item in information:
-            if not all(elem in item for elem in ["pattern", "description"]):
-                raise ValueError(
-                    "'information' must contain the keys 'pattern' and 'description'"
-                )
-
-            if not all(
-                elem in ["pattern", "description", "needed_pipeline"]
-                for elem in item.keys()
-            ):
-                raise ValueError(
-                    "'information' can only contain the keys 'pattern', 'description' and 'needed_pipeline'"
-                )
-
-            if isinstance(item["pattern"], str) and item["pattern"][0] == "/":
-                raise ValueError(
-                    "pattern argument cannot start with char: / (does not work in os.path.join function). "
-                    "If you want to indicate the exact name of the file, use the format "
-                    "directory_name/filename.extension or filename.extension in the pattern argument."
-                )
-    else:
-        if not all(elem in information for elem in ["pattern", "description"]):
-            raise ValueError(
-                "'information' must contain the keys 'pattern' and 'description'"
-            )
-
-        if not all(
-            elem in ["pattern", "description", "needed_pipeline"]
-            for elem in information.keys()
-        ):
-            raise ValueError(
-                "'information' can only contain the keys 'pattern', 'description' and 'needed_pipeline'"
-            )
-
-        if isinstance(information["pattern"], str) and information["pattern"][0] == "/":
-            raise ValueError(
-                "pattern argument cannot start with char: / (does not work in os.path.join function). "
-                "If you want to indicate the exact name of the file, use the format "
-                "directory_name/filename.extension or filename.extension in the pattern argument."
-            )
-
-
 def clinica_file_filter(
     subjects: List[str],
     sessions: List[str],
     input_directory: Path,
-    information: Dict,
+    pattern: QueryPattern,
     n_procs: int = 1,
 ) -> Tuple[List[str], List[str], List[str]]:
     from clinica.utils.stream import cprint
 
     files, errors = clinica_file_reader(
-        subjects, sessions, input_directory, information, n_procs
+        subjects, sessions, input_directory, pattern, n_procs
     )
-    cprint(format_clinica_file_reader_errors(errors, information), "warning")
+    cprint(format_clinica_file_reader_errors(errors, pattern), "warning")
     filtered_subjects, filtered_sessions = _remove_sub_ses_from_list(
         subjects, sessions, errors
     )
@@ -586,16 +558,16 @@ def clinica_file_filter(
 
 
 def format_clinica_file_reader_errors(
-    errors: Iterable[InvalidSubjectSession], information: Dict
+    errors: Sequence[InvalidSubjectSession], pattern: QueryPattern
 ) -> str:
     message = (
         f"Clinica encountered {len(errors)} "
-        f"problem(s) while getting {information['description']}:\n"
+        f"problem(s) while getting {pattern.description}:\n"
     )
-    if "needed_pipeline" in information and information["needed_pipeline"]:
+    if pattern.needed_pipeline != "":
         message += (
             "Please note that the following clinica pipeline(s) must "
-            f"have run to obtain these files: {information['needed_pipeline']}\n"
+            f"have run to obtain these files: {pattern.needed_pipeline}\n"
         )
     if errors:
         message += "".join(f"\t* ({err.subject} | {err.session})\n" for err in errors)
@@ -630,10 +602,10 @@ def _remove_sub_ses_from_list(
 
 # todo : generalize
 def clinica_file_reader(
-    subjects: Iterable[str],
-    sessions: Iterable[str],
+    subjects: Sequence[str],
+    sessions: Sequence[str],
     input_directory: os.PathLike,
-    information: Dict,
+    pattern: QueryPattern,
     n_procs: int = 1,
 ) -> Tuple[List[str], List[InvalidSubjectSession]]:
     """Read files in BIDS or CAPS directory based on participant ID(s).
@@ -642,23 +614,17 @@ def clinica_file_reader(
 
     Parameters
     ----------
-    subjects : List[str]
+    subjects : Sequence of str
         List of subjects.
 
-    sessions : List[str]
+    sessions : Sequence of str
         List of sessions. Must be same size as `subjects` and must correspond.
 
     input_directory : PathLike
         Path to the BIDS or CAPS directory to read from.
 
-    information : Dict
-        Dictionary containing all the relevant information to look for the files.
-        The possible keys are:
-
-            - `pattern`: Required. Define the pattern of the final file.
-            - `description`: Required. String to describe what the file is.
-            - `needed_pipeline` : Optional. String describing the pipeline(s)
-              needed to obtain the related file.
+    pattern : QueryPattern
+        Pattern to query files.
 
     n_procs : int, optional
         Number of cores used to fetch files in parallel.
@@ -751,21 +717,12 @@ def clinica_file_reader(
     """
 
     input_directory = Path(input_directory)
-    _check_information(information)
-    pattern = information["pattern"]
-
     is_bids = determine_caps_or_bids(input_directory)
-    if is_bids:
-        check_bids_folder(input_directory)
-    else:
-        check_caps_folder(input_directory)
-
+    (check_bids_folder if is_bids else check_caps_folder)(input_directory)
     if len(subjects) != len(sessions):
         raise ValueError("Subjects and sessions must have the same length.")
-
     if len(subjects) == 0:
         return [], []
-
     file_reader = _read_files_parallel if n_procs > 1 else _read_files_sequential
     return file_reader(
         input_directory,
@@ -782,7 +739,7 @@ def _read_files_parallel(
     subjects: Iterable[str],
     sessions: Iterable[str],
     is_bids: bool,
-    pattern: str,
+    pattern: QueryPattern,
     n_procs: int,
 ) -> Tuple[List[str], List[InvalidSubjectSession]]:
     from multiprocessing import Manager
@@ -793,7 +750,7 @@ def _read_files_parallel(
     shared_results = manager.list()
     shared_errors_encountered = manager.list()
     Parallel(n_jobs=n_procs)(
-        delayed(find_images_path)(
+        delayed(_find_images_path)(
             input_directory,
             sub,
             ses,
@@ -814,22 +771,22 @@ def _read_files_sequential(
     subjects: Iterable[str],
     sessions: Iterable[str],
     is_bids: bool,
-    pattern: str,
+    pattern: QueryPattern,
     **kwargs,
 ) -> Tuple[List[str], List[InvalidSubjectSession]]:
     errors_encountered, results = [], []
     for sub, ses in zip(subjects, sessions):
-        find_images_path(
+        _find_images_path(
             input_directory, sub, ses, errors_encountered, results, is_bids, pattern
         )
     return results, errors_encountered
 
 
 def clinica_list_of_files_reader(
-    participant_ids: List[str],
-    session_ids: List[str],
+    participant_ids: Sequence[str],
+    session_ids: Sequence[str],
     bids_or_caps_directory: os.PathLike,
-    list_information: List[Dict],
+    patterns: Iterable[QueryPattern],
     raise_exception: Optional[bool] = True,
 ) -> List[List[str]]:
     """Read list of BIDS or CAPS files.
@@ -839,19 +796,19 @@ def clinica_list_of_files_reader(
 
     Parameters
     ----------
-    participant_ids : List[str]
+    participant_ids : Sequence of str
         List of participant IDs.
         Example: ['sub-CLNC01', 'sub-CLNC01', 'sub-CLNC02']
 
-    session_ids : List[str]
+    session_ids : Sequence of str
         List of sessions ID associated to `participant_ids`
         Example: ['ses-M00', 'ses-M18', 'ses-M00']
 
     bids_or_caps_directory : PathLike
         Path to the BIDS of CAPS directory to read from.
 
-    list_information : List[Dict]
-        List of information dictionaries described in `clinica_file_reader`.
+    patterns : Iterable of QueryPattern
+        List of query patterns.
 
     raise_exception : bool, optional
         Raise Exception or not. Defaults to True.
@@ -865,19 +822,19 @@ def clinica_list_of_files_reader(
 
     all_errors = []
     list_found_files = []
-    for info_file in list_information:
+    for pattern in patterns:
         files, errors = clinica_file_reader(
             participant_ids,
             session_ids,
             bids_or_caps_directory,
-            info_file,
+            pattern,
         )
         all_errors.append(errors)
         list_found_files.append([] if errors else files)
 
     if any(all_errors) and raise_exception:
         error_message = "Clinica faced error(s) while trying to read files in your BIDS or CAPS directory.\n"
-        for error, info in zip(all_errors, list_information):
+        for error, info in zip(all_errors, patterns):
             error_message += format_clinica_file_reader_errors(error, info)
         raise ClinicaBIDSError(error_message)
 
@@ -886,8 +843,8 @@ def clinica_list_of_files_reader(
 
 def clinica_group_reader(
     caps_directory: os.PathLike,
-    information: Dict,
-    raise_exception: Optional[bool] = True,
+    pattern: QueryPattern,
+    raise_exception: bool = True,
 ) -> str:
     """Read files from CAPS directory based on group ID(s).
 
@@ -899,14 +856,8 @@ def clinica_group_reader(
     caps_directory : PathLike
         Path to the input CAPS directory.
 
-    information : Dict
-        Dictionary containing all the relevant information to look for the files.
-        The possible keys are:
-
-            - `pattern`: Required. Define the pattern of the final file.
-            - `description`: Required. String to describe what the file is.
-            - `needed_pipeline` : Optional. String describing the pipeline(s)
-              needed to obtain the related file.
+    pattern : QueryPattern
+        Query pattern to be used.
 
     raise_exception : bool, optional
         If True, an exception is raised if errors happen.
@@ -923,32 +874,29 @@ def clinica_group_reader(
     ClinicaCAPSError :
         If no file is found, or more than 1 files are found.
     """
-    _check_information(information)
-    pattern = information["pattern"]
     caps_directory = Path(caps_directory)
     check_caps_folder(caps_directory)
-
-    current_pattern = caps_directory / "**" / pattern
-    found_files = insensitive_glob(str(current_pattern), recursive=True)
+    current_pattern = caps_directory / "**" / pattern.pattern
+    found_files = _insensitive_glob(str(current_pattern), recursive=True)
 
     # Since we are returning found_files[0], force raising even if raise_exception is False
     # Otherwise we'll get an uninformative IndexError...
     if (len(found_files) == 0) or (len(found_files) > 1 and raise_exception is True):
-        _format_and_raise_group_reader_errors(caps_directory, found_files, information)
+        _format_and_raise_group_reader_errors(caps_directory, found_files, pattern)
 
     return found_files[0]
 
 
 def _format_and_raise_group_reader_errors(
     caps_directory: os.PathLike,
-    found_files: List,
-    information: Dict,
+    found_files: Sequence[str],
+    pattern: QueryPattern,
 ) -> None:
     # todo : TEST
     from clinica.utils.exceptions import ClinicaCAPSError
 
     error_string = (
-        f"Clinica encountered a problem while getting {information['description']}. "
+        f"Clinica encountered a problem while getting {pattern.description}. "
     )
     if len(found_files) == 0:
         error_string += "No file was found"
@@ -959,7 +907,7 @@ def _format_and_raise_group_reader_errors(
         error_string += (
             f"\n\tCAPS directory: {caps_directory}\n"
             "Please note that the following clinica pipeline(s) must have run to obtain these files: "
-            f"{information['needed_pipeline']}\n"
+            f"{pattern.needed_pipeline}\n"
         )
     raise ClinicaCAPSError(error_string)
 

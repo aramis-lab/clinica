@@ -60,6 +60,7 @@ def test_caps_reader_instantiation(tmp_path, query, grabber, name):
 def test_caps_reader(tmp_path):
     from clinica.pydra.engine_utils import run
     from clinica.pydra.interfaces import caps_reader
+    from clinica.utils.group import GroupID
 
     structure = {
         "groups": ["UnitTest"],
@@ -73,7 +74,7 @@ def test_caps_reader(tmp_path):
     query = CAPSFileQuery(
         {
             "mask_tissues": {"tissue_number": (1, 2, 3), "modulation": False},
-            "flow_fields": {"group_label": "UnitTest"},
+            "flow_fields": {"group_id": GroupID("group-UnitTest")},
             "pvc_mask_tissues": {"tissue_number": (1, 2, 3)},
             "dartel_template": {"group_label": "UnitTest"},
         }
@@ -98,7 +99,7 @@ def test_caps_reader(tmp_path):
         "sub-01_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz",
         "sub-03_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz",
     }
-    query = CAPSGroupQuery({"dartel_template": {"group_label": "UnitTest"}})
+    query = CAPSGroupQuery({"dartel_template": {"group_id": GroupID("group-UnitTest")}})
     task = caps_reader(query, tmp_path)
     results = run(task)
     assert hasattr(results.output, "dartel_template")

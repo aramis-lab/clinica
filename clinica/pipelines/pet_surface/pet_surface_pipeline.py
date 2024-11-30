@@ -1,6 +1,8 @@
 from typing import List
 
 from clinica.pipelines.pet.engine import PETPipeline
+from clinica.utils.image import HemiSphere
+from clinica.utils.input_files import Parcellation
 
 
 class PetSurface(PETPipeline):
@@ -72,11 +74,15 @@ class PetSurface(PETPipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        import clinica.utils.input_files as input_files
         from clinica.iotools.utils.data_handling import (
             check_relative_volume_location_in_world_coordinate_system,
         )
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.input_files import (
+            get_t1_freesurfer_longitudinal_intensity_normalized_volume_after_nu,
+            get_t1_freesurfer_longitudinal_parcellation,
+            get_t1_freesurfer_longitudinal_white_matter_surface,
+        )
         from clinica.utils.inputs import (
             clinica_file_reader,
             clinica_list_of_files_reader,
@@ -100,8 +106,28 @@ class PetSurface(PETPipeline):
             self._get_pet_scans_query(),
         )
         if pet_errors:
-            all_errors.append(format_clinica_file_reader_errors(pet_errors))
+            all_errors.append(
+                format_clinica_file_reader_errors(
+                    pet_errors, self._get_pet_scans_query()
+                )
+            )
 
+        patterns = [
+            get_t1_freesurfer_longitudinal_intensity_normalized_volume_after_nu()
+        ]
+        patterns.extend(
+            [
+                get_t1_freesurfer_longitudinal_white_matter_surface(hemisphere)
+                for hemisphere in (HemiSphere.RIGHT, HemiSphere.LEFT)
+            ]
+        )
+        patterns.extend(
+            [
+                get_t1_freesurfer_longitudinal_parcellation(hemisphere, parcellation)
+                for parcellation in (Parcellation.DESTRIEUX, Parcellation.DESIKAN)
+                for hemisphere in (HemiSphere.LEFT, HemiSphere.RIGHT)
+            ]
+        )
         try:
             (
                 read_parameters_node.inputs.orig_nu,
@@ -115,17 +141,8 @@ class PetSurface(PETPipeline):
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
-                [
-                    input_files.T1_FS_LONG_ORIG_NU,
-                    input_files.T1_FS_LONG_SURF_R,
-                    input_files.T1_FS_LONG_SURF_L,
-                    input_files.T1_FS_LONG_DESTRIEUX_PARC_L,
-                    input_files.T1_FS_LONG_DESTRIEUX_PARC_R,
-                    input_files.T1_FS_LONG_DESIKAN_PARC_L,
-                    input_files.T1_FS_LONG_DESIKAN_PARC_R,
-                ],
+                patterns,
             )
-
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -164,11 +181,15 @@ class PetSurface(PETPipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        import clinica.utils.input_files as input_files
         from clinica.iotools.utils.data_handling import (
             check_relative_volume_location_in_world_coordinate_system,
         )
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.input_files import (
+            get_t1_freesurfer_intensity_normalized_volume_after_nu,
+            get_t1_freesurfer_parcellation,
+            get_t1_freesurfer_white_matter_surface,
+        )
         from clinica.utils.inputs import (
             clinica_file_reader,
             clinica_list_of_files_reader,
@@ -193,6 +214,20 @@ class PetSurface(PETPipeline):
         if pet_errors:
             all_errors.append(format_clinica_file_reader_errors(pet_errors))
 
+        patterns = [get_t1_freesurfer_intensity_normalized_volume_after_nu()]
+        patterns.extend(
+            [
+                get_t1_freesurfer_white_matter_surface(hemisphere)
+                for hemisphere in (HemiSphere.RIGHT, HemiSphere.LEFT)
+            ]
+        )
+        patterns.extend(
+            [
+                get_t1_freesurfer_parcellation(hemisphere, parcellation)
+                for parcellation in (Parcellation.DESTRIEUX, Parcellation.DESIKAN)
+                for hemisphere in (HemiSphere.LEFT, HemiSphere.RIGHT)
+            ]
+        )
         try:
             (
                 read_parameters_node.inputs.orig_nu,
@@ -206,15 +241,7 @@ class PetSurface(PETPipeline):
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
-                [
-                    input_files.T1_FS_ORIG_NU,
-                    input_files.T1_FS_WM_SURF_R,
-                    input_files.T1_FS_WM_SURF_L,
-                    input_files.T1_FS_DESTRIEUX_PARC_L,
-                    input_files.T1_FS_DESTRIEUX_PARC_R,
-                    input_files.T1_FS_DESIKAN_PARC_L,
-                    input_files.T1_FS_DESIKAN_PARC_R,
-                ],
+                patterns,
             )
         except ClinicaException as e:
             all_errors.append(e)

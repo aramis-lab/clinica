@@ -48,9 +48,9 @@ class T1VolumeDartel2MNI(GroupPipeline):
 
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.input_files import (
-            t1_volume_deformation_to_template,
-            t1_volume_final_group_template,
-            t1_volume_native_tpm,
+            get_t1_volume_deformation_to_template,
+            get_t1_volume_group_template,
+            get_t1_volume_tpm,
         )
         from clinica.utils.inputs import (
             clinica_file_reader,
@@ -70,7 +70,6 @@ class T1VolumeDartel2MNI(GroupPipeline):
                 f"Group {self.group_label} does not exist. "
                 "Did you run t1-volume or t1-volume-create-dartel pipeline?"
             )
-
         all_errors = []
         read_input_node = npe.Node(
             name="LoadingCLIArguments",
@@ -78,18 +77,18 @@ class T1VolumeDartel2MNI(GroupPipeline):
                 fields=self.get_input_fields(), mandatory_inputs=True
             ),
         )
-
         # Segmented Tissues
         # =================
+        patterns = [
+            get_t1_volume_tpm(tissue_number, modulation=False, mni_space=False)
+            for tissue_number in self.parameters["tissues"]
+        ]
         try:
             tissues_input = clinica_list_of_files_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
-                [
-                    t1_volume_native_tpm(tissue_number)
-                    for tissue_number in self.parameters["tissues"]
-                ],
+                patterns,
             )
             # Tissues_input has a length of len(self.parameters['mask_tissues']). Each of these elements has a size of
             # len(self.subjects). We want the opposite : a list of size len(self.subjects) whose elements have a size of
@@ -103,25 +102,26 @@ class T1VolumeDartel2MNI(GroupPipeline):
 
         # Flow Fields
         # ===========
+        pattern = get_t1_volume_deformation_to_template(self.group_id)
         read_input_node.inputs.flowfield_files, flowfield_errors = clinica_file_reader(
             self.subjects,
             self.sessions,
             self.caps_directory,
-            t1_volume_deformation_to_template(self.group_label),
+            pattern,
         )
         if flowfield_errors:
-            all_errors.append(format_clinica_file_reader_errors(flowfield_errors))
+            all_errors.append(
+                format_clinica_file_reader_errors(flowfield_errors, pattern)
+            )
 
         # Dartel Template
         # ================
         try:
             read_input_node.inputs.template_file = clinica_group_reader(
-                self.caps_directory,
-                t1_volume_final_group_template(self.group_label),
+                self.caps_directory, get_t1_volume_group_template(self.group_id)
             )
         except ClinicaException as e:
             all_errors.append(e)
-
         if any(all_errors):
             error_message = "Clinica faced error(s) while trying to read files in your CAPS/BIDS directories.\n"
             for msg in all_errors:

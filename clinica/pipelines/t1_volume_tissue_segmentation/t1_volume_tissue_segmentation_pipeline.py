@@ -75,8 +75,7 @@ class T1VolumeTissueSegmentation(Pipeline):
         from clinica.iotools.utils.data_handling import (
             check_volume_location_in_world_coordinate_system,
         )
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
-        from clinica.utils.input_files import T1W_NII
+        from clinica.utils.input_files import get_t1w_mri
         from clinica.utils.inputs import clinica_file_filter
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
@@ -85,7 +84,7 @@ class T1VolumeTissueSegmentation(Pipeline):
         # ========================
         # T1w file:
         t1w_files, subjects, sessions = clinica_file_filter(
-            self.subjects, self.sessions, self.bids_directory, T1W_NII
+            self.subjects, self.sessions, self.bids_directory, get_t1w_mri()
         )
         self.subjects = subjects
         self.sessions = sessions

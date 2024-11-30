@@ -110,6 +110,7 @@ class StatisticsSurface(GroupPipeline):
     def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.input_files import QueryPattern
         from clinica.utils.inputs import clinica_list_of_files_reader
 
         # Check if already present in CAPS
@@ -118,35 +119,36 @@ class StatisticsSurface(GroupPipeline):
         # Note(AR): if the user wants to compare Cortical Thickness measure with PET measure
         # using the group_id, Clinica won't allow it.
         # TODO: Modify this behaviour
-        group_folder = self.caps_directory / "groups" / str(self.group_id)
-        if group_folder.exists():
+        if self.group_directory.exists():
             raise ClinicaException(
-                f"Group label {self.group_label} already exists (found in {group_folder})."
+                f"Group label {self.group_label} already exists (found in {self.group_directory})."
                 "Please choose another one or delete the existing folder and "
                 "also the working directory and rerun the pipeline."
             )
 
         # Check input files
-        surface_query = []
+        patterns: list[QueryPattern] = []
         # clinica_files_reader expects regexp to start at subjects/ so sub-*/ses-*/ is removed here
         fwhm = str(self.parameters["full_width_at_half_maximum"])
         for direction, hemi in zip(["left", "right"], ["lh", "rh"]):
             cut_pattern = "sub-*/ses-*/"
             query = {"subject": "sub-*", "session": "ses-*", "hemi": hemi, "fwhm": fwhm}
             pattern_hemisphere = self.parameters["custom_file"] % query
-            surface_based_info = {
-                "pattern": pattern_hemisphere[
-                    pattern_hemisphere.find(cut_pattern) + len(cut_pattern) :
-                ],
-                "description": f"surface-based features on {direction} hemisphere at FWHM = {fwhm}",
-            }
-            surface_query.append(surface_based_info)
+            patterns.append(
+                QueryPattern(
+                    pattern_hemisphere[
+                        pattern_hemisphere.find(cut_pattern) + len(cut_pattern) :
+                    ],
+                    f"surface-based features on {direction} hemisphere at FWHM = {fwhm}",
+                    "",
+                )
+            )
         try:
             clinica_list_of_files_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
-                surface_query,
+                patterns,
             )
         except ClinicaException as e:
             raise RuntimeError(e)

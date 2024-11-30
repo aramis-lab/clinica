@@ -4,6 +4,13 @@ from typing import List
 from nipype import config
 
 from clinica.pipelines.dwi.preprocessing.engine import DWIPreprocessingPipeline
+from clinica.utils.input_files import (
+    DWIFileType,
+    get_dwi_file,
+    get_dwi_fmap_magnitude1_file,
+    get_dwi_fmap_phasediff_file,
+    get_dwi_preprocessed_file,
+)
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
@@ -30,13 +37,15 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
         caps_directory: Path, subjects: List[str], sessions: List[str]
     ) -> List[str]:
         from clinica.utils.filemanip import extract_image_ids
-        from clinica.utils.input_files import DWI_PREPROC_NII
         from clinica.utils.inputs import clinica_file_reader
 
         image_ids: List[str] = []
         if caps_directory.is_dir():
             preproc_files, _ = clinica_file_reader(
-                subjects, sessions, caps_directory, DWI_PREPROC_NII
+                subjects,
+                sessions,
+                caps_directory,
+                get_dwi_preprocessed_file(DWIFileType.NII),
             )
             image_ids = extract_image_ids(preproc_files)
         return image_ids
@@ -97,32 +106,31 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.utils.filemanip import save_participants_sessions
-        from clinica.utils.input_files import (
-            DWI_BVAL,
-            DWI_BVEC,
-            DWI_JSON,
-            DWI_NII,
-            FMAP_MAGNITUDE1_NII,
-            FMAP_PHASEDIFF_JSON,
-            FMAP_PHASEDIFF_NII,
-        )
         from clinica.utils.inputs import clinica_list_of_files_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
+        patterns = [
+            get_dwi_file(file_type)
+            for file_type in (
+                DWIFileType.NII,
+                DWIFileType.BVEC,
+                DWIFileType.BVAL,
+                DWIFileType.JSON,
+            )
+        ]
+        patterns.append(get_dwi_fmap_magnitude1_file(DWIFileType.NII))
+        patterns.extend(
+            [
+                get_dwi_fmap_phasediff_file(file_type)
+                for file_type in (DWIFileType.NII, DWIFileType.JSON)
+            ]
+        )
         list_bids_files = clinica_list_of_files_reader(
             self.subjects,
             self.sessions,
             self.bids_directory,
-            [
-                DWI_NII,
-                DWI_BVEC,
-                DWI_BVAL,
-                DWI_JSON,
-                FMAP_MAGNITUDE1_NII,
-                FMAP_PHASEDIFF_NII,
-                FMAP_PHASEDIFF_JSON,
-            ],
+            patterns,
             raise_exception=True,
         )
         save_participants_sessions(
@@ -131,9 +139,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(DWIPreprocessingPipeline):
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
             cprint(
-                f"List available in {self.base_dir / self.name / 'participants.tsv'}"
-            )
-            cprint(
+                f"List available in {self.base_dir / self.name / 'participants.tsv'}\n"
                 "Computational time will depend of the number of volumes in your DWI dataset and the use of CUDA."
             )
 

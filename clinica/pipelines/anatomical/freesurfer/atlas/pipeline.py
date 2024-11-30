@@ -51,7 +51,12 @@ class T1FreeSurferAtlas(Pipeline):
             get_processed_images,
         )
         from clinica.utils.filemanip import extract_image_ids
-        from clinica.utils.input_files import T1_FS_DESTRIEUX
+        from clinica.utils.image import HemiSphere
+        from clinica.utils.input_files import (
+            Parcellation,
+            get_t1_freesurfer_segmentation,
+            get_t1_freesurfer_statistics,
+        )
         from clinica.utils.inputs import clinica_file_reader
 
         part_ids, sess_ids, list_long_id = grab_image_ids_from_caps_directory(
@@ -66,13 +71,6 @@ class T1FreeSurferAtlas(Pipeline):
 
         if caps_directory.is_dir():
             for atlas in atlas_list:
-                atlas_info = dict(
-                    {
-                        "pattern": f"t1/freesurfer_cross_sectional/sub-*_ses-*/stats/rh.{atlas}.stats",
-                        "description": f"{atlas}-based segmentation",
-                        "needed_pipeline": "t1-freesurfer",
-                    }
-                )
                 t1_freesurfer_longitudinal_output = get_processed_images(
                     caps_directory, part_ids, sess_ids, list_long_id
                 )
@@ -87,13 +85,13 @@ class T1FreeSurferAtlas(Pipeline):
                     subjects,
                     sessions,
                     caps_directory,
-                    T1_FS_DESTRIEUX,
+                    get_t1_freesurfer_segmentation(Parcellation.DESTRIEUX),
                 )
                 t1_freesurfer_files, _ = clinica_file_reader(
                     subjects,
                     sessions,
                     caps_directory,
-                    atlas_info,
+                    get_t1_freesurfer_statistics(atlas, HemiSphere.RIGHT),
                 )
                 image_ids = extract_image_ids(t1_freesurfer_files)
                 image_ids_2 = extract_image_ids(t1_freesurfer_output)

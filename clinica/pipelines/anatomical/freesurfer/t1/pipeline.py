@@ -21,13 +21,19 @@ class T1FreeSurfer(Pipeline):
         caps_directory: Path, subjects: List[str], sessions: List[str]
     ) -> List[str]:
         from clinica.utils.filemanip import extract_image_ids
-        from clinica.utils.input_files import T1_FS_DESTRIEUX
+        from clinica.utils.input_files import (
+            Parcellation,
+            get_t1_freesurfer_segmentation,
+        )
         from clinica.utils.inputs import clinica_file_reader
 
         image_ids: List[str] = []
         if caps_directory.is_dir():
             t1_freesurfer_files, _ = clinica_file_reader(
-                subjects, sessions, caps_directory, T1_FS_DESTRIEUX
+                subjects,
+                sessions,
+                caps_directory,
+                get_t1_freesurfer_segmentation(Parcellation.DESTRIEUX),
             )
             image_ids = extract_image_ids(t1_freesurfer_files)
         return image_ids
@@ -96,7 +102,7 @@ class T1FreeSurfer(Pipeline):
             extract_subjects_sessions_from_filename,
             save_participants_sessions,
         )
-        from clinica.utils.input_files import T1W_NII
+        from clinica.utils.input_files import get_t1w_mri
         from clinica.utils.inputs import clinica_file_filter
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
@@ -131,9 +137,8 @@ class T1FreeSurfer(Pipeline):
                 )
 
         t1w_files, self.subjects, self.sessions = clinica_file_filter(
-            self.subjects, self.sessions, self.bids_directory, T1W_NII
+            self.subjects, self.sessions, self.bids_directory, get_t1w_mri()
         )
-
         if not t1w_files:
             raise ClinicaException("Empty dataset or already processed")
 

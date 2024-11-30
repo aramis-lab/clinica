@@ -43,15 +43,14 @@ class StatisticsVolumeCorrection(Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
+        from clinica.utils.input_files import QueryPattern
         from clinica.utils.inputs import clinica_group_reader
 
         t_map = clinica_group_reader(
             self.caps_directory,
-            {
-                "pattern": self.parameters["t_map"] + "*",
-                "description": "statistics t map",
-                "needed_pipeline": "statistics-volume",
-            },
+            QueryPattern(
+                self.parameters["t_map"] + "*", "statistics t map", "statistics-volume"
+            ),
         )
 
         read_parameters_node = npe.Node(

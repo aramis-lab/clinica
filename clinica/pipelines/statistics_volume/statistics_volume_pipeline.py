@@ -1,6 +1,7 @@
 from typing import List
 
 from clinica.pipelines.engine import GroupPipeline
+from clinica.utils.input_files import QueryPattern
 from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
 
@@ -93,14 +94,20 @@ class StatisticsVolume(GroupPipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.group import GroupID, GroupLabel
         from clinica.utils.input_files import (
-            pet_volume_normalized_suvr_pet,
-            t1_volume_template_tpm_in_mni,
+            get_pet_volume_normalized_suvr,
+            get_t1_volume_template_tpm_in_mni,
         )
         from clinica.utils.inputs import clinica_file_filter
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_begin_image, print_images_to_process
 
+        dartel_group_id = None
+        if self.parameters["group_label_dartel"] != "*":
+            dartel_group_id = GroupID.from_label(
+                GroupLabel(self.parameters["group_label_dartel"])
+            )
         if self.parameters["orig_input_data_volume"] == "pet-volume":
             if not (
                 self.parameters["acq_label"]
@@ -114,9 +121,9 @@ class StatisticsVolume(GroupPipeline):
                 )
 
             self.parameters["measure_label"] = self.parameters["acq_label"].value
-            information_dict = pet_volume_normalized_suvr_pet(
-                acq_label=self.parameters["acq_label"],
-                group_label=self.parameters["group_label_dartel"],
+            pattern = get_pet_volume_normalized_suvr(
+                tracer=self.parameters["acq_label"],
+                group_id=dartel_group_id,
                 suvr_reference_region=self.parameters["suvr_reference_region"],
                 use_brainmasked_image=True,
                 use_pvc_data=self.parameters["use_pvc_data"],
@@ -124,13 +131,12 @@ class StatisticsVolume(GroupPipeline):
             )
         elif self.parameters["orig_input_data_volume"] == "t1-volume":
             self.parameters["measure_label"] = "graymatter"
-            information_dict = t1_volume_template_tpm_in_mni(
-                group_label=self.parameters["group_label_dartel"],
-                tissue_number=1,
+            pattern = get_t1_volume_template_tpm_in_mni(
+                group_id=dartel_group_id,
+                tissue=1,
                 modulation=True,
                 fwhm=self.parameters["full_width_at_half_maximum"],
             )
-
         elif self.parameters["orig_input_data_volume"] == "custom-pipeline":
             if not self.parameters["custom_file"]:
                 raise ClinicaException(
@@ -138,17 +144,16 @@ class StatisticsVolume(GroupPipeline):
                 )
             # If custom file are grabbed, information of fwhm is irrelevant and should not appear on final filenames
             self.parameters["full_width_at_half_maximum"] = None
-            information_dict = {
-                "pattern": self.parameters["custom_file"],
-                "description": "custom file provided by user",
-            }
+            pattern = QueryPattern(
+                self.parameters["custom_file"], "custom file provided by user", ""
+            )
         else:
             raise ValueError(
                 f"Input data {self.parameters['orig_input_data_volume']} unknown."
             )
 
         input_files, self.subjects, self.sessions = clinica_file_filter(
-            self.subjects, self.sessions, self.caps_directory, information_dict
+            self.subjects, self.sessions, self.caps_directory, pattern
         )
 
         read_parameters_node = npe.Node(

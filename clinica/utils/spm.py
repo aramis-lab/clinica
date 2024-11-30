@@ -3,6 +3,7 @@ import warnings
 from enum import Enum
 from os import PathLike
 from pathlib import Path
+from typing import Union
 
 __all__ = [
     "SPMTissue",
@@ -23,7 +24,9 @@ class SPMTissue(str, Enum):
     BACKGROUND = "background"
 
 
-def get_spm_tissue_from_index(index: int) -> SPMTissue:
+def get_spm_tissue_from_index(index: Union[int, SPMTissue]) -> SPMTissue:
+    if isinstance(index, SPMTissue):
+        return index
     if index == 1:
         return SPMTissue.GRAY_MATTER
     if index == 2:
