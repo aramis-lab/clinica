@@ -40,6 +40,8 @@ class PETLinear(PETPipeline):
         The pipeline will further skip these visits and run processing only for the remaining
         visits.
         """
+        from functools import reduce
+
         from clinica.utils.filemanip import extract_visits
         from clinica.utils.input_files import (
             pet_linear_nii,
@@ -59,21 +61,23 @@ class PETLinear(PETPipeline):
                 uncropped_image=self.parameters.get("uncropped_image", False),
             ),
         )
-        visits_having_pet_image = extract_visits(pet_registered_image)
+        visits = [set(extract_visits(pet_registered_image))]
         transformation, _ = clinica_file_reader(
             self.subjects,
             self.sessions,
             self.caps_directory,
             pet_linear_transformation_matrix(tracer=self.parameters["acq_label"]),
         )
-        visits_having_transformation = extract_visits(transformation)
-        return sorted(
-            list(
-                set(visits_having_pet_image).intersection(
-                    set(visits_having_transformation)
-                )
+        visits.append(set(extract_visits(transformation)))
+        if self.parameters.get("save_PETinT1w", False):
+            pet_image_in_t1w_space, _ = clinica_file_reader(
+                self.subjects,
+                self.sessions,
+                self.caps_directory,
+                pet_linear_nii(acq_label=self.parameters["acq_label"], space="T1w"),
             )
-        )
+            visits.append(set(extract_visits(pet_image_in_t1w_space)))
+        return sorted(list(reduce(lambda x, y: x.intersection(y), visits)))
 
     def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
