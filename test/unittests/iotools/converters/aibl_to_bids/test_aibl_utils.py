@@ -8,7 +8,10 @@ from pandas.testing import assert_frame_equal
 def build_bids_dir(tmp_path: Path) -> Path:
     bids_dir = tmp_path / "BIDS"
     bids_dir.mkdir()
-    (bids_dir / "sub-AIBL1" / "ses-M000").mkdir(parents=True)
+    (bids_dir / "sub-AIBL1" / "ses-M000" / "anat").mkdir(parents=True)
+    (
+        bids_dir / "sub-AIBL1" / "ses-M000" / "anat" / "sub-AIBL1_ses-M000_T1w.nii.gz"
+    ).touch()
     (bids_dir / "sub-AIBL100" / "ses-M000").mkdir(parents=True)
     (bids_dir / "sub-AIBL100" / "ses-M012").mkdir(parents=True)
     (bids_dir / "sub-AIBL109" / "ses-M000").mkdir(parents=True)
@@ -694,3 +697,38 @@ def test_create_scans_dict(tmp_path):
     }
 
     assert result == expected
+
+
+def test_write_scans_tsv(tmp_path):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import write_scans_tsv
+    from clinica.utils.pet import Tracer
+
+    scans_dict = {
+        "sub-AIBL1": {
+            "ses-M000": {
+                "T1/DWI/fMRI/FMAP": {"acq_time": "2001-01-01T00:00:00"},
+                Tracer.PIB: {"acq_time": "n/a"},
+                Tracer.AV45: {"acq_time": "n/a"},
+                Tracer.FMM: {"acq_time": "n/a"},
+            }
+        }
+    }
+
+    bids_dir = build_bids_dir(tmp_path)
+
+    write_scans_tsv(bids_dir, scans_dict)
+
+    result_list = list(bids_dir.rglob("*sub-AIBL1_ses-M000_scans.tsv"))
+
+    assert len(result_list) == 1
+
+    result = pd.read_csv(result_list[0], sep="\t")
+    expected = pd.DataFrame(
+        {
+            "filename": "anat / sub-AIBL1_ses-M000_T1w.nii.gz",
+            "acq_time": "2001-01-01T00:00:00",
+        },
+        index=[0],
+    )
+
+    assert_frame_equal(result, expected)

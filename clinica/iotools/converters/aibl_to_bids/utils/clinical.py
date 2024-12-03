@@ -512,8 +512,6 @@ def write_scans_tsv(bids_dir: Path, scans_dict: dict) -> None:
 
     supported_modalities = ("anat", "dwi", "func", "pet")
 
-    # todo : what happens now is if it is not a recognized modality it will still write something... not worth it
-
     for sub in scans_dict.keys():
         for session in scans_dict[sub].keys():
             scans_df = pd.DataFrame()
@@ -534,5 +532,5 @@ def write_scans_tsv(bids_dir: Path, scans_dict: dict) -> None:
                         )
                         row_to_append.insert(0, "filename", f"{mod.name} / {file.name}")
                         scans_df = pd.concat([scans_df, row_to_append])
-            scans_df = scans_df.fillna("n/a")
-            scans_df.to_csv(tsv_file, sep="\t", encoding="utf8", index=False)
+                scans_df = scans_df.fillna("n/a")
+                scans_df.to_csv(tsv_file, sep="\t", encoding="utf8", index=False)
