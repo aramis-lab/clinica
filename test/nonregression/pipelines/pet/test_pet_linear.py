@@ -23,6 +23,7 @@ def run_pet_linear(
     parameters = {
         "acq_label": Tracer.FDG,
         "suvr_reference_region": SUVRReferenceRegion.PONS,
+        "save_PETinT1w": True,
     }
 
     pipeline = PETLinear(
