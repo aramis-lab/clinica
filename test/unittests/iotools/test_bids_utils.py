@@ -8,10 +8,12 @@ import pytest
 
 from clinica.iotools.bids_utils import (
     StudyName,
+    _get_pet_tracer_from_filename,
     _write_bids_validator_config,
     _write_bidsignore,
     _write_readme,
 )
+from clinica.utils.pet import Tracer
 
 MODALITY_AGNOSTIC_FILE_WRITERS = {
     #    "readme": _write_readme,
@@ -39,6 +41,37 @@ EXPECTED_README_CONTENT = Template(
         "Find more about it and about the data user agreement: link"
     )
 )
+
+
+@pytest.mark.parametrize(
+    "filename, expected",
+    [
+        ("sub-1_ses-1_trc-18FFDG_pet.nii.gz", Tracer.FDG),
+        ("sub-1_ses-1_acq-18FFDG_pet.nii.gz", Tracer.FDG),
+        ("sub-1_ses-1_trc-18FFDG_acq-18FFDG_pet.nii.gz", Tracer.FDG),
+        ("sub-1_ses-1_trc-11CPIB_pet.nii.gz", Tracer.PIB),
+        ("sub-1_ses-1_trc-18FFBB_pet.nii.gz", Tracer.FBB),
+        ("sub-1_ses-1_trc-18FFMM_pet.nii.gz", Tracer.FMM),
+        ("sub-1_ses-1_trc-18FAV1451_pet.nii.gz", Tracer.AV1451),
+        ("sub-1_ses-1_trc-18FAV45_pet.nii.gz", Tracer.AV45),
+    ],
+)
+def test_get_pet_tracer_from_filename_success(filename, expected):
+    assert expected == _get_pet_tracer_from_filename(filename)
+
+
+@pytest.mark.parametrize(
+    "filename",
+    [
+        "sub-1_ses-1_trc18FFDG_pet.nii.gz",
+        "sub-1_ses-1_trc-///_pet.nii.gz",
+        "sub-1_ses-1_trc-foo_pet.nii.gz",
+        "sub-1_ses-1_pet.nii.gz",
+    ],
+)
+def test_get_pet_tracer_from_filename_error(filename):
+    with pytest.raises(ValueError):
+        _get_pet_tracer_from_filename(filename)
 
 
 @pytest.mark.parametrize(
