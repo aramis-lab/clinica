@@ -487,7 +487,6 @@ def create_scans_dict(
     return scans_dict
 
 
-# todo : test
 def write_scans_tsv(bids_dir: Path, scans_dict: dict) -> None:
     """Write the scans dict into TSV files.
 
