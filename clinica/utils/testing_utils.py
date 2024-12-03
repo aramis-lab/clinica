@@ -236,6 +236,15 @@ def _build_pet_linear(directory: Path, sub: str, ses: str, config: dict) -> None
 
     tracer = Tracer(config["acq_label"])
     suvr = SUVRReferenceRegion(config["suvr_reference_region"])
+    if config.get("save_PETinT1w", False):
+        (
+            directory
+            / "subjects"
+            / sub
+            / ses
+            / "pet_linear"
+            / f"{sub}_{ses}_trc-{tracer.value}_pet_space-T1w_pet.nii.gz"
+        ).touch()
     for filename in (
         f"{sub}_{ses}_trc-{tracer.value}_pet_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-{suvr.value}_pet.nii.gz",
         f"{sub}_{ses}_trc-{tracer.value}_pet_space-T1w_rigid.mat",

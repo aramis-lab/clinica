@@ -88,6 +88,7 @@ def test_pet_linear_get_processed_visits(tmp_path, mocker):
             ├── ses-M000
             │         └── pet_linear
             │             ├── sub-02_ses-M000_trc-18FFDG_pet_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-pons_pet.nii.gz
+            │             ├── sub-02_ses-M000_trc-18FFDG_pet_space-T1w_pet.nii.gz
             │             └── sub-02_ses-M000_trc-18FFDG_pet_space-T1w_rigid.mat
             └── ses-M006
                 └── pet_linear
@@ -116,6 +117,7 @@ def test_pet_linear_get_processed_visits(tmp_path, mocker):
                     "acq_label": Tracer.FDG,
                     "suvr_reference_region": SUVRReferenceRegion.PONS,
                     "uncropped_image": False,
+                    "save_PETinT1w": True,
                 }
             },
             "subjects": {
@@ -140,6 +142,26 @@ def test_pet_linear_get_processed_visits(tmp_path, mocker):
             },
         },
     )
+    # We remove the pet image registered on the T1w image for sub-01 and session M006
+    (
+        caps
+        / "subjects"
+        / "sub-01"
+        / "ses-M006"
+        / "pet_linear"
+        / "sub-01_ses-M006_trc-18FFDG_pet_space-T1w_pet.nii.gz"
+    ).unlink()
+    pipeline = PETLinear(
+        bids_directory=str(bids),
+        caps_directory=str(caps),
+        parameters={
+            "acq_label": Tracer.FDG,
+            "suvr_reference_region": SUVRReferenceRegion.PONS,
+            "uncropped_image": False,
+            "save_PETinT1w": True,
+        },
+    )
+    assert pipeline.get_processed_visits() == [Visit("sub-02", "ses-M000")]
 
     pipeline = PETLinear(
         bids_directory=str(bids),
@@ -148,6 +170,7 @@ def test_pet_linear_get_processed_visits(tmp_path, mocker):
             "acq_label": Tracer.FDG,
             "suvr_reference_region": SUVRReferenceRegion.PONS,
             "uncropped_image": False,
+            "save_PETinT1w": False,
         },
     )
 
