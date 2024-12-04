@@ -500,7 +500,12 @@ class PETLinear(PETPipeline):
                     (
                         clipping_node,
                         ants_applytransform_optional_node,
-                        [("output_image", "input_image"), ("t1w", "reference_image")],
+                        [("output_image", "input_image")],
+                    ),
+                    (
+                        self.input_node,
+                        ants_applytransform_optional_node,
+                        [("t1w", "reference_image")],
                     ),
                     (
                         ants_registration_node,
