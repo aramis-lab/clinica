@@ -216,15 +216,48 @@ def _build_subjects(directory: Path, configuration: dict) -> None:
                 for pipeline_name, pipeline_config in configuration[
                     "pipelines"
                 ].items():
-                    (directory / "subjects" / sub / ses / pipeline_name).mkdir(
-                        exist_ok=True
-                    )
+                    if pipeline_name.startswith("t1_volume"):
+                        (directory / "subjects" / sub / ses / "t1").mkdir(exist_ok=True)
+                    else:
+                        (directory / "subjects" / sub / ses / pipeline_name).mkdir(
+                            exist_ok=True
+                        )
                     if pipeline_name == "t1_linear":
                         _build_t1_linear(directory, sub, ses, pipeline_config)
                     if pipeline_name == "pet_linear":
                         _build_pet_linear(directory, sub, ses, pipeline_config)
                     if pipeline_name == "t1":
                         _build_t1(directory, sub, ses, configuration)
+                    if pipeline_name == "t1_volume_tissue_segmentation":
+                        _build_t1_volume_tissue_segmentation(
+                            directory, sub, ses, configuration
+                        )
+
+
+def _build_t1_volume_tissue_segmentation(
+    directory: Path, sub: str, ses: str, config: dict
+) -> None:
+    """Build a fake t1-volume-tissue-segmentation file structure in a CAPS directory."""
+    segmentation_folder = (
+        directory / "subjects" / sub / ses / "t1" / "spm" / "segmentation"
+    )
+    segmentation_folder.mkdir(parents=True, exist_ok=True)
+    folders = ["dartel_input", "native_space", "normalized_space"]
+    for folder in folders:
+        (segmentation_folder / folder).mkdir(exist_ok=True)
+    for tissue in ("csf", "graymatter", "whitematter"):
+        common_filename_part = f"{sub}_{ses}_T1w_segm-{tissue}"
+        for folder, filename_end in zip(
+            folders,
+            [
+                "dartelinput.nii.gz",
+                "probability.nii.gz",
+                "space-Ixi549Space_modulated-off_probability.nii.gz",
+            ],
+        ):
+            (
+                segmentation_folder / folder / f"{common_filename_part}_{filename_end}"
+            ).touch()
 
 
 def _build_t1_linear(directory: Path, sub: str, ses: str, config: dict) -> None:
