@@ -13,7 +13,7 @@ def test_dwi_preprocessing_using_t1_info_loading(tmp_path):
     caps = build_caps_directory(
         tmp_path / "caps",
         {
-            "pipelines": ["dwi-preprocessing-using-t1"],
+            "pipelines": {"dwi-preprocessing-using-t1": {}},
             "subjects": {"sub-01": ["ses-M000"]},
         },
     )
@@ -66,7 +66,7 @@ def test_dwi_preprocessing_using_t1_dependencies(tmp_path, mocker):
     caps = build_caps_directory(
         tmp_path / "caps",
         {
-            "pipelines": ["dwi-preprocessing-using-t1"],
+            "pipelines": {"dwi-preprocessing-using-t1": {}},
             "subjects": {"sub-01": ["ses-M000"]},
         },
     )

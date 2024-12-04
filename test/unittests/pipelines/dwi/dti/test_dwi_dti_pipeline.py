@@ -6,7 +6,7 @@ def test_dwi_dti_info_loading(tmp_path):
 
     caps = build_caps_directory(
         tmp_path / "caps",
-        {"pipelines": ["dwi-dti"], "subjects": {"sub-01": ["ses-M000"]}},
+        {"pipelines": {"dwi-dti": {}}, "subjects": {"sub-01": ["ses-M000"]}},
     )
     pipeline = DwiDti(caps_directory=str(caps))
 
@@ -45,7 +45,7 @@ def test_dwi_dti_dependencies(tmp_path, mocker):
     )
     caps = build_caps_directory(
         tmp_path / "caps",
-        {"pipelines": ["dwi-dti"], "subjects": {"sub-01": ["ses-M000"]}},
+        {"pipelines": {"dwi-dti": {}}, "subjects": {"sub-01": ["ses-M000"]}},
     )
     pipeline = DwiDti(caps_directory=str(caps))
 

@@ -680,28 +680,71 @@ def pet_volume_normalized_suvr_pet(
     return information
 
 
+def _clean_pattern(pattern: str, character: str = "*") -> str:
+    """Removes multiple '*' wildcards in provided pattern."""
+    cleaned = []
+    for c in pattern:
+        if not cleaned or not cleaned[-1] == c == character:
+            cleaned.append(c)
+    return "".join(cleaned)
+
+
 def pet_linear_nii(
-    acq_label: Union[str, Tracer],
-    suvr_reference_region: Union[str, SUVRReferenceRegion],
-    uncropped_image: bool,
+    acq_label: Optional[Union[str, Tracer]] = None,
+    suvr_reference_region: Optional[Union[str, SUVRReferenceRegion]] = None,
+    uncropped_image: bool = False,
+    space: str = "mni",
+    resolution: Optional[int] = None,
 ) -> dict:
     from pathlib import Path
 
-    acq_label = Tracer(acq_label)
-    region = SUVRReferenceRegion(suvr_reference_region)
-
-    if uncropped_image:
-        description = ""
-    else:
+    tracer_filter = "*"
+    tracer_description = ""
+    if acq_label:
+        acq_label = Tracer(acq_label)
+        tracer_filter = f"_trc-{acq_label.value}"
+        tracer_description = f" obtained with tracer {acq_label.value}"
+    region_filter = "*"
+    region_description = ""
+    if suvr_reference_region:
+        region = SUVRReferenceRegion(suvr_reference_region)
+        region_filter = f"_suvr-{region.value}"
+        region_description = f" for SUVR region {region.value}"
+    space_filer = f"_space-{'MNI152NLin2009cSym' if space == 'mni' else 'T1w'}"
+    space_description = f" affinely registered to the {'MNI152NLin2009cSym template' if space == 'mni' else 'associated T1w image'}"
+    description = "*"
+    if space == "mni" and not uncropped_image:
         description = "_desc-Crop"
-
+    resolution_filter = "*"
+    resolution_description = ""
+    if resolution:
+        resolution_explicit = f"{resolution}x{resolution}x{resolution}"
+        resolution_filter = f"_res-{resolution_explicit}"
+        resolution_description = f" of resolution {resolution_explicit}"
     information = {
         "pattern": Path("pet_linear")
-        / f"*_trc-{acq_label.value}_pet_space-MNI152NLin2009cSym{description}_res-1x1x1_suvr-{region.value}_pet.nii.gz",
-        "description": "",
+        / _clean_pattern(
+            f"*{tracer_filter}{space_filer}{description}{resolution_filter}{region_filter}_pet.nii.gz"
+        ),
+        "description": (
+            f"{'Cropped ' if space == 'mni' and not uncropped_image else ''}PET nifti image{resolution_description}"
+            f"{tracer_description}{region_description}{space_description} resulting from the pet-linear pipeline"
+        ),
         "needed_pipeline": "pet-linear",
     }
     return information
+
+
+def pet_linear_transformation_matrix(tracer: Union[str, Tracer]) -> dict:
+    from pathlib import Path
+
+    tracer = Tracer(tracer)
+
+    return {
+        "pattern": Path("pet_linear") / f"*_trc-{tracer.value}_space-T1w_rigid.mat",
+        "description": "Rigid transformation matrix between the PET and T1w images estimated with ANTs.",
+        "needed_pipeline": "pet-linear",
+    }
 
 
 # CUSTOM

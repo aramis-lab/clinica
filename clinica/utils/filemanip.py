@@ -2,12 +2,15 @@ from os import PathLike
 from pathlib import Path
 from typing import Callable, List, Optional, Union
 
+from .bids import Visit
+
 __all__ = [
     "UserProvidedPath",
     "delete_directories",
     "delete_directories_task",
     "extract_crash_files_from_log_file",
     "extract_image_ids",
+    "extract_visits",
     "extract_metadata_from_json",
     "extract_subjects_sessions_from_filename",
     "get_filename_no_ext",
@@ -363,6 +366,13 @@ def extract_image_ids(bids_or_caps_files: list[str]) -> list[str]:
         id_bids_or_caps_files.append(match.group())
 
     return id_bids_or_caps_files
+
+
+def extract_visits(bids_or_caps_files: list[str]) -> list[Visit]:
+    return [
+        Visit(*image_id.split("_"))
+        for image_id in extract_image_ids(bids_or_caps_files)
+    ]
 
 
 def extract_subjects_sessions_from_filename(

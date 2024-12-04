@@ -9,7 +9,7 @@ def test_dwi_preprocessing_using_fmap_info_loading(tmp_path):
     caps = build_caps_directory(
         tmp_path / "caps",
         {
-            "pipelines": ["dwi-preprocessing-using-phasediff-fmap"],
+            "pipelines": {"dwi-preprocessing-using-phasediff-fmap": {}},
             "subjects": {"sub-01": ["ses-M000"]},
         },
     )
@@ -54,7 +54,7 @@ def test_dwi_preprocessing_using_fmap_dependencies(tmp_path, mocker):
     caps = build_caps_directory(
         tmp_path / "caps",
         {
-            "pipelines": ["dwi-preprocessing-using-phasediff-fmap"],
+            "pipelines": {"dwi-preprocessing-using-phasediff-fmap": {}},
             "subjects": {"sub-01": ["ses-M000"]},
         },
     )

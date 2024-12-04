@@ -9,7 +9,7 @@ def test_t1_volume_register_dartel_info_loading(tmp_path):
     caps = build_caps_directory(
         tmp_path / "caps",
         {
-            "pipelines": ["t1-volume-register-dartel"],
+            "pipelines": {"t1-volume-register-dartel": {}},
             "subjects": {"sub-01": ["ses-M000"]},
         },
     )
@@ -41,7 +41,7 @@ def test_t1_volume_register_dartel_dependencies(tmp_path, mocker):
     caps = build_caps_directory(
         tmp_path / "caps",
         {
-            "pipelines": ["t1-volume-register-dartel"],
+            "pipelines": {"t1-volume-register-dartel": {}},
             "subjects": {"sub-01": ["ses-M000"]},
         },
     )

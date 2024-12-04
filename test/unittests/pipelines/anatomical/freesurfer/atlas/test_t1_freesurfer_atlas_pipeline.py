@@ -6,7 +6,7 @@ def test_t1_freesurfer_atlas_info_loading(tmp_path):
 
     caps = build_caps_directory(
         tmp_path / "caps",
-        {"pipelines": ["compute-atlas"], "subjects": {"sub-01": ["ses-M000"]}},
+        {"pipelines": {"compute-atlas": {}}, "subjects": {"sub-01": ["ses-M000"]}},
     )
     pipeline = T1FreeSurferAtlas(caps_directory=str(caps))
 
@@ -35,7 +35,7 @@ def test_t1_freesurfer_atlas_dependencies(tmp_path, mocker):
     )
     caps = build_caps_directory(
         tmp_path / "caps",
-        {"pipelines": ["compute-atlas"], "subjects": {"sub-01": ["ses-M000"]}},
+        {"pipelines": {"compute-atlas": {}}, "subjects": {"sub-01": ["ses-M000"]}},
     )
     pipeline = T1FreeSurferAtlas(caps_directory=str(caps))
 

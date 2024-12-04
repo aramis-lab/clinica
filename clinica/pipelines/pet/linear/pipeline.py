@@ -1,10 +1,12 @@
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
+from pathlib import Path
 from typing import List
 
 from nipype import config
 
 from clinica.pipelines.pet.engine import PETPipeline
+from clinica.utils.bids import Visit
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
@@ -29,6 +31,53 @@ class PETLinear(PETPipeline):
     def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
         pass
+
+    def get_processed_visits(self) -> list[Visit]:
+        """Return a list of visits for which the pipeline is assumed to have run already.
+
+        Before running the pipeline, for a given visit, if both the PET SUVR registered image
+        and the rigid transformation files already exist, then the visit is added to this list.
+        The pipeline will further skip these visits and run processing only for the remaining
+        visits.
+        """
+        from functools import reduce
+
+        from clinica.utils.filemanip import extract_visits
+        from clinica.utils.input_files import (
+            pet_linear_nii,
+            pet_linear_transformation_matrix,
+        )
+        from clinica.utils.inputs import clinica_file_reader
+
+        if not self.caps_directory.is_dir():
+            return []
+        pet_registered_image, _ = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.caps_directory,
+            pet_linear_nii(
+                acq_label=self.parameters["acq_label"],
+                suvr_reference_region=self.parameters["suvr_reference_region"],
+                uncropped_image=self.parameters.get("uncropped_image", False),
+            ),
+        )
+        visits = [set(extract_visits(pet_registered_image))]
+        transformation, _ = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.caps_directory,
+            pet_linear_transformation_matrix(tracer=self.parameters["acq_label"]),
+        )
+        visits.append(set(extract_visits(transformation)))
+        if self.parameters.get("save_PETinT1w", False):
+            pet_image_in_t1w_space, _ = clinica_file_reader(
+                self.subjects,
+                self.sessions,
+                self.caps_directory,
+                pet_linear_nii(acq_label=self.parameters["acq_label"], space="T1w"),
+            )
+            visits.append(set(extract_visits(pet_image_in_t1w_space)))
+        return sorted(list(reduce(lambda x, y: x.intersection(y), visits)))
 
     def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.

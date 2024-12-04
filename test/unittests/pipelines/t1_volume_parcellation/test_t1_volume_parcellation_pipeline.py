@@ -8,7 +8,10 @@ def test_t1_volume_parcellation_info_loading(tmp_path):
 
     caps = build_caps_directory(
         tmp_path / "caps",
-        {"pipelines": ["t1-volume-parcellation"], "subjects": {"sub-01": ["ses-M000"]}},
+        {
+            "pipelines": {"t1-volume-parcellation": {}},
+            "subjects": {"sub-01": ["ses-M000"]},
+        },
     )
     pipeline = T1VolumeParcellation(caps_directory=str(caps), group_label="test")
 
@@ -29,7 +32,10 @@ def test_t1_volume_parcellation_dependencies(tmp_path):
 
     caps = build_caps_directory(
         tmp_path / "caps",
-        {"pipelines": ["t1-volume-parcellation"], "subjects": {"sub-01": ["ses-M000"]}},
+        {
+            "pipelines": {"t1-volume-parcellation": {}},
+            "subjects": {"sub-01": ["ses-M000"]},
+        },
     )
     pipeline = T1VolumeParcellation(caps_directory=str(caps), group_label="test")
 
