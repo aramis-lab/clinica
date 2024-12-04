@@ -243,11 +243,11 @@ def _build_pet_linear(directory: Path, sub: str, ses: str, config: dict) -> None
             / sub
             / ses
             / "pet_linear"
-            / f"{sub}_{ses}_trc-{tracer.value}_pet_space-T1w_pet.nii.gz"
+            / f"{sub}_{ses}_trc-{tracer.value}_space-T1w_pet.nii.gz"
         ).touch()
     for filename in (
-        f"{sub}_{ses}_trc-{tracer.value}_pet_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-{suvr.value}_pet.nii.gz",
-        f"{sub}_{ses}_trc-{tracer.value}_pet_space-T1w_rigid.mat",
+        f"{sub}_{ses}_trc-{tracer.value}_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-{suvr.value}_pet.nii.gz",
+        f"{sub}_{ses}_trc-{tracer.value}_space-T1w_rigid.mat",
     ):
         (directory / "subjects" / sub / ses / "pet_linear" / filename).touch()
 

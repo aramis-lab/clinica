@@ -724,7 +724,7 @@ def pet_linear_nii(
     information = {
         "pattern": Path("pet_linear")
         / _clean_pattern(
-            f"*{tracer_filter}_pet{space_filer}{description}{resolution_filter}{region_filter}_pet.nii.gz"
+            f"*{tracer_filter}{space_filer}{description}{resolution_filter}{region_filter}_pet.nii.gz"
         ),
         "description": (
             f"{'Cropped ' if space == 'mni' and not uncropped_image else ''}PET nifti image{resolution_description}"
@@ -741,7 +741,7 @@ def pet_linear_transformation_matrix(tracer: Union[str, Tracer]) -> dict:
     tracer = Tracer(tracer)
 
     return {
-        "pattern": Path("pet_linear") / f"*_trc-{tracer.value}_pet_space-T1w_rigid.mat",
+        "pattern": Path("pet_linear") / f"*_trc-{tracer.value}_space-T1w_rigid.mat",
         "description": "Rigid transformation matrix between the PET and T1w images estimated with ANTs.",
         "needed_pipeline": "pet-linear",
     }

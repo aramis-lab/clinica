@@ -98,7 +98,7 @@ def test_dwi_dti_query_error():
                 "Cropped PET nifti image affinely registered to the MNI152NLin2009cSym "
                 "template resulting from the pet-linear pipeline"
             ),
-            "pet_linear/*_pet_space-MNI152NLin2009cSym_desc-Crop*_pet.nii.gz",
+            "pet_linear/*_space-MNI152NLin2009cSym_desc-Crop*_pet.nii.gz",
         ),
         (
             {
@@ -108,7 +108,7 @@ def test_dwi_dti_query_error():
                 "Cropped PET nifti image obtained with tracer 18FFDG affinely registered to the "
                 "MNI152NLin2009cSym template resulting from the pet-linear pipeline"
             ),
-            "pet_linear/*_trc-18FFDG_pet_space-MNI152NLin2009cSym_desc-Crop*_pet.nii.gz",
+            "pet_linear/*_trc-18FFDG_space-MNI152NLin2009cSym_desc-Crop*_pet.nii.gz",
         ),
         (
             {
@@ -121,7 +121,7 @@ def test_dwi_dti_query_error():
                 "PET nifti image of resolution 2x2x2 obtained with tracer 18FAV45 for SUVR region "
                 "pons affinely registered to the MNI152NLin2009cSym template resulting from the pet-linear pipeline"
             ),
-            "pet_linear/*_trc-18FAV45_pet_space-MNI152NLin2009cSym*_res-2x2x2_suvr-pons_pet.nii.gz",
+            "pet_linear/*_trc-18FAV45_space-MNI152NLin2009cSym*_res-2x2x2_suvr-pons_pet.nii.gz",
         ),
         (
             {
@@ -133,7 +133,7 @@ def test_dwi_dti_query_error():
                 "PET nifti image of resolution 2x2x2 for SUVR region pons2 affinely "
                 "registered to the associated T1w image resulting from the pet-linear pipeline"
             ),
-            "pet_linear/*_pet_space-T1w*_res-2x2x2_suvr-pons2_pet.nii.gz",
+            "pet_linear/*_space-T1w*_res-2x2x2_suvr-pons2_pet.nii.gz",
         ),
         (
             {
@@ -144,7 +144,7 @@ def test_dwi_dti_query_error():
                 "PET nifti image obtained with tracer 18FFDG affinely registered to the "
                 "associated T1w image resulting from the pet-linear pipeline"
             ),
-            "pet_linear/*_trc-18FFDG_pet_space-T1w*_pet.nii.gz",
+            "pet_linear/*_trc-18FFDG_space-T1w*_pet.nii.gz",
         ),
     ],
 )

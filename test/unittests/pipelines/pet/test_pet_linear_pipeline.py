@@ -76,24 +76,24 @@ def test_pet_linear_get_processed_visits(tmp_path, mocker):
         ├── sub-01
         │         ├── ses-M000
         │         │         └── pet_linear
-        │         │             ├── sub-01_ses-M000_trc-18FAV45_pet_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-pons2_pet.nii.gz
-        │         │             └── sub-01_ses-M000_trc-18FAV45_pet_space-T1w_rigid.mat
+        │         │             ├── sub-01_ses-M000_trc-18FAV45_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-pons2_pet.nii.gz
+        │         │             └── sub-01_ses-M000_trc-18FAV45_space-T1w_rigid.mat
         │         └── ses-M006
         │             └── pet_linear
-        │                 ├── sub-01_ses-M006_trc-18FAV45_pet_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-pons2_pet.nii.gz
-        │                 ├── sub-01_ses-M006_trc-18FAV45_pet_space-T1w_rigid.mat
-        │                 ├── sub-01_ses-M006_trc-18FFDG_pet_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-pons_pet.nii.gz
-        │                 └── sub-01_ses-M006_trc-18FFDG_pet_space-T1w_rigid.mat
+        │                 ├── sub-01_ses-M006_trc-18FAV45_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-pons2_pet.nii.gz
+        │                 ├── sub-01_ses-M006_trc-18FAV45_space-T1w_rigid.mat
+        │                 ├── sub-01_ses-M006_trc-18FFDG_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-pons_pet.nii.gz
+        │                 └── sub-01_ses-M006_trc-18FFDG_space-T1w_rigid.mat
         └── sub-02
             ├── ses-M000
             │         └── pet_linear
-            │             ├── sub-02_ses-M000_trc-18FFDG_pet_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-pons_pet.nii.gz
-            │             ├── sub-02_ses-M000_trc-18FFDG_pet_space-T1w_pet.nii.gz
-            │             └── sub-02_ses-M000_trc-18FFDG_pet_space-T1w_rigid.mat
+            │             ├── sub-02_ses-M000_trc-18FFDG_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-pons_pet.nii.gz
+            │             ├── sub-02_ses-M000_trc-18FFDG_space-T1w_pet.nii.gz
+            │             └── sub-02_ses-M000_trc-18FFDG_space-T1w_rigid.mat
             └── ses-M006
                 └── pet_linear
-                    ├── sub-02_ses-M006_trc-18FAV45_pet_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-pons2_pet.nii.gz
-                    └── sub-02_ses-M006_trc-18FAV45_pet_space-T1w_rigid.mat
+                    ├── sub-02_ses-M006_trc-18FAV45_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-pons2_pet.nii.gz
+                    └── sub-02_ses-M006_trc-18FAV45_space-T1w_rigid.mat
 
     And make sure that a PETLinear pipeline with tracer 18FFDG et pons SUVR will only consider
     (sub-01, ses-M006) and (sub-02, ses-M000) as already processed. The other folders contain
@@ -149,7 +149,7 @@ def test_pet_linear_get_processed_visits(tmp_path, mocker):
         / "sub-01"
         / "ses-M006"
         / "pet_linear"
-        / "sub-01_ses-M006_trc-18FFDG_pet_space-T1w_pet.nii.gz"
+        / "sub-01_ses-M006_trc-18FFDG_space-T1w_pet.nii.gz"
     ).unlink()
     pipeline = PETLinear(
         bids_directory=str(bids),
@@ -186,7 +186,7 @@ def test_pet_linear_get_processed_visits(tmp_path, mocker):
         / "sub-01"
         / "ses-M006"
         / "pet_linear"
-        / "sub-01_ses-M006_trc-18FFDG_pet_space-T1w_rigid.mat"
+        / "sub-01_ses-M006_trc-18FFDG_space-T1w_rigid.mat"
     ).unlink()
 
     # The corresponding visit is not considered as "processed" anymore because the transformation is
