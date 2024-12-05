@@ -87,7 +87,7 @@ def test_t1_volume_tissue_segmentation_get_processed_visits_empty(tmp_path, mock
 def test_t1_volume_tissue_segmentation_get_processed_visits(tmp_path, mocker):
     """Test the get_processed_visits for T1VolumeTissueSegmentation.
 
-    We build the following CAPS dataset:
+    We build a CAPS dataset with the following structure:
 
     caps2
     ├── dataset_description.json
@@ -98,19 +98,20 @@ def test_t1_volume_tissue_segmentation_get_processed_visits(tmp_path, mocker):
                     └── spm
                         └── segmentation
                             ├── dartel_input
-                            │         ├── sub-01_ses-M000_T1w_segm-csf_dartelinput.nii.gz
-                            │         ├── sub-01_ses-M000_T1w_segm-graymatter_dartelinput.nii.gz
-                            │         └── sub-01_ses-M000_T1w_segm-whitematter_dartelinput.nii.gz
+                            │         └── sub-01_ses-M000_T1w_segm-XXXXXXXX_dartelinput.nii.gz
                             ├── native_space
-                            │         ├── sub-01_ses-M000_T1w_segm-csf_probability.nii.gz
-                            │         ├── sub-01_ses-M000_T1w_segm-graymatter_probability.nii.gz
-                            │         └── sub-01_ses-M000_T1w_segm-whitematter_probability.nii.gz
+                            │         └── sub-01_ses-M000_T1w_segm-YYYYYYYY_probability.nii.gz
                             └── normalized_space
-                                ├── sub-01_ses-M000_T1w_segm-csf_space-Ixi549Space_modulated-off_probability.nii.gz
-                                ├── sub-01_ses-M000_T1w_segm-graymatter_space-Ixi549Space_modulated-off_probability.nii.gz
-                                └── sub-01_ses-M000_T1w_segm-whitematter_space-Ixi549Space_modulated-off_probability.nii.gz
-    ... same for other subjects and sessions.
-    Verify that removing files for a given visit will remove it from the "processed" visits.
+                                └── sub-01_ses-M000_T1w_segm-YYYYYYYY_space-Ixi549Space_modulated-off_probability.nii.gz
+
+    And this for several subjects and sessions.
+    We can control the values for XXXXX and YYYYY through the lists of tissues that we pass
+    to the CAPS generator (XXXX is controlled by 'dartel_tissues', while YYYY is controlled by 'tissue_classes').
+
+    The purpose of this test is to verify that, depending on what the user wants in terms of tissues,
+    the pipeline correctly identifies the already processed visits as the ones having ALL images for
+    the tissues of interest. If there is at least one image missing, then the visit will be processed
+    again (and therefore won't be listed in the list of "processed" visits).
     """
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import (
         T1VolumeTissueSegmentation,
@@ -127,7 +128,12 @@ def test_t1_volume_tissue_segmentation_get_processed_visits(tmp_path, mocker):
     caps = build_caps_directory(
         tmp_path / "caps",
         {
-            "pipelines": {"t1_volume_tissue_segmentation": {}},
+            "pipelines": {
+                "t1_volume_tissue_segmentation": {
+                    "tissue_classes": (1, 2, 3, 4),
+                    "dartel_tissues": (2, 4, 5, 6),
+                }
+            },
             "subjects": {
                 "sub-01": ["ses-M006"],
                 "sub-02": ["ses-M000", "ses-M012"],
@@ -138,15 +144,41 @@ def test_t1_volume_tissue_segmentation_get_processed_visits(tmp_path, mocker):
         bids_directory=str(bids),
         caps_directory=str(caps),
         parameters={
-            "tissue_classes": (1, 2, 3),
+            "tissue_classes": (1, 2, 5, 6),
+            "dartel_tissues": (2, 4, 6),
+        },
+    )
+    # No visit considered already processed since we are asking for tissues 1, 2, 5, and 6
+    # and the CAPS folder only contains tissues 1, 2, 3, and 4
+    assert pipeline.get_processed_visits() == []
+
+    pipeline = T1VolumeTissueSegmentation(
+        bids_directory=str(bids),
+        caps_directory=str(caps),
+        parameters={
+            "tissue_classes": (1, 2, 3, 4),
             "dartel_tissues": (1, 2, 3),
         },
     )
+    # No visit considered already processed since we are asking for dartel tissues 1, 2, and 3
+    # and the CAPS folder only contains tissues 2, 4, 5, and 6 (1 and 3 are missing...)
+    assert pipeline.get_processed_visits() == []
+
+    pipeline = T1VolumeTissueSegmentation(
+        bids_directory=str(bids),
+        caps_directory=str(caps),
+        parameters={
+            "tissue_classes": (1, 2, 3),
+            "dartel_tissues": (2, 4, 5),
+        },
+    )
+    # All visits are considered processed since we are asking for tissues that are present in the CAPS folder
     assert pipeline.get_processed_visits() == [
         Visit("sub-01", "ses-M006"),
         Visit("sub-02", "ses-M000"),
         Visit("sub-02", "ses-M012"),
     ]
+
     # Delete the folder "dartel_input" altogether for subject 02 session M000 (but keep the other folders)
     shutil.rmtree(
         tmp_path
@@ -164,6 +196,7 @@ def test_t1_volume_tissue_segmentation_get_processed_visits(tmp_path, mocker):
         Visit("sub-01", "ses-M006"),
         Visit("sub-02", "ses-M012"),
     ]
+
     # Delete a single file in the "native_space" folder for subject 01 session M006 (keep other files and folders)
     (
         tmp_path

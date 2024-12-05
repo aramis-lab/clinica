@@ -10,6 +10,8 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from clinica.pipelines.dwi.utils import DWIDataset
 
+from .spm import SPMTissue, get_spm_tissue_from_index
+
 __all__ = [
     "build_test_image_cubic_object",
     "build_bids_directory",
@@ -230,7 +232,7 @@ def _build_subjects(directory: Path, configuration: dict) -> None:
                         _build_t1(directory, sub, ses, configuration)
                     if pipeline_name == "t1_volume_tissue_segmentation":
                         _build_t1_volume_tissue_segmentation(
-                            directory, sub, ses, configuration
+                            directory, sub, ses, pipeline_config
                         )
 
 
@@ -242,22 +244,58 @@ def _build_t1_volume_tissue_segmentation(
         directory / "subjects" / sub / ses / "t1" / "spm" / "segmentation"
     )
     segmentation_folder.mkdir(parents=True, exist_ok=True)
-    folders = ["dartel_input", "native_space", "normalized_space"]
-    for folder in folders:
-        (segmentation_folder / folder).mkdir(exist_ok=True)
-    for tissue in ("csf", "graymatter", "whitematter"):
-        common_filename_part = f"{sub}_{ses}_T1w_segm-{tissue}"
-        for folder, filename_end in zip(
-            folders,
-            [
-                "dartelinput.nii.gz",
-                "probability.nii.gz",
-                "space-Ixi549Space_modulated-off_probability.nii.gz",
-            ],
-        ):
-            (
-                segmentation_folder / folder / f"{common_filename_part}_{filename_end}"
-            ).touch()
+    common_filename_part = f"{sub}_{ses}_T1w_segm-"
+    _build_t1_volume_tissue_segmentation_native_space(
+        segmentation_folder, common_filename_part, config
+    )
+    _build_t1_volume_tissue_segmentation_dartel_input(
+        segmentation_folder, common_filename_part, config
+    )
+    _build_t1_volume_tissue_segmentation_normalized_space(
+        segmentation_folder, common_filename_part, config
+    )
+
+
+def _extract_tissues_from_config(config: dict, key: str) -> list[SPMTissue]:
+    if (tissue_classes := config.get(key, None)) is not None:
+        return [get_spm_tissue_from_index(i) for i in tissue_classes]
+    return [tissue for tissue in SPMTissue]
+
+
+def _build_t1_volume_tissue_segmentation_native_space(
+    segmentation_folder: Path, common_filename_part: str, config: dict
+) -> None:
+    (segmentation_folder / "native_space").mkdir(exist_ok=True)
+    for tissue in _extract_tissues_from_config(config, "tissue_classes"):
+        (
+            segmentation_folder
+            / "native_space"
+            / f"{common_filename_part}{tissue.value}_probability.nii.gz"
+        ).touch()
+
+
+def _build_t1_volume_tissue_segmentation_dartel_input(
+    segmentation_folder: Path, common_filename_part: str, config: dict
+) -> None:
+    (segmentation_folder / "dartel_input").mkdir(exist_ok=True)
+    for tissue in _extract_tissues_from_config(config, "dartel_tissues"):
+        (
+            segmentation_folder
+            / "dartel_input"
+            / f"{common_filename_part}{tissue.value}_dartelinput.nii.gz"
+        ).touch()
+
+
+def _build_t1_volume_tissue_segmentation_normalized_space(
+    segmentation_folder: Path, common_filename_part: str, config: dict
+) -> None:
+    (segmentation_folder / "normalized_space").mkdir(exist_ok=True)
+    for tissue in _extract_tissues_from_config(config, "tissue_classes"):
+        (
+            segmentation_folder
+            / "normalized_space"
+            / f"{common_filename_part}{tissue.value}_space-Ixi549Space_modulated-off_probability.nii.gz"
+        ).touch()
 
 
 def _build_t1_linear(directory: Path, sub: str, ses: str, config: dict) -> None:
