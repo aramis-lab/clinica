@@ -6,6 +6,7 @@ __all__ = [
     "replace_sequence_chars",
     "write_longitudinal_analysis",
     "write_statistics",
+    "viscode_to_session",
 ]
 
 
