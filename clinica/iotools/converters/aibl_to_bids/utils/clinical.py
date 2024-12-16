@@ -25,7 +25,7 @@ def create_participants_tsv_file(
     Parameters
     ----------
     input_path : Path
-        The path to the input directory.
+        The path to the input (BIDS) directory.
 
     clinical_specifications_folder : Path
         The path to the folder containing the clinical specification files.
@@ -39,95 +39,48 @@ def create_participants_tsv_file(
         Default=True.
     """
     import glob
-    import os
-    from os import path
 
-    import numpy as np
-
-    fields_bids = ["participant_id"]
-    fields_dataset = []
+    study = StudyName.AIBL
     prev_location = ""
-    prev_sheet = ""
-    index_to_drop = []
 
     specifications = _load_specifications(
         clinical_specifications_folder, "participant.tsv"
-    )
-    participant_fields_db = specifications[StudyName.AIBL.value]
-    field_location = specifications[f"{StudyName.AIBL.value} location"]
-    participant_fields_bids = specifications["BIDS CLINICA"]
+    )[[study.value, f"{study.value} location", "BIDS CLINICA"]].dropna()
 
-    # Extract the list of the available fields for the dataset (and the corresponding BIDS version)
-    for i in range(0, len(participant_fields_db)):
-        if not pd.isnull(participant_fields_db[i]):
-            fields_bids.append(participant_fields_bids[i])
-            fields_dataset.append(participant_fields_db[i])
-
-    # Init the dataframe that will be saved in the file participant.tsv
-    participant_df = pd.DataFrame(columns=fields_bids)
-
-    for i in range(0, len(participant_fields_db)):
-        # If a field not empty is found
-        if not pd.isnull(participant_fields_db[i]):
-            # Extract the file location of the field and read the value from the file
-            tmp = field_location[i].split("/")
-            location = tmp[0]
-            # If a sheet is available
-            sheet = tmp[1] if len(tmp) > 1 else ""
-            # Check if the file to open for a certain field it's the same of the previous field
-            if location == prev_location and sheet == prev_sheet:
-                pass
-            else:
-                file_ext = os.path.splitext(location)[1]
-                file_to_read_path = path.join(clinical_data_dir, location)
-
-                if file_ext == ".xlsx":
-                    file_to_read = pd.read_excel(
-                        glob.glob(file_to_read_path)[0], sheet_name=sheet
-                    )
-                elif file_ext == ".csv":
-                    file_to_read = pd.read_csv(glob.glob(file_to_read_path)[0])
-                prev_location = location
-                prev_sheet = sheet
-
-            field_col_values = []
-            # For each field in fields_dataset extract all the column values
-            for j in range(0, len(file_to_read)):
-                # Convert the alternative_id_1 to string if is an integer/float
-                if participant_fields_bids[i] == "alternative_id_1" and (
-                    file_to_read[participant_fields_db[i]].dtype == np.float64
-                    or file_to_read[participant_fields_db[i]].dtype == np.int64
-                ):
-                    if not pd.isnull(file_to_read.at[j, participant_fields_db[i]]):
-                        # value_to_append = str(file_to_read.get_value(j, participant_fields_db[i])).rstrip('.0')
-                        value_to_append = str(
-                            file_to_read.at[j, participant_fields_db[i]]
-                        )
-                    else:
-                        value_to_append = "n/a"
-                else:
-                    value_to_append = file_to_read.at[j, participant_fields_db[i]]
-                field_col_values.append(value_to_append)
-            # Add the extracted column to the participant_df
-            participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
+    participant_df = pd.DataFrame()
+    for _, row in specifications.iterrows():
+        location = row[f"{study.value} location"]
+        if location == prev_location:
+            pass
+        else:
+            # todo : use function to read csvs from previous PR when merged
+            file_to_read = pd.read_csv(glob.glob(clinical_data_dir / location)[0])
+            prev_location = location
+        participant_df[row["BIDS CLINICA"]] = file_to_read[row[study.value]].astype(str)
 
     # Compute BIDS-compatible participant ID.
-    participant_df["participant_id"] = participant_df["alternative_id_1"].apply(
-        lambda x: bids_id_factory(StudyName.AIBL).from_original_study_id(x)
+    participant_df.insert(
+        0,
+        "participant_id",
+        participant_df["alternative_id_1"].apply(
+            lambda x: bids_id_factory(StudyName.AIBL).from_original_study_id(x)
+        ),
     )
     # Keep year-of-birth only.
     participant_df["date_of_birth"] = participant_df["date_of_birth"].str.extract(
         r"/(\d{4}).*"
     )
     # Normalize sex value.
-    participant_df["sex"] = participant_df["sex"].map({1: "M", 2: "F"}).fillna("n/a")
-
+    participant_df["sex"] = participant_df["sex"].map({"1": "M", "2": "F"})
     # Normalize known NA values.
-    participant_df.replace(-4, "n/a", inplace=True)
+    participant_df.fillna("n/a", inplace=True)
+    participant_df.replace("-4", "n/a", inplace=True)
 
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
-        participant_df = participant_df.drop(index_to_drop)
+        keep = [d.name for d in input_path.glob("sub-*")]
+        participant_df.set_index("participant_id", inplace=True, drop=False)
+        participant_df = participant_df.loc[keep]
 
     participant_df.to_csv(
         input_path / "participants.tsv",
