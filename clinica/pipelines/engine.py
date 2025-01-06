@@ -5,11 +5,16 @@ Subclasses are located in clinica/pipeline/<pipeline_name>/<pipeline_name>_pipel
 
 import abc
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple
 
 import click
 from nipype.interfaces.utility import IdentityInterface
 from nipype.pipeline.engine import Node, Workflow
+
+from clinica.utils.bids import Visit
+from clinica.utils.check_dependency import SoftwareDependency, ThirdPartySoftware
+from clinica.utils.group import GroupID, GroupLabel
+from clinica.utils.stream import log_and_warn
 
 
 def clinica_pipeline(func):
@@ -49,14 +54,15 @@ def postset(attribute, value):
 
 
 def _detect_cross_sectional_and_longitudinal_subjects(
-    all_subs: List[str], bids_dir: Path
+    subjects: Iterable[str], bids_dir: Path
 ) -> Tuple[List[str], List[str]]:
-    """This function detects whether a subject has a longitudinal or cross sectional structure.
-    If it has a mixed structure, it will be considered cross sectionnal.
+    """Detect whether a subject's folder has a longitudinal or cross-sectional structure.
+
+    If it has a mixed structure, it will be considered cross-sectionnal.
 
     Parameters
     ----------
-    all_subs: list of str
+    subjects: Iterable of str
         List containing all the names of the subjects.
 
     bids_dir: Path
@@ -64,10 +70,10 @@ def _detect_cross_sectional_and_longitudinal_subjects(
 
     Returns
     -------
-    cross_subj: list of str
+    cross_sectional_subjects: list of str
         List of all the subject detected with a cross_sectional organisation.
 
-    long_subj: list of str
+    longitudinal_subjects: list of str
         List of all the subject detected with a longitudinal organisation.
 
     Examples
@@ -77,24 +83,18 @@ def _detect_cross_sectional_and_longitudinal_subjects(
     │   └── anat
     └── sub-02
         └── ses-M000
-    >>> _detect_cross_sectional_and_longitudinal_subjects(["sub-01", "sub-02"], /Users/name.surname/BIDS)
+    >>> _detect_cross_sectional_and_longitudinal_subjects(["sub-01", "sub-02"], Path("/Users/name.surname/BIDS"))
     (["sub-01"], ["sub-02])
     """
-    from os import listdir
-    from os.path import isdir, join
-
-    cross_subj = []
-    long_subj = []
-    for sub in all_subs:
-        folder_list = [
-            f for f in listdir(join(bids_dir, sub)) if isdir(join(bids_dir, sub, f))
-        ]
-
-        if not all([fold.startswith("ses-") for fold in folder_list]):
-            cross_subj.append(sub)
+    cross_sectional_subjects = []
+    longitudinal_subjects = []
+    for subject in subjects:
+        folders = [f.name for f in (bids_dir / subject).iterdir() if f.is_dir()]
+        if not all([folder.startswith("ses-") for folder in folders]):
+            cross_sectional_subjects.append(subject)
         else:
-            long_subj.append(sub)
-    return cross_subj, long_subj
+            longitudinal_subjects.append(subject)
+    return cross_sectional_subjects, longitudinal_subjects
 
 
 SYMBOLS = {
@@ -192,12 +192,12 @@ def _add_session_label(filename: str) -> str:
 
     Examples
     --------
-    >>> _add_ses("sub-ADNI001_scans.tsv")
+    >>> _add_session_label("sub-ADNI001_scans.tsv")
     sub-ADNI001_ses-M000_scans.tsv
 
     No modification done if filename already has a session:
 
-    >>> _add_ses("sub-023a_ses-M012_T1w.nii.gz")
+    >>> _add_session_label("sub-023a_ses-M012_T1w.nii.gz")
     sub-023a_ses-M012_T1w.nii.gz
 
     Parameters
@@ -211,13 +211,6 @@ def _add_session_label(filename: str) -> str:
     """
     import re
 
-    # If filename contains ses-..., returns the original filename
-    # Regex explication:
-    # ^ start of string
-    # ([a-zA-Z0-9]*) matches any number of characters from a to z,
-    #       A to Z, 0 to 9, and store it in group(1)
-    # (?!ses-[a-zA-Z0-9]) do not match if there is already a 'ses-'
-    # (.*) catches the rest of the string
     m = re.search(r"(^sub-[a-zA-Z0-9]*)_(?!ses-[a-zA-Z0-9])(.*)", filename)
     try:
         return m.group(1) + "_ses-M000_" + m.group(2)
@@ -225,38 +218,37 @@ def _add_session_label(filename: str) -> str:
         return filename
 
 
-def _copy2_add_session_label(src: Path, dst: Path) -> Path:
-    """Calls copy2 function from shutil, but modifies the filename of the
-    copied files if they match the regex template described in the
-    _add_session_label() function
+def _copy_and_add_session_label(src: str, dst: str) -> str:
+    """Copy src to dst, but modifies the filename of the copied files if they
+    match the regex template described in the _add_session_label() function.
 
     Parameters
     ----------
-    src : Path
+    src : str
         The path to the file that needs to be copied.
 
-    dst : Path
+    dst : str
         The original destination for the copied file.
 
     Returns
     -------
-    Path :
-        copy2 with modified filename.
+    str :
+        Copy with modified filename.
     """
     from shutil import copy2
 
-    return copy2(src, dst / _add_session_label(src.name))
+    filename = Path(src).name
+
+    return copy2(src, str(Path(dst).parent / _add_session_label(filename)))
 
 
 def _convert_cross_sectional(
     bids_in: Path,
     bids_out: Path,
-    cross_subjects: List[str],
-    long_subjects: List[str],
-) -> None:
-    """
-    This function converts a cross-sectional-bids dataset into a
-    longitudinal clinica-compliant dataset
+    cross_subjects: Iterable[str],
+    long_subjects: Iterable[str],
+):
+    """Convert a cross-sectional-bids dataset into a longitudinal clinica-compliant dataset.
 
     Parameters
     ----------
@@ -266,21 +258,30 @@ def _convert_cross_sectional(
     bids_out : Path
         The path to the converted longitudinal bids dataset.
 
-    cross_subjects : list of str
-        List of subjects in cross-sectional form (they need some adjustment).
+    cross_subjects : Iterable of str
+        Subjects in cross-sectional form (they need some adjustment).
 
-    long_subjects : list of str
-        List of subjects in longitudinal form (they just need to be copied).
+    long_subjects : Iterable of str
+        Subjects in longitudinal form (they just need to be copied).
     """
     if not bids_out.exists():
         bids_out.mkdir()
+    _copy_metadata_files(bids_in, bids_out, ("dataset_description.json", ".bidsignore"))
     _convert(bids_in, bids_out, cross_subjects, cross_sectional=True)
     _convert(bids_in, bids_out, long_subjects, cross_sectional=False)
 
 
+def _copy_metadata_files(bids_in: Path, bids_out: Path, files_to_copy: Iterable[str]):
+    from shutil import copy2
+
+    for file in files_to_copy:
+        if (bids_in / file).is_file():
+            copy2(bids_in / file, bids_out / file)
+
+
 def _convert(
-    bids_in: Path, bids_out: Path, subjects: List[str], cross_sectional: bool
-) -> None:
+    bids_in: Path, bids_out: Path, subjects: Iterable[str], cross_sectional: bool
+):
     for subject in subjects:
         output_folder = (
             bids_out / subject / "ses-M000" if cross_sectional else bids_out / subject
@@ -294,7 +295,7 @@ def _convert(
             copy_func(bids_in / subject / file_to_copy, output_folder)
 
 
-def _copy_cross_sectional(file_to_copy: Path, output_folder: Path) -> None:
+def _copy_cross_sectional(file_to_copy: Path, output_folder: Path):
     from shutil import copy2, copytree
 
     if not (output_folder / file_to_copy.name).exists():
@@ -302,7 +303,7 @@ def _copy_cross_sectional(file_to_copy: Path, output_folder: Path) -> None:
             copytree(
                 file_to_copy,
                 output_folder / file_to_copy.name,
-                copy_function=_copy2_add_session_label,
+                copy_function=_copy_and_add_session_label,
             )
         elif file_to_copy.is_file():
             new_filename_wo_ses = _add_session_label(file_to_copy.name)
@@ -317,13 +318,6 @@ def _copy_longitudinal(file_to_copy: Path, output_folder: Path) -> None:
             copytree(file_to_copy, output_folder / file_to_copy.name)
         elif file_to_copy.is_file():
             copy2(file_to_copy, output_folder)
-
-
-def _check_cross_subj(cross_subj: list) -> None:
-    from clinica.utils.exceptions import ClinicaInconsistentDatasetError
-
-    if len(cross_subj) > 0:
-        raise ClinicaInconsistentDatasetError(cross_subj)
 
 
 class Pipeline(Workflow):
@@ -392,6 +386,8 @@ class Pipeline(Workflow):
         base_dir: Optional[str] = None,
         parameters: Optional[dict] = None,
         name: Optional[str] = None,
+        ignore_dependencies: Optional[List[str]] = None,
+        caps_name: Optional[str] = None,
     ):
         """Init a Pipeline object.
 
@@ -418,6 +414,10 @@ class Pipeline(Workflow):
         name : str, optional
             Pipeline name. Defaults to None.
 
+        ignore_dependencies : List of str
+            List of names of dependencies whose installation checking procedure should be ignored.
+            Defaults to None (i.e. all dependencies will be checked).
+
         Raises
         ------
         RuntimeError: [description]
@@ -427,8 +427,12 @@ class Pipeline(Workflow):
         from pathlib import Path
         from tempfile import mkdtemp
 
+        from clinica.utils.caps import (
+            build_caps_dataset_description,
+            write_caps_dataset_description,
+        )
+        from clinica.utils.exceptions import ClinicaCAPSError
         from clinica.utils.inputs import check_bids_folder, check_caps_folder
-        from clinica.utils.participant import get_subject_session_list
 
         self._is_built: bool = False
         self._overwrite_caps: bool = overwrite_caps
@@ -444,8 +448,11 @@ class Pipeline(Workflow):
             Path(os.path.dirname(os.path.abspath(inspect.getfile(self.__class__))))
             / "info.json"
         )
-        self._info: dict = {}
-
+        self._info: Optional[dict] = None
+        self._subjects: Optional[List[str]] = None
+        self._sessions: Optional[List[str]] = None
+        self._input_node = None
+        self._output_node = None
         if base_dir:
             self.base_dir = Path(base_dir).absolute()
             self._base_dir_was_specified = True
@@ -455,6 +462,13 @@ class Pipeline(Workflow):
 
         self._name = name or self.__class__.__name__
         self._parameters = parameters or {}
+        self._dependencies: Optional[List[SoftwareDependency]] = None
+        self._ignore_dependencies: List[ThirdPartySoftware] = []
+        if ignore_dependencies:
+            self._ignore_dependencies += [
+                ThirdPartySoftware(d) for d in ignore_dependencies
+            ]
+        self.caps_name = caps_name
 
         if not self._bids_directory:
             if not self._caps_directory:
@@ -462,24 +476,62 @@ class Pipeline(Workflow):
                     f"The {self._name} pipeline does not contain "
                     "BIDS nor CAPS directory at the initialization."
                 )
-
-            check_caps_folder(self._caps_directory)
-            input_dir = self._caps_directory
-            is_bids_dir = False
+            try:
+                check_caps_folder(self._caps_directory)
+            except ClinicaCAPSError as e:
+                desc = build_caps_dataset_description(
+                    input_dir=self._caps_directory,
+                    output_dir=self._caps_directory,
+                    processing_name=self._name,
+                    dataset_name=self.caps_name,
+                    dependencies=self.dependencies,
+                )
+                raise ClinicaCAPSError(
+                    f"{e}\nYou might want to create a 'dataset_description.json' "
+                    f"file with the following content:\n{desc}"
+                )
+            self.is_bids_dir = False
         else:
             check_bids_folder(self._bids_directory)
-            input_dir = self._bids_directory
-            is_bids_dir = True
-        self._subjects, self._sessions = get_subject_session_list(
-            input_dir,
-            subject_session_file=tsv_file,
-            is_bids_dir=is_bids_dir,
-            use_session_tsv=False,
-            tsv_dir=base_dir,
-        )
-        self._input_node = None
-        self._output_node = None
+            self.is_bids_dir = True
+            if self._caps_directory is not None:
+                if (
+                    not self._caps_directory.exists()
+                    or len([f for f in self._caps_directory.iterdir()]) == 0
+                ):
+                    self._caps_directory.mkdir(parents=True, exist_ok=True)
+        if self._caps_directory:
+            write_caps_dataset_description(
+                input_dir=self.input_dir,
+                output_dir=self._caps_directory,
+                processing_name=self._name,
+                dataset_name=self.caps_name,
+                dependencies=self.dependencies,
+            )
+            check_caps_folder(self._caps_directory)
+        self._compute_subjects_and_sessions()
         self._init_nodes()
+
+    def _compute_subjects_and_sessions(self):
+        from clinica.utils.participant import get_subject_session_list
+
+        self._subjects, self._sessions = get_subject_session_list(
+            self.input_dir,
+            subject_session_file=self.tsv_file,
+            is_bids_dir=self.is_bids_dir,
+            use_session_tsv=False,
+            tsv_dir=self.base_dir,
+        )
+        self._subjects, self._sessions = self.filter_qc()
+
+    def filter_qc(self) -> tuple[list[str], list[str]]:
+        return self._subjects, self._sessions
+
+    @property
+    def input_dir(self) -> Path:
+        if self.is_bids_dir:
+            return self._bids_directory
+        return self._caps_directory
 
     @property
     def base_dir_was_specified(self) -> bool:
@@ -507,14 +559,6 @@ class Pipeline(Workflow):
         # Need to rebuild input, output and core nodes
         self.is_built = False
         self.init_nodes()
-
-    @property
-    def info(self) -> dict:
-        return self._info
-
-    @info.setter
-    def info(self, value: dict):
-        self._info = value
 
     @property
     def input_node(self) -> Node:
@@ -551,6 +595,18 @@ class Pipeline(Workflow):
         self.is_built = False
 
     @property
+    def visits(self) -> list[Visit]:
+        return [
+            Visit(subject, session)
+            for subject, session in zip(self.subjects, self.sessions)
+        ]
+
+    @visits.setter
+    def visits(self, value: list[Visit]):
+        self.subjects = [v.subject for v in value]
+        self.sessions = [v.session for v in value]
+
+    @property
     def tsv_file(self) -> Optional[Path]:
         return self._tsv_file
 
@@ -558,24 +614,31 @@ class Pipeline(Workflow):
     def info_file(self) -> Path:
         return self._info_file
 
-    @staticmethod
-    def get_processed_images(
-        caps_directory: Path, subjects: List[str], sessions: List[str]
-    ) -> List[str]:
-        """Extract processed image IDs in `caps_directory` based on `subjects`_`sessions`.
+    def determine_subject_and_session_to_process(self):
+        """Query expected output files in the CAPS folder in order to process only those missing.
 
-        Todo:
-            [ ] Implement this static method in all pipelines
-            [ ] Make it abstract to force overload in future pipelines
+        If expected output files already exist in the CAPS folder for some subjects and sessions,
+        then do not process those again.
         """
-        from clinica.utils.exceptions import ClinicaException
-        from clinica.utils.stream import cprint
+        from clinica.utils.stream import log_and_warn
 
-        cprint(msg="Pipeline finished with errors.", lvl="error")
-        cprint(msg="CAPS outputs were not found for some image(s):", lvl="error")
-        raise ClinicaException(
-            "Implementation on which image(s) failed will appear soon."
+        visits_already_processed = self.get_processed_visits()
+        if len(visits_already_processed) == 0:
+            return
+        message = (
+            f"In the provided CAPS folder {self.caps_directory}, Clinica found already processed "
+            f"images for {len(visits_already_processed)} visit(s):\n- "
         )
+        message += "\n- ".join([str(visit) for visit in visits_already_processed])
+        message += "\nThose visits will be ignored by Clinica."
+        log_and_warn(message, UserWarning)
+        self.visits = [
+            visit for visit in self.visits if visit not in visits_already_processed
+        ]
+
+    def get_processed_visits(self) -> list[Visit]:
+        """Examine the files present in the CAPS output folder and return the visits for which processing has already been done."""
+        return []
 
     def _init_nodes(self) -> None:
         """Init the basic workflow and I/O nodes necessary before build."""
@@ -648,6 +711,7 @@ class Pipeline(Workflow):
             self._check_dependencies()
             self._check_pipeline_parameters()
             if not self.has_input_connections():
+                self.determine_subject_and_session_to_process()
                 self._build_input_node()
             self._build_core_nodes()
             if not self.has_output_connections():
@@ -680,13 +744,11 @@ class Pipeline(Workflow):
 
         from networkx import Graph, NetworkXError
 
-        from clinica.utils.stream import cprint
         from clinica.utils.ux import print_failed_images
 
+        self._handle_cross_sectional_dataset()
         if not self.is_built:
             self.build()
-        self._check_not_cross_sectional()
-
         if not bypass_check:
             self._check_size()
             plugin_args = self._update_parallelize_info(plugin_args)
@@ -714,75 +776,49 @@ class Pipeline(Workflow):
             else:
                 raise e
         except NetworkXError:
-            cprint(
-                msg=(
-                    "Either all the images were already run by the pipeline "
-                    "or no image was found to run the pipeline."
-                ),
-                lvl="warning",
+            msg = (
+                "Either all the images were already run by the pipeline "
+                "or no image was found to run the pipeline."
             )
+            log_and_warn(msg, UserWarning)
             exec_graph = Graph()
         return exec_graph
 
-    def _load_info(self):
-        """Loads the associated info.json file.
-
-        Todo:
-            - [ ] Raise an appropriate exception when the info file can't open
-
-        Raises:
-            None. # TODO(@jguillon)
-
-        Returns:
-            self: A Pipeline object.
-        """
+    @property
+    def info(self) -> dict:
         import json
 
-        with open(self.info_file) as info_file:
-            self.info = json.load(info_file)
-        return self
+        if self._info is None:
+            try:
+                with open(self.info_file) as info_file:
+                    info = json.load(info_file)
+            except FileNotFoundError:
+                log_and_warn(
+                    f"Info file {self.info_file} for pipeline {self.name} is missing.",
+                    UserWarning,
+                )
+                info = {}
+            self._info = info
+        return self._info
+
+    @property
+    def dependencies(self) -> List[SoftwareDependency]:
+        if self._dependencies is None:
+            dependencies = [
+                SoftwareDependency.from_dict(d)
+                for d in self.info.get("dependencies", [])
+            ]
+            dependencies = [
+                d for d in dependencies if d.name not in self._ignore_dependencies
+            ]
+            self._dependencies = dependencies
+        return self._dependencies
 
     def _check_dependencies(self):
-        """Checks if listed dependencies are present.
-
-        Loads the pipelines related `info.json` file and check each one of the
-        dependencies listed in the JSON "dependencies" field. Its raises
-        exception if a program in the list does not exist or if environment
-        variables are not properly defined.
-
-        Todo:
-            - [ ] MATLAB toolbox dependency checking
-            - [x] check MATLAB
-            - [ ] Clinica pipelines dependency checks
-            - [ ] Check dependencies version
-
-        Raises:
-            Exception: Raises an exception when bad dependency types given in
-            the `info.json` file are detected.
-
-        Returns:
-            self: A Pipeline object.
-        """
-        from clinica.utils.check_dependency import check_binary, check_software
-
-        if not self.info:
-            self._load_info()
-        for d in self.info["dependencies"]:
-            if d["type"] == "software":
-                check_software(d["name"])
-            elif d["type"] == "binary":
-                check_binary(d["name"])
-            elif d["type"] == "toolbox":
-                pass
-            elif d["type"] == "pipeline":
-                pass
-            else:
-                raise Exception(
-                    f"Pipeline.check_dependencies() Unknown dependency type: '{d['type']}'."
-                )
+        """Checks if listed dependencies are correctly installed."""
+        for dependency in self.dependencies:
+            dependency.check()
         self._check_custom_dependencies()
-
-        return self
 
     def _check_size(self):
         """Check if the pipeline has enough space on the disk for both working directory and CAPS."""
@@ -854,8 +890,6 @@ class Pipeline(Workflow):
         """
         from multiprocessing import cpu_count
 
-        from clinica.utils.stream import cprint
-
         n_cpu = cpu_count()
         ask_user = False
 
@@ -864,28 +898,22 @@ class Pipeline(Workflow):
             # so we need a try / except block
             n_thread_cmdline = plugin_args["n_procs"]
             if n_thread_cmdline > n_cpu:
-                cprint(
-                    msg=(
-                        f"You are trying to run clinica with a number of threads ({n_thread_cmdline}) superior to your "
-                        f"number of CPUs ({n_cpu})."
-                    ),
-                    lvl="warning",
+                msg = (
+                    f"You are trying to run clinica with a number of threads ({n_thread_cmdline}) superior to your "
+                    f"number of CPUs ({n_cpu})."
                 )
+                log_and_warn(msg, UserWarning)
                 ask_user = True
         except TypeError:
-            cprint(
-                msg=f"You did not specify the number of threads to run in parallel (--n_procs argument).",
-                lvl="warning",
-            )
-            cprint(
-                msg=(
+            log_and_warn(
+                (
+                    f"You did not specify the number of threads to run in parallel (--n_procs argument)."
                     f"Computation time can be shorten as you have {n_cpu} CPUs on this computer. "
                     f"We recommend using {n_cpu - 1} threads."
                 ),
-                lvl="warning",
+                UserWarning,
             )
             ask_user = True
-
         if ask_user:
             n_procs = click.prompt(
                 text="How many threads do you want to use?",
@@ -903,51 +931,73 @@ class Pipeline(Workflow):
 
         return plugin_args
 
-    def _check_not_cross_sectional(self):
+    def _handle_cross_sectional_dataset(self):
+        """Check if the dataset is longitudinal or cross-sectional.
+
+        If it is cross-sectional, propose to convert it to a longitudinal layout.
         """
-        This function checks if the dataset is longitudinal.
-
-        If it is cross-sectional, clinica proposes to convert it in a clinica compliant form.
-
-        author: Arnaud Marcoux
-        """
-        import sys
-
-        from clinica.utils.exceptions import ClinicaInconsistentDatasetError
-        from clinica.utils.stream import cprint
-
         if self.bids_directory is None:
             return
-        all_subs = [
+        subjects = [
             f.name
             for f in self.bids_directory.iterdir()
             if (self.bids_directory / f).is_dir() and f.name.startswith("sub-")
         ]
-        cross_subj, long_subj = _detect_cross_sectional_and_longitudinal_subjects(
-            all_subs, self.bids_directory
+        (
+            cross_sectional_subjects,
+            longitudinal_subjects,
+        ) = _detect_cross_sectional_and_longitudinal_subjects(
+            subjects, self.bids_directory
         )
-        try:
-            _check_cross_subj(cross_subj)
-        except ClinicaInconsistentDatasetError as e:
-            cprint(e, lvl="warning")
-            proposed_bids = (
-                self.bids_directory / f"{self.bids_directory.name}_clinica_compliant"
+        if cross_sectional_subjects:
+            self._convert_to_longitudinal_if_user_agrees(
+                cross_sectional_subjects, longitudinal_subjects
             )
-            if not click.confirm(
-                "Do you want to proceed with the conversion in another folder? "
-                "(Your original BIDS folder will not be modified "
-                f"and the folder {proposed_bids} will be created.)"
-            ):
-                click.echo("Clinica will now exit...")
-                sys.exit()
-            else:
-                cprint("Converting cross-sectional dataset into longitudinal...")
-                _convert_cross_sectional(
-                    self.bids_directory, proposed_bids, cross_subj, long_subj
-                )
-                cprint(
-                    f"Conversion succeeded. Your clinica-compliant dataset is located here: {proposed_bids}"
-                )
+
+    def _convert_to_longitudinal_if_user_agrees(
+        self,
+        cross_sectional_subjects: List[str],
+        longitudinal_subjects: List[str],
+    ):
+        import sys
+
+        from clinica.utils.stream import cprint
+
+        log_and_warn(
+            (
+                f"The following subjects of the input dataset {self.bids_directory} seem to "
+                "have a cross-sectional layout which is not supported by Clinica:\n"
+                + "\n- ".join(cross_sectional_subjects)
+            ),
+            UserWarning,
+        )
+        proposed_bids = (
+            self.bids_directory.parent / f"{self.bids_directory.name}_clinica_compliant"
+        )
+        if not click.confirm(
+            "Do you want to proceed with the conversion in another folder? "
+            "(Your original BIDS folder will not be modified "
+            f"and the folder {proposed_bids} will be created.)"
+        ):
+            click.echo(
+                "Clinica does not support cross-sectional layout for BIDS dataset input. "
+                "To run the pipeline, please provide a dataset in longitudinal format or accept "
+                "the automatic conversion. Clinica will now exit."
+            )
+            sys.exit()
+        cprint("Converting cross-sectional dataset into longitudinal...")
+        _convert_cross_sectional(
+            self.bids_directory,
+            proposed_bids,
+            cross_sectional_subjects,
+            longitudinal_subjects,
+        )
+        cprint(
+            f"Conversion succeeded. Your clinica-compliant dataset is located here: {proposed_bids}. "
+            "The pipeline will run using this new dataset as input."
+        )
+        self._bids_directory = proposed_bids
+        self._compute_subjects_and_sessions()
 
     @abc.abstractmethod
     def _build_core_nodes(self):
@@ -1003,26 +1053,31 @@ class Pipeline(Workflow):
         """Check pipeline parameters."""
 
 
-class PETPipeline(Pipeline):
-    def _check_pipeline_parameters(self) -> None:
-        """Check pipeline parameters."""
-        if "acq_label" not in self.parameters.keys():
-            raise KeyError("Missing compulsory acq_label key in pipeline parameter.")
-        self.parameters.setdefault("reconstruction_method", None)
-
-    def _get_pet_scans_query(self) -> dict:
-        """Return the query to retrieve PET scans."""
-        from clinica.utils.input_files import bids_pet_nii
-        from clinica.utils.pet import ReconstructionMethod, Tracer
-
-        pet_tracer = None
-        if self.parameters["acq_label"] is not None:
-            pet_tracer = Tracer(self.parameters["acq_label"])
-
-        reconstruction_method = None
-        if self.parameters["reconstruction_method"] is not None:
-            reconstruction_method = ReconstructionMethod(
-                self.parameters["reconstruction_method"]
-            )
-
-        return bids_pet_nii(pet_tracer, reconstruction_method)
+class GroupPipeline(Pipeline):
+    def __init__(
+        self,
+        caps_directory: str,
+        group_label: str,
+        bids_directory: Optional[str] = None,
+        tsv_file: Optional[str] = None,
+        overwrite_caps: Optional[bool] = False,
+        base_dir: Optional[str] = None,
+        parameters: Optional[dict] = None,
+        name: Optional[str] = None,
+        ignore_dependencies: Optional[List[str]] = None,
+        caps_name: Optional[str] = None,
+    ):
+        super().__init__(
+            bids_directory=bids_directory,
+            caps_directory=caps_directory,
+            tsv_file=tsv_file,
+            overwrite_caps=overwrite_caps,
+            base_dir=base_dir,
+            parameters=parameters,
+            name=name,
+            ignore_dependencies=ignore_dependencies,
+            caps_name=caps_name,
+        )
+        self.group_label: GroupLabel = GroupLabel(group_label)
+        self.group_id: GroupID = GroupID.from_label(self.group_label)
+        self.group_directory: Path = self.caps_directory / "groups" / str(self.group_id)

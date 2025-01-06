@@ -3,15 +3,29 @@
 These functions can check binaries, software (e.g. FreeSurfer) or toolboxes (e.g. SPM).
 """
 import functools
+import json
 import os
 from enum import Enum
+from functools import partial
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
+from attrs import define
+from packaging.specifiers import SpecifierSet
+from packaging.version import Version
+
 from clinica.utils.exceptions import ClinicaMissingDependencyError
+from clinica.utils.stream import (
+    LoggingLevel,
+    cprint,
+    get_logging_level,
+    log_and_raise,
+    log_and_warn,
+)
 
 __all__ = [
     "ThirdPartySoftware",
+    "SoftwareDependency",
     "SoftwareEnvironmentVariable",
     "get_fsl_home",
     "get_freesurfer_home",
@@ -22,6 +36,8 @@ __all__ = [
     "check_binary",
     "check_environment_variable",
     "check_software",
+    "get_software_min_version_supported",
+    "get_software_version",
 ]
 
 
@@ -39,6 +55,71 @@ class ThirdPartySoftware(str, Enum):
     PETPVC = "petpvc"
     SPM = "spm"
     SPMSTANDALONE = "spm standalone"
+
+
+@define
+class SoftwareDependency:
+    """Class modeling a dependency on a third-party software.
+
+    Attributes
+    ----------
+    name : ThirdPartySoftware
+        The name of the software that is a dependency.
+
+    version_constraint : SpecifierSet
+        The constraint on the version of the software that Clinica imposes.
+
+    installed_version : Version, optional
+        The version of the software installed on the machine.
+        If the software is not installed, this value is set to None.
+    """
+
+    name: ThirdPartySoftware
+    version_constraint: SpecifierSet
+    installed_version: Optional[Version]
+
+    @classmethod
+    def from_strings(cls, name: str, version_constraint: str):
+        try:
+            installed_version = get_software_version(name)
+        except Exception:
+            installed_version = None
+        if version_constraint == "":
+            version_constraint = ">=0.0.0"
+        return cls(
+            ThirdPartySoftware(name),
+            SpecifierSet(version_constraint),
+            installed_version,
+        )
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        return cls.from_strings(d["name"], d["version"])
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name.value,
+            "version_constraint": str(self.version_constraint),
+            "installed_version": str(self.installed_version)
+            if self.installed_version
+            else "",
+        }
+
+    def __str__(self) -> str:
+        return json.dumps(self.to_dict())
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
+    def check(self):
+        check_software(self.name, log_level="error", specifier=self.version_constraint)
+
+    def is_satisfied(self) -> bool:
+        try:
+            self.check()
+        except ClinicaMissingDependencyError:
+            return False
+        return True
 
 
 class SoftwareEnvironmentVariable:
@@ -347,59 +428,359 @@ _check_fsl = functools.partial(
 )
 
 
-def _check_fsl_above_version_five() -> None:
-    """Check FSL software."""
-    import nipype.interfaces.fsl as fsl
+def get_software_min_version_supported(
+    software: Union[str, ThirdPartySoftware],
+) -> Version:
+    """Return the minimum version of the provided third-party software required by Clinica.
 
-    from clinica.utils.stream import cprint
+    Parameters
+    ----------
+    software : str or ThirdPartySoftware
+        One of the third-party software of Clinica.
 
-    _check_fsl()
-    try:
-        if fsl.Info.version().split(".") < ["5", "0", "5"]:
-            raise ClinicaMissingDependencyError(
-                "FSL version must be greater than 5.0.5"
-            )
-    except Exception as e:
-        cprint(msg=str(e), lvl="error")
+    Returns
+    -------
+    Version :
+        The minimum version number of the software required by Clinica.
 
-
-def _check_freesurfer_above_version_six() -> None:
-    """Check FreeSurfer software >= 6.0.0."""
-    import nipype.interfaces.freesurfer as freesurfer
-
-    from clinica.utils.stream import cprint
-
-    _check_freesurfer()
-    try:
-        if freesurfer.Info().version().split("-")[3].split(".") < ["6", "0", "0"]:
-            raise ClinicaMissingDependencyError(
-                "FreeSurfer version must be greater than 6.0.0"
-            )
-    except Exception as e:
-        cprint(msg=str(e), lvl="error")
-
-
-def check_software(software: Union[str, ThirdPartySoftware]):
+    Examples
+    --------
+    >>> from clinica.utils.check_dependency import get_software_min_version_supported
+    >>> get_software_min_version_supported("ants")
+    <Version('2.5.0')>
+    """
     software = ThirdPartySoftware(software)
-    if software == ThirdPartySoftware.ANTS:
-        return _check_ants()
-    if software == ThirdPartySoftware.FSL:
-        return _check_fsl_above_version_five()
     if software == ThirdPartySoftware.FREESURFER:
-        return _check_freesurfer_above_version_six()
+        return Version("6.0.0")
+    if software == ThirdPartySoftware.FSL:
+        return Version("5.0.5")
+    if software == ThirdPartySoftware.ANTS:
+        return Version("2.5.0")
+    if software == ThirdPartySoftware.DCM2NIIX:
+        return Version("1.0.20240202")
+    if software == ThirdPartySoftware.MRTRIX:
+        return Version("3.0.3")
+    if software == ThirdPartySoftware.CONVERT3D:
+        return Version("1.0.0")
+    if software == ThirdPartySoftware.MATLAB:
+        return Version("9.2.0.556344")
+    if software == ThirdPartySoftware.SPM:
+        return Version("12.7219")
+    if software == ThirdPartySoftware.MCR:
+        return Version("9.0.1")
+    if software == ThirdPartySoftware.SPMSTANDALONE:
+        return Version("12.7219")
+    if software == ThirdPartySoftware.PETPVC:
+        return Version("0.0.0")
+
+
+def get_software_version(software: Union[str, ThirdPartySoftware]) -> Version:
+    """Return the version of the provided third-party software.
+
+    Parameters
+    ----------
+    software : str or ThirdPartySoftware
+        One of the third-party software of Clinica.
+
+    Returns
+    -------
+    Version :
+        The version number of the installed software.
+
+    Notes
+    -----
+    This function assumes the software are correctly installed.
+    It doesn't run any check and directly try to infer the version number by calling an
+    underlying executable.
+
+    Examples
+    --------
+    >>> from clinica.utils.check_dependency import get_software_version
+    >>> get_software_version("freesurfer")
+    <Version('7.2.0')>
+    """
+    software = ThirdPartySoftware(software)
+    if software == ThirdPartySoftware.FREESURFER:
+        return _get_freesurfer_version()
+    if software == ThirdPartySoftware.FSL:
+        return _get_fsl_version()
+    if software == ThirdPartySoftware.ANTS:
+        return _get_ants_version()
+    if software == ThirdPartySoftware.DCM2NIIX:
+        return _get_dcm2niix_version()
+    if software == ThirdPartySoftware.MRTRIX:
+        return _get_mrtrix_version()
+    if software == ThirdPartySoftware.CONVERT3D:
+        return _get_convert3d_version()
+    if software == ThirdPartySoftware.MATLAB:
+        return _get_matlab_version()
+    if software == ThirdPartySoftware.SPM:
+        return _get_spm_version()
+    if software == ThirdPartySoftware.MCR:
+        return _get_mcr_version()
+    if software == ThirdPartySoftware.SPMSTANDALONE:
+        return _get_spm_standalone_version()
+    if software == ThirdPartySoftware.PETPVC:
+        return Version("0.0.0")
+
+
+def _get_freesurfer_version() -> Version:
+    from nipype.interfaces import freesurfer
+
+    return Version(str(freesurfer.Info.looseversion()))
+
+
+def _get_spm_version() -> Version:
+    from nipype.interfaces import spm
+
+    from .spm import configure_nipype_interface_to_work_with_spm
+
+    configure_nipype_interface_to_work_with_spm()
+
+    return Version(spm.SPMCommand().version)
+
+
+def _get_spm_standalone_version() -> Version:
+    from nipype.interfaces import spm
+
+    from .spm import configure_nipype_interface_to_work_with_spm_standalone
+
+    configure_nipype_interface_to_work_with_spm_standalone()
+
+    return Version(spm.SPMCommand().version)
+
+
+def _get_fsl_version() -> Version:
+    import re
+
+    from nipype.interfaces import fsl
+
+    from clinica.utils.stream import cprint
+
+    raw_output = str(fsl.Info.version())
+    try:
+        return Version(re.search(r"\s*([\d.]+)", raw_output).group(1))
+    except Exception as e:
+        cprint(msg=str(e), lvl="error")
+
+
+def _get_software_version_from_command_line(
+    executable: str, prepend_with_v: bool = True, two_dashes: bool = True
+) -> Version:
+    import re
+
+    from clinica.utils.stream import log_and_raise
+
+    try:
+        return Version(
+            re.search(
+                rf"{'v' if prepend_with_v else ''}\s*([\d.]+)",
+                _run_command(executable, two_dashes=two_dashes),
+            )
+            .group(1)
+            .strip(".")
+        )
+    except Exception as e:
+        log_and_raise(str(e), RuntimeError)
+
+
+def _run_command(executable: str, two_dashes: bool = True) -> str:
+    import subprocess
+
+    return subprocess.run(
+        [executable, f"-{'-' if two_dashes else ''}version"], stdout=subprocess.PIPE
+    ).stdout.decode("utf-8")
+
+
+_get_ants_version = partial(
+    _get_software_version_from_command_line,
+    executable="antsRegistration",
+    prepend_with_v=False,
+)
+_get_dcm2niix_version = partial(
+    _get_software_version_from_command_line, executable="dcm2niix"
+)
+_get_mrtrix_version = partial(
+    _get_software_version_from_command_line,
+    executable="mrtransform",
+    prepend_with_v=False,
+)
+_get_convert3d_version = partial(
+    _get_software_version_from_command_line,
+    executable="c3d",
+    prepend_with_v=False,
+    two_dashes=False,
+)
+
+
+def _get_matlab_version() -> Version:
+    import re
+
+    from clinica.utils.stream import log_and_raise
+
+    try:
+        return Version(
+            re.search(r"\(\s*([\d.]+)\)", _get_matlab_start_session_message())
+            .group(1)
+            .strip(".")
+        )
+    except Exception as e:
+        log_and_raise(str(e), RuntimeError)
+
+
+def _get_matlab_start_session_message() -> str:
+    """Start Matlab, get the message displayed at the beginning of the session, and quit."""
+    import subprocess
+
+    return subprocess.run(
+        ["matlab", "-r", "quit", "-nojvm"], stdout=subprocess.PIPE
+    ).stdout.decode("utf-8")
+
+
+def _get_mcr_version() -> Version:
+    import os
+
+    mcr_home_path = Path(os.environ.get("MCR_HOME"))
+    raw_version = mcr_home_path.parent.name
+    return _map_mcr_release_to_version_number(raw_version)
+
+
+def _map_mcr_release_to_version_number(mcr_release: str) -> Version:
+    """Map the MCR release to a proper version number.
+
+    If the found version is older than the minimum supported version, we don't bother mapping it
+    to its version number, 0.0.0 is returned.
+    If the release is >= 2024a, we use the fact that Matlab is now using proper calendar versioning.
+    If the release is in-between, we use a hardcoded mapping.
+    """
+    mcr_versions_mapping = {
+        "2023b": Version("23.2"),
+        "2023a": Version("9.14"),
+        "2022b": Version("9.13"),
+        "2022a": Version("9.12"),
+        "2021b": Version("9.11"),
+        "2021a": Version("9.10"),
+        "2020b": Version("9.9"),
+        "2020a": Version("9.8"),
+        "2019b": Version("9.7"),
+        "2019a": Version("9.6"),
+        "2018b": Version("9.5"),
+        "2018a": Version("9.4"),
+        "2017b": Version("9.3"),
+        "2017a": Version("9.2"),
+        "2016b": Version("9.1"),
+        "2016a": Version("9.0.1"),
+    }
+    if int(mcr_release[:4]) >= 2024:
+        return Version(f"{mcr_release[2:4]}.{'1' if mcr_release[-1] == 'a' else '2'}")
+    return mcr_versions_mapping.get(mcr_release, Version("0.0.0"))
+
+
+def _check_software_version(
+    software: ThirdPartySoftware,
+    *,
+    log_level: Optional[LoggingLevel] = None,
+    specifier: Optional[SpecifierSet] = None,
+):
+    """Check that the installed version of the software is satisfying the constraints imposed by Clinica."""
+    log_level = log_level or LoggingLevel.WARNING
+    if specifier is None:
+        specifier = SpecifierSet(f">={get_software_min_version_supported(software)}")
+    if (installed_version := get_software_version(software)) not in specifier:
+        (log_and_raise if log_level >= LoggingLevel.ERROR else log_and_warn)(
+            f"{software.value} version is {installed_version}. We strongly recommend to have {software.value} {specifier}.",
+            (
+                ClinicaMissingDependencyError
+                if log_level == LoggingLevel.ERROR
+                else UserWarning
+            ),
+        )
+    cprint(
+        f"Found installation of {software.value} with version {installed_version}, satisfying {specifier}.",
+        lvl="info",
+    )
+
+
+def check_software(
+    software: Union[str, ThirdPartySoftware],
+    *,
+    log_level: Optional[Union[str, LoggingLevel]] = None,
+    specifier: Optional[Union[str, SpecifierSet]] = None,
+):
+    """Run some checks on the given software.
+
+    These checks are of two types:
+        - checks to verify that the executable is present in the PATH.
+          Also check configurations made through environment variables.
+        - checks on the installed version. The installed version has to
+          satisfy the constraints imposed by Clinica.
+
+    Parameters
+    ----------
+    software : str or ThirdPartySoftware
+        One of the third-party software of Clinica.
+
+    log_level : str or LoggingLevel, optional
+        Whether to raise or warn if the version of the installed software does not
+        match the requirement. For specific cases like if FreeSurfer is < 6.0, an
+        error will be raised independently of this parameter because it is impossible
+        that Clinica pipelines could work in these situations.
+        Default is set to warnings.
+
+    specifier : str or SpecifierSet, optional
+        A version constraint for the software (i.e. '>=2.0.1', '<1.0.0', or '==0.10.9').
+        If not provided, the specifier will be '>= minimum_version' where 'minimum_version'
+        is the minimum version number of the software required by Clinica.
+
+    Raises
+    ------
+    ClinicaMissingDependencyError :
+        If an issue is found with the installation of the provided software.
+        In some cases where the software is correctly installed, but the version is considered
+        a bit old compared to the one recommended by Clinica, a warning could be given instead of
+        an error. In this situation, it is strongly recommended to upgrade the dependency even
+        though Clinica does not raise.
+
+    Examples
+    --------
+    >>> from clinica.utils.check_dependency import check_software
+    >>> check_software("dcm2niix")
+    >>> check_software("matlab", log_level="error")
+    >>> check_software("ants", specifier=">=2.5")
+    """
+    software = ThirdPartySoftware(software)
+    if specifier and not isinstance(specifier, SpecifierSet):
+        if specifier == "":
+            specifier = None
+        else:
+            specifier = SpecifierSet(specifier)
+    if log_level:
+        log_level = get_logging_level(log_level)
+    else:
+        log_level = LoggingLevel.WARNING
+    if software == ThirdPartySoftware.ANTS:
+        _check_ants()
+    if software == ThirdPartySoftware.FSL:
+        _check_fsl()
+        log_level = LoggingLevel.ERROR
+    if software == ThirdPartySoftware.FREESURFER:
+        _check_freesurfer()
+        log_level = LoggingLevel.ERROR
     if (
         software == ThirdPartySoftware.SPM
         or software == ThirdPartySoftware.SPMSTANDALONE
         or software == ThirdPartySoftware.MCR
     ):
-        return _check_spm()
+        _check_spm()
+        log_level = LoggingLevel.ERROR
     if software == ThirdPartySoftware.MATLAB:
-        return _check_matlab()
+        _check_matlab()
     if software == ThirdPartySoftware.DCM2NIIX:
-        return _check_dcm2niix()
+        _check_dcm2niix()
     if software == ThirdPartySoftware.PETPVC:
-        return _check_petpvc()
+        _check_petpvc()
     if software == ThirdPartySoftware.MRTRIX:
-        return _check_mrtrix()
+        _check_mrtrix()
     if software == ThirdPartySoftware.CONVERT3D:
-        return _check_convert3d()
+        _check_convert3d()
+    _check_software_version(software, log_level=log_level, specifier=specifier)

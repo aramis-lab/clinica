@@ -1,9 +1,9 @@
 from typing import List
 
-from clinica.pipelines.engine import Pipeline
+from clinica.pipelines.engine import GroupPipeline
 
 
-class T1VolumeDartel2MNI(Pipeline):
+class T1VolumeDartel2MNI(GroupPipeline):
     """T1VolumeDartel2MNI - Dartel template to MNI.
 
     Returns:
@@ -12,15 +12,10 @@ class T1VolumeDartel2MNI(Pipeline):
 
     def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
-        from clinica.utils.group import check_group_label
-
-        if "group_label" not in self.parameters.keys():
-            raise KeyError("Missing compulsory group_label key in pipeline parameter.")
         self.parameters.setdefault("tissues", [1, 2, 3])
         self.parameters.setdefault("voxel_size", None)
         self.parameters.setdefault("modulate", True)
         self.parameters.setdefault("smooth", [8])
-        check_group_label(self.parameters["group_label"])
 
     def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
@@ -57,19 +52,22 @@ class T1VolumeDartel2MNI(Pipeline):
             t1_volume_final_group_template,
             t1_volume_native_tpm,
         )
-        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
+        from clinica.utils.inputs import (
+            clinica_file_reader,
+            clinica_group_reader,
+            clinica_list_of_files_reader,
+            format_clinica_file_reader_errors,
+        )
         from clinica.utils.stream import cprint
         from clinica.utils.ux import (
             print_groups_in_caps_directory,
             print_images_to_process,
         )
 
-        if not (
-            self.caps_directory / "groups" / f"group-{self.parameters['group_label']}"
-        ).exists():
+        if not self.group_directory.exists():
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
-                f"Group {self.parameters['group_label']} does not exist. "
+                f"Group {self.group_label} does not exist. "
                 "Did you run t1-volume or t1-volume-create-dartel pipeline?"
             )
 
@@ -83,50 +81,48 @@ class T1VolumeDartel2MNI(Pipeline):
 
         # Segmented Tissues
         # =================
-        tissues_input = []
-        for tissue_number in self.parameters["tissues"]:
-            try:
-                native_space_tpm, _ = clinica_file_reader(
-                    self.subjects,
-                    self.sessions,
-                    self.caps_directory,
-                    t1_volume_native_tpm(tissue_number),
-                )
-                tissues_input.append(native_space_tpm)
-            except ClinicaException as e:
-                all_errors.append(e)
-        # Tissues_input has a length of len(self.parameters['mask_tissues']). Each of these elements has a size of
-        # len(self.subjects). We want the opposite : a list of size len(self.subjects) whose elements have a size of
-        # len(self.parameters['mask_tissues']. The trick is to iter on elements with zip(*my_list)
-        tissues_input_rearranged = []
-        for subject_tissue_list in zip(*tissues_input):
-            tissues_input_rearranged.append(subject_tissue_list)
-
-        read_input_node.inputs.native_segmentations = tissues_input_rearranged
-
-        # Flow Fields
-        # ===========
         try:
-            read_input_node.inputs.flowfield_files, _ = clinica_file_reader(
+            tissues_input = clinica_list_of_files_reader(
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
-                t1_volume_deformation_to_template(self.parameters["group_label"]),
+                [
+                    t1_volume_native_tpm(tissue_number)
+                    for tissue_number in self.parameters["tissues"]
+                ],
             )
+            # Tissues_input has a length of len(self.parameters['mask_tissues']). Each of these elements has a size of
+            # len(self.subjects). We want the opposite : a list of size len(self.subjects) whose elements have a size of
+            # len(self.parameters['mask_tissues']. The trick is to iter on elements with zip(*my_list)
+            tissues_input_rearranged = []
+            for subject_tissue_list in zip(*tissues_input):
+                tissues_input_rearranged.append(subject_tissue_list)
+                read_input_node.inputs.native_segmentations = tissues_input_rearranged
         except ClinicaException as e:
             all_errors.append(e)
+
+        # Flow Fields
+        # ===========
+        read_input_node.inputs.flowfield_files, flowfield_errors = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.caps_directory,
+            t1_volume_deformation_to_template(self.group_label),
+        )
+        if flowfield_errors:
+            all_errors.append(format_clinica_file_reader_errors(flowfield_errors))
 
         # Dartel Template
         # ================
         try:
             read_input_node.inputs.template_file = clinica_group_reader(
                 self.caps_directory,
-                t1_volume_final_group_template(self.parameters["group_label"]),
+                t1_volume_final_group_template(self.group_label),
             )
         except ClinicaException as e:
             all_errors.append(e)
 
-        if len(all_errors) > 0:
+        if any(all_errors):
             error_message = "Clinica faced error(s) while trying to read files in your CAPS/BIDS directories.\n"
             for msg in all_errors:
                 error_message += str(msg)
@@ -171,8 +167,7 @@ class T1VolumeDartel2MNI(Pipeline):
             + self.subjects[i]
             + "/"
             + self.sessions[i]
-            + "/t1/spm/dartel/group-"
-            + self.parameters["group_label"]
+            + f"/t1/spm/dartel/{self.group_id}"
             for i in range(len(self.subjects))
         ]
         write_normalized_node.inputs.regexp_substitutions = [

@@ -26,6 +26,12 @@ pipeline_name = "flair-linear"
 @cli_param.option.working_directory
 @option.global_option_group
 @option.n_procs
+@cli_param.option.option(
+    "--use-antspy",
+    is_flag=True,
+    help="Use ANTsPy instead of ANTs.",
+)
+@cli_param.option.caps_name
 def cli(
     bids_directory: str,
     caps_directory: str,
@@ -34,6 +40,8 @@ def cli(
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
+    use_antspy: bool = False,
+    caps_name: Optional[str] = None,
 ) -> None:
     """Affine registration of Flair images to the MNI standard space.
 
@@ -59,6 +67,8 @@ def cli(
         base_dir=working_directory,
         parameters=parameters,
         name=pipeline_name,
+        use_antspy=use_antspy,
+        caps_name=caps_name,
     )
 
     exec_pipeline = (

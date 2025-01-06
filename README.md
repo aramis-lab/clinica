@@ -12,8 +12,8 @@
 <p align="center"><strong>Software platform for clinical neuroimaging studies</strong></p>
 
 <p align="center">
-  <a href="https://ci.inria.fr/clinica-aramis/job/clinica/job/dev/">
-    <img src="https://ci.inria.fr/clinica-aramis/buildStatus/icon?job=clinica%2Fdev" alt="Build Status">
+  <a href="https://github.com/aramis-lab/clinica/actions/workflows/test.yml">
+    <img src="https://github.com/aramis-lab/clinica/actions/workflows/test.yml/badge.svg" alt="Build Status">
   </a>
   <a href="https://badge.fury.io/py/clinica">
     <img src="https://badge.fury.io/py/clinica.svg" alt="PyPI version">
@@ -126,7 +126,7 @@ After activation, use `pip` to install Clinica.
 Depending on the pipeline that you want to use, you need to install pipeline-specific interfaces.
 Some of which uses a different runtime or use incompatible licensing terms, which prevent their distribution alongside Clinica.
 Not all the dependencies are necessary to run Clinica.
-Please refer to this [page](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Third-party/)
+Please refer to this [page](https://aramislab.paris.inria.fr/clinica/docs/public/dev/Software/Third-party/)
 to determine which third-party libraries you need to install.
 
 ## Example

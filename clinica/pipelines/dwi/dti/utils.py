@@ -1,11 +1,11 @@
 """This module contains utilities used by the DWIDTI pipeline."""
 
-from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+from clinica.utils.dwi import DTIBasedMeasure
+
 __all__ = [
-    "DTIBasedMeasure",
     "compute_statistics_on_atlases",
     "get_caps_filenames",
     "rename_into_caps",
@@ -13,15 +13,6 @@ __all__ = [
     "print_end_pipeline",
     "get_ants_transforms",
 ]
-
-
-class DTIBasedMeasure(str, Enum):
-    """Possible DTI measures."""
-
-    FRACTIONAL_ANISOTROPY = "FA"
-    MEAN_DIFFUSIVITY = "MD"
-    AXIAL_DIFFUSIVITY = "AD"
-    RADIAL_DIFFUSIVITY = "RD"
 
 
 def compute_statistics_on_atlases(

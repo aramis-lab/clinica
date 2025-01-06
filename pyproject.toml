@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "clinica"
-version = "0.8.1"
+version = "0.9.3"
 description = "Software platform for clinical neuroimaging studies"
 license = "MIT"
 authors = ["ARAMIS Lab"]
@@ -31,15 +31,15 @@ python = ">=3.9,<3.13"
 nibabel = "^5"
 nipype = ">=1.8.6"
 argcomplete = "^1.9.4"
-pandas = "^1.4"
+pandas = "^2"
 jinja2 = "^3"
 xvfbwrapper = "*"
-numpy = "^1.17"
+numpy = "^2"
 scikit-learn = "^1.0"
 nilearn = "^0.10.3"
 colorlog = "^5"
 xgboost = "*"
-scipy = "^1.7"
+scipy = "^1.12"
 matplotlib = "*"
 scikit-image = "*"
 pydicom = "*"
@@ -54,12 +54,13 @@ pydra = "^0.22"
 pybids = "^0.16"
 joblib = "^1.2.0"
 attrs = ">=20.1.0"
-cattrs = "^1.9.0"
-brainstat = "^0.3.6"
+cattrs = "*"
 pydra-bids = "^0.0.10"
 pydra-freesurfer = "^0.0.9"
 pydra-petpvc="^0.0.4"
 pydra-fsl = "^0.0.22"
+antspyx = "^0.4.2"
+rich = "^13.8.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
@@ -76,6 +77,10 @@ optional = true
 mkdocs = "^1.1"
 mkdocs-material = ">=7.1.8"
 pymdown-extensions = "*"
+
+
+[tool.poetry.group.optional.dependencies]
+brainstat = "^0.4.2"
 
 [tool.poetry.scripts]
 clinica = "clinica.cmdline:main"

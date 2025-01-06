@@ -1,91 +1,68 @@
-from os import PathLike
-from typing import BinaryIO, Iterable, List, Tuple, Union
+from pathlib import Path
+from typing import Iterable
 
-from pandas import DataFrame
+import pandas as pd
+
+__all__ = [
+    "read_clinical_data",
+    "read_imaging_data",
+    "intersect_data",
+    "dataset_to_bids",
+    "write_bids",
+]
 
 
-def find_clinical_data(
-    clinical_data_directory: PathLike,
-) -> Tuple[DataFrame, DataFrame, DataFrame, DataFrame, DataFrame]:
-    from pathlib import Path
-
-    import pandas as pd
-
-    from clinica.utils.stream import cprint
-
-    # Read the xls
+def read_clinical_data(clinical_data_directory: Path) -> dict[str, pd.DataFrame]:
     try:
-        image_data_file = list(Path(clinical_data_directory).glob("*.csv"))
+        image_data_files = [f for f in clinical_data_directory.glob("*.csv")]
     except StopIteration:
         raise FileNotFoundError("Imaging collection file not found.")
+    image_metadata = [pd.read_csv(image_path) for image_path in image_data_files]
+    for i, df in enumerate(image_metadata):
+        image_metadata[i] = df.set_index(df.axes[1][0])
 
-    # Assign the dfs
-    df_list = []
-    for i in range(0, len(image_data_file)):
-        df_list.append(pd.read_csv(str(image_data_file[i])))
-        df_list[i] = df_list[i].set_index(df_list[i].axes[1][0])
-        if df_list[i].index.name == "XNAT_PETSESSIONDATA ID":
-            df_pet = df_list[i]
-        if df_list[i].index.name == "MR ID":
-            df_mri = df_list[i]
-        if df_list[i].index.name == "Subject":
-            df_subject = df_list[i]
-        if df_list[i].index.name == "PUP_PUPTIMECOURSEDATA ID":
-            df_pup = df_list[i]
-        if df_list[i].index.name == "ADRC_ADRCCLINICALDATA ID":
-            df_adrc = df_list[i]
-
-    # Warn if a dataframe is missing
-    if (
-        "df_pup" in locals()
-        and "df_mri" in locals()
-        and "df_adrc" in locals()
-        and "df_pet" in locals()
-    ):
-        cprint(msg="All clinical data have been found", lvl="info")
-    else:
-        raise FileNotFoundError("Clinical data not found or incomplete")
-
-    return df_pet, df_mri, df_subject, df_pup, df_adrc
-
-
-def read_clinical_data(
-    clinical_data_directory: PathLike,
-) -> Tuple[DataFrame, DataFrame, DataFrame, DataFrame, DataFrame]:
-    df_pet, df_mri, df_subject, df_pup, df_adrc = find_clinical_data(
-        clinical_data_directory
-    )
-    dictionary = {
-        "pet": df_pet,
-        "mri": df_mri,
-        "subject": df_subject,
-        "pup": df_pup,
-        "adrc": df_adrc,
+    return {
+        k: _get_df_based_on_index_name(image_metadata, index_name)
+        for k, index_name in zip(
+            ["pet", "mri", "subject", "pup", "adrc"],
+            [
+                "XNAT_PETSESSIONDATA ID",
+                "MR ID",
+                "Subject",
+                "PUP_PUPTIMECOURSEDATA ID",
+                "ADRC_ADRCCLINICALDATA ID",
+            ],
+        )
     }
-    return dictionary
 
 
-def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
-    from pathlib import Path
+def _get_df_based_on_index_name(
+    image_metadata: list[pd.DataFrame], index_name: str
+) -> pd.DataFrame:
+    matching_dfs = [df for df in image_metadata if df.index.name == index_name]
+    if len(matching_dfs) == 0:
+        raise FileNotFoundError(f"Clinical data not found for {index_name}.")
+    if len(matching_dfs) > 1:
+        raise ValueError(f"Multiple data found for {index_name}.")
+    return matching_dfs[0]
 
-    import pandas as pd
+
+def read_imaging_data(imaging_data_directory: Path) -> pd.DataFrame:
+    from clinica.iotools.bids_utils import StudyName, bids_id_factory
 
     source_path_series = pd.Series(
-        find_imaging_data(imaging_data_directory), name="source_path"
+        _find_imaging_data(imaging_data_directory), name="source_path"
     )
-
-    source_dir_series = source_path_series.apply(lambda x: Path(str(x)).parent).rename(
+    source_dir_series = source_path_series.apply(lambda x: x.parent).rename(
         "source_dir"
     )
-    file_spec_series = source_path_series.apply(lambda x: Path(str(x)).parts[0]).rename(
-        "path"
-    )
+    file_spec_series = source_path_series.apply(lambda x: x.parts[0]).rename("path")
     source_file_series = source_path_series.apply(
-        lambda x: identify_modality(str(x))
+        lambda x: _identify_modality(x)
     ).rename("modality")
-    source_run_series = source_path_series.apply(
-        lambda x: identify_runs(str(x))
-    ).rename("run_number")
+    source_run_series = source_path_series.apply(lambda x: _identify_runs(x)).rename(
+        "run_number"
+    )
     df_source = pd.concat(
         [
             source_path_series,
@@ -102,41 +79,41 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         .drop_duplicates()
         .sort_values(by=["source_path"])
     )
-    df_source = df_source.assign(participant_id=lambda df: "sub-" + df.Subject)
+    df_source = df_source.assign(
+        participant_id=lambda df: df.Subject.apply(
+            lambda x: bids_id_factory(StudyName.OASIS3).from_original_study_id(x)
+        )
+    )
     df_source["modality"] = df_source[["modality", "modality_2"]].apply(
         "_".join, axis=1
     )
     return df_source
 
 
-def identify_modality(source_path: str) -> str:
-    from pathlib import Path
-
+def _identify_modality(source_path: Path) -> str:
     try:
-        return (Path(source_path).name).split(".")[0].split("_")[-1]
+        return source_path.name.split(".")[0].split("_")[-1]
     except Exception:
         return "nan"
 
 
-def identify_runs(source_path: str) -> str:
+def _identify_runs(source_path: Path) -> str:
     import re
 
     try:
-        return re.search(r"run-\d+", source_path)[0]
+        return re.search(r"run-\d+", str(source_path))[0]
     except Exception:
         return "run-01"
 
 
-def find_imaging_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
-    from pathlib import Path
-
-    for path in Path(path_to_source_data).rglob("*.nii.gz"):
-        yield str(path.relative_to(path_to_source_data))
+def _find_imaging_data(path_to_source_data: Path) -> Iterable[Path]:
+    for image in path_to_source_data.rglob("*.nii.gz"):
+        yield image.relative_to(path_to_source_data)
 
 
-def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, DataFrame]:
-    import pandas as pd
-
+def intersect_data(
+    df_source: pd.DataFrame, dict_df: dict
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     df_adrc = dict_df["adrc"].assign(
         session_id=lambda df: df.index.map(lambda x: x.split("_")[2])
     )
@@ -150,7 +127,6 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
     df_source = df_source.assign(
         age=lambda df: (df["ageAtEntry"]) + df["Date"].str[1:].astype("float") / 365.25
     )
-
     df_subject_small = (
         dict_df["subject"]
         .merge(df_source["Subject"], how="inner", on="Subject")
@@ -159,19 +135,16 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
     df_source = df_source.merge(
         dict_df["mri"]["Scanner"], how="left", left_on="path", right_on="MR ID"
     )
-
     df_small = df_subject_small.merge(df_adrc_small, how="inner", on="Subject")
     df_small = df_small.assign(participant_id=lambda df: "sub-" + df.Subject)
     df_source = df_source.assign(
         session=lambda df: (round(df["Date"].str[1:].astype("int") / (365.25 / 2)) * 6)
     )
-
     df_source = df_source.assign(
         ses=lambda df: df.session.apply(
             lambda x: f"ses-M{(5 - (len(str(x)))) * '0' + str(int(x))}"
         )
     )
-
     df_source = df_source.join(
         df_source.modality.map(
             {
@@ -238,9 +211,16 @@ def intersect_data(df_source: DataFrame, dict_df: dict) -> Tuple[DataFrame, Data
 
 
 def dataset_to_bids(
-    df_source: DataFrame, df_small: DataFrame
-) -> Tuple[DataFrame, DataFrame, DataFrame]:
-    # Build participants dataframe
+    df_source: pd.DataFrame, df_small: pd.DataFrame
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    return (
+        _build_participants_df(df_small),
+        _build_sessions_df(df_source),
+        _build_scans_df(df_source),
+    )
+
+
+def _build_participants_df(df_small: pd.DataFrame) -> pd.DataFrame:
     df_participants = (
         df_small[["participant_id", "ageAtEntry", "M/F", "Hand", "Education"]]
         .rename(
@@ -252,8 +232,10 @@ def dataset_to_bids(
         )
         .set_index("participant_id", verify_integrity=True)
     )
+    return df_participants
 
-    # Build sessions dataframe
+
+def _build_sessions_df(df_source: pd.DataFrame) -> pd.DataFrame:
     df_session = (
         df_source[
             [
@@ -284,20 +266,19 @@ def dataset_to_bids(
         .drop_duplicates(subset=["participant_id", "session_id"])
         .set_index(["participant_id", "session_id"], verify_integrity=True)
     )
+    return df_session
 
-    # Build scans dataframe
+
+def _build_scans_df(df_source: pd.DataFrame) -> pd.DataFrame:
     df_scan = (
         df_source[["filename", "source_dir"]]
         .drop_duplicates(subset=["filename"])
         .set_index("filename", verify_integrity=True)
     )
+    return df_scan
 
-    return df_participants, df_session, df_scan
 
-
-def install_bids(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
-    from pathlib import Path
-
+def _install_bids(sourcedata_dir: Path, bids_filename: Path) -> None:
     from fsspec.implementations.local import LocalFileSystem
 
     fs = LocalFileSystem(auto_mkdir=True)
@@ -315,7 +296,7 @@ def install_bids(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
     # It may or may not be used, since there might not be any sidecars.
     sidecar_dir = sourcedata_dir.parent / "BIDS"
     for source_sidecar in sidecar_dir.rglob(f"{source_basename}*"):
-        target_sidecar = Path.joinpath(bids_filename.parent, target_basename).with_name(
+        target_sidecar = (bids_filename.parent / target_basename).with_name(
             f"{target_basename}{source_sidecar.suffix}"
         )
         source_file = fs.open(source_sidecar, mode="rb")
@@ -325,41 +306,38 @@ def install_bids(sourcedata_dir: PathLike, bids_filename: PathLike) -> None:
 
 
 def write_bids(
-    to: PathLike,
-    participants: DataFrame,
-    sessions: DataFrame,
-    scans: DataFrame,
-    dataset_directory: PathLike,
-) -> List[PathLike]:
-    from pathlib import Path
-
+    to: Path,
+    participants: pd.DataFrame,
+    sessions: pd.DataFrame,
+    scans: pd.DataFrame,
+    dataset_directory: Path,
+) -> list[str]:
     from fsspec.implementations.local import LocalFileSystem
 
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
-    from clinica.iotools.bids_utils import write_to_tsv
+    from clinica.iotools.bids_utils import StudyName, write_to_tsv
 
-    to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
 
     with fs.transaction:
         with fs.open(to / "dataset_description.json", "w") as dataset_description_file:
-            BIDSDatasetDescription(name="OASIS-3").write(to=dataset_description_file)
+            BIDSDatasetDescription(name=StudyName.OASIS3).write(
+                to=dataset_description_file
+            )
         with fs.open(to / "participants.tsv", "w") as participant_file:
             write_to_tsv(participants, participant_file)
-
         for participant_id, sessions_group in sessions.groupby("participant_id"):
             sessions_group = sessions_group.droplevel("participant_id")
             sessions_filepath = to / participant_id / f"{participant_id}_sessions.tsv"
             with fs.open(sessions_filepath, "w") as sessions_file:
                 write_to_tsv(sessions_group, sessions_file)
 
-    # Perform import of imaging data next.
     for filename, metadata in scans.iterrows():
-        path = Path(dataset_directory) / metadata.source_dir
-        if extract_suffix_from_filename(str(filename)) != "nan":
-            install_bids(sourcedata_dir=path, bids_filename=to / filename)
+        path = dataset_directory / metadata.source_dir
+        if _extract_suffix_from_filename(str(filename)) != "nan":
+            _install_bids(sourcedata_dir=path, bids_filename=to / filename)
     return scans.index.to_list()
 
 
-def extract_suffix_from_filename(filename: str) -> str:
+def _extract_suffix_from_filename(filename: str) -> str:
     return filename.split("_")[-1].split(".")[0]

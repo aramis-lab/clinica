@@ -3,7 +3,7 @@ from os import fspath
 from pathlib import Path
 from test.nonregression.testing_tools import compare_folders, configure_paths
 
-from clinica.utils.pet import Tracer
+from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
 
 def test_pet_linear(cmdopt, tmp_path):
@@ -16,11 +16,15 @@ def test_pet_linear(cmdopt, tmp_path):
 def run_pet_linear(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
-    from clinica.pipelines.pet_linear.pet_linear_pipeline import PETLinear
+    from clinica.pipelines.pet.linear.pipeline import PETLinear
 
     shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
-    parameters = {"acq_label": Tracer.FDG, "suvr_reference_region": "pons"}
+    parameters = {
+        "acq_label": Tracer.FDG,
+        "suvr_reference_region": SUVRReferenceRegion.PONS,
+        "save_PETinT1w": True,
+    }
 
     pipeline = PETLinear(
         bids_directory=fspath(input_dir / "bids"),

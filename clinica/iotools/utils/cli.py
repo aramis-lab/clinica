@@ -1,4 +1,5 @@
-from typing import List, Optional
+from pathlib import Path
+from typing import List, Optional, Union
 
 import click
 
@@ -15,6 +16,15 @@ current_directory = click.argument(
 def cli() -> None:
     """Tools to handle BIDS/CAPS datasets."""
     pass
+
+
+@cli.command()
+@click.argument("dataset", type=click.Path(resolve_path=True))
+def describe(dataset: Union[str, Path]):
+    """Describe a dataset in BIDS or CAPS format."""
+    from .describe import describe as _describe
+
+    _describe(dataset)
 
 
 @cli.command()
@@ -35,67 +45,36 @@ def center_nifti(
     modalities: Optional[List[str]] = None,
     center_all_files: bool = False,
 ) -> None:
-    """Center NIfTI files in a BIDS dataset.
-
-    This tool is mainly useful as a preprocessing step of SPM. In some cases, SPM is not able to segment T1 volumes
-    because their respective center is not aligned with the origin of the world coordinate system. By default, only
-    images detected as problematic are converted from INPUT_BIDS_DIRECTORY to OUTPUT_BIDS_DIRECTORY, whilst the others
-    are copied verbatim.
-    """
+    """Center NIfTI files in a BIDS dataset."""
     import sys
-    import time
-    from os import listdir, makedirs
-    from os.path import isfile, join
 
-    from clinica.iotools.utils.data_handling import (
-        center_all_nifti,
-        write_list_of_files,
-    )
-    from clinica.utils.stream import cprint
+    from clinica.utils.exceptions import ClinicaExistingDatasetError
 
-    # check that output_folder does not exist, or is an empty folder
+    from .center_nifti import center_nifti as center_nifti_
+
     try:
-        makedirs(output_bids_directory)
-    except FileExistsError:
-        file_list = [
-            file for file in listdir(output_bids_directory) if not file.startswith(".")
-        ]
-        if file_list:
-            click.echo(
-                "Target BIDS directory is not empty. Existing files may be overwritten."
+        center_nifti_(
+            bids_directory,
+            output_bids_directory,
+            modalities=modalities,
+            center_all_files=center_all_files,
+            overwrite_existing_files=False,
+        )
+    except ClinicaExistingDatasetError:
+        click.echo(
+            "Target BIDS directory is not empty. Existing files may be overwritten."
+        )
+        if click.confirm("Do you wish to continue?"):
+            center_nifti_(
+                bids_directory,
+                output_bids_directory,
+                modalities=modalities,
+                center_all_files=center_all_files,
+                overwrite_existing_files=True,
             )
-            if not click.confirm("Do you wish to continue?"):
-                click.echo("Clinica will now exit...")
-                sys.exit(0)
-
-    cprint("Clinica is now centering the requested images.")
-
-    centered_files = center_all_nifti(
-        bids_directory,
-        output_bids_directory,
-        modalities,
-        center_all_files,
-    )
-
-    # Write list of created files
-    timestamp = time.strftime("%Y%m%d-%H%M%S", time.localtime(time.time()))
-    log_file = join(output_bids_directory, "centered_nifti_list_" + timestamp + ".txt")
-    # If an error happen while creating the file, the function returns Nan
-    if not write_list_of_files(centered_files, log_file):
-        cprint("Could not create log file.")
-
-    # Final message
-    cprint(
-        f"{str(len(centered_files))} NIfTI files/images of BIDS folder:\n"
-        f"\t{bids_directory}\n"
-        f"for the modalities {modalities} have been centered in output folder:\n"
-        f"\t{output_bids_directory}"
-    )
-    if isfile(log_file):
-        cprint(f"The list of centered NIfTI files is available here: {log_file}.")
-    cprint(
-        "Please note that the rest of the input BIDS folder has also been copied to the output folder."
-    )
+        else:
+            click.echo("Clinica will now exit...")
+            sys.exit(0)
 
 
 @cli.command()
@@ -248,32 +227,19 @@ def merge_tsv(
     ignore_session_scan_files: bool = False,
 ) -> None:
     """Merge clinical data into a single TSV file."""
+    from .merge_tsv import merge_tsv as merge_tsv_
 
-    from clinica.iotools.utils.data_handling import create_merge_file
-    from clinica.utils.inputs import check_bids_folder
-
-    check_bids_folder(bids_directory)
-
-    atlas_selection = []
-    if volume_atlas_selection is not None:
-        atlas_selection += volume_atlas_selection
-    if freesurfer_atlas_selection is not None:
-        atlas_selection += freesurfer_atlas_selection
-    if group_selection == ():
-        group_selection = None
-    if pet_tracers_selection == ():
-        pet_tracers_selection = None
-
-    create_merge_file(
+    merge_tsv_(
         bids_directory,
         output_tsv,
-        caps_dir=caps_directory,
+        caps_directory=caps_directory,
         pipelines=pipelines,
-        ignore_scan_files=ignore_scan_files,
-        ignore_sessions_files=ignore_session_scan_files,
-        atlas_selection=atlas_selection,
+        volume_atlas_selection=volume_atlas_selection,
+        freesurfer_atlas_selection=freesurfer_atlas_selection,
         pvc_restriction=pvc_restriction,
-        tsv_file=subjects_sessions_tsv,
+        pet_tracers_selection=pet_tracers_selection,
         group_selection=group_selection,
-        tracers_selection=pet_tracers_selection,
+        subjects_sessions_tsv=subjects_sessions_tsv,
+        ignore_scan_files=ignore_scan_files,
+        ignore_session_scan_files=ignore_session_scan_files,
     )

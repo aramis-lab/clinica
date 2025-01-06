@@ -2,9 +2,9 @@ name: Build and Deloy Documentation
 
 on:
   push:
-    branches: ["dev", "maint-*"]
+    branches: ["master", "dev", "maint-*"]
   pull_request:
-    branches: ["dev", "maint-*"]
+    branches: ["master", "dev", "maint-*"]
 
 permissions:
   contents: read
@@ -12,10 +12,6 @@ permissions:
 concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
-
-env:
-  POETRY_VERSION: '1.6.1'
-  PYTHON_VERSION: '3.10'
 
 jobs:
   build-and-deploy-doc:
@@ -25,10 +21,6 @@ jobs:
       - doc-runner
     steps:
       - uses: actions/checkout@v4
-      - uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY_VERSION }}
-          virtualenvs-create: false
       - name: Build documentation
         run: |
           make env.conda
@@ -46,5 +38,4 @@ jobs:
           echo $BRANCH_NAME
           mv site "${BRANCH_NAME}"
           ls "${BRANCH_NAME}"
-          scp -r "${BRANCH_NAME}" "aramislab:/srv/local/clinica/docs/public/${BRANCH_NAME}"
-
+          rsync -zav "${BRANCH_NAME}" aramislab:/srv/local/clinica/docs/public/

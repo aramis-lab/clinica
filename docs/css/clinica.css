@@ -1,3 +1,4 @@
+body {text-align: justify}
 
 .md-typeset .codehilite, .md-typeset .highlight, code {
     color: #c7254e;
@@ -41,3 +42,65 @@ h3, .h3, .md-typeset h3 {
     font-weight: 600;
     margin: 1.6rem 0 1.6rem;
 }
+
+.grid a {
+  color: #333; /* Link color */
+  text-align: center;
+  font-size:12px;
+}
+
+
+.md-typeset__table {
+   width: 100%;
+}
+
+.md-typeset table:not([class]) {
+    display: table;
+}
+
+
+.third_party_table table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    }
+
+.third_party_table td, th {
+    border: 0px solid #ddd;
+    padding: 0px 0px;
+    text-align: center,
+    }
+
+.third_party_table tr:hover {
+    color:#ff6600;
+    }
+
+.third_party_table th:nth-child(1) {
+    width: 20%;
+    }
+.third_party_table th:nth-child(2) {
+    width: 8%;
+    }
+.third_party_table th:nth-child(3) {
+    width: 11%;
+    }
+.third_party_table th:nth-child(4) {
+    width: 11%;
+    }
+.third_party_table th:nth-child(5) {
+    width: 6%;
+    }
+.third_party_table th:nth-child(6) {
+    width: 6%;
+    }
+    .third_party_table th:nth-child(7) {
+    width: 10%;
+    }
+.third_party_table th:nth-child(8) {
+    width: 10%;
+    }
+.third_party_table th:nth-child(9) {
+    width: 10%;
+    }
+.third_party_table th:nth-child(10) {
+    width: 8%;
+    }

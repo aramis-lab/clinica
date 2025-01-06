@@ -1,11 +1,14 @@
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from nipype import config
 
 from clinica.pipelines.engine import Pipeline
+from clinica.utils.bids import Visit
+from clinica.utils.check_dependency import ThirdPartySoftware
+from clinica.utils.stream import log_and_warn
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
@@ -24,21 +27,87 @@ class AnatLinear(Pipeline):
         A clinica pipeline object containing the  AnatLinear pipeline.
     """
 
-    @staticmethod
-    def get_processed_images(
-        caps_directory: Path, subjects: List[str], sessions: List[str]
-    ) -> List[str]:
-        from clinica.utils.filemanip import extract_image_ids
-        from clinica.utils.input_files import T1W_LINEAR_CROPPED
+    def __init__(
+        self,
+        bids_directory: Optional[str] = None,
+        caps_directory: Optional[str] = None,
+        tsv_file: Optional[str] = None,
+        overwrite_caps: Optional[bool] = False,
+        base_dir: Optional[str] = None,
+        parameters: Optional[dict] = None,
+        name: Optional[str] = None,
+        ignore_dependencies: Optional[List[str]] = None,
+        use_antspy: bool = False,
+        caps_name: Optional[str] = None,
+    ):
+        self.use_antspy = use_antspy
+        if self.use_antspy:
+            if ignore_dependencies:
+                ignore_dependencies.append(ThirdPartySoftware.ANTS)
+            else:
+                ignore_dependencies = [ThirdPartySoftware.ANTS]
+            log_and_warn(
+                (
+                    "The AnatLinear pipeline has been configured to use ANTsPy instead of ANTs.\n"
+                    "This means that no installation of ANTs is required, but the antspyx Python "
+                    "package must be installed in your environment.\nThis functionality has been "
+                    "introduced in Clinica 0.9.0 and is considered experimental.\n"
+                    "Please report any issue or unexpected results to the Clinica developer team."
+                ),
+                UserWarning,
+            )
+        super().__init__(
+            bids_directory=bids_directory,
+            caps_directory=caps_directory,
+            tsv_file=tsv_file,
+            overwrite_caps=overwrite_caps,
+            base_dir=base_dir,
+            parameters=parameters,
+            ignore_dependencies=ignore_dependencies,
+            name=name,
+            caps_name=caps_name,
+        )
+
+    def get_processed_visits(self) -> list[Visit]:
+        """Return a list of visits for which the pipeline is assumed to have run already.
+
+        Before running the pipeline, for a given visit, if both the T1w image registered
+        to the MNI152NLin2009cSym template and the affine transformation estimated with ANTs
+        already exist, then the visit is added to this list.
+        The pipeline will further skip these visits and run processing only for the remaining
+        visits.
+        """
+        from clinica.utils.filemanip import extract_visits
+        from clinica.utils.input_files import (
+            T1W_LINEAR,
+            T1W_LINEAR_CROPPED,
+            T1W_TO_MNI_TRANSFORM,
+        )
         from clinica.utils.inputs import clinica_file_reader
 
-        image_ids: List[str] = []
-        if caps_directory.is_dir():
-            cropped_files, _ = clinica_file_reader(
-                subjects, sessions, caps_directory, T1W_LINEAR_CROPPED, False
+        if not self.caps_directory.is_dir():
+            return []
+        images, _ = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.caps_directory,
+            T1W_LINEAR
+            if self.parameters.get("uncropped_image", False)
+            else T1W_LINEAR_CROPPED,
+        )
+        visits_having_image = extract_visits(images)
+        transformation, _ = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.caps_directory,
+            T1W_TO_MNI_TRANSFORM,
+        )
+        visits_having_transformation = extract_visits(transformation)
+        return sorted(
+            list(
+                set(visits_having_image).intersection(set(visits_having_transformation))
             )
-            image_ids = extract_image_ids(cropped_files)
-        return image_ids
+        )
 
     def _check_custom_dependencies(self) -> None:
         """Check dependencies that can not be listed in the `info.json` file."""
@@ -70,102 +139,29 @@ class AnatLinear(Pipeline):
 
     def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        from os import pardir
-        from os.path import abspath, dirname, exists, join
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
-        from clinica.utils.filemanip import extract_subjects_sessions_from_filename
+        from clinica.utils.image import get_mni_template
         from clinica.utils.input_files import T1W_NII, Flair_T2W_NII
-        from clinica.utils.inputs import (
-            RemoteFileStructure,
-            clinica_file_reader,
-            fetch_file,
-        )
+        from clinica.utils.inputs import clinica_file_filter
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
-        root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
-        path_to_mask = join(root, "resources", "masks")
-        if self.name == "t1-linear":
-            url_aramis = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/"
-            FILE2 = RemoteFileStructure(
-                filename="mni_icbm152_t1_tal_nlin_sym_09c.nii",
-                url=url_aramis,
-                checksum="93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34",
-            )
-        else:
-            url_aramis = "https://aramislab.paris.inria.fr/files/data/img_flair_linear/"
-            FILE2 = RemoteFileStructure(
-                filename="GG-853-FLAIR-1.0mm.nii.gz",
-                url=url_aramis,
-                checksum="b1d2d359a4c3671685227bb14014ce50ac232012b628335a4c049e2911c64ce1",
-            )
-
-        FILE1 = RemoteFileStructure(
-            filename="ref_cropped_template.nii.gz",
-            url=url_aramis,
-            checksum="67e1e7861805a8fd35f7fcf2bdf9d2a39d7bcb2fd5a201016c4d2acdd715f5b3",
+        self.ref_template = get_mni_template(
+            "t1" if self.name == "t1-linear" else "flair"
         )
-
-        self.ref_template = join(path_to_mask, FILE2.filename)
-        self.ref_crop = join(path_to_mask, FILE1.filename)
-
-        if not (exists(self.ref_template)):
-            try:
-                fetch_file(FILE2, path_to_mask)
-            except IOError as err:
-                cprint(
-                    msg=f"Unable to download required template (mni_icbm152) for processing: {err}",
-                    lvl="error",
-                )
-
-        if not (exists(self.ref_crop)):
-            try:
-                fetch_file(FILE1, path_to_mask)
-            except IOError as err:
-                cprint(
-                    msg=f"Unable to download required template (ref_crop) for processing: {err}",
-                    lvl="error",
-                )
-
-        # Display image(s) already present in CAPS folder
-        # ===============================================
-        processed_ids = self.get_processed_images(
-            self.caps_directory, self.subjects, self.sessions
-        )
-        if len(processed_ids) > 0:
-            cprint(
-                msg=f"Clinica found {len(processed_ids)} image(s) already processed in CAPS directory:",
-                lvl="warning",
-            )
-            for image_id in processed_ids:
-                cprint(msg=f"{image_id.replace('_', ' | ')}", lvl="warning")
-            cprint(msg=f"Image(s) will be ignored by Clinica.", lvl="warning")
-            input_ids = [
-                f"{p_id}_{s_id}" for p_id, s_id in zip(self.subjects, self.sessions)
-            ]
-            to_process_ids = list(set(input_ids) - set(processed_ids))
-            self.subjects, self.sessions = extract_subjects_sessions_from_filename(
-                to_process_ids
-            )
 
         # Inputs from anat/ folder
         # ========================
         # anat image file:
-        try:
-            file = T1W_NII if self.name == "t1-linear" else Flair_T2W_NII
-            anat_files, _ = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, file
-            )
-        except ClinicaException as e:
-            err = (
-                "Clinica faced error(s) while trying to read files in your BIDS directory.\n"
-                + str(e)
-            )
-            raise ClinicaBIDSError(err)
+        query = T1W_NII if self.name == "t1-linear" else Flair_T2W_NII
+
+        anat_files, filtered_subjects, filtered_sessions = clinica_file_filter(
+            self.subjects, self.sessions, self.bids_directory, query
+        )
+        self.subjects = filtered_subjects
+        self.sessions = filtered_sessions
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
@@ -261,8 +257,11 @@ class AnatLinear(Pipeline):
         import nipype.pipeline.engine as npe
         from nipype.interfaces import ants
 
-        from clinica.pipelines.tasks import crop_nifti_task
-        from clinica.utils.filemanip import get_filename_no_ext
+        from clinica.pipelines.t1_linear.tasks import (
+            run_ants_registration_task,
+            run_n4biasfieldcorrection_task,
+        )
+        from clinica.pipelines.tasks import crop_nifti_task, get_filename_no_ext_task
 
         from .anat_linear_utils import print_end_pipeline
 
@@ -270,20 +269,35 @@ class AnatLinear(Pipeline):
             interface=nutil.Function(
                 input_names=["filename"],
                 output_names=["image_id"],
-                function=get_filename_no_ext,
+                function=get_filename_no_ext_task,
             ),
             name="ImageID",
         )
 
-        # The core (processing) nodes
-        # =====================================
-
         # 1. N4biascorrection by ANTS. It uses nipype interface.
         n4biascorrection = npe.Node(
             name="n4biascorrection",
-            interface=ants.N4BiasFieldCorrection(dimension=3, save_bias=True),
+            interface=(
+                nutil.Function(
+                    function=run_n4biasfieldcorrection_task,
+                    input_names=[
+                        "input_image",
+                        "bspline_fitting_distance",
+                        "output_prefix",
+                        "output_dir",
+                        "save_bias",
+                        "verbose",
+                    ],
+                    output_names=["output_image"],
+                )
+                if self.use_antspy
+                else ants.N4BiasFieldCorrection(dimension=3)
+            ),
         )
-
+        n4biascorrection.inputs.save_bias = True
+        if self.use_antspy:
+            n4biascorrection.inputs.output_dir = str(self.base_dir)
+            n4biascorrection.inputs.verbose = True
         if self.name == "t1-linear":
             n4biascorrection.inputs.bspline_fitting_distance = 600
         else:
@@ -291,14 +305,30 @@ class AnatLinear(Pipeline):
 
         # 2. `RegistrationSynQuick` by *ANTS*. It uses nipype interface.
         ants_registration_node = npe.Node(
-            name="antsRegistrationSynQuick", interface=ants.RegistrationSynQuick()
+            name="antsRegistrationSynQuick",
+            interface=(
+                nutil.Function(
+                    function=run_ants_registration_task,
+                    input_names=[
+                        "fixed_image",
+                        "moving_image",
+                        "random_seed",
+                        "output_prefix",
+                        "output_dir",
+                    ],
+                    output_names=["warped_image", "out_matrix"],
+                )
+                if self.use_antspy
+                else ants.RegistrationSynQuick()
+            ),
         )
         ants_registration_node.inputs.fixed_image = self.ref_template
-        ants_registration_node.inputs.transform_type = "a"
-        ants_registration_node.inputs.dimension = 3
+        if not self.use_antspy:
+            ants_registration_node.inputs.transform_type = "a"
+            ants_registration_node.inputs.dimension = 3
 
-        if random_seed := self.parameters.get("random_seed", None):
-            ants_registration_node.inputs.random_seed = random_seed
+        random_seed = self.parameters.get("random_seed", None)
+        ants_registration_node.inputs.random_seed = random_seed or 0
 
         # 3. Crop image (using nifti). It uses custom interface, from utils file
 
@@ -306,11 +336,11 @@ class AnatLinear(Pipeline):
             name="cropnifti",
             interface=nutil.Function(
                 function=crop_nifti_task,
-                input_names=["input_image", "reference_image"],
+                input_names=["input_image", "output_path"],
                 output_names=["output_img"],
             ),
         )
-        cropnifti.inputs.reference_image = self.ref_crop
+        cropnifti.inputs.output_path = self.base_dir
 
         # 4. Print end message
         print_end_message = npe.Node(
@@ -348,6 +378,16 @@ class AnatLinear(Pipeline):
                 (self.input_node, print_end_message, [("anat", "anat")]),
             ]
         )
+        if self.use_antspy:
+            self.connect(
+                [
+                    (
+                        image_id_node,
+                        n4biascorrection,
+                        [("image_id", "output_prefix")],
+                    ),
+                ]
+            )
         if not (self.parameters.get("uncropped_image")):
             self.connect(
                 [

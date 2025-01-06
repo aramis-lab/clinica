@@ -124,7 +124,7 @@ def epi_pipeline(
         (
             inputnode,
             ants_registration,
-            [(inpt, f"inputnode.{inpt}") for inpt in workflow_inputs],
+            [(i, f"inputnode.{i}") for i in workflow_inputs],
         ),
         (
             inputnode,

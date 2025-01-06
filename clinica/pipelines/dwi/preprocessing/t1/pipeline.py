@@ -40,7 +40,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         image_ids: List[str] = []
         if caps_directory.is_dir():
             preproc_files, _ = clinica_file_reader(
-                subjects, sessions, caps_directory, DWI_PREPROC_NII, False
+                subjects, sessions, caps_directory, DWI_PREPROC_NII
             )
             image_ids = extract_image_ids(preproc_files)
         return image_ids
@@ -85,6 +85,48 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
                 * b0_mask: Path of the b0 brainmask
         """
         return ["preproc_dwi", "preproc_bvec", "preproc_bval", "b0_mask"]
+
+    def filter_qc(self) -> tuple[list[str], list[str]]:
+        from clinica.pipelines.dwi.preprocessing.utils import check_dwi_volume
+        from clinica.pipelines.dwi.utils import DWIDataset
+        from clinica.utils.bids import BIDSFileName
+        from clinica.utils.input_files import (
+            DWI_BVAL,
+            DWI_BVEC,
+            DWI_NII,
+        )
+        from clinica.utils.inputs import clinica_list_of_files_reader
+        from clinica.utils.stream import cprint
+
+        subjects = []
+        sessions = []
+        list_bids_files = clinica_list_of_files_reader(
+            self.subjects,
+            self.sessions,
+            self.bids_directory,
+            [DWI_NII, DWI_BVEC, DWI_BVAL],
+            raise_exception=True,
+        )
+        for dwi_image_file, b_vectors_file, b_values_file in zip(*list_bids_files):
+            dwi_image_file_bids = BIDSFileName.from_name(dwi_image_file)
+            try:
+                check_dwi_volume(
+                    DWIDataset(
+                        dwi=dwi_image_file,
+                        b_values=b_values_file,
+                        b_vectors=b_vectors_file,
+                    )
+                )
+                subjects.append(f"sub-{dwi_image_file_bids.subject}")
+                sessions.append(f"ses-{dwi_image_file_bids.session}")
+            except (IOError, ValueError) as e:
+                cprint(
+                    f"Ignoring DWI scan for subject {dwi_image_file_bids.subject} "
+                    f"and session {dwi_image_file_bids.session} for the following reason: {e}",
+                    lvl="warning",
+                )
+
+        return subjects, sessions
 
     def _build_input_node(self):
         """Build and connect an input node to the pipeline."""
@@ -278,6 +320,7 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
             use_cuda=self.parameters["use_cuda"],
             initrand=self.parameters["initrand"],
             compute_mask=True,
+            image_id=True,
         )
         # Susceptibility distortion correction using T1w image
         sdc = epi_pipeline(
@@ -337,7 +380,11 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
                     eddy_fsl,
                     [
                         (x, f"inputnode.{x}")
-                        for x in ("total_readout_time", "phase_encoding_direction")
+                        for x in (
+                            "total_readout_time",
+                            "phase_encoding_direction",
+                            "image_id",
+                        )
                     ],
                 ),
                 (

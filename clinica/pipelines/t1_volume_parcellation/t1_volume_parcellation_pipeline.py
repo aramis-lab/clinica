@@ -1,9 +1,9 @@
 from typing import List
 
-from clinica.pipelines.engine import Pipeline
+from clinica.pipelines.engine import GroupPipeline
 
 
-class T1VolumeParcellation(Pipeline):
+class T1VolumeParcellation(GroupPipeline):
     """T1VolumeParcellation - Computation of mean GM concentration for a set of regions.
 
     Returns:
@@ -17,10 +17,7 @@ class T1VolumeParcellation(Pipeline):
     def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
         from clinica.utils.atlas import T1AndPetVolumeAtlasName
-        from clinica.utils.group import check_group_label
 
-        self.parameters.setdefault("group_label", None)
-        check_group_label(self.parameters["group_label"])
         self.parameters.setdefault("atlases", T1AndPetVolumeAtlasName)
         self.parameters.setdefault("modulate", True)
 
@@ -51,37 +48,30 @@ class T1VolumeParcellation(Pipeline):
 
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.input_files import t1_volume_template_tpm_in_mni
-        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.inputs import clinica_file_filter, clinica_file_reader
         from clinica.utils.stream import cprint
         from clinica.utils.ux import (
             print_groups_in_caps_directory,
             print_images_to_process,
         )
 
-        if not (
-            self.caps_directory / "groups" / f"group-{self.parameters['group_label']}"
-        ).exists():
+        if not self.group_directory.exists():
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
-                f"Group {self.parameters['group_label']} does not exist. "
+                f"Group {self.group_label} does not exist. "
                 "Did you run t1-volume or t1-volume-create-dartel pipeline?"
             )
 
-        try:
-            gm_mni, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                t1_volume_template_tpm_in_mni(
-                    group_label=self.parameters["group_label"],
-                    tissue_number=1,
-                    modulation=self.parameters["modulate"],
-                ),
-            )
-        except ClinicaException as e:
-            final_error_str = "Clinica faced error(s) while trying to read files in your CAPS directory.\n"
-            final_error_str += str(e)
-            raise ClinicaCAPSError(final_error_str)
+        gm_mni, self.subjects, self.sessions = clinica_file_filter(
+            self.subjects,
+            self.sessions,
+            self.caps_directory,
+            t1_volume_template_tpm_in_mni(
+                group_label=self.group_label,
+                tissue_number=1,
+                modulation=self.parameters["modulate"],
+            ),
+        )
 
         read_parameters_node = npe.Node(
             name="LoadingCLIArguments",
@@ -133,15 +123,12 @@ class T1VolumeParcellation(Pipeline):
         )
 
         datasink = npe.Node(nio.DataSink(), name="datasink")
-
         datasink.inputs.base_directory = str(self.caps_directory)
         datasink.inputs.parameterization = True
         datasink.inputs.regexp_substitutions = [
             (
                 r"(.*)(atlas_statistics)/.*/(sub-(.*)_ses-(.*)_T1.*)$",
-                r"\1/subjects/sub-\4/ses-\5/t1/spm/dartel/group-"
-                + self.parameters["group_label"]
-                + r"/\2/\3",
+                rf"\1/subjects/sub-\4/ses-\5/t1/spm/dartel/{self.group_id}" + r"/\2/\3",
             )
         ]
         self.connect(

@@ -19,15 +19,9 @@ def cli(
     Convert the imaging and clinical data of UK Biobank, located in DATASET_DIRECTORY and
     CLINICAL_DATA_DIRECTORY respectively, to a BIDS dataset in the target BIDS_DIRECTORY.
     """
-    from clinica.iotools.bids_utils import _write_bidsignore
-    from clinica.iotools.converters.ukb_to_bids.ukb_to_bids import convert_images
-    from clinica.utils.check_dependency import ThirdPartySoftware, check_software
-    from clinica.utils.stream import cprint
+    from .ukb_to_bids import convert
 
-    check_software(ThirdPartySoftware.DCM2NIIX)
-    convert_images(dataset_directory, bids_directory, clinical_data_directory)
-    _write_bidsignore(str(bids_directory))
-    cprint("Conversion to BIDS succeeded.")
+    convert(dataset_directory, bids_directory, clinical_data_directory)
 
 
 if __name__ == "__main__":

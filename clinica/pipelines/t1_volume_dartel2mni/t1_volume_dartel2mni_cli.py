@@ -25,6 +25,7 @@ pipeline_name = "t1-volume-dartel2mni"
 @cli_param.option.tissues
 @cli_param.option.modulate
 @cli_param.option.voxel_size
+@cli_param.option.caps_name
 def cli(
     bids_directory: str,
     caps_directory: str,
@@ -36,6 +37,7 @@ def cli(
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
+    caps_name: Optional[str] = None,
 ) -> None:
     """Register DARTEL template to MNI space.
 
@@ -50,7 +52,6 @@ def cli(
     from .t1_volume_dartel2mni_pipeline import T1VolumeDartel2MNI
 
     parameters = {
-        "group_label": group_label,
         "tissues": tissues,
         "voxel_size": voxel_size,
         "modulate": modulate,
@@ -64,6 +65,8 @@ def cli(
         base_dir=working_directory,
         parameters=parameters,
         name=pipeline_name,
+        caps_name=caps_name,
+        group_label=group_label,
     )
 
     exec_pipeline = (

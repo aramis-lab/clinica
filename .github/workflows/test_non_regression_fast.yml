@@ -12,10 +12,6 @@ concurrency:
   group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
   cancel-in-progress: true
 
-env:
-  POETRY_VERSION: '1.6.1'
-  PYTHON_VERSION: '3.10'
-
 jobs:
   test-non-regression-fast-MacOS:
     runs-on:
@@ -23,10 +19,6 @@ jobs:
       - macOS
     steps:
       - uses: actions/checkout@v4
-      - uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY_VERSION }}
-          virtualenvs-create: false
       - name: Run fast non regression tests
         run: |
           make env.conda
@@ -39,15 +31,10 @@ jobs:
           poetry run pytest --verbose \
           --working_directory=/Volumes/data/working_dir_mac \
           --input_data_directory=/Volumes/data_ci \
-          --basetemp=/Volumes/data/tmp \
           --junitxml=./test-reports/non_regression_fast_mac.xml \
           --disable-warnings \
           -m "fast" \
           ./nonregression/
-      - name: Clean
-        run: |
-          rm -rf /Volumes/data/tmp
-          rm -rf /Volumes/data/working_dir_mac
 
   test-non-regression-fast-Linux:
     runs-on:
@@ -56,14 +43,6 @@ jobs:
       - test-runner
     steps:
       - uses: actions/checkout@v4
-      - uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY_VERSION }}
-          virtualenvs-create: false
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: poetry
       - name: Run fast non regression tests
         run: |
           make env.conda
@@ -76,12 +55,7 @@ jobs:
           poetry run pytest --verbose \
           --working_directory=/mnt/data/ci/working_dir_linux \
           --input_data_directory=/mnt/data_ci \
-          --basetemp=/mnt/data/ci/tmp \
           --junitxml=./test-reports/non_regression_fast_linux.xml \
           --disable-warnings \
           -m "fast" \
           ./nonregression/
-      - name: Clean
-        run: |
-          rm -rf /mnt/data/ci/tmp
-          rm -rf /mnt/data/ci/working_dir_linux

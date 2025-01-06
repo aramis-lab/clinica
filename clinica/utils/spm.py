@@ -1,22 +1,42 @@
 """This module contains SPM utilities."""
 import warnings
+from enum import Enum
 from os import PathLike
 from pathlib import Path
 
 __all__ = [
-    "INDEX_TISSUE_MAP",
+    "SPMTissue",
+    "get_spm_tissue_from_index",
     "get_tpm",
     "use_spm_standalone_if_available",
+    "configure_nipype_interface_to_work_with_spm",
+    "configure_nipype_interface_to_work_with_spm_standalone",
 ]
 
-INDEX_TISSUE_MAP = {
-    1: "graymatter",
-    2: "whitematter",
-    3: "csf",
-    4: "bone",
-    5: "softtissue",
-    6: "background",
-}
+
+class SPMTissue(str, Enum):
+    GRAY_MATTER = "graymatter"
+    WHITE_MATTER = "whitematter"
+    CSF = "csf"
+    BONE = "bone"
+    SOFT_TISSUE = "softtissue"
+    BACKGROUND = "background"
+
+
+def get_spm_tissue_from_index(index: int) -> SPMTissue:
+    if index == 1:
+        return SPMTissue.GRAY_MATTER
+    if index == 2:
+        return SPMTissue.WHITE_MATTER
+    if index == 3:
+        return SPMTissue.CSF
+    if index == 4:
+        return SPMTissue.BONE
+    if index == 5:
+        return SPMTissue.SOFT_TISSUE
+    if index == 6:
+        return SPMTissue.BACKGROUND
+    raise ValueError(f"No SPM tissue matching index {index}.")
 
 
 def get_tpm() -> PathLike:
@@ -62,35 +82,39 @@ def use_spm_standalone_if_available() -> bool:
     ClinicaEnvironmentVariableError :
         If the environment variables are set to non-existent folders.
     """
-    from clinica.utils.stream import cprint
-
-    from .check_dependency import get_mcr_home, get_spm_standalone_home
     from .exceptions import ClinicaMissingDependencyError
+    from .stream import log_and_warn
 
     try:
-        spm_standalone_home = get_spm_standalone_home()
-        mcr_home = get_mcr_home()
-        cprint(
-            f"SPM standalone has been found at {spm_standalone_home}, "
-            f"with an MCR at {mcr_home} and will be used in this pipeline"
-        )
-        matlab_command = _get_platform_dependant_matlab_command(
-            spm_standalone_home, mcr_home
-        )
-        _configure_spm_nipype_interface(matlab_command)
+        configure_nipype_interface_to_work_with_spm_standalone()
         return True
     except ClinicaMissingDependencyError:
-        warnings.warn(
-            "SPM standalone is not available on this system. "
-            "The pipeline will try to use SPM and Matlab instead. "
-            "If you want to rely on spm standalone, please make sure "
-            "to set the following environment variables: "
-            "$SPMSTANDALONE_HOME, and $MCR_HOME"
+        log_and_warn(
+            (
+                "SPM standalone is not available on this system. "
+                "The pipeline will try to use SPM and Matlab instead. "
+                "If you want to rely on spm standalone, please make sure "
+                "to set the following environment variables: "
+                "$SPMSTANDALONE_HOME, and $MCR_HOME"
+            ),
+            UserWarning,
         )
+        configure_nipype_interface_to_work_with_spm()
         return False
 
 
-def _get_platform_dependant_matlab_command(
+def configure_nipype_interface_to_work_with_spm() -> None:
+    import nipype.interfaces.matlab as mlab
+
+    from clinica.utils.stream import cprint
+
+    from .check_dependency import get_spm_home
+
+    cprint(f"Setting SPM path to {get_spm_home()}", lvl="info")
+    mlab.MatlabCommand.set_default_paths(f"{get_spm_home()}")
+
+
+def _get_platform_dependant_matlab_command_for_spm_standalone(
     spm_standalone_home: Path, mcr_home: Path
 ) -> str:
     import platform
@@ -105,10 +129,23 @@ def _get_platform_dependant_matlab_command(
     )
 
 
-def _configure_spm_nipype_interface(matlab_command: str):
+def configure_nipype_interface_to_work_with_spm_standalone() -> None:
     from nipype.interfaces import spm
 
     from clinica.utils.stream import cprint
 
-    spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_command, use_mcr=True)
-    cprint(f"Using SPM standalone version {spm.SPMCommand().version}")
+    from .check_dependency import get_mcr_home, get_spm_standalone_home
+
+    spm_standalone_home = get_spm_standalone_home()
+    mcr_home = get_mcr_home()
+    cprint(
+        f"SPM standalone has been found at {spm_standalone_home}, "
+        f"with an MCR at {mcr_home} and will be used in this pipeline"
+    )
+    spm.SPMCommand.set_mlab_paths(
+        matlab_cmd=_get_platform_dependant_matlab_command_for_spm_standalone(
+            spm_standalone_home, mcr_home
+        ),
+        use_mcr=True,
+    )
+    cprint(f"Using SPM standalone version {spm.SPMCommand().version}", lvl="info")

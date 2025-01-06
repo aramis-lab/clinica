@@ -1,6 +1,6 @@
 import typing as ty
 from os import PathLike
-from pathlib import PurePath
+from pathlib import Path, PurePath
 
 import pydra
 from nipype.interfaces.ants import N4BiasFieldCorrection, RegistrationSynQuick
@@ -16,18 +16,12 @@ registration_syn_quick = RegistrationSynQuick(transform_type="a")
 
 @task
 @annotate({"return": {"cropped_image": PurePath}})
-def crop_image(input_image: PathLike, template_image: PathLike) -> PurePath:
+def crop_image_task(input_image: PathLike, output_dir: PathLike) -> PurePath:
     from pathlib import Path
 
-    from nilearn.image import resample_to_img
+    from clinica.utils.image import crop_nifti
 
-    cropped_image = Path(input_image).name.replace(".nii.gz", "_cropped.nii.gz")
-
-    resample_to_img(
-        source_img=str(input_image), target_img=str(template_image), force_resample=True
-    ).to_filename(cropped_image)
-
-    return cropped_image
+    return crop_nifti(Path(input_image), Path(output_dir))
 
 
 @clinica_io
@@ -56,8 +50,6 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
 
     wf.add(download_mni_template_2009c(name="download_mni_template"))
 
-    wf.add(download_ref_template(name="download_ref_template"))
-
     wf.add(
         Nipype1Task(
             name="n4_bias_field_correction",
@@ -76,11 +68,11 @@ def build_core_workflow(name: str = "core", parameters={}) -> Workflow:
     )
 
     wf.add(
-        crop_image(
+        crop_image_task(
             name="crop_image",
-            interface=crop_image,
+            interface=crop_image_task,
             input_image=wf.registration_syn_quick.lzout.warped_image,
-            template_image=wf.download_ref_template.lzout.ref_template_file,
+            output_dir=Path.cwd(),
         )
     )
 

@@ -28,7 +28,7 @@ Do not hesitate to have a look at the paragraph **[Specifying what surface data 
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of [FreeSurfer](../Third-party.md#freesurfer) on your computer.
+If you only installed the core of Clinica, this pipeline needs the installation of [FreeSurfer](../Software/Third-party.md#freesurfer) on your computer.
 
 ## Running the pipeline
 
@@ -44,9 +44,9 @@ where:
 - `CAPS_DIRECTORY` is the folder containing the results of the [`t1-freesurfer`](./T1_FreeSurfer.md) or [`pet-surface`](./PET_Surface.md) pipeline and the output of the present command, both in a [CAPS hierarchy](../CAPS/Introduction.md).
 - `GROUP_LABEL` is a string defining the group label for the current analysis, which helps you keep track of different analyses.
 - The third positional argument defines the type of surface-based feature. It can be:
-  - `t1-freesurfer` for cortical thickness
-  - `pet-surface` for projected PET data
-  - `custom-pipeline` for you own data in CAPS directory (see below for details)
+    - `t1-freesurfer` for cortical thickness
+    - `pet-surface` for projected PET data
+    - `custom-pipeline` for you own data in CAPS directory (see below for details)
 - The fourth positional argument is a string defining the type of analysis of your model. It can be either `group_comparison` or `correlation`.
 - `SUBJECT_VISITS_WITH_COVARIATES_TSV` is a TSV file containing a list of subjects with their sessions and all the covariates and factors in your model (the content of the file is explained in the [Example](#comparison-analysis) subsection).
 - `CONTRAST` is a string defining the contrast matrix or the variable of interest for the [GLM](../glossary.md#glm). For example `group`, `sex`, or `age`.

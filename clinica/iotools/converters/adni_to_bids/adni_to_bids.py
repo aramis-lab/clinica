@@ -1,59 +1,59 @@
-from typing import List, Optional
+from pathlib import Path
+from typing import Iterable, Optional, Union
 
 from clinica.iotools.abstract_converter import Converter
+from clinica.utils.filemanip import UserProvidedPath
+
+from .adni_utils import ADNIModality
+
+__all__ = ["convert"]
 
 
-def get_bids_subjs_info(
-    clinical_data_dir: str,
-    out_path: str,
-    subjects_list_path: Optional[str] = None,
+def convert(
+    path_to_dataset: UserProvidedPath,
+    bids_dir: UserProvidedPath,
+    path_to_clinical: UserProvidedPath,
+    clinical_data_only: bool = False,
+    subjects: Optional[UserProvidedPath] = None,
+    modalities: Optional[Iterable[Union[str, ADNIModality]]] = None,
+    xml_path: Optional[UserProvidedPath] = None,
+    force_new_extraction: bool = False,
+    n_procs: Optional[int] = 1,
 ):
-    from os import path
+    from ..utils import validate_input_path
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
+    path_to_dataset = validate_input_path(path_to_dataset)
+    bids_dir = validate_input_path(bids_dir, check_exist=False)
+    path_to_clinical = validate_input_path(path_to_clinical)
+    if xml_path:
+        xml_path = validate_input_path(xml_path)
+    if subjects:
+        subjects = validate_input_path(subjects)
+    modalities = _validate_input_modalities(modalities)
 
-    # Read optional list of participants.
-    subjects_list = (
-        set([line.rstrip("\n") for line in open(subjects_list_path)])
-        if subjects_list_path
-        else None
+    adni_to_bids = AdniToBids()
+    adni_to_bids.check_adni_dependencies()
+
+    if not clinical_data_only:
+        adni_to_bids.convert_images(
+            source_dir=path_to_dataset,
+            clinical_dir=path_to_clinical,
+            dest_dir=bids_dir,
+            modalities=modalities,
+            subjects=subjects,
+            force_new_extraction=force_new_extraction,
+            n_procs=n_procs,
+        )
+    adni_to_bids.convert_clinical_data(
+        clinical_data_dir=path_to_clinical,
+        out_path=bids_dir,
+        clinical_data_only=clinical_data_only,
+        subjects=subjects,
+        xml_path=xml_path,
     )
-
-    # Load all participants from ADNIMERGE.
-    adni_merge = load_clinical_csv(clinical_data_dir, "ADNIMERGE")
-    participants = adni_merge["PTID"].unique()
-
-    # Filter participants if requested.
-    participants = sorted(
-        participants & subjects_list if subjects_list else participants
-    )
-
-    # Compute their corresponding BIDS IDs and paths.
-    bids_ids = [f"sub-ADNI{p.replace('_', '')}" for p in participants]
-    bids_paths = [path.join(out_path, bids_id) for bids_id in bids_ids]
-
-    return bids_ids, bids_paths
 
 
 class AdniToBids(Converter):
-    @classmethod
-    def get_modalities_supported(cls) -> List[str]:
-        """Return a list of modalities supported.
-
-        Returns: a list containing the modalities supported by the converter
-        (T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI, FMAP)
-        """
-        return [
-            "T1",
-            "PET_FDG",
-            "PET_AMYLOID",
-            "PET_TAU",
-            "DWI",
-            "FLAIR",
-            "fMRI",
-            "FMAP",
-        ]
-
     @classmethod
     def check_adni_dependencies(cls) -> None:
         """Check the dependencies of ADNI converter."""
@@ -63,11 +63,11 @@ class AdniToBids(Converter):
 
     def convert_clinical_data(
         self,
-        clinical_data_dir: str,
-        out_path: str,
+        clinical_data_dir: Path,
+        out_path: Path,
         clinical_data_only: bool = False,
-        subjects_list_path: Optional[str] = None,
-        xml_path: Optional[str] = None,
+        subjects: Optional[Path] = None,
+        xml_path: Optional[Path] = None,
     ):
         """Convert the clinical data of ADNI specified into the file clinical_specifications_adni.xlsx.
 
@@ -75,41 +75,44 @@ class AdniToBids(Converter):
             clinical_data_dir:  path to the clinical data directory
             out_path: path to the BIDS directory
             clinical_data_only: process clinical data only
-            subjects_list_path: restrict processing to this manifest of subjects
+            subjects: restrict processing to this manifest of subjects
             xml_path: path to the XML metadata files
         """
-        import os
-        from os import path
-        from pathlib import Path
-
-        import clinica.iotools.bids_utils as bids
-        import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
+        from clinica.iotools.bids_utils import (
+            StudyName,
+            create_participants_df,
+            get_bids_subjs_list,
+            get_bids_subjs_paths,
+            write_modality_agnostic_files,
+        )
         from clinica.utils.stream import cprint
 
         from .adni_json import create_json_metadata
-
-        out_path = Path(out_path)
-        clinic_specs_path = path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-            "data",
-            "clinical_specifications_adni",
+        from .adni_utils import (
+            correct_diagnosis_sc_adni3,
+            create_adni_scans_files,
+            create_adni_sessions_dict,
         )
+
+        clinical_specifications_folder = Path(__file__).parents[0] / "specifications"
         if not out_path.exists():
-            raise IOError("BIDS folder not found.")
+            msg = f"BIDS folder {out_path} not found."
+            cprint(msg, lvl="error")
+            raise FileNotFoundError(msg)
         conversion_path = out_path / "conversion_info"
 
         if clinical_data_only:
-            bids_ids, bids_subjs_paths = get_bids_subjs_info(
+            bids_ids, bids_subjects_paths = _get_bids_subjects_info(
                 clinical_data_dir=clinical_data_dir,
-                out_path=str(out_path),
-                subjects_list_path=subjects_list_path,
+                out_path=out_path,
+                subjects=subjects,
             )
         else:
-            bids_ids = bids.get_bids_subjs_list(str(out_path))
-            bids_subjs_paths = bids.get_bids_subjs_paths(str(out_path))
+            bids_ids = get_bids_subjs_list(out_path)
+            bids_subjects_paths = get_bids_subjs_paths(out_path)
 
         # -- Creation of modality agnostic files --
-        cprint("Creating modality agnostic files...")
+        cprint("Creating modality agnostic files...", lvl="info")
         readme_data = {
             "link": "http://adni.loni.usc.edu",
             "desc": (
@@ -121,51 +124,47 @@ class AdniToBids(Converter):
                 "cohesive research and share compatible data with other researchers around the world."
             ),
         }
-        bids.write_modality_agnostic_files(
-            study_name=bids.StudyName.ADNI,
+        write_modality_agnostic_files(
+            study_name=StudyName.ADNI,
             readme_data=readme_data,
             bids_dir=out_path,
         )
-
         # -- Creation of participant.tsv --
-        cprint("Creating participants.tsv...")
-        participants_df = bids.create_participants_df(
-            bids.StudyName.ADNI,
-            clinic_specs_path,
+        cprint("Creating participants.tsv...", lvl="info")
+        participants_df = create_participants_df(
+            StudyName.ADNI,
+            clinical_specifications_folder,
             clinical_data_dir,
             bids_ids,
         )
-
         # Replace the original values with the standard defined by the AramisTeam
         participants_df["sex"] = participants_df["sex"].replace("Male", "M")
         participants_df["sex"] = participants_df["sex"].replace("Female", "F")
 
         # Correction of diagnosis_sc for ADNI3 participants
-        participants_df = adni_utils.correct_diagnosis_sc_adni3(
-            clinical_data_dir, participants_df
-        )
-
+        participants_df = correct_diagnosis_sc_adni3(clinical_data_dir, participants_df)
         participants_df.to_csv(
             out_path / "participants.tsv",
             sep="\t",
             index=False,
             encoding="utf-8",
         )
-
         # -- Creation of sessions.tsv --
-        cprint("Creating sessions files...")
-        adni_utils.create_adni_sessions_dict(
-            bids_ids, clinic_specs_path, clinical_data_dir, bids_subjs_paths
+        cprint("Creating sessions files...", lvl="info")
+        create_adni_sessions_dict(
+            bids_ids,
+            clinical_specifications_folder,
+            clinical_data_dir,
+            bids_subjects_paths,
         )
-
         # -- Creation of scans files --
         if conversion_path.exists():
-            cprint("Creating scans files...")
-            adni_utils.create_adni_scans_files(conversion_path, bids_subjs_paths)
+            cprint("Creating scans files...", lvl="info")
+            create_adni_scans_files(conversion_path, bids_subjects_paths)
 
         if xml_path is not None:
-            if os.path.exists(xml_path):
-                create_json_metadata(bids_subjs_paths, bids_ids, xml_path)
+            if xml_path.exists():
+                create_json_metadata(bids_subjects_paths, bids_ids, xml_path)
             else:
                 cprint(
                     msg=(
@@ -177,12 +176,12 @@ class AdniToBids(Converter):
 
     def convert_images(
         self,
-        source_dir,
-        clinical_dir,
-        dest_dir,
-        subjs_list_path=None,
-        modalities=None,
-        force_new_extraction=False,
+        source_dir: Path,
+        clinical_dir: Path,
+        dest_dir: Path,
+        modalities: Iterable[ADNIModality],
+        subjects: Optional[Path] = None,
+        force_new_extraction: bool = False,
         n_procs: Optional[int] = 1,
     ):
         """Convert the images of ADNI.
@@ -191,89 +190,67 @@ class AdniToBids(Converter):
             source_dir: path to the ADNI directory
             clinical_dir: path to the clinical data directory
             dest_dir: path to the BIDS directory
-            subjs_list_path: list of subjects to process
+            subjects: Path to list of subjects to process
             modalities: modalities to convert (T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI)
             force_new_extraction: if given pre-existing images in the BIDS directory will be erased and extracted again.
         """
-        import os
-        from copy import copy
-        from os import path
-
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_av45_fbb_pet as adni_av45_fbb
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet as adni_fdg
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_flair as adni_flair
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fmap as adni_fmap
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fmri as adni_fmri
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_pib_pet as adni_pib
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_tau_pet as adni_tau
-        from clinica.iotools.converters.adni_to_bids.adni_utils import (
-            load_clinical_csv,
-        )
         from clinica.utils.stream import cprint
 
-        modalities = modalities or self.get_modalities_supported()
+        from .adni_utils import get_subjects_list
+        from .modality_converters import modality_converter_factory
 
-        adni_merge = load_clinical_csv(clinical_dir, "ADNIMERGE")
-
-        # Load a file with subjects list or compute all the subjects
-        if subjs_list_path is not None:
-            cprint("Loading a subjects lists provided by the user...")
-            subjs_list = [line.rstrip("\n") for line in open(subjs_list_path)]
-            subjs_list_copy = copy(subjs_list)
-
-            # Check that there are no errors in subjs_list given by the user
-            for subj in subjs_list_copy:
-                adnimerge_subj = adni_merge[adni_merge.PTID == subj]
-
-                if len(adnimerge_subj) == 0:
-                    cprint(
-                        msg=f"Subject with PTID {subj} does not exist. Please check your subjects list.",
-                        lvl="warning",
-                    )
-                    subjs_list.remove(subj)
-            del subjs_list_copy
-
-        else:
-            cprint("Using all the subjects contained into the ADNIMERGE.csv file...")
-            subjs_list = list(adni_merge["PTID"].unique())
+        modalities = modalities or ADNIModality
+        subjects = get_subjects_list(source_dir, clinical_dir, subjects)
 
         # Create the output folder if is not already existing
-        os.makedirs(dest_dir, exist_ok=True)
-        os.makedirs(path.join(dest_dir, "conversion_info"), exist_ok=True)
-        version_number = len(os.listdir(path.join(dest_dir, "conversion_info")))
-        conversion_dir = path.join(dest_dir, "conversion_info", f"v{version_number}")
-        os.makedirs(conversion_dir)
-        cprint(dest_dir, lvl="debug")
-
-        converters = {
-            "T1": [adni_t1.convert_adni_t1],
-            "PET_FDG": [
-                adni_fdg.convert_adni_fdg_pet,
-                adni_fdg.convert_adni_fdg_pet_uniform,
-            ],
-            "PET_AMYLOID": [
-                adni_pib.convert_adni_pib_pet,
-                adni_av45_fbb.convert_adni_av45_fbb_pet,
-            ],
-            "PET_TAU": [adni_tau.convert_adni_tau_pet],
-            "DWI": [adni_dwi.convert_adni_dwi],
-            "FLAIR": [adni_flair.convert_adni_flair],
-            "fMRI": [adni_fmri.convert_adni_fmri],
-            "FMAP": [adni_fmap.convert_adni_fmap],
-        }
+        (dest_dir / "conversion_info").mkdir(parents=True, exist_ok=True)
+        version_number = len([f for f in (dest_dir / "conversion_info").iterdir()])
+        conversion_dir = dest_dir / "conversion_info" / f"v{version_number}"
+        conversion_dir.mkdir(parents=True, exist_ok=True)
+        cprint(f"Destination folder = {dest_dir}", lvl="debug")
 
         for modality in modalities:
-            if modality not in converters:
-                raise Exception(f"{modality} is not a valid input modality")
-            for converter in converters[modality]:
+            for converter in modality_converter_factory(modality):
                 converter(
                     source_dir=source_dir,
                     csv_dir=clinical_dir,
                     destination_dir=dest_dir,
                     conversion_dir=conversion_dir,
-                    subjects=subjs_list,
+                    subjects=subjects,
                     mod_to_update=force_new_extraction,
                     n_procs=n_procs,
                 )
+
+
+def _validate_input_modalities(
+    modalities: Optional[Iterable[str]] = None,
+) -> tuple[ADNIModality, ...]:
+    if modalities:
+        return tuple((ADNIModality(modality) for modality in modalities))
+    return tuple(ADNIModality)
+
+
+def _get_bids_subjects_info(
+    clinical_data_dir: Path,
+    out_path: Path,
+    subjects: Optional[Path] = None,
+) -> tuple[list[str], list[Path]]:
+    from clinica.iotools.bids_utils import StudyName, bids_id_factory
+
+    from .adni_utils import load_clinical_csv
+
+    # Read optional list of participants.
+    if subjects:
+        subjects = [subject for subject in subjects.read_text().split("\n") if subject]
+    # Load all participants from ADNIMERGE.
+    adni_merge = load_clinical_csv(clinical_data_dir, "ADNIMERGE")
+    participants = adni_merge["PTID"].unique()
+    # Filter participants if requested.
+    participants = sorted(participants & subjects if subjects else participants)
+    # Compute their corresponding BIDS IDs and paths.
+    bids_ids = [
+        bids_id_factory(StudyName.ADNI).from_original_study_id(p) for p in participants
+    ]
+    bids_paths = [out_path / bids_id for bids_id in bids_ids]
+
+    return bids_ids, bids_paths

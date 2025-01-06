@@ -7,10 +7,6 @@ on:
 permissions:
   contents: read
 
-env:
-  POETRY_VERSION: '1.6.1'
-  PYTHON_VERSION: '3.10'
-
 jobs:
   test-t1-linear-MacOS:
     runs-on:
@@ -19,7 +15,6 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
-      - uses: snok/install-poetry@v1
       - name: Run tests for t1 linear pipelines
         run: |
           make env.conda
@@ -44,7 +39,6 @@ jobs:
     timeout-minutes: 720
     steps:
       - uses: actions/checkout@v4
-      - uses: snok/install-poetry@v1
       - name: Run tests for t1 volume pipelines
         run: |
           make env.conda
@@ -71,14 +65,6 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
-      - uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY_VERSION }}
-          virtualenvs-create: false
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: poetry
       - name: Run tests for t1 linear pipelines
         run: |
           make env.conda
@@ -104,14 +90,6 @@ jobs:
     timeout-minutes: 720
     steps:
       - uses: actions/checkout@v4
-      - uses: snok/install-poetry@v1
-        with:
-          version: ${{ env.POETRY_VERSION }}
-          virtualenvs-create: false
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: poetry
       - name: Run tests for t1 volume pipelines
         run: |
           make env.conda

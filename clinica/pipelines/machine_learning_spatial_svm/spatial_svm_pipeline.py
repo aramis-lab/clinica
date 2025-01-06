@@ -1,9 +1,9 @@
 from typing import List
 
-from clinica.pipelines.engine import Pipeline
+from clinica.pipelines.engine import GroupPipeline
 
 
-class SpatialSVM(Pipeline):
+class SpatialSVM(GroupPipeline):
     """SpatialSVM - Prepare input data for SVM with spatial and anatomical regularization.
 
     Returns:
@@ -12,10 +12,6 @@ class SpatialSVM(Pipeline):
 
     def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
-        from clinica.utils.group import check_group_label
-
-        self.parameters.setdefault("group_label", None)
-        check_group_label(self.parameters["group_label"])
         if "orig_input_data_ml" not in self.parameters.keys():
             raise KeyError(
                 "Missing compulsory orig_input_data key in pipeline parameter."
@@ -63,15 +59,17 @@ class SpatialSVM(Pipeline):
             pet_volume_normalized_suvr_pet,
             t1_volume_final_group_template,
         )
-        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
+        from clinica.utils.inputs import (
+            clinica_file_reader,
+            clinica_group_reader,
+            format_clinica_file_reader_errors,
+        )
         from clinica.utils.ux import print_groups_in_caps_directory
 
-        if not (
-            self.caps_directory / "groups" / f"group-{self.parameters['group_label']}"
-        ).exists():
+        if not self.group_directory.exists():
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
-                f"Group {self.parameters['group_label']} does not exist. "
+                f"Group {self.group_label} does not exist. "
                 "Did you run pet-volume, t1-volume or t1-volume-create-dartel pipeline?"
             )
 
@@ -89,7 +87,7 @@ class SpatialSVM(Pipeline):
                     "t1",
                     "spm",
                     "dartel",
-                    "group-" + self.parameters["group_label"],
+                    str(self.group_id),
                     "*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability.nii.gz",
                 ),
                 "description": "graymatter tissue segmented in T1w MRI in Ixi549 space",
@@ -118,26 +116,27 @@ class SpatialSVM(Pipeline):
                 f"Image type {self.parameters['orig_input_data_ml']} unknown."
             )
 
-        try:
-            input_image, _ = clinica_file_reader(
-                self.subjects,
-                self.sessions,
-                self.caps_directory,
-                caps_files_information,
+        input_image, caps_error = clinica_file_reader(
+            self.subjects,
+            self.sessions,
+            self.caps_directory,
+            caps_files_information,
+        )
+        if caps_error:
+            all_errors.append(
+                format_clinica_file_reader_errors(caps_error, caps_files_information)
             )
-        except ClinicaException as e:
-            all_errors.append(e)
 
         try:
             dartel_input = clinica_group_reader(
                 self.caps_directory,
-                t1_volume_final_group_template(self.parameters["group_label"]),
+                t1_volume_final_group_template(self.group_label),
             )
         except ClinicaException as e:
             all_errors.append(e)
 
         # Raise all errors if some happened
-        if len(all_errors) > 0:
+        if any(all_errors):
             error_message = "Clinica faced errors while trying to read files in your CAPS directories.\n"
             for msg in all_errors:
                 error_message += str(msg)
@@ -211,24 +210,17 @@ class SpatialSVM(Pipeline):
             datasink.inputs.regexp_substitutions = [
                 (
                     r"(.*)/regularized_image/.*/(.*(sub-(.*)_ses-(.*))_T1w(.*)_probability(.*))$",
-                    r"\1/subjects/sub-\4/ses-\5/machine_learning/input_spatial_svm/group-"
-                    + self.parameters["group_label"]
+                    rf"\1/subjects/sub-\4/ses-\5/machine_learning/input_spatial_svm/{self.group_id}"
                     + r"/\3_T1w\6_spatialregularization\7",
                 ),
                 (
                     r"(.*)json_file/(output_data.json)$",
-                    r"\1/groups/group-"
-                    + self.parameters["group_label"]
-                    + r"/machine_learning/input_spatial_svm/group-"
-                    + self.parameters["group_label"]
+                    rf"\1/groups/{self.group_id}/machine_learning/input_spatial_svm/{self.group_id}"
                     + r"_space-Ixi549Space_parameters.json",
                 ),
                 (
                     r"(.*)fisher_tensor_path/(output_fisher_tensor.npy)$",
-                    r"\1/groups/group-"
-                    + self.parameters["group_label"]
-                    + r"/machine_learning/input_spatial_svm/group-"
-                    + self.parameters["group_label"]
+                    rf"\1/groups/{self.group_id}/machine_learning/input_spatial_svm/{self.group_id}"
                     + r"_space-Ixi549Space_gram.npy",
                 ),
             ]
@@ -237,24 +229,17 @@ class SpatialSVM(Pipeline):
             datasink.inputs.regexp_substitutions = [
                 (
                     r"(.*)/regularized_image/.*/(.*(sub-(.*)_ses-(.*))_(task.*)_pet(.*))$",
-                    r"\1/subjects/sub-\4/ses-\5/machine_learning/input_spatial_svm/group-"
-                    + self.parameters["group_label"]
+                    rf"\1/subjects/sub-\4/ses-\5/machine_learning/input_spatial_svm/{self.group_id}"
                     + r"/\3_\6_spatialregularization\7",
                 ),
                 (
                     r"(.*)json_file/(output_data.json)$",
-                    r"\1/groups/group-"
-                    + self.parameters["group_label"]
-                    + r"/machine_learning/input_spatial_svm/group-"
-                    + self.parameters["group_label"]
+                    rf"\1/groups/{self.group_id}/machine_learning/input_spatial_svm/{self.group_id}"
                     + r"_space-Ixi549Space_parameters.json",
                 ),
                 (
                     r"(.*)fisher_tensor_path/(output_fisher_tensor.npy)$",
-                    r"\1/groups/group-"
-                    + self.parameters["group_label"]
-                    + r"/machine_learning/input_spatial_svm/group-"
-                    + self.parameters["group_label"]
+                    rf"\1/groups/{self.group_id}/machine_learning/input_spatial_svm/{self.group_id}"
                     + r"_space-Ixi549Space_gram.npy",
                 ),
             ]

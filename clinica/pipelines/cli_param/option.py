@@ -2,7 +2,7 @@
 
 import click
 
-from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS, ReconstructionMethod, Tracer
+from clinica.utils.pet import ReconstructionMethod, SUVRReferenceRegion, Tracer
 
 from .option_group import option
 
@@ -13,6 +13,18 @@ acq_label = option(
     help=(
         "Name of the label given to the PET acquisition, "
         "specifying the tracer used (acq-<acq_label>)."
+    ),
+)
+
+caps_name = option(
+    "-cn",
+    "--caps-name",
+    type=str,
+    help=(
+        "The name of the CAPS dataset that will be created by the pipeline. "
+        "This is not the name of the folder itself, but the name in the metadata, "
+        "which can be different if desired. If the CAPS folder already exists and "
+        "already has a name, this will have no effect and the existing name will be kept."
     ),
 )
 
@@ -118,7 +130,7 @@ subjects_sessions_tsv = option(
 suvr_reference_region = option(
     "-suvr",
     "--suvr_reference_region",
-    type=click.Choice(LIST_SUVR_REFERENCE_REGIONS),
+    type=click.Choice(SUVRReferenceRegion),
     help=(
         "Intensity normalization using the average PET uptake in reference regions "
         "resulting in a standardized uptake value ratio (SUVR) map. It can be "

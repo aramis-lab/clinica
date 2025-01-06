@@ -6,6 +6,76 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.9.3
+
+### Fixed
+
+- [PETLinear] Fix the SUVR normalization step (see PR [#1348](https://github.com/aramis-lab/clinica/pull/1348))
+
+## Clinica 0.9.2
+
+### Fixed
+
+- [Converters] Fix KeyError "APGEN" in adni-to-bids (see PR [#1342](https://github.com/aramis-lab/clinica/pull/1342))
+- [Converters] Fix function `load_clinical_csv` to avoid hidden files (see PR [#1343](https://github.com/aramis-lab/clinica/pull/1343))
+- [Converters] Fix logging in oasis-to-bids and aibl-to-bids (see PR [#1340](https://github.com/aramis-lab/clinica/pull/1340))
+- [Converters] Fix method `BIDSSubjectID.to_study_id()` (see PR [#1335](https://github.com/aramis-lab/clinica/pull/1335))
+- [T1Linear] Fix missing import in utility function (see PR [#1329](https://github.com/aramis-lab/clinica/pull/1329))
+- [Converters] Fix oasis-to-bids to work with new clinical data (see PR [#1321](https://github.com/aramis-lab/clinica/pull/1321))
+- [Converters] Fix function `define_participants` in ixi-to-bids, which is now deterministic (see PR [#1318](https://github.com/aramis-lab/clinica/pull/1318))
+- [Converters] Fix Oasis1 `BIDSSubjectID` method (see PR [#1312](https://github.com/aramis-lab/clinica/pull/1312))
+
+## Clinica 0.9.1
+
+### Fixed
+
+- Fix broken install of release `0.9.0` (see PR [#1304](https://github.com/aramis-lab/clinica/pull/1304))
+
+## Clinica 0.9.0
+
+### Added
+
+- [ixi-to-bids] There is a new converter to convert IXI to BIDS (see PR [#1239](https://github.com/aramis-lab/clinica/pull/1239))
+- [iotools] There is a new tool `clinica iotools describe` to nicely display metadata in `dataset_description.json` files in the console (see PR [#1287](https://github.com/aramis-lab/clinica/pull/1287))
+- [t1-linear] It is now possible to use `t1-linear` with ANTsPy (see PR [#1244](https://github.com/aramis-lab/clinica/pull/1244))
+- [ADNI2BIDS] The converter now support FMAP (see PR [#1119](https://github.com/aramis-lab/clinica/pull/1119))
+- [Doc] Some pages have been refactored to improve readability and make information easier to find (see PR [#1284](https://github.com/aramis-lab/clinica/pull/1284), [#1288](https://github.com/aramis-lab/clinica/pull/1288), and [#1295](https://github.com/aramis-lab/clinica/pull/1295))
+- [Doc] The online documentation now has a glossary page (see PR [#1110](https://github.com/aramis-lab/clinica/pull/1110))
+
+### Breaking changes
+
+- BIDS and CAPS datasets must have a `dataset_description.json` file at the root (see PR [#1127](https://github.com/aramis-lab/clinica/pull/1127) and PR [#1158](https://github.com/aramis-lab/clinica/pull/1158))
+
+### Enhanced
+
+- [Converters] Converters now implement the same API which make them easier to use from Python (see PR [#1140](https://github.com/aramis-lab/clinica/pull/1140))
+
+### Fixed
+
+- [Converters] A few issues with logging have been fixed (see PR [#1181](https://github.com/aramis-lab/clinica/pull/1181))
+- [t1-linear] Fix the `crop_nifti` function which was doing unnecessary resampling (see PR [#1215](https://github.com/aramis-lab/clinica/pull/1215))
+
+## Clinica 0.8.4
+
+### Fixed
+
+- [Pipelines] Fix 'SPM not in matlab path' error when using SPM12 with Matlab (see PR [#1261](https://github.com/aramis-lab/clinica/pull/1261))
+
+## Clinica 0.8.3
+
+### Fixed
+
+- [IOTools] Fix `merge-tsv` when providing a `T1Freesurfer` CAPS directory (see PR [#1240](https://github.com/aramis-lab/clinica/pull/1240))
+
+## Clinica 0.8.2
+
+### Fixed
+
+- [ADNI2BIDS] Fix wrong preprocessing sequence in FDG PET Uniform (see PR [#1159](https://github.com/aramis-lab/clinica/pull/1159))
+- [NIFD2BIDS] Fix check on type in pandas dataframe (see PR [#1230](https://github.com/aramis-lab/clinica/pull/1227))
+- [DWI] `DWIPreprocessingUsingT1` pipeline skips problematic images instead of crashing (see PR [#1169](https://github.com/aramis-lab/clinica/pull/1169))
+- Fix compatibility issues with matplotlib 3.9 (see PR [#1185](https://github.com/aramis-lab/clinica/pull/1185))
+
 ## Clinica 0.8.1
 
 ### Fixed

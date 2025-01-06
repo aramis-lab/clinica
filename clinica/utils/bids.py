@@ -4,15 +4,37 @@ from os import PathLike
 from pathlib import Path
 from typing import Dict, Tuple, Union
 
+from packaging.version import Version
+
 __all__ = [
     "BIDSLabel",
     "BIDSFileName",
     "BIDS_VERSION",
     "Extension",
     "Suffix",
+    "Visit",
 ]
 
-BIDS_VERSION = "1.7.0"
+BIDS_VERSION = Version("1.7.0")
+
+
+@dataclass(frozen=True)
+class Visit:
+    subject: str
+    session: str
+
+    def __lt__(self, obj):
+        return (self.subject < obj.subject) or (
+            self.subject == obj.subject and self.session < obj.session
+        )
+
+    def __gt__(self, obj):
+        return (self.subject > obj.subject) or (
+            self.subject == obj.subject and self.session > obj.session
+        )
+
+    def __str__(self) -> str:
+        return f"{self.subject} {self.session}"
 
 
 class Extension(str, Enum):

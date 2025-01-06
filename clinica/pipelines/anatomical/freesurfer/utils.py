@@ -5,6 +5,8 @@ from typing import Optional, Union
 
 import pandas as pd
 
+from clinica.utils.image import HemiSphere
+
 __all__ = [
     "ImageID",
     "extract_image_id_from_freesurfer_id",
@@ -192,8 +194,10 @@ def _generate_tsv_for_parcellation(
         }
         for info, col_name in info_dict.items():
             # Secondary information are common to left and right hemispheres
-            stats_df = _get_secondary_stats(hemi_to_stats_filename["lh"], info)
-            for hemi in ("lh", "rh"):
+            stats_df = _get_secondary_stats(
+                hemi_to_stats_filename[HemiSphere.LEFT], info
+            )
+            for hemi in HemiSphere:
                 stats_df = pd.concat(
                     [
                         stats_df,
@@ -206,7 +210,7 @@ def _generate_tsv_for_parcellation(
                     ]
                 )
             output_filename = (
-                output_dir / f"{prefix}_parcellation-{atlas}_{str(info)}.tsv"
+                output_dir / f"{prefix}_parcellation-{atlas}_{info.value}.tsv"
             )
             stats_df.to_csv(output_filename, sep="\t", index=False, encoding="utf-8")
 
@@ -226,13 +230,14 @@ def _get_stats_filename_for_atlas(stats_folder: Path, atlas: str) -> dict:
     -------
     dict :
         Dictionary mapping hemispheres to statistics file names.
-        Indexes are 'lh' for 'left hemisphere', and 'rh' for 'right hemisphere'.
+        Indexes are HemiSphere.LEFT for 'left hemisphere', and HemiSphere.RIGHT for 'right hemisphere'.
     """
     atlas_dict = {"desikan": "aparc", "destrieux": "aparc.a2009s", "ba": "BA_exvivo"}
     atlas_filename = atlas_dict.get(atlas, atlas)
 
     return {
-        hemi: stats_folder / f"{hemi}.{atlas_filename}.stats" for hemi in ("lh", "rh")
+        hemi: stats_folder / f"{hemi.value}.{atlas_filename}.stats"
+        for hemi in HemiSphere
     }
 
 

@@ -16,6 +16,7 @@ warnings.filterwarnings("ignore")
 
 
 @pytest.mark.fast
+@pytest.mark.skip(reason="Brainstat is not compatible with Numpy 2.")
 def test_statistics_surface(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
@@ -84,7 +85,6 @@ def run_statistics_surface(
     shutil.copytree(input_dir / "caps", caps_dir, copy_function=shutil.copy)
 
     parameters = {
-        "group_label": "UnitTest",
         "orig_input_data": "t1-freesurfer",
         "glm_type": "group_comparison",
         "contrast": "group",
@@ -94,6 +94,7 @@ def run_statistics_surface(
         caps_directory=caps_dir,
         tsv_file=tsv,
         base_dir=working_dir,
+        group_label="UnitTest",
         parameters=parameters,
     )
     pipeline.build()
@@ -145,7 +146,7 @@ def run_statistics_volume_pet(
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import (
         StatisticsVolume,
     )
-    from clinica.utils.pet import Tracer
+    from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
     caps_dir = output_dir / "caps"
     tsv = input_dir / "group-UnitTest_covariates.tsv"
@@ -153,25 +154,22 @@ def run_statistics_volume_pet(
     # Copy necessary data from in to out
     shutil.copytree(input_dir / "caps", caps_dir, copy_function=shutil.copy)
 
-    # Instantiate pipeline and run()
     parameters = {
         # Clinica compulsory parameters
-        "group_label": "UnitTest",
         "orig_input_data_volume": "pet-volume",
         "contrast": "group",
         # Optional arguments for inputs from pet-volume pipeline
         "acq_label": Tracer.FDG,
         "use_pvc_data": False,
-        "suvr_reference_region": "pons",
+        "suvr_reference_region": SUVRReferenceRegion.PONS,
     }
-
     pipeline = StatisticsVolume(
         caps_directory=fspath(caps_dir),
         tsv_file=fspath(tsv),
         base_dir=fspath(working_dir),
+        group_label="UnitTest",
         parameters=parameters,
     )
-
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 2}, bypass_check=True)
 
     output_t_stat = (
@@ -179,8 +177,8 @@ def run_statistics_volume_pet(
         / "groups"
         / "group-UnitTest"
         / "statistics_volume"
-        / "group_comparison_measure-fdg"
-        / "group-UnitTest_CN-lt-AD_measure-fdg_fwhm-8_TStatistics.nii"
+        / f"group_comparison_measure-{Tracer.FDG.value}"
+        / f"group-UnitTest_CN-lt-AD_measure-{Tracer.FDG.value}_fwhm-8_TStatistics.nii"
     )
     ref_t_stat = (
         ref_dir
@@ -197,8 +195,6 @@ def run_statistics_volume_pet(
         nib.load(fspath(ref_t_stat)).get_fdata(dtype="float32"),
     )
 
-    # Remove data in out folder
-
 
 def run_statistics_volume_t1(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
@@ -211,7 +207,6 @@ def run_statistics_volume_t1(
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import (
         StatisticsVolume,
     )
-    from clinica.utils.pet import Tracer
 
     caps_dir = output_dir / "caps"
     tsv = input_dir / "group-UnitTest_covariates.tsv"
@@ -219,21 +214,16 @@ def run_statistics_volume_t1(
     # Copy necessary data from in to out
     shutil.copytree(input_dir / "caps", caps_dir, copy_function=shutil.copy)
 
-    # Instantiate pipeline and run()
-    parameters = {
-        # Clinica compulsory parameters
-        "group_label": "UnitTest",
-        "orig_input_data_volume": "t1-volume",
-        "contrast": "group",
-    }
-
     pipeline = StatisticsVolume(
         caps_directory=fspath(caps_dir),
         tsv_file=fspath(tsv),
         base_dir=fspath(working_dir),
-        parameters=parameters,
+        group_label="UnitTest",
+        parameters={
+            "orig_input_data_volume": "t1-volume",
+            "contrast": "group",
+        },
     )
-
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 2}, bypass_check=True)
 
     output_t_stat = (

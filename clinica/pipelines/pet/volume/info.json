@@ -1,0 +1,14 @@
+{
+    "id": "aramislab/pet-volume",
+    "author": "Jorge Samper-Gonzalez",
+    "version": "0.1.0",
+    "space_caps": "55M",
+    "space_wd": "245M",
+    "dependencies": [
+        {
+            "type": "software",
+            "name": "spm",
+            "version": ">=12"
+        }
+    ]
+}

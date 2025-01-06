@@ -13,16 +13,37 @@ class ClinicaEnvironmentVariableError(ClinicaException):
     """Something is wrong with an environment variable managed by Clinica."""
 
 
-class ClinicaBIDSError(ClinicaException):
-    """Base class for BIDS errors."""
+class ClinicaDatasetError(ClinicaException):
+    """Base class for errors related to Datasets."""
 
 
-class ClinicaCAPSError(ClinicaException):
-    """Base class for CAPS errors."""
+class ClinicaBIDSError(ClinicaDatasetError):
+    """Base class for BIDS dataset errors."""
+
+
+class ClinicaCAPSError(ClinicaDatasetError):
+    """Base class for CAPS dataset errors."""
+
+
+class ClinicaExistingDatasetError(ClinicaDatasetError):
+    """Base class for existing dataset errors."""
+
+    def __init__(self, dataset_folder_path):
+        super().__init__(
+            f"Dataset located at {dataset_folder_path} already contain some files."
+        )
 
 
 class ClinicaParserError(ClinicaException):
     """Base class for parser errors."""
+
+
+class ClinicaXMLParserError(ClinicaParserError):
+    """Base class for XML parser errors."""
+
+
+class ClinicaPipelineConfigurationError(ClinicaException):
+    """Base class for configuration errors of clinica pipelines."""
 
 
 class ClinicaInconsistentDatasetError(ClinicaException):

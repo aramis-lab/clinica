@@ -1,8 +1,21 @@
 import xml.etree.ElementTree
 from pathlib import Path
-from typing import Optional, Tuple, Union
+from typing import Iterable, Optional, Tuple, Union
 
 import pandas as pd
+
+from clinica.utils.exceptions import ClinicaXMLParserError
+from clinica.utils.stream import cprint, log_and_raise
+
+__all__ = ["create_json_metadata"]
+
+
+LOGGING_HEADER = "[ADNI JSON]"
+
+
+def _log_and_raise_xml_parser_error(message: str):
+    log_and_raise(f"{LOGGING_HEADER} {message}", ClinicaXMLParserError)
+
 
 # Map from names of extracted metadata to their proper BIDS names.
 METADATA_NAME_MAPPING = {
@@ -13,60 +26,81 @@ METADATA_NAME_MAPPING = {
 }
 
 
-def _read_xml_files(subj_ids: Optional[list] = None, xml_path: str = "") -> list:
+def _bids_id_to_loni(bids_id: str) -> Optional[str]:
+    """Convert a subject id of the form sub-ADNI000S0000
+    back to original format 000_S_0000
+    """
+    from clinica.iotools.bids_utils import StudyName, bids_id_factory
+
+    try:
+        return bids_id_factory(StudyName.ADNI)(bids_id).to_original_study_id()
+    except ValueError:
+        return None
+
+
+def _read_xml_files(
+    subject_ids: Optional[Iterable[str]] = None,
+    xml_path: Optional[Path] = None,
+) -> Iterable[Path]:
     """Return the XML files in the folder `xml_path` for the provided `subj_ids`.
     This function assumes that file are named "ADNI_{sub_ids}.xml".
     If no files were found, an `IndexError` is raised.
     """
-    from glob import glob
-    from os import path
-
-    if subj_ids:
+    xml_path = xml_path or Path.cwd()
+    if subject_ids:
         xml_files = []
-        xml_regex = [path.join(xml_path, ("ADNI_" + e + "*.xml")) for e in subj_ids]
+        xml_regex = [f"ADNI_{e}*.xml" for e in subject_ids]
         for subj_files in xml_regex:
-            xml_files.extend(glob(subj_files))
+            xml_files.extend([f for f in xml_path.glob(subj_files)])
     else:
-        xml_files = glob("Clinica_processed_metadata/ADNI_*.xml")
+        xml_files = [f for f in xml_path.glob("Clinica_processed_metadata/ADNI_*.xml")]
     if len(xml_files) == 0:
-        raise IndexError("No ADNI xml files were found for reading the metadata.")
+        msg = f"{LOGGING_HEADER} No ADNI xml files were found for reading the metadata."
+        cprint(msg, lvl="error")
+        raise FileNotFoundError(msg)
     return xml_files
 
 
-def _check_xml_tag(el_tag: str, exp_tag: str):
+def _check_xml_tag(element_tag: str, expected_tag: str):
     """Check that the XML element tagged matches the expected tag."""
-    if el_tag != exp_tag:
-        raise ValueError(f"Bad tag: expected {exp_tag}, got {el_tag}")
+    if element_tag != expected_tag:
+        _log_and_raise_xml_parser_error(
+            f"Bad tag: expected {expected_tag}, got {element_tag}"
+        )
 
 
-def _check_xml_nb_children(xml_el: xml.etree.ElementTree.Element, exp_nb_children: int):
+def _check_xml_nb_children(
+    xml_el: xml.etree.ElementTree.Element,
+    expected_nb_children: Union[int, Iterable[int]],
+):
     """Check that the given XML element has the expected number of children.
     Raise a `ValueError` otherwise.
     """
     nb_children = len(xml_el)
-    if isinstance(exp_nb_children, int):
-        if nb_children != exp_nb_children:
-            raise ValueError(
+    if isinstance(expected_nb_children, int):
+        if nb_children != expected_nb_children:
+            _log_and_raise_xml_parser_error(
                 f"Bad number of children for <{xml_el.tag}>: "
-                f"got {nb_children} != {exp_nb_children}"
+                f"got {nb_children} != {expected_nb_children}"
             )
     else:
-        # container
-        if nb_children not in exp_nb_children:
-            raise ValueError(
+        if nb_children not in expected_nb_children:
+            _log_and_raise_xml_parser_error(
                 f"Bad number of children for <{xml_el.tag}>: "
-                f"got {nb_children}, not in {exp_nb_children}"
+                f"got {nb_children}, not in {expected_nb_children}"
             )
 
 
 def _check_xml(
-    xml_el: xml.etree.ElementTree.Element, exp_tag: str, exp_nb_children=None
+    xml_el: xml.etree.ElementTree.Element,
+    exp_tag: str,
+    exp_nb_children: Optional[Union[int, Iterable[int]]] = None,
 ) -> xml.etree.ElementTree.Element:
     """Check that the given xml element is as expected (tag name + nb of children).
     Raise a ValueError if not and return the element if it is valid.
     """
     _check_xml_tag(xml_el.tag, exp_tag)
-    if exp_nb_children is not None:  # no check otherwise
+    if exp_nb_children is not None:
         _check_xml_nb_children(xml_el, exp_nb_children)
     return xml_el
 
@@ -79,8 +113,8 @@ def _parse_project(
     Check that the project identifier contains ADNI.
     """
     if len(root) != 1:
-        raise ValueError(
-            "XML root should have only one child. " f"{len(root)} children found."
+        _log_and_raise_xml_parser_error(
+            "XML root should have only one child. " f"{len(root)} children found.",
         )
     project = _check_xml(root[0], "project", 4)
     _check_xml_project_identifier(project, "ADNI")
@@ -88,24 +122,24 @@ def _parse_project(
 
 
 def _check_xml_and_get_text(
-    xml_el: xml.etree.ElementTree.Element, exp_tag: str, *, cast=None
+    xml_element: xml.etree.ElementTree.Element, expected_tag: str, *, cast=None
 ) -> str:
     """Check xml element and return its text (leaf)"""
-    _check_xml(xml_el, exp_tag, 0)  # leaf
-    return _get_text(xml_el, cast=cast)
+    _check_xml(xml_element, expected_tag, 0)  # leaf
+    return _get_text(xml_element, cast=cast)
 
 
-def _get_text(xml_el: xml.etree.ElementTree.Element, cast=None) -> str:
+def _get_text(xml_element: xml.etree.ElementTree.Element, cast=None) -> str:
     """Get text of xml element (leaf)."""
     if cast is not None:
-        return cast(xml_el.text)
-    return xml_el.text
+        return cast(xml_element.text)
+    return xml_element.text
 
 
 def _check_derived_image_xml(derived: xml.etree.ElementTree.Element) -> None:
     """Perform sanity checks on derived images."""
     if len(derived) < 9:
-        raise ValueError("derived image does not have enough field")
+        _log_and_raise_xml_parser_error("Derived image does not have enough field.")
     for idx, field, expected in zip(
         [2, 3, 4, 5, 6],
         ["imageType", "tissue", "hemisphere", "anatomicStructure", "registration"],
@@ -119,7 +153,7 @@ def _check_derived_image_xml(derived: xml.etree.ElementTree.Element) -> None:
         try:
             _validate_date_iso_format(image_create_date)
         except ValueError as e:
-            raise ValueError(
+            _log_and_raise_xml_parser_error(
                 f"The creationDate for the derived image is not valid: {e}"
             )
 
@@ -129,7 +163,7 @@ def _check_xml_field(
 ) -> None:
     """Check that the given field of the given XML element has the expected value."""
     if (found_value := _check_xml_and_get_text(xml_element, field)) != expected_value:
-        raise ValueError(
+        _log_and_raise_xml_parser_error(
             f"The {field} for the derived image should be '{expected_value}'. "
             f"{found_value} was found instead."
         )
@@ -162,7 +196,7 @@ def _check_xml_project_identifier(
 ):
     """Check the project identifier."""
     if _check_xml_and_get_text(project[0], "projectIdentifier") != expected:
-        raise ValueError(f"Not {expected} cohort")
+        _log_and_raise_xml_parser_error(f"Not {expected} cohort")
 
 
 def _get_original_image_metadata(original_image: xml.etree.ElementTree.Element) -> dict:
@@ -200,7 +234,7 @@ def _check_processed_image_rating(
         if processed_image_rating != rating:
             cprint(
                 msg=(
-                    "Image rating for processed image "
+                    f"{LOGGING_HEADER} Image rating for processed image "
                     f"{derived_image_metadata.get('image_proc_id')} not "
                     "consistent with rating of original image"
                 ),
@@ -208,17 +242,18 @@ def _check_processed_image_rating(
             )
 
 
-def _get_root_from_xml_path(xml_path: str) -> xml.etree.ElementTree.Element:
+def _get_root_from_xml_path(xml_path: Path) -> xml.etree.ElementTree.Element:
     """Return the root XML element from the XML file path."""
-    import os
     from xml.etree import ElementTree
 
     try:
         tree = ElementTree.parse(xml_path)
         root = tree.getroot()
+        return root
     except Exception as e:
-        raise ValueError(os.path.basename(xml_path) + ": " + str(e))
-    return root
+        _log_and_raise_xml_parser_error(
+            f"Error parsing XML file {xml_path.name} :\n{e}"
+        )
 
 
 def _parse_series(
@@ -264,14 +299,13 @@ def _check_image(img: xml.etree.ElementTree.Element):
         "imagingProtocol",  # for original image metadata
         "originalRelatedImage",  # for processed image
     }:
-        raise ValueError(
+        _log_and_raise_xml_parser_error(
             f"Bad image tag <{img.tag}>. "
-            "Should be either 'imagingProtocol' "
-            "or 'originalRelatedImage'."
+            "Should be either 'imagingProtocol' or 'originalRelatedImage'."
         )
     if len(img) not in {3, 4}:
-        raise ValueError(
-            f"Image XML element has {len(img)} children. " "Expected either 3 or 4."
+        _log_and_raise_xml_parser_error(
+            f"Image XML element has {len(img)} children. " "Expected either 3 or 4.",
         )
 
 
@@ -332,7 +366,7 @@ def _check_modality(study: xml.etree.ElementTree.Element, expected_modality: str
     series = _parse_series(study)
     modality = _check_xml_and_get_text(series[1], "modality")
     if modality != expected_modality:
-        raise ValueError(
+        _log_and_raise_xml_parser_error(
             f"Unexpected modality {modality}, expected {expected_modality}."
         )
 
@@ -370,10 +404,9 @@ def _parse_images(
         return _parse_derived_images(series)
 
 
-def _parse_xml_file(xml_path: str) -> dict:
+def _parse_xml_file(xml_path: Path) -> dict:
     """Parse the given XML file and return the desired metadata as a dict."""
-    root = _get_root_from_xml_path(xml_path)
-    project = _parse_project(root)
+    project = _parse_project(_get_root_from_xml_path(xml_path))
     subject_id, subject = _parse_subject(project)
     study = _parse_study(subject)
     series = _parse_series(study)
@@ -392,7 +425,9 @@ def _parse_xml_file(xml_path: str) -> dict:
         **derived_image_metadata,
     }
     if "image_proc_id" not in scan_metadata and "image_orig_id" not in scan_metadata:
-        raise ValueError(f"Scan metadata for subject {subject_id} has no image ID.")
+        _log_and_raise_xml_parser_error(
+            f"Scan metadata for subject {subject_id} has no image ID."
+        )
     return scan_metadata
 
 
@@ -408,7 +443,7 @@ class FuncWithException:
             return None, e
 
 
-def _run_parsers(xml_files: list) -> Tuple[list, dict]:
+def _run_parsers(xml_files: Iterable[Path]) -> Tuple[Iterable[dict], dict]:
     """Run the parser `_parse_xml_file` on the list of files `xml_files`.
     Returns a tuple consisting if parsed images
     metadata and captured exceptions.
@@ -416,24 +451,28 @@ def _run_parsers(xml_files: list) -> Tuple[list, dict]:
     import os
 
     parser = FuncWithException(_parse_xml_file)
-    imgs_with_excep = dict(
+    images_with_exceptions = dict(
         zip(
             xml_files,  # tqdm is buggy when chunksize > 1
             [parser(xml_file) for xml_file in xml_files],
         )
     )
-    imgs = [img for img, e in imgs_with_excep.values() if e is None]
-    exceps = {
-        os.path.basename(xml_p): e
-        for xml_p, (_, e) in imgs_with_excep.items()
-        if e is not None
+    images = [
+        image
+        for image, exception in images_with_exceptions.values()
+        if exception is None
+    ]
+    exceptions = {
+        os.path.basename(xml_p): exception
+        for xml_p, (_, exception) in images_with_exceptions.items()
+        if exception is not None
     }
-    return imgs, exceps
+    return images, exceptions
 
 
-def _create_mri_meta_df(imgs: list) -> pd.DataFrame:
+def _create_mri_meta_df(images: Iterable[dict]) -> pd.DataFrame:
     """Create dataframe from images metadata parsed from the XML files."""
-    mri_meta = pd.DataFrame(imgs).convert_dtypes()
+    mri_meta = pd.DataFrame(images).convert_dtypes()
     # Scan ID as expected by Clinica (derived if so, original otherwise)
     mri_meta["T1w_scan_id"] = mri_meta["image_proc_id"].combine_first(
         mri_meta["image_orig_id"]
@@ -457,21 +496,24 @@ def _create_mri_meta_df(imgs: list) -> pd.DataFrame:
 
 
 def _get_existing_scan_dataframe(
-    subj_path: str, session: str
-) -> Union[Tuple[pd.DataFrame, Path], Tuple[None, Path]]:
+    subject_path: Path, session: str
+) -> Tuple[Optional[pd.DataFrame], Path]:
     """Retrieve existing scan dataframe at the given
     `subj_path`, and the given `session`.
     If no existing scan file is found, a warning is given.
     """
     import warnings
 
-    subj_id = Path(subj_path).name
-    scans_tsv_path = Path(subj_path) / session / f"{subj_id}_{session}_scans.tsv"
+    from clinica.utils.stream import cprint
+
+    scans_tsv_path = subject_path / session / f"{subject_path.name}_{session}_scans.tsv"
     if scans_tsv_path.exists():
         df_scans = pd.read_csv(scans_tsv_path, sep="\t")
         df_scans["scan_id"] = df_scans["scan_id"].astype("Int64")
         return df_scans, scans_tsv_path
-    warnings.warn(f"No scan tsv file for subject {subj_id} and session {session}")
+    msg = f"{LOGGING_HEADER} No scan tsv file for subject {subject_path.name} and session {session}"
+    cprint(msg, lvl="warning")
+    warnings.warn(msg)
     return None, scans_tsv_path
 
 
@@ -521,40 +563,42 @@ def _add_json_scan_metadata(
             json.dump(updated_metadata, fp, indent=indent)
 
 
-def _add_metadata_to_scans(df_meta: pd.DataFrame, bids_subjs_paths: list) -> None:
+def _add_metadata_to_scans(df_meta: pd.DataFrame, bids_subjects_paths: Iterable[Path]):
     """Add the metadata to the appropriate tsv and json files."""
     from clinica.iotools.bids_utils import get_bids_sess_list
 
     merge_strategy = {"how": "left", "left_on": "scan_id", "right_on": "T1w_scan_id"}
 
-    for subj_path in bids_subjs_paths:
-        sess_list = get_bids_sess_list(subj_path)
-        if sess_list:
+    for subject_path in bids_subjects_paths:
+        if (sess_list := get_bids_sess_list(subject_path)) is not None:
             for sess in sess_list:
-                df_scans, scans_tsv_path = _get_existing_scan_dataframe(subj_path, sess)
+                df_scans, scans_tsv_path = _get_existing_scan_dataframe(
+                    subject_path, sess
+                )
                 if df_scans is not None:
                     columns_to_keep = list(df_scans.columns) + ["acq_time"]
                     df_merged = _merge_scan_and_metadata(
                         df_scans, df_meta, merge_strategy
                     )
                     for _, scan_row in df_merged.iterrows():
-                        scan_path = Path(subj_path) / sess / scan_row["filename"]
-                        json_path = _get_json_filename_from_scan_filename(scan_path)
-                        _add_json_scan_metadata(json_path, scan_row.to_json())
+                        _add_json_scan_metadata(
+                            _get_json_filename_from_scan_filename(
+                                subject_path / sess / scan_row["filename"]
+                            ),
+                            scan_row.to_json(),
+                        )
                     df_merged[columns_to_keep].to_csv(
                         scans_tsv_path, sep="\t", index=False
                     )
-    return None
 
 
-def create_json_metadata(bids_subjs_paths: list, bids_ids: list, xml_path: str) -> None:
+def create_json_metadata(
+    bids_subjects_paths: Iterable[Path], bids_ids: Iterable[str], xml_path: Path
+):
     """Create json metadata dictionary and add the metadata to the
     appropriate files in the BIDS hierarchy."""
-    from clinica.iotools.converters.adni_to_bids.adni_utils import bids_id_to_loni
-
-    loni_ids = [bids_id_to_loni(bids_id) for bids_id in bids_ids]
+    loni_ids = [_bids_id_to_loni(bids_id) for bids_id in bids_ids]
     xml_files = _read_xml_files(loni_ids, xml_path)
-    imgs, exe = _run_parsers(xml_files)
-    df_meta = _create_mri_meta_df(imgs)
-    _add_metadata_to_scans(df_meta, bids_subjs_paths)
-    return None
+    images, exe = _run_parsers(xml_files)
+    df_meta = _create_mri_meta_df(images)
+    _add_metadata_to_scans(df_meta, bids_subjects_paths)

@@ -1,7 +1,13 @@
 <!-- markdownlint-disable MD007 MD046 -->
 # `adni-to-bids` – Conversion of the Alzheimer’s Disease Neuroimaging Initiative (ADNI) to BIDS
 
-!!! quote "Description adapted from the [ADNI website](http://adni.loni.usc.edu)"
+!!! warning "October 2024 ADNI new download interface"
+    The LONI Image and Data Archive is currently refactoring the ADNI data download interface.
+    Because of the ongoing modifications, both the documentation and the code of this converter are not up-to-date.
+    The Clinica team will work on updating the converter once the interface stabilizes.
+    In the mean-time, we recommend using previous versions of the downloaded clinical data (before sept. 2024).
+
+??? quote "Description adapted from the [ADNI website](http://adni.loni.usc.edu)"
     ADNI is a global research effort that actively supports the investigation and development of treatments that slow or stop the progression of Alzheimer's disease (AD).
     This multisite, longitudinal study assesses clinical, imaging, genetic and biospecimen biomarkers through the process of normal aging to mild cognitive impairment (MCI) and AD dementia.
     With established, standardized methods for imaging and biomarker collection and analysis, ADNI facilitates a way for scientists to conduct cohesive research and share compatible data with other researchers around the world.
@@ -16,10 +22,12 @@
     | Duration / Start date   | 5 years / October 2004 | 2 years / September 2009 | 5 years / September 2011 | 5 years / September 2016 |
     | Cohort                  | 200 elderly controls + 400 MCI + 200 AD | Existing ADNI-1 + 200 early MCI | Existing ADNI-1 and ADNI-GO + 150 elderly controls + 100 early MCI + 150 late MCI + 150 AD | Existing ADNI-1, ADNI-GO, ADNI-2 + 133 elderly controls + 151 MCI + 87 AD |
 
+!!! warning "Supported ADNI versions"
+    Clinica is currently able to convert ADNI 1, GO, 2 and 3. It is not ready for ADNI 4.
+
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of the **dcm2niix** DICOM to NIfTI converter.
-You can find how to install these software packages on the [installation](../../#installing-clinica-from-source) page.
+If you only [installed the core of Clinica](../Software/Installation.md), this pipeline needs the installation of the [**dcm2niix**](../Software/Third-party.md#dcm2nix) DICOM to NIfTI converter.
 
 ## Downloading ADNI
 
@@ -69,6 +77,7 @@ Currently, the modalities supported by our converter are:
 | Florbetapir (AV45) PET (amyloid)          | -      | ✓         | ✓      |
 | Florbetaben (FBB) PET (amyloid)           | -      | -         | ✓      |
 | Flortaucipir (AV1451) PET (tau)           | -      | -         | ✓      |
+| Field mapping (FMAP)                      | ✓      | ✓         | ✓      |
 | Clinical data                             | ✓      | ✓         | ✓      |
 
 To convert the imaging data to BIDS, a list of subjects with their sessions is first obtained from the `ADNIMERGE` spreadsheet.
@@ -85,6 +94,7 @@ Gradwarp, B1-inhomogeneity corrected and N3 bias field corrected images are sele
 - **FLAIR** We select images containing 'FLAIR' in the sequence name, without multiplanar reconstruction (MPR).
 - **fMRI** We select images containing 'MRI' in the sequence name, that are not multiband.
 - **FDG, Amyloid and Tau PET** The images co-registered and averaged across time frames are selected.
+- **FMAP** We select images referring to Field Mapping in their sequence name.
 
 For all imaging modalities, the scans failing quality control (if it was performed) are discarded.
 
@@ -99,6 +109,11 @@ The user can easily modify this file if they want to convert additional clinical
 
 For further details regarding clinica data, we recommend to look at the [ADNI Data Package
 ](https://adni.bitbucket.io/index.html) developed by the Alzheimer's Disease Neuroimaging Initiative.
+
+??? failure "Warning : Field Mapping modality"
+    The conversion of the Field Mapping modality was recently added to Clinica (v O.9.O) and is still experimental.
+    Bugs are expected to occur. In particular, it could not be tested how the process handles having more than one full run
+    (magnitude + phase images) acquired in the same session. Feel free to report bugs if you encounter any.
 
 ## Using the converter
 
@@ -165,6 +180,7 @@ Due to the high computational time required for converting all the modalities of
 - `PET_FDG` for Fluorodeoxyglucose (FDG) PET
 - `PET_AMYLOID` for Pittsburgh compound B (PIB), Florbetapir (AV45) and Florbetaben (FBB) PET
 - `PET_TAU` for Flortaucipir (AV1451) PET
+- `FMAP` for Field Mapping
 
 It is also possible to provide the path to a .txt file with the list of subjects to convert using the optional parameter `--subjects_list`.
 This file must contain one subject identifier per line.
@@ -305,6 +321,23 @@ clinica convert adni-to-bids -h
     - **AV45 PET**
         - _Interslice distance varies in the volume (incompatible with NIfTI format):_
             - Subject sub-ADNI128S2220 for session ses-M048
+
+    - **FMAP**
+        - _Image conversion generates an invalid output file (real/imaginary suffix):_
+            - Subject sub-ADNI002S1261 for session ses-M060 ; ses-M072 ; ses-M084 ; ses-M096
+            - Subject sub-ADNI006S4485 for session ses-M000 ; ses-M003 ; ses-M006 ; ses-M012 ; ses-M024 ; ses-M048
+        - _Unrecognized BIDS case for Field Mappings :_
+            - Subject sub-ADNI006S4485 for session ses-M078 
+            - Subject sub-ADNI009S4388 for session ses-M003 ; ses-M006 ; ses-M012 ; ses-M024 ; ses-M048
+            - Subject sub-ADNI023S4115 for session ses-M000 ; ses-M003 ; ses-M006 ; ses-M012 ; ses-M024 ; ses-M048
+            - Subject sub-ADNI123S4127 for session ses-M000 ; ses-M012 ; ses-M024 ; ses-M036
+        - _Missing keys in .json files :_
+            - Subject sub-ADNI006S4485 for session ses-M090
+            - Subject sub-ADNI036S6088 for session ses-M012
+            - Subject sub-ADNI123S4127 for session ses-M084
+        - _Missing DICOMs slices :_
+            - Subject sub-ADNI023S4115 for session ses-M126
+            - Subject sub-ADNI177S6448 for session ses-M024
 
 ## Citing this converter in your paper
 
@@ -478,6 +511,18 @@ Known conversion exceptions are removed from the list.
     - Then we apply the function `get_images_pet` in `adni_utils.py`:
         - Functioning is the same as described above for FDG PET but we look for a different sequence ("AV1451 Co-registered, Averaged").
     - The list of images for each subject is added to the list of images to convert.
+
+??? abstract "Field Mapping (FMAP)""
+    The quality selection process for fMRI data described above is also used there :
+    - QC files are filtered to keep only entries corresponding to fMRI scans. We keep:
+        - `MAYOADIRL_MRI_IMAGEQC_12_08_15` rows containing `fMRI` as `series_type`,
+        - `MAYOADIRL_MRI_QUALITY_ADNI3` rows containing `EPB` as `SERIES_TYPE`.
+        - Resulting entries from both QC files are concatenated in one dataframe.
+    - The image sequence names in the `MRILIST.csv` file are filtered to keep only Field Mapping sequences.
+    - For each subject, since the `ADNIMERGE` and `MRILIST` files have different notations for the visits, a correspondence must be established.
+    For each subject, we pair the closest dates from the two files as the same visit (`visits_to_timepoints`).
+    - For each visit, the images are filtered to keep only images for the current visit.
+    - Since Field Mapping produces several images, all of them are considered and renamed according to BIDS specifications.
 
 ### Step 2: Path extraction
 

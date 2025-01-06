@@ -1,11 +1,17 @@
 """Methods used by BIDS converters."""
 
+import json
+import os
+import re
+from abc import ABC, abstractmethod
+from collections import UserString
 from enum import Enum
-from os import PathLike
 from pathlib import Path
-from typing import BinaryIO, List, Optional, Union
+from typing import BinaryIO, List, Optional, Type, Union
 
-from pandas import DataFrame
+import pandas as pd
+
+from clinica.utils.pet import Tracer
 
 
 class StudyName(str, Enum):
@@ -19,6 +25,7 @@ class StudyName(str, Enum):
     OASIS = "OASIS"
     OASIS3 = "OASIS3"
     UKB = "UKB"
+    IXI = "IXI"
 
 
 BIDS_VALIDATOR_CONFIG = {
@@ -46,45 +53,322 @@ BIDS_VALIDATOR_CONFIG = {
 }
 
 
+class BIDSSubjectID(ABC, UserString):
+    """This is the interface that BIDS subject IDs have to implement."""
+
+    def __init__(self, value: str):
+        instance = super().__init__(self.validate(value))
+        return instance
+
+    @abstractmethod
+    def validate(self, value: str) -> str:
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        raise NotImplementedError
+
+    @abstractmethod
+    def to_original_study_id(self) -> str:
+        raise NotImplementedError
+
+
+def bids_id_factory(study: StudyName) -> Type[BIDSSubjectID]:
+    if study == StudyName.ADNI:
+        return ADNIBIDSSubjectID
+    if study == StudyName.NIFD:
+        return NIFDBIDSSubjectID
+    if study == StudyName.AIBL:
+        return AIBLBIDSSubjectID
+    if study == StudyName.UKB:
+        return UKBBIDSSubjectID
+    if study == StudyName.GENFI:
+        return GENFIBIDSSubjectID
+    if study == StudyName.OASIS:
+        return OASISBIDSSubjectID
+    if study == StudyName.OASIS3:
+        return OASIS3BIDSSubjectID
+    if study == StudyName.HABS:
+        return HABSBIDSSubjectID
+    if study == StudyName.IXI:
+        return IXIBIDSSubjectID
+
+
+class ADNIBIDSSubjectID(BIDSSubjectID):
+    """Implementation for ADNI of the BIDSSubjectIDClass, allowing to go from the source id XXX_S_XXXX
+    to a bids id sub-ADNIXXXSXXX and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-ADNI\d{3}S\d{4}", value):
+            return value
+        raise ValueError(
+            f"BIDS ADNI subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-ADNIXXXSXXXX' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"\d{3}_S_\d{4}", study_id):
+            return "sub-ADNI" + study_id.replace("_", "")
+        raise ValueError(
+            f"Raw ADNI subject ID {study_id} is not properly formatted. "
+            "Expecting a 'XXX_S_XXXX' format."
+        )
+
+    def to_original_study_id(self) -> str:
+        return "_S_".join(self.split("ADNI")[1].split("S"))
+
+
+class NIFDBIDSSubjectID(BIDSSubjectID):
+    """Implementation for NIFD of the BIDSSubjectIDClass, allowing to go from the source id X_S_XXXX
+    to a bids id sub-NIFDXSXXX and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-NIFD\dS\d{4}", value):
+            return value
+        raise ValueError(
+            f"BIDS NIFD subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-NIFDXSXXXX' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"\d_S_\d{4}", study_id):
+            return "sub-NIFD" + study_id.replace("_", "")
+        raise ValueError(
+            f"Raw NIFD subject ID {study_id} is not properly formatted. "
+            "Expecting a 'X_S_XXXX' format."
+        )
+
+    def to_original_study_id(self) -> str:
+        return "_S_".join(self.split("NIFD")[1].split("S"))
+
+
+class AIBLBIDSSubjectID(BIDSSubjectID):
+    """Implementation for AIBL of the BIDSSubjectIDClass, allowing to go from the source id Y
+    to a bids id sub-ADNIY and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-AIBL\d*", value):
+            return value
+        raise ValueError(
+            f"BIDS AIBL subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-AIBLY' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"\d*", study_id):
+            return "sub-AIBL" + study_id
+        raise ValueError(
+            f"Raw AIBL subject ID {study_id} is not properly formatted. "
+            "Expecting a 'Y' format where Y is a combination of digits."
+        )
+
+    def to_original_study_id(self) -> str:
+        return self.split("AIBL")[1]
+
+
+class UKBBIDSSubjectID(BIDSSubjectID):
+    """Implementation for UKB of the BIDSSubjectIDClass, allowing to go from the source id Y
+    to a bids id sub-ADNIY and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-UKB\d*", value):
+            return value
+        raise ValueError(
+            f"BIDS UKB subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-UKBY' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"\d*", study_id):
+            return "sub-UKB" + study_id
+        raise ValueError(
+            f"Raw UKB subject ID {study_id} is not properly formatted. "
+            "Expecting a 'Y' format where Y is a combination of digits."
+        )
+
+    def to_original_study_id(self) -> str:
+        return self.split("UKB")[1]
+
+
+class GENFIBIDSSubjectID(BIDSSubjectID):
+    """Implementation for GENFI of the BIDSSubjectIDClass, allowing to go from the source id Y
+    to a bids id sub-Y and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-\w*", value):
+            return value
+        raise ValueError(
+            f"BIDS GENFI subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-Y' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"\w*", study_id):
+            return "sub-" + study_id
+        raise ValueError(
+            f"Raw GENFI subject ID {study_id} is not properly formatted. "
+            "Expecting a 'Y' format where Y is a combination of letters and digits."
+        )
+
+    def to_original_study_id(self) -> str:
+        return self.split("-")[1]
+
+
+class OASISBIDSSubjectID(BIDSSubjectID):
+    """Implementation for OASIS1 of the BIDSSubjectIDClass, allowing to go from the source id OAS1_XXXX_MR1/2
+    to a bids id sub-OASIS1XXXX and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-OASIS1\d{4}", value):
+            return value
+        raise ValueError(
+            f"BIDS OASIS1 subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-OASIS1XXXX' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"OAS1_\d{4}_MR\d", study_id):
+            return "sub-OASIS1" + study_id.split("_")[1]
+        raise ValueError(
+            f"Raw OASIS1 subject ID {study_id} is not properly formatted. "
+            "Expecting a 'OAS1_XXXX_MR1/2' format."
+        )
+
+    def to_original_study_id(self) -> str:
+        return f"OAS1_{self.split('OASIS1')[1]}_MR1"
+
+
+class OASIS3BIDSSubjectID(BIDSSubjectID):
+    """Implementation for OASIS3 of the BIDSSubjectIDClass, allowing to go from the source id XXXX
+    to a bids id sub-OAS3XXXX and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-OAS3\d{4}", value):
+            return value
+        raise ValueError(
+            f"BIDS OASIS3 subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-OAS3XXXX' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"OAS3\d{4}", study_id):
+            return "sub-" + study_id
+        raise ValueError(
+            f"Raw OASIS3 subject ID {study_id} is not properly formatted. "
+            "Expecting a 'OAS3XXXX' format."
+        )
+
+    def to_original_study_id(self) -> str:
+        return self.split("-")[1]
+
+
+class HABSBIDSSubjectID(BIDSSubjectID):
+    """Implementation for HABS of the BIDSSubjectIDClass, allowing to go from the source id P_Y
+    to a bids id sub-HABSY and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-HABS\w*", value):
+            return value
+        raise ValueError(
+            f"BIDS HABS subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-HABSY' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"P_\w*", study_id):
+            return study_id.replace("P_", "sub-HABS")
+        raise ValueError(
+            f"Raw HABS subject ID {study_id} is not properly formatted. "
+            "Expecting a 'P_Y' format."
+        )
+
+    def to_original_study_id(self) -> str:
+        return str(self).replace("sub-HABS", "P_")
+
+
+class IXIBIDSSubjectID(BIDSSubjectID):
+    """Implementation for IXI of the BIDSSubjectIDClass, allowing to go from the source id IXI###
+    to a bids id sub-IXI### and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-IXI\d{3}", value):
+            return value
+        raise ValueError(
+            f"BIDS IXI subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-IXIXXX' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"IXI\d{3}", study_id):
+            return f"sub-{study_id}"
+        raise ValueError(
+            f"Raw IXI subject ID {study_id} is not properly formatted. "
+            "Expecting a 'Y' format."
+        )
+
+    def to_original_study_id(self) -> str:
+        return str(self).replace("sub-", "")
+
+
 # -- Methods for the clinical data --
-# @ToDo:test this function
 def create_participants_df(
     study_name: StudyName,
-    clinical_spec_path,
-    clinical_data_dir,
-    bids_ids,
-    delete_non_bids_info=True,
-):
+    clinical_specifications_folder: Path,
+    clinical_data_dir: Path,
+    bids_ids: list[str],
+    delete_non_bids_info: bool = True,
+) -> pd.DataFrame:
     """Create the file participants.tsv.
 
-    Args:
-        study_name: name of the study (Ex. ADNI)
-        clinical_spec_path: path to the clinical file
-        clinical_data_dir: path to the directory where the clinical data are stored
-        bids_ids: list of bids ids
-        delete_non_bids_info: if True delete all the rows of the subjects that
-        are not available in the BIDS dataset
+    Parameters
+    ----------
+    study_name : StudyName
+        The name of the study (Ex. ADNI).
 
-    Returns: a pandas dataframe that contains the participants data
+    clinical_specifications_folder : Path
+        The path to the clinical file.
+
+    clinical_data_dir : Path
+        The path to the directory where the clinical data are stored.
+
+    bids_ids : list of str
+        The list of bids ids.
+
+    delete_non_bids_info : bool, optional
+        If True delete all the rows of the subjects that are not available in the BIDS dataset.
+        Default=True.
+
+    Returns
+    -------
+    pd.DataFrame :
+        A pandas dataframe that contains the participants data.
     """
-    import os
-    from os import path
-
     import numpy as np
-    import pandas as pd
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
     from clinica.utils.stream import cprint
 
     fields_bids = ["participant_id"]
     prev_location = ""
+    prev_sheet = 0
     index_to_drop = []
     subjects_to_drop = []
     study_name = StudyName(study_name)
     location_name = f"{study_name.value} location"
 
-    # Load the data from the clincal specification file
-    participants_specs = pd.read_csv(clinical_spec_path + "_participant.tsv", sep="\t")
+    participants_specs = pd.read_csv(
+        clinical_specifications_folder / "participant.tsv", sep="\t"
+    )
     participant_fields_db = participants_specs[study_name.value]
     field_location = participants_specs[location_name]
     participant_fields_bids = participants_specs["BIDS CLINICA"]
@@ -104,23 +388,34 @@ def create_participants_df(
             tmp = field_location[i].split("/")
             location = tmp[0]
             # If a sheet is available
-            if len(tmp) > 1:
-                sheet = tmp[1]
-            else:
-                sheet = ""
+            sheet = tmp[1] if len(tmp) > 1 else 0
             # Check if the file to open for a certain field is the same of the previous field
             if location == prev_location and sheet == prev_sheet:
                 pass
             else:
                 file_ext = os.path.splitext(location)[1]
-                file_to_read_path = path.join(clinical_data_dir, location)
-
+                file_to_read_path = clinical_data_dir / location
                 if file_ext == ".xlsx":
                     file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
                 elif file_ext == ".csv":
                     file_to_read = load_clinical_csv(
                         clinical_data_dir, location.split(".")[0]
                     )
+                    # Condition to handle ADNI modification of file APOERES.csv
+                    # See issue https://github.com/aramis-lab/clinica/issues/1294
+                    if study_name == StudyName.ADNI and location == "APOERES.csv":
+                        if (
+                            participant_fields_db[i] not in file_to_read.columns
+                            and "GENOTYPE" in file_to_read.columns
+                        ):
+                            # Split the 'GENOTYPE' column into 'APGEN1' and 'APGEN2'
+                            genotype = file_to_read["GENOTYPE"].str.split(
+                                "/", expand=True
+                            )
+                            file_to_read = file_to_read.assign(
+                                APGEN1=genotype[0], APGEN2=genotype[1]
+                            )
+
                 prev_location = location
                 prev_sheet = sheet
 
@@ -158,15 +453,10 @@ def create_participants_df(
 
     # Adding participant_id column with BIDS ids
     for i in range(0, len(participant_df)):
-        if study_name == StudyName.OASIS:
-            value = (participant_df["alternative_id_1"][i].split("_"))[1]
-        elif study_name == StudyName.OASIS3:
-            value = participant_df["alternative_id_1"][i].replace("OAS3", "")
-        else:
-            value = remove_space_and_symbols(participant_df["alternative_id_1"][i])
-
+        value = bids_id_factory(study_name).from_original_study_id(
+            participant_df["alternative_id_1"][i]
+        )
         bids_id = [s for s in bids_ids if value in s]
-
         if len(bids_id) == 0:
             index_to_drop.append(i)
             subjects_to_drop.append(value)
@@ -190,160 +480,46 @@ def create_participants_df(
     return participant_df
 
 
-def create_sessions_dict_OASIS(
-    clinical_data_dir,
-    bids_dir,
-    study_name: StudyName,
-    clinical_spec_path,
-    bids_ids,
-    name_column_ids,
-    subj_to_remove=[],
-    participants_df=None,
-):
-    """Extract the information regarding the sessions and store them in a dictionary (session M00 only).
-
-    Args:
-        clinical_data_dir: path to the input folder
-        study_name: name of the study (Ex: ADNI)
-        clinical_spec_path:  path to the clinical file
-        bids_ids: list of bids ids
-        name_column_ids: name of the column where the subject ids are stored
-        subj_to_remove: subjects to remove
-        participants_df: a pandas dataframe that contains the participants data (required for OASIS3 only)
-    """
-    import os
-    from os import path
-
-    import numpy as np
-    import pandas as pd
-
-    from clinica.utils.stream import cprint
-
-    # Load data
-    location = f"{study_name.value} location"
-    sessions = pd.read_csv(clinical_spec_path + "_sessions.tsv", sep="\t")
-    sessions_fields = sessions[study_name.value]
-    field_location = sessions[location]
-    sessions_fields_bids = sessions["BIDS CLINICA"]
-    fields_dataset = []
-    fields_bids = []
-    sessions_dict = {}
-
-    for i in range(0, len(sessions_fields)):
-        if not pd.isnull(sessions_fields[i]):
-            fields_bids.append(sessions_fields_bids[i])
-            fields_dataset.append(sessions_fields[i])
-
-    for i in range(0, len(sessions_fields)):
-        # If the i-th field is available
-        if not pd.isnull(sessions_fields[i]):
-            # Load the file
-            tmp = field_location[i].split("/")
-            location = tmp[0]
-            if len(tmp) > 1:
-                sheet = tmp[1]
-            else:
-                sheet = ""
-
-            file_to_read_path = path.join(clinical_data_dir, location)
-            file_ext = os.path.splitext(location)[1]
-
-            if file_ext == ".xlsx":
-                file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
-            elif file_ext == ".csv":
-                file_to_read = pd.read_csv(file_to_read_path)
-
-            for r in range(0, len(file_to_read.values)):
-                # Extracts the subject ids columns from the dataframe
-                subj_id = file_to_read.iloc[r][name_column_ids]
-                if hasattr(subj_id, "dtype"):
-                    if subj_id.dtype == np.int64:
-                        subj_id = str(subj_id)
-                # Removes all the - from
-                subj_id_alpha = remove_space_and_symbols(subj_id)
-                if study_name == StudyName.OASIS:
-                    subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3] + subj_id[5:9])
-                if study_name == StudyName.OASIS3:
-                    subj_id_alpha = str(subj_id[0:3] + "IS" + subj_id[3:])
-
-                # Extract the corresponding BIDS id and create the output file if doesn't exist
-                subj_bids = [s for s in bids_ids if subj_id_alpha in s]
-                if len(subj_bids) == 0:
-                    # If the subject is not an excluded one
-                    if subj_id not in subj_to_remove:
-                        cprint(
-                            f"{sessions_fields[i]} for {subj_id} not found in the BIDS converted.",
-                            "info",
-                        )
-                else:
-                    subj_bids = subj_bids[0]
-
-                    subj_dir = path.join(
-                        bids_dir,
-                        subj_bids,
-                    )
-                    session_names = get_bids_sess_list(subj_dir)
-                    for s in session_names:
-                        s_name = s.replace("ses-", "")
-                        if study_name == StudyName.OASIS3:
-                            row = file_to_read[
-                                file_to_read["MR ID"].str.startswith(subj_id)
-                                & file_to_read["MR ID"].str.endswith(s_name)
-                            ].iloc[0]
-                        else:
-                            row = file_to_read.iloc[r]
-                        if subj_bids not in sessions_dict:
-                            sessions_dict.update({subj_bids: {}})
-                        if s_name not in sessions_dict[subj_bids].keys():
-                            sessions_dict[subj_bids].update({s_name: {"session_id": s}})
-                        (sessions_dict[subj_bids][s_name]).update(
-                            {sessions_fields_bids[i]: row[sessions_fields[i]]}
-                        )
-                        # Calculate the difference in months for OASIS3 only
-                        if (
-                            study_name == StudyName.OASIS3
-                            and sessions_fields_bids[i] == "age"
-                        ):
-                            diff_years = (
-                                float(sessions_dict[subj_bids][s_name]["age"])
-                                - participants_df[
-                                    participants_df["participant_id"] == subj_bids
-                                ]["age_bl"]
-                            )
-                            (sessions_dict[subj_bids][s_name]).update(
-                                {"diff_months": round(float(diff_years) * 12)}
-                            )
-
-    return sessions_dict
-
-
 def create_scans_dict(
-    clinical_data_dir,
+    clinical_data_dir: Path,
     study_name: StudyName,
-    clinic_specs_path,
-    bids_ids,
-    name_column_ids,
-    name_column_ses,
-    ses_dict,
-):
+    clinical_specifications_folder: Path,
+    bids_ids: list[str],
+    name_column_ids: str,
+    name_column_ses: str,
+    ses_dict: dict,
+) -> pd.DataFrame:
     """[summary].
 
-    Args:
-        clinical_data_dir: path to the directory where the clinical data are stored
-        study_name: name of the study (Ex ADNI)
-        clinic_specs_path: path to the clinical specification file
-        bids_ids: list of bids ids
-        name_column_ids: name of the column where the subject id is contained
-        name_column_ses: name of the column where the viscode of the session is contained
-        ses_dict: links the session id to the viscode of the session.
+    Parameters
+    ----------
+    clinical_data_dir : Path
+        The path to the directory where the clinical data are stored.
 
-    Returns: a pandas DataFrame that contains the scans information for all sessions of all participants.
+    study_name : StudyName
+        The name of the study (Ex ADNI).
+
+    clinical_specifications_folder : Path
+        The path to the folder containing the clinical specification files.
+
+    bids_ids : list of str
+        A list of bids ids.
+
+    name_column_ids : str
+        The name of the column where the subject id is contained.
+
+    name_column_ses : str
+        The name of the column where the viscode of the session is contained.
+
+    ses_dict : dict
+        The links the session id to the viscode of the session.
+
+    Returns
+    -------
+    pd.DataFrame :
+        A pandas DataFrame that contains the scans information for all sessions of all participants.
     """
     import datetime
-    import glob
-    from os import path
-
-    import pandas as pd
 
     from clinica.utils.pet import Tracer
     from clinica.utils.stream import cprint
@@ -364,7 +540,7 @@ def create_scans_dict(
                 Tracer.FDG: {},
             }
 
-    scans_specs = pd.read_csv(clinic_specs_path + "_scans.tsv", sep="\t")
+    scans_specs = pd.read_csv(clinical_specifications_folder / "scans.tsv", sep="\t")
     fields_dataset = []
     fields_location = []
     fields_bids = []
@@ -384,33 +560,25 @@ def create_scans_dict(
         # Location is composed by file/sheet
         location = fields_location[i].split("/")
         file_name = location[0]
-        if len(location) > 1:
-            sheet = location[1]
-        else:
-            sheet = ""
+        sheet = location[1] if len(location) > 1 else ""
         # Check if the file to read is already opened
         if file_name == prev_file and sheet == prev_sheet:
             pass
         else:
-            file_to_read_path = path.join(clinical_data_dir, file_name)
-            file_ext = path.splitext(file_name)[1]
+            file_ext = os.path.splitext(file_name)[1]
+            files_to_read = [f for f in clinical_data_dir.glob(file_name)]
             if file_ext == ".xlsx":
-                file_to_read = pd.read_excel(
-                    glob.glob(file_to_read_path)[0], sheet_name=sheet
-                )
+                file_to_read = pd.read_excel(files_to_read[0], sheet_name=sheet)
             elif file_ext == ".csv":
-                file_path = glob.glob(file_to_read_path)[0]
+                file_path = files_to_read[0]
 
                 # Fix for malformed flutemeta file in AIBL (see #796).
                 # Some flutemeta lines contain a non-coded string value at the second-to-last position. This value
                 # contains a comma which adds an extra column and shifts the remaining values to the right. In this
                 # case, we just remove the erroneous content and replace it with -4 which AIBL uses as n/a value.
-                on_bad_lines = (  # noqa: E731
-                    lambda bad_line: bad_line[:-3] + [-4, bad_line[-1]]
-                    if "flutemeta" in file_path and study_name == StudyName.AIBL
-                    else "error"
-                )
-
+                on_bad_lines = lambda x: "error"  # noqa
+                if "flutemeta" in file_path.name and study_name == StudyName.AIBL:
+                    on_bad_lines = lambda bad_line: bad_line[:-3] + [-4, bad_line[-1]]  # noqa
                 file_to_read = pd.read_csv(
                     file_path,
                     sep=",",
@@ -466,7 +634,7 @@ def create_scans_dict(
 
 def _write_bids_dataset_description(
     study_name: StudyName,
-    bids_dir: Union[str, Path],
+    bids_dir: Path,
     bids_version: Optional[str] = None,
 ) -> None:
     """Write `dataset_description.json` at the root of the BIDS directory."""
@@ -476,7 +644,7 @@ def _write_bids_dataset_description(
         bids_desc = BIDSDatasetDescription(name=study_name, bids_version=bids_version)
     else:
         bids_desc = BIDSDatasetDescription(name=study_name)
-    with open(Path(bids_dir) / "dataset_description.json", "w") as f:
+    with open(bids_dir / "dataset_description.json", "w") as f:
         bids_desc.write(to=f)
 
 
@@ -499,8 +667,6 @@ def _write_readme(
 
 def _write_bids_validator_config(bids_dir: Path) -> None:
     """Write `.bids-validator-config.json` at the root of the BIDS directory."""
-    import json
-
     with open(bids_dir / ".bids-validator-config.json", "w") as f:
         json.dump(BIDS_VALIDATOR_CONFIG, f, skipkeys=True, indent=4)
 
@@ -523,11 +689,19 @@ def write_modality_agnostic_files(
     Write the files README, dataset_description.json, .bidsignore and .bids-validator-config.json
     at the root of the BIDS directory.
 
-    Args:
-        study_name: name of the study (Ex ADNI)
-        readme_data: dictionary containing the data specific to the dataset to write in the readme
-        bids_dir: path to the bids directory
-        bids_version: BIDS version if different from the version supported by Clinica.
+    Parameters
+    ----------
+    study_name : StudyName
+        The name of the study (Ex ADNI).
+
+    readme_data : dict
+        A dictionary containing the data specific to the dataset to write in the readme.
+
+    bids_dir : Path
+        The path to the bids directory.
+
+    bids_version : str, optional
+        The BIDS version if different from the version supported by Clinica.
     """
     _write_bids_dataset_description(study_name, bids_dir, bids_version)
     _write_readme(study_name, readme_data, bids_dir)
@@ -535,57 +709,7 @@ def write_modality_agnostic_files(
     _write_bidsignore(bids_dir)
 
 
-def write_sessions_tsv(bids_dir: Union[str, Path], sessions_dict: dict) -> None:
-    """Create <participant_id>_sessions.tsv files.
-
-    Basically writes the content of the function
-    `clinica.iotools.bids_utils.create_sessions_dict` in several TSV files
-    following the BIDS specification.
-
-    Parameters
-    ----------
-    bids_dir : str
-        Path to the BIDS directory.
-
-    sessions_dict : dict
-        Dictionary containing sessions metadata.
-
-        .. note::
-            This is the output of the function
-            `clinica.iotools.bids_utils.create_sessions_dict`.
-
-    See also
-    --------
-    create_sessions_dict
-    write_scans_tsv
-    """
-    from pathlib import Path
-
-    import pandas as pd
-
-    bids_dir = Path(bids_dir)
-
-    for subject_path in bids_dir.glob("sub-*"):
-        if subject_path.name in sessions_dict:
-            session_df = pd.DataFrame.from_dict(
-                sessions_dict[subject_path.name], orient="index"
-            )
-            cols = session_df.columns.tolist()
-            cols = cols[-1:] + cols[:-1]
-            session_df = session_df[cols]
-        else:
-            print(f"No session data available for {subject_path}")
-            session_df = pd.DataFrame(columns=["session_id"])
-            session_df["session_id"] = pd.Series("M000")
-        session_df = session_df.set_index("session_id").fillna("n/a")
-        session_df.to_csv(
-            subject_path / f"{subject_path.name}_sessions.tsv",
-            sep="\t",
-            encoding="utf8",
-        )
-
-
-def _get_pet_tracer_from_filename(filename: str) -> str:
+def _get_pet_tracer_from_filename(filename: str) -> Tracer:
     """Return the PET tracer from the provided filename.
 
     Parameters
@@ -595,7 +719,7 @@ def _get_pet_tracer_from_filename(filename: str) -> str:
 
     Returns
     -------
-    tracer : str
+    tracer : Tracer
         The PET tracer.
 
     Raises
@@ -615,18 +739,18 @@ def _get_pet_tracer_from_filename(filename: str) -> str:
             f"Could not extract the PET tracer from the following file name {filename}."
         )
 
-    return tracer
+    return Tracer(tracer)
 
 
 def write_scans_tsv(
-    bids_dir: Union[str, Path], participant_ids: List[str], scans_dict: dict
+    bids_dir: Path, participant_ids: List[str], scans_dict: dict
 ) -> None:
     """Write the scans dict into TSV files.
 
     Parameters
     ----------
-    bids_dir : str
-        Path to the BIDS directory.
+    bids_dir : Path
+        The path to the BIDS directory.
 
     participant_ids : List[str]
         List of participant ids for which to write the scans TSV files.
@@ -642,11 +766,6 @@ def write_scans_tsv(
     --------
     write_sessions_tsv
     """
-    from pathlib import Path
-
-    import pandas as pd
-
-    bids_dir = Path(bids_dir)
     supported_modalities = ("anat", "dwi", "func", "pet")
 
     for sub in participant_ids:
@@ -668,7 +787,7 @@ def write_scans_tsv(
                         f_type = (
                             "T1/DWI/fMRI/FMAP"
                             if mod.name in ("anat", "dwi", "func")
-                            else _get_pet_tracer_from_filename(file.name)
+                            else _get_pet_tracer_from_filename(file.name).value
                         )
                         row_to_append = pd.DataFrame(
                             scans_dict[sub][session_path.name][f_type], index=[0]
@@ -681,13 +800,13 @@ def write_scans_tsv(
             scans_df.to_csv(tsv_file, sep="\t", encoding="utf8")
 
 
-def get_bids_subjs_list(bids_path: str) -> List[str]:
+def get_bids_subjs_list(bids_path: Path) -> List[str]:
     """Given a BIDS compliant dataset, return the list of all the subjects available.
 
     Parameters
     ----------
-    bids_path : str
-        Path to the BIDS directory.
+    bids_path : Path
+        The path to the BIDS directory.
 
     Returns
     -------
@@ -699,19 +818,21 @@ def get_bids_subjs_list(bids_path: str) -> List[str]:
     get_bids_sess_list
     get_bids_subjs_paths
     """
-    from pathlib import Path
-
-    return [str(d.name) for d in Path(bids_path).glob("sub-*") if d.is_dir()]
+    return _filter_folder_names(bids_path, "sub-*")
 
 
-def get_bids_sess_list(subj_path: str) -> List[str]:
+def _filter_folder_names(folder: Path, pattern: str) -> List[str]:
+    return [d.name for d in folder.glob(pattern) if d.is_dir()]
+
+
+def get_bids_sess_list(subj_path: Path) -> List[str]:
     """Given a path to a subject's folder, this function returns the
     list of sessions available.
 
     Parameters
     ----------
-    subj_path : str
-        Path to the subject folder for which to list the sessions.
+    subj_path : Path
+        The path to the subject folder for which to list the sessions.
 
     Returns
     -------
@@ -723,12 +844,10 @@ def get_bids_sess_list(subj_path: str) -> List[str]:
     get_bids_subjs_list
     get_bids_subjs_paths
     """
-    from pathlib import Path
-
-    return [str(d.name) for d in Path(subj_path).glob("ses-*") if d.is_dir()]
+    return _filter_folder_names(subj_path, "ses-*")
 
 
-def get_bids_subjs_paths(bids_path: str) -> List[str]:
+def get_bids_subjs_paths(bids_path: Path) -> List[Path]:
     """Given a BIDS compliant dataset, returns the list of all paths to the subjects folders.
 
     Parameters
@@ -738,7 +857,7 @@ def get_bids_subjs_paths(bids_path: str) -> List[str]:
 
     Returns
     -------
-    List[str] :
+    List[Path] :
         List of paths to the subjects folders.
 
     See also
@@ -746,9 +865,7 @@ def get_bids_subjs_paths(bids_path: str) -> List[str]:
     get_bids_subjs_list
     get_bids_sess_list
     """
-    from pathlib import Path
-
-    return [str(d) for d in Path(bids_path).glob("sub-*") if d.is_dir()]
+    return [d for d in bids_path.glob("sub-*") if d.is_dir()]
 
 
 def remove_space_and_symbols(data: Union[str, List[str]]) -> Union[str, List[str]]:
@@ -774,21 +891,17 @@ def remove_space_and_symbols(data: Union[str, List[str]]) -> Union[str, List[str
     return re.sub("[-_ ]", "", data)
 
 
-def json_from_dcm(dcm_dir: str, json_path: str) -> None:
+def json_from_dcm(dcm_dir: Path, json_path: Path) -> None:
     """Writes descriptive JSON file from DICOM header.
 
     Parameters
     ----------
-    dcm_dir : str
-        Path to the DICOM directory.
+    dcm_dir : Path
+        The path to the DICOM directory.
 
-    json_path : str
-        Path to the output JSON file.
+    json_path : Path
+        The path to the output JSON file.
     """
-    import json
-    from glob import glob
-    from os import path
-
     from pydicom import dcmread
     from pydicom.tag import Tag
 
@@ -815,21 +928,20 @@ def json_from_dcm(dcm_dir: str, json_path: str) -> None:
     }
 
     try:
-        dcm_path = glob(path.join(dcm_dir, "*.dcm"))[0]
+        dcm_path = [f for f in dcm_dir.glob("*.dcm")][0]
         ds = dcmread(dcm_path)
         json_dict = {
             key: ds.get(tag).value for key, tag in fields_dict.items() if tag in ds
         }
-        json = json.dumps(json_dict, skipkeys=True, indent=4)
         with open(json_path, "w") as f:
-            f.write(json)
+            f.write(json.dumps(json_dict, skipkeys=True, indent=4))
     except IndexError:
         cprint(msg=f"No DICOM found at {dcm_dir}", lvl="warning")
 
 
 def _build_dcm2niix_command(
-    input_dir: str,
-    output_dir: str,
+    input_dir: Path,
+    output_dir: Path,
     output_fmt: str,
     compress: bool = False,
     bids_sidecar: bool = True,
@@ -844,8 +956,8 @@ def _build_dcm2niix_command(
 
 
 def run_dcm2niix(
-    input_dir: str,
-    output_dir: str,
+    input_dir: Path,
+    output_dir: Path,
     output_fmt: str,
     compress: bool = False,
     bids_sidecar: bool = True,
@@ -854,10 +966,10 @@ def run_dcm2niix(
 
     Parameters
     ----------
-    input_dir : str
+    input_dir : Path
         Input folder.
 
-    output_dir : str
+    output_dir : Path
         Output folder. This will be passed to the
         dcm2niix "-o" option.
 
@@ -912,6 +1024,7 @@ def run_dcm2niix(
     return True
 
 
+# todo : place in genfi utils ?
 def identify_modality(filename: str) -> Optional[str]:
     """Identifies the modality of a file given its name.
 
@@ -942,53 +1055,8 @@ def identify_modality(filename: str) -> Optional[str]:
         return np.nan
 
 
-def parse_description(filepath: PathLike, start_line: int, end_line: int) -> str:
-    """Parse the description of the dataset from the readme in the documentation.
-
-    Parameters
-    ----------
-    filepath : PathLike
-        Path to the readme file from which to extract the description.
-
-    start_line : int
-        Line number where the description starts.
-
-    end_line : int
-        Line number where the description ends.
-
-    Returns
-    -------
-    str :
-        The description extracted from the readme file.
-    """
-    with open(filepath, "r") as fp:
-        txt = fp.readlines()
-    return "\n".join(txt[start_line:end_line])
-
-
-def parse_url(filepath: PathLike) -> List[str]:
-    """Parse the URLs from the readme in the documentation.
-
-    Parameters
-    ----------
-    filepath : PathLike
-        Path to the readme file from which to extract the URLs.
-
-    Returns
-    -------
-    List[str] :
-        The list of found URLs.
-    """
-    import re
-
-    with open(filepath, "r") as fp:
-        txt = fp.readlines()
-    txt = "".join(txt)
-    url_extract_pattern = "https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)"
-    return re.findall(url_extract_pattern, txt)
-
-
-def write_to_tsv(df: DataFrame, buffer: Union[PathLike, BinaryIO]) -> None:
+# todo : use more ?
+def write_to_tsv(df: pd.DataFrame, buffer: Union[Path, BinaryIO]) -> None:
     """Save dataframe as a BIDS-compliant TSV file.
 
     Parameters

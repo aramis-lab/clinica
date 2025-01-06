@@ -1,24 +1,32 @@
 """Convert the NIFD dataset into BIDS."""
 
-from os import PathLike
-from typing import List
+from typing import Optional
+
+from clinica.utils.filemanip import UserProvidedPath
+
+__all__ = ["convert"]
 
 
-def convert_images(
-    path_to_dataset: PathLike,
-    bids_dir: PathLike,
-    path_to_clinical: PathLike,
-) -> List[PathLike]:
+def convert(
+    path_to_dataset: UserProvidedPath,
+    bids_dir: UserProvidedPath,
+    path_to_clinical: UserProvidedPath,
+    subjects: Optional[UserProvidedPath] = None,
+    n_procs: Optional[int] = 1,
+    **kwargs,
+):
     """Convert the entire dataset in BIDS.
 
     Scans available files in the path_to_dataset,
     identifies the patients that have images described by the JSON file,
     converts the image with the highest quality for each category.
     """
-    from pathlib import Path
+    from clinica.iotools.bids_utils import StudyName, write_modality_agnostic_files
+    from clinica.iotools.converters.factory import get_converter_name
+    from clinica.utils.check_dependency import ThirdPartySoftware, check_software
+    from clinica.utils.stream import cprint
 
-    import clinica.iotools.bids_utils as bids
-
+    from ..utils import validate_input_path
     from .nifd_utils import (
         dataset_to_bids,
         read_clinical_data,
@@ -26,15 +34,30 @@ def convert_images(
         write_bids,
     )
 
-    bids_dir = Path(bids_dir)
+    path_to_dataset = validate_input_path(path_to_dataset)
+    bids_dir = validate_input_path(bids_dir, check_exist=False)
+    path_to_clinical = validate_input_path(path_to_clinical)
+    check_software(ThirdPartySoftware.DCM2NIIX)
+    if subjects:
+        cprint(
+            (
+                f"Subject filtering is not yet implemented in {get_converter_name(StudyName.NIFD)} converter. "
+                "All subjects available will be converted."
+            ),
+            lvl="warning",
+        )
+    if n_procs != 1:
+        cprint(
+            f"{get_converter_name(StudyName.NIFD)} converter does not support multiprocessing yet. n_procs set to 1.",
+            lvl="warning",
+        )
     clinical_data = read_clinical_data(path_to_clinical)
     imaging_data = read_imaging_data(path_to_dataset)
-
     participants, sessions, scans = dataset_to_bids(
-        imaging_data=imaging_data, clinical_data=clinical_data
+        imaging_data=imaging_data,
+        clinical_data=clinical_data,
     )
-
-    written = write_bids(
+    write_bids(
         to=bids_dir,
         participants=participants,
         sessions=sessions,
@@ -50,9 +73,9 @@ def convert_images(
             "NIFD are the same controls as those collected for 4RTNI."
         ),
     }
-    bids.write_modality_agnostic_files(
-        study_name=bids.StudyName.NIFD,
+    write_modality_agnostic_files(
+        study_name=StudyName.NIFD,
         readme_data=readme_data,
         bids_dir=bids_dir,
     )
-    return written
+    cprint("Conversion to BIDS succeeded.", lvl="info")

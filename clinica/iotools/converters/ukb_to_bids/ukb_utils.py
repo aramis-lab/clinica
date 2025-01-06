@@ -1,45 +1,47 @@
 from cmath import nan
-from os import PathLike
-from typing import Dict, Iterable, List, Optional
+from pathlib import Path
+from typing import Iterable, List, Optional
 
-from pandas import DataFrame, Series
+import pandas as pd
+
+__all__ = [
+    "find_clinical_data",
+    "read_imaging_data",
+    "merge_imaging_and_clinical_data",
+    "prepare_dataset_to_bids_format",
+    "write_bids",
+]
 
 
-def find_clinical_data(
-    clinical_data_directory: PathLike,
-) -> DataFrame:
-    from pathlib import Path
-
-    import pandas as pd
-
+def find_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
     from clinica.utils.stream import cprint
 
-    # Read the xls
-    try:
-        image_data_file = list(Path(clinical_data_directory).glob("*.csv"))
-    except StopIteration:
-        raise FileNotFoundError("Clinical data file not found.")
-
-    # Assign the dfs
+    image_data_file = [f for f in clinical_data_directory.glob("*.csv")]
     if len(image_data_file) == 0:
-        raise FileNotFoundError("Clinical data not found or incomplete. Aborting")
+        raise FileNotFoundError(
+            f"Clinical data not found or incomplete in {clinical_data_directory}."
+        )
     if len(image_data_file) > 1:
-        raise ValueError("Too many data files found, expected one. Aborting.")
+        raise ValueError(
+            f"Too many data files found in {clinical_data_directory}, expected only one."
+        )
     df_clinical = pd.read_csv(
-        str(image_data_file[0]),
+        image_data_file[0],
         usecols=["eid", "31-0.0", "34-0.0", "21022-0.0", "21003-2.0", "21003-3.0"],
     )
     cprint(msg="All clinical data have been found", lvl="info")
-    required_columns = [
+    required_columns = {
         "eid",
         "31-0.0",
         "34-0.0",
         "21022-0.0",
         "21003-2.0",
         "21003-3.0",
-    ]
-    missing_columns = set(required_columns).difference(set(df_clinical.columns))
-    if missing_columns:
+    }
+    if (
+        len(missing_columns := required_columns.difference(set(df_clinical.columns)))
+        > 0
+    ):
         raise ValueError(f"Required columns {missing_columns} not found")
     df_clinical = df_clinical.rename(
         columns={
@@ -53,16 +55,12 @@ def find_clinical_data(
     return df_clinical
 
 
-def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
-    from pathlib import Path
-
-    import pandas as pd
-
+def read_imaging_data(imaging_data_directory: Path) -> pd.DataFrame:
     source_path_series_nifti = pd.Series(
-        find_imaging_data(imaging_data_directory), name="source_path"
+        _find_imaging_data(imaging_data_directory), name="source_path"
     )
     source_path_series_dicom = pd.Series(
-        find_dicom_data(imaging_data_directory), name="source_path"
+        _find_dicom_data(imaging_data_directory), name="source_path"
     )
     # Rationales for this choice of files can be found in the documentation:
     # https://github.com/aramis-lab/clinica/blob/dev/docs/Converters/UKBtoBIDS.md
@@ -81,17 +79,13 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
         source_path_series_nifti, columns=["source_zipfile", "source_filename"]
     )
     dataframe_nifti = dataframe_nifti[
-        ~dataframe_nifti["source_filename"].str.contains("unusable")
+        dataframe_nifti["source_filename"].str.contains("unusable") != True  # noqa
     ]
     dataframe_dicom = pd.DataFrame.from_records(
         source_path_series_dicom, columns=["source_zipfile", "source_filename"]
     )
     dataframe = pd.concat([dataframe_nifti, dataframe_dicom])
-    filename = (
-        dataframe["source_filename"]
-        .apply(lambda x: Path(str(x)).name)
-        .rename("filename")
-    )
+    filename = dataframe["source_filename"].apply(lambda x: x.name).rename("filename")
     dataframe = dataframe[filename.isin(file_mod_list)]
     filename = filename[filename.isin(file_mod_list)]
     if dataframe.empty:
@@ -99,6 +93,7 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
             f"No imaging data were found in the provided folder: {imaging_data_directory}, "
             "or they are not handled by Clinica. Please check your data."
         )
+    dataframe["source_zipfile"] = dataframe["source_zipfile"].apply(lambda x: str(x))
     split_zipfile = dataframe["source_zipfile"].str.split("_", expand=True)
     split_zipfile = split_zipfile.rename(
         {0: "source_id", 1: "modality_num", 2: "source_sessions_number"}, axis="columns"
@@ -116,48 +111,46 @@ def read_imaging_data(imaging_data_directory: PathLike) -> DataFrame:
     return df_source
 
 
-def find_dicom_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
+def _find_dicom_data(path_to_source_data: Path) -> Iterable[list[Path, Path]]:
     """
     This function finds the paths to the dicoms, only for fMRI, since we use the niftis for the other modalities.
     More information here: https://github.com/aramis-lab/clinica/blob/dev/docs/Converters/UKBtoBIDS.md
     """
-    from pathlib import Path
-
-    for z in Path(path_to_source_data).rglob("*.zip"):
-        if str(z.name).split("_")[1] == "20217":
-            yield [str(z.relative_to(path_to_source_data)), "fMRI/tfMRI.dcm"]
-        elif str(z.name).split("_")[1] == "20225":
-            yield [str(z.relative_to(path_to_source_data)), "fMRI/rfMRI.dcm"]
+    for z in path_to_source_data.rglob("*.zip"):
+        if z.name.split("_")[1] == "20217":
+            yield [z.relative_to(path_to_source_data), Path("fMRI/tfMRI.dcm")]
+        elif z.name.split("_")[1] == "20225":
+            yield [z.relative_to(path_to_source_data), Path("fMRI/rfMRI.dcm")]
 
 
-def find_imaging_data(path_to_source_data: PathLike) -> Iterable[PathLike]:
-    from pathlib import Path
+def _find_imaging_data(path_to_source_data: Path) -> Iterable[list[Path, Path]]:
     from zipfile import ZipFile
 
-    for z in Path(path_to_source_data).rglob("*.zip"):
+    for z in path_to_source_data.rglob("*.zip"):
         for f in ZipFile(z).namelist():
             if f.endswith(".nii.gz"):
-                yield [str(z.relative_to(path_to_source_data)), f]
+                yield [z.relative_to(path_to_source_data), Path(f)]
 
 
-def intersect_data(df_source: DataFrame, df_clinical_data: DataFrame) -> DataFrame:
-    """
-    This function merges the two dataframes given as inputs based on the subject id
-    """
-
-    df_clinical = df_clinical_data.merge(
-        df_source, how="inner", right_on="source_id", left_on="eid"
+def merge_imaging_and_clinical_data(
+    imaging_data: pd.DataFrame, clinical_data: pd.DataFrame
+) -> pd.DataFrame:
+    """Merges the imaging and clinical dataframes based on the subject id."""
+    merged_data = clinical_data.merge(
+        imaging_data, how="inner", right_on="source_id", left_on="eid"
     )
-    return df_clinical
+    return merged_data
 
 
-def complete_clinical(df_clinical: DataFrame) -> DataFrame:
+def _complete_clinical(df_clinical: pd.DataFrame) -> pd.DataFrame:
     """This function uses the existing data to create the columns needed for
     the bids hierarchy (subject_id, ses, age_at _sessions, etc.)"""
-    import pandas as pd
+    from clinica.iotools.bids_utils import StudyName, bids_id_factory
 
     df_clinical = df_clinical.assign(
-        participant_id=lambda df: ("sub-UKB" + df.source_id.astype("str"))
+        participant_id=lambda df: df.source_id.astype("str").apply(
+            lambda x: bids_id_factory(StudyName.UKB).from_original_study_id(x)
+        )
     )
     df_clinical = df_clinical.assign(
         sessions=lambda df: "ses-" + df.source_sessions_number.astype("str")
@@ -239,7 +232,7 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
         age_at_first_session=lambda df: df.age_when_attended_assessment_centre_f21003_2_0
     )
     df_clinical["age_at_session"] = df_clinical.apply(
-        lambda df: select_sessions(df), axis=1
+        lambda df: _select_sessions(df), axis=1
     )
     df_clinical = df_clinical[df_clinical["age_at_session"].notna()]
     df_clinical = df_clinical.assign(
@@ -282,45 +275,36 @@ def complete_clinical(df_clinical: DataFrame) -> DataFrame:
     return df_clinical
 
 
-def dataset_to_bids(df_clinical: DataFrame) -> Dict[str, DataFrame]:
-    import os
-
-    import pandas as pd
-
-    # open the reference for building the tsvs:
-    path_to_ref_csv = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-        "data",
-        "ukb_ref.csv",
+def prepare_dataset_to_bids_format(
+    df_clinical: pd.DataFrame,
+) -> dict[str, pd.DataFrame]:
+    df_clinical = _complete_clinical(df_clinical)
+    df_specifications = pd.read_csv(
+        Path(__file__).parent / "specifications.csv", sep=";"
     )
-    df_ref = pd.read_csv(path_to_ref_csv, sep=";")
-
     df_clinical = df_clinical.set_index(
         ["participant_id", "sessions", "modality", "bids_filename"],
         verify_integrity=True,
     )
 
     return {
-        col: df_clinical.filter(items=list(df_ref[col]))
+        col: df_clinical.filter(items=list(df_specifications[col]))
         for col in ["participants", "sessions", "scans"]
     }
 
 
 def write_bids(
-    to: PathLike,
-    participants: DataFrame,
-    sessions: DataFrame,
-    scans: DataFrame,
-    dataset_directory: PathLike,
+    to: Path,
+    participants: pd.DataFrame,
+    sessions: pd.DataFrame,
+    scans: pd.DataFrame,
+    dataset_directory: Path,
 ) -> None:
-    from pathlib import Path
-
     from fsspec.implementations.local import LocalFileSystem
 
     from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
-    from clinica.iotools.bids_utils import write_to_tsv
+    from clinica.iotools.bids_utils import StudyName, write_to_tsv
 
-    to = Path(to)
     fs = LocalFileSystem(auto_mkdir=True)
 
     participants = participants.droplevel(
@@ -332,11 +316,13 @@ def write_bids(
         with fs.open(
             str(to / "dataset_description.json"), "w"
         ) as dataset_description_file:
-            BIDSDatasetDescription(name="UKB").write(to=dataset_description_file)
+            BIDSDatasetDescription(name=StudyName.UKB).write(
+                to=dataset_description_file
+            )
         with fs.open(str(to / "participants.tsv"), "w") as participant_file:
             write_to_tsv(participants, participant_file)
 
-    for participant_id, data_frame in sessions.groupby(["participant_id"]):
+    for participant_id, data_frame in sessions.groupby("participant_id"):
         sessions = data_frame.droplevel(
             ["participant_id", "modality", "bids_filename"]
         ).drop_duplicates()
@@ -347,40 +333,40 @@ def write_bids(
     scans = scans.set_index(["bids_full_path"], verify_integrity=True)
     for bids_full_path, metadata in scans.iterrows():
         if metadata["modality_num"] != "20217" and metadata["modality_num"] != "20225":
-            copy_file_to_bids(
-                zipfile=str(dataset_directory) + "/" + metadata["source_zipfile"],
+            _copy_file_to_bids(
+                zipfile=dataset_directory / metadata["source_zipfile"],
                 filenames=[metadata["source_filename"]] + metadata["sidecars"],
                 bids_path=to / bids_full_path,
             )
         else:
-            convert_dicom_to_nifti(
-                zipfiles=str(dataset_directory) + "/" + metadata["source_zipfile"],
+            _convert_dicom_to_nifti(
+                zipfiles=dataset_directory / metadata["source_zipfile"],
                 bids_path=to / bids_full_path,
             )
             if metadata["modality_num"] == "20217":
-                import_event_tsv(bids_path=str(to))
+                _import_event_tsv(bids_path=to)
     return
 
 
-def copy_file_to_bids(zipfile: str, filenames: List[str], bids_path: str) -> None:
+def _copy_file_to_bids(zipfile: Path, filenames: List[Path], bids_path: Path) -> None:
     """Install the requested files in the BIDS  dataset."""
     import fsspec
 
-    fo = fsspec.open(zipfile)
+    fo = fsspec.open(str(zipfile))
     fs = fsspec.filesystem("zip", fo=fo)
     for filename in filenames:
+        filename = str(filename)
         if fs.exists(filename):
             bids_path_extension = str(bids_path) + "." + (filename.split(".", 1)[1])
             with fsspec.open(bids_path_extension, mode="wb") as f:
                 f.write(fs.cat(filename))
 
 
-def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
+def _convert_dicom_to_nifti(zipfiles: Path, bids_path: Path) -> None:
     """Install the requested files in the BIDS  dataset.
     First, the dicom is extracted in a temporary directory
     Second, the dicom extracted is converted in the right place using dcm2niix"""
     import json
-    import os
     import subprocess
     import tempfile
     import zipfile
@@ -392,7 +378,7 @@ def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
 
     zf = zipfile.ZipFile(zipfiles)
     try:
-        os.makedirs(PurePath(bids_path).parent)
+        bids_path.parent.mkdir(exist_ok=True, parents=True)
     except OSError:
         # Folder already created with previous instance
         pass
@@ -407,7 +393,8 @@ def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
         command += ["-b", "y", "-ba", "y"]
         command += [tempdir]
         subprocess.run(command)
-        fmri_image_path = PurePath(find_largest_imaging_data(tempdir))
+        fmri_image_path = _find_largest_imaging_data(Path(tempdir))
+        fmri_image_path = fmri_image_path or ""
         fs.copy(str(fmri_image_path), str(bids_path) + ".nii.gz")
         fs.copy(
             str(fmri_image_path.parent)
@@ -422,10 +409,9 @@ def convert_dicom_to_nifti(zipfiles: str, bids_path: str) -> None:
         json_file["TaskName"] = "facesshapesemotion"
         f.seek(0)
         json.dump(json_file, f, indent=4)
-    return
 
 
-def select_sessions(x: DataFrame) -> Optional[Series]:
+def _select_sessions(x: pd.DataFrame) -> Optional[pd.Series]:
     from clinica.utils.stream import cprint
 
     if (
@@ -438,8 +424,11 @@ def select_sessions(x: DataFrame) -> Optional[Series]:
         and x.age_when_attended_assessment_centre_f21003_2_0 == nan
     ):
         cprint(
-            msg=f"The subject {x.eid} doesn't have the age for the imaging session number one (age_when_attended_assessment_centre_f21003_2_0)."
-            f"It will not be converted. To have it converted, please update your clinical data.",
+            msg=(
+                f"The subject {x.eid} doesn't have the age for the imaging session "
+                "number one (age_when_attended_assessment_centre_f21003_2_0)."
+                f"It will not be converted. To have it converted, please update your clinical data."
+            ),
             lvl="warning",
         )
         return None
@@ -453,40 +442,44 @@ def select_sessions(x: DataFrame) -> Optional[Series]:
         and x.age_when_attended_assessment_centre_f21003_3_0 == nan
     ):
         cprint(
-            msg=f"The subject {x.eid} doesn't have the age for the imaging session number two (age_when_attended_assessment_centre_f21003_3_0)."
-            f"It will not be converted. To have it converted, please update your clinical data.",
+            msg=(
+                f"The subject {x.eid} doesn't have the age for the imaging session "
+                "number two (age_when_attended_assessment_centre_f21003_3_0)."
+                f"It will not be converted. To have it converted, please update your clinical data."
+            ),
             lvl="warning",
         )
         return None
 
 
-def import_event_tsv(bids_path: str) -> None:
+def _import_event_tsv(bids_path: Path) -> None:
     """Import the csv containing the events' information."""
-    import os
-
     from fsspec.implementations.local import LocalFileSystem
 
     fs = LocalFileSystem(auto_mkdir=True)
-    path_to_event_tsv = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
-        "resources",
-        "fmri",
-        "task-facesshapesemotion_events.tsv",
+    event_tsv = (
+        Path(__file__).parents[3]
+        / "resources"
+        / "fmri"
+        / "task-facesshapesemotion_events.tsv"
     )
+    if not event_tsv.exists():
+        raise FileNotFoundError(
+            f"Could not find file {event_tsv} which is an internal file of Clinica."
+        )
+    bids_path_extension = bids_path / "task-facesshapesemotion_events.tsv"
+    fs.copy(str(event_tsv), str(bids_path_extension))
 
-    bids_path_extension = str(bids_path) + "/" + "task-facesshapesemotion_events.tsv"
-    fs.copy(path_to_event_tsv, bids_path_extension)
-    return
 
-
-def find_largest_imaging_data(path_to_source_data: PathLike) -> PathLike:
+def _find_largest_imaging_data(path_to_source_data: Path) -> Optional[Path]:
     import os
-    from pathlib import Path
 
     weight = 0
-    file_to_return = ""
-    for z in Path(path_to_source_data).rglob("*.nii.gz"):
+    file_to_return = None
+    for z in path_to_source_data.rglob("*.nii.gz"):
         if os.path.getsize(z) > weight:
             weight = os.path.getsize(z)
             file_to_return = z
-    return Path(file_to_return)
+    if file_to_return:
+        return file_to_return
+    return None

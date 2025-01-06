@@ -16,7 +16,7 @@ def concatenate_transforms_task(
         `clinica.pipelines.pet_linear.pet_linear_utils.concatenate_transforms`.
 
     """
-    from clinica.pipelines.pet_linear.pet_linear_utils import concatenate_transforms
+    from clinica.pipelines.pet.linear.utils import concatenate_transforms
 
     return concatenate_transforms(t1w_to_mni_tranform, pet_to_t1w_tranform)
 
@@ -35,14 +35,18 @@ def suvr_normalization_task(
         `clinica.pipelines.pet_linear.pet_linear_utils.suvr_normalization`.
 
     """
-    from clinica.pipelines.pet_linear.pet_linear_utils import suvr_normalization
+    from pathlib import Path
 
-    return suvr_normalization(input_img, norm_img, ref_mask)
+    from clinica.pipelines.pet.linear.utils import perform_suvr_normalization
+
+    return str(
+        perform_suvr_normalization(Path(input_img), Path(norm_img), Path(ref_mask))
+    )
 
 
 @task
 @annotate({"return": {"output_img": os.PathLike}})
-def crop_nifti_task(input_img: os.PathLike, ref_img: os.PathLike) -> os.PathLike:
+def crop_nifti_task(input_img: os.PathLike, output_dir: os.PathLike) -> os.PathLike:
     """Pydra task for cropping the input image based on the reference.
 
     .. note::
@@ -54,4 +58,4 @@ def crop_nifti_task(input_img: os.PathLike, ref_img: os.PathLike) -> os.PathLike
 
     from clinica.utils.image import crop_nifti
 
-    return crop_nifti(input_img, ref_img)
+    return crop_nifti(Path(input_img), Path(output_dir))

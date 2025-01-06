@@ -669,7 +669,7 @@ def operateur(x, ginv, detg):
     if len(x.shape) == 4:
         x = x[0, :, :, :]
     y = np.zeros([x.shape[0] + 2, x.shape[1] + 2, x.shape[2] + 2])
-    y = np.array(y, dtype=np.complex_)
+    y = np.array(y, dtype=np.complex128)
     y[1:-1, 1:-1, 1:-1] = x
     y = utils.tensor_helmholtz(y, ginv, detg, 0)
 
@@ -682,7 +682,7 @@ def largest_eigenvalue_heat_3D_tensor2(g, h, epsilon: float = 1e-6):
     :param g: metric tensor
     :param h: space step
     :param epsilon: stop criterion (default: 1e-6)
-    :return: lamba = the largest eigenvalues
+    :return: lambda = the largest eigenvalues
 
     """
     import cmath

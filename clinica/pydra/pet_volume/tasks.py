@@ -1,5 +1,5 @@
 import typing as ty
-from pathlib import PurePath
+from pathlib import Path, PurePath
 
 from pydra.mark import annotate, task
 
@@ -13,9 +13,9 @@ def normalize_to_reference_task(pet_image: PurePath, region_mask: PurePath) -> P
         Please refer to the documentation of function
         `clinica.pipelines.pet_volume.pet_volume_utils.normalize_to_reference`.
     """
-    from clinica.pipelines.pet_volume.pet_volume_utils import normalize_to_reference
+    from clinica.pipelines.pet.volume.utils import normalize_to_reference
 
-    return normalize_to_reference(pet_image, region_mask)
+    return normalize_to_reference(Path(pet_image), Path(region_mask))
 
 
 @task
@@ -30,7 +30,7 @@ def create_binary_mask_task(
         Please refer to the documentation of function
         `clinica.pipelines.pet_volume.pet_volume_utils.create_binary_mask`.
     """
-    from clinica.pipelines.pet_volume.pet_volume_utils import create_binary_mask
+    from clinica.pipelines.pet.volume.utils import create_binary_mask
 
     return create_binary_mask(tissues, threshold)
 
@@ -44,9 +44,9 @@ def apply_binary_mask_task(image: PurePath, binary_mask: PurePath) -> PurePath:
         Please refer to the documentation of function
         `clinica.pipelines.pet_volume.pet_volume_utils.apply_binary_mask`.
     """
-    from clinica.pipelines.pet_volume.pet_volume_utils import apply_binary_mask
+    from clinica.pipelines.pet.volume.utils import apply_binary_mask
 
-    return apply_binary_mask(image, binary_mask)
+    return apply_binary_mask(Path(image), Path(binary_mask))
 
 
 @task
@@ -58,9 +58,9 @@ def atlas_statistics_task(in_image: str, in_atlas_list: ty.List) -> ty.List:
         Please refer to the documentation of function
         `clinica.pipelines.pet_volume.pet_volume_utils.atlas_statistics`.
     """
-    from clinica.pipelines.pet_volume.pet_volume_utils import atlas_statistics
+    from clinica.pipelines.pet.volume.utils import compute_atlas_statistics
 
-    return atlas_statistics(in_image, in_atlas_list)
+    return compute_atlas_statistics(Path(in_image), in_atlas_list)
 
 
 @task
@@ -72,7 +72,7 @@ def create_pvc_mask_task(tissues: ty.List) -> PurePath:
         Please refer to the documentation of function
         `clinica.pipelines.pet_volume.pet_volume_utils.create_pvc_mask`.
     """
-    from clinica.pipelines.pet_volume.pet_volume_utils import create_pvc_mask
+    from clinica.pipelines.pet.volume.utils import create_pvc_mask
 
     return create_pvc_mask(tissues)
 
@@ -86,9 +86,9 @@ def pet_pvc_name_task(pet_image: PurePath, pvc_method: str) -> str:
         Please refer to the documentation of function
         `clinica.pipelines.pet_volume.pet_volume_utils.pet_pvc_name`.
     """
-    from clinica.pipelines.pet_volume.pet_volume_utils import pet_pvc_name
+    from clinica.pipelines.pet.volume.utils import build_pet_pvc_name
 
-    return pet_pvc_name(pet_image, pvc_method)
+    return build_pet_pvc_name(pet_image, pvc_method)
 
 
 @task
@@ -127,7 +127,7 @@ def get_psf_task(
     """
     import re
 
-    from clinica.utils.pet import read_psf_information
+    from clinica.pipelines.pet.utils import read_psf_information
 
     m = re.search(r"(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)", str(pet_filename.name))
     if not m:
@@ -136,5 +136,7 @@ def get_psf_task(
         )
     sub = m.group(1)
     ses = m.group(2)
-    psf_x, psf_y, psf_z = read_psf_information(pvc_psf_tsv, [sub], [ses], pet_tracer)[0]
+    psf_x, psf_y, psf_z = read_psf_information(
+        Path(pvc_psf_tsv), [sub], [ses], pet_tracer
+    )[0]
     return psf_x, psf_y, psf_z

@@ -35,13 +35,34 @@ bids
       └─ sub-CLNC001_ses-M000_trc-18FFDG_pet.nii.gz
 ```
 
+## Reconstruction methods
+
+PET data can be reconstructed into the spatial distribution of the injected radio-tracer through various methods.
+The specification of the method used to reconstruct a given image is supported by the [BIDS standard](https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/09-positron-emission-tomography.html#pet-recording-data).
+
+There exists four reserved values:
+
+- `acdyn`: for reconstructions with attenuation correction of dynamic data
+- `acstat`: for reconstructions with attenuation correction of static data
+- `nacdyn`: for reconstructions without attenuation correction of dynamic data
+- `nacstat`: for reconstructions without attenuation correction of static data
+
+In addition to these values, when working with ADNI data, the following values are possible:
+
+- `coregdyn`: Corresponds to "ADNI processing steps 1"
+- `coregavg`: Corresponds to "ADNI processing steps 2"
+- `coregstd`: Corresponds to "ADNI processing steps 3"
+- `coregiso`: Corresponds to "ADNI processing steps 4"
+
+See [this page](https://adni.loni.usc.edu/data-samples/adni-data/neuroimaging/pet/) for more information.
+
 ## Reference regions used for intensity normalization
 
-In neurology, an approach widely used to allow inter- and intra-subject comparison of [PET](../glossary.md#pet) images is to compute standardized uptake value ratio (SUVR) maps.
+In neurology, an approach widely used to allow inter- and intra-subject comparison of [PET](../glossary.md#pet) images is to compute standardized uptake value ratio ([SUVR](../glossary.md#suvr)) maps.
 The images are intensity normalized by dividing each [voxel](../glossary.md#voxel) of the image by the average uptake in a reference region.
 This region is chosen according to the tracer and disease studied as it must be unaffected by the disease.
 
-Clinica `v0.3.8` introduces the possibility for the user to select the reference region for the SUVR map computation.
+Clinica `v0.3.8` introduces the possibility for the user to select the reference region for the [SUVR](../glossary.md#suvr) map computation.
 
 Reference regions provided by Clinica come from the [Pick atlas](https://www.nitrc.org/projects/wfu_pickatlas) in MNI space and currently are:
 
@@ -61,66 +82,33 @@ It is possible to run the [`pet-surface`](../PET_Surface) and [`pet-volume`](../
 
 - Install Clinica following the [developer instructions](../../Installation/#install-clinica) ;
 
-- In the `<clinica>/clinica/utils/pet.py` file, modify the following two elements:
-    - The label of the SUVR reference region that will be stored in CAPS filename(s):
+- In the `<clinica>/clinica/utils/pet.py` file:
+    - **Step 1:** Define the label of the [SUVR](../glossary.md#suvr) reference region that will be stored in CAPS filename(s).
+      To do so, you need to add a variant to the `SUVRReferenceRegion` enumeration, which should look like this:
 
     ```python
-    LIST_SUVR_REFERENCE_REGIONS = [
-        "pons",
-        "cerebellumPons",
-        "pons2",
-        "cerebellumPons2"
-    ]
+    class SUVRReferenceRegion(str, Enum):
+        PONS = "pons"
+        CEREBELLUM_PONS = "cerebellumPons"
+        PONS2 = "pons2"
+        CEREBELLUM_PONS2 = "cerebellumPons2"
     ```
 
-    Simply define a new label that will be your new SUVR reference region.
-    `LIST_SUVR_REFERENCE_REGIONS` is used by all command-line interfaces, so you do not need to modify the pipelines' CLI to make this new region appear.
+    Simply define a new label that will be your new [SUVR](../glossary.md#suvr) reference region.
+    The `SUVRReferenceRegion` enumeration is used by all command-line interfaces, so you do not need to modify the pipelines' CLI to make this new region appear.
 
-    - The path of the SUVR reference region that you will use:
+    - **Step 2:** Define the path of the [SUVR](../glossary.md#suvr) reference region that you will use.
+      The function responsible to get the [SUVR](../glossary.md#suvr) mask is called `get_suvr_mask`, and it looks by default in the folder `<clinica>/resources/masks/`.
+      You can put your mask in this folder and edit the following function (add an if statement to handle the enumeration variant you added in step 1): 
 
     ```python
-    def get_suvr_mask(suvr_reference_region):
-        """Get path of the SUVR mask from SUVR reference region label.
-
-        Args:
-            suvr_reference_region: Label of the SUVR reference region
-
-        Returns:
-            Path of the SUVR mask
-        """
-        import os
-
-        suvr_reference_region_to_suvr = {
-            "pons": os.path.join(
-                os.path.split(os.path.realpath(__file__))[0],
-                "..",
-                "resources",
-                "masks",
-                "region-pons_eroded-6mm_mask.nii.gz",
-            ),
-            "cerebellumPons": os.path.join(
-                os.path.split(os.path.realpath(__file__))[0],
-                "..",
-                "resources",
-                "masks",
-                "region-cerebellumPons_eroded-6mm_mask.nii.gz",
-            ),
-            "pons2": os.path.join(
-                os.path.split(os.path.realpath(__file__))[0],
-                "..",
-                "resources",
-                "masks",
-                "region-pons_remove-extrabrain_eroded-2it_mask.nii.gz",
-            ),
-            "cerebellumPons2": os.path.join(
-                os.path.split(os.path.realpath(__file__))[0],
-                "..",
-                "resources",
-                "masks",
-                "region-cerebellumPons_remove-extrabrain_eroded-3it_mask.nii.gz",
-            ),
-        }
-        return suvr_reference_region_to_suvr[suvr_reference_region]
+    def _get_suvr_reference_region_labels_filename(region: SUVRReferenceRegion) -> str:
+        if region == SUVRReferenceRegion.PONS:
+            return "region-pons_eroded-6mm_mask.nii.gz"
+        if region == SUVRReferenceRegion.CEREBELLUM_PONS:
+            return "region-cerebellumPons_eroded-6mm_mask.nii.gz"
+        if region == SUVRReferenceRegion.PONS2:
+            return "region-pons_remove-extrabrain_eroded-2it_mask.nii.gz"
+        if region == SUVRReferenceRegion.CEREBELLUM_PONS2:
+            return "region-cerebellumPons_remove-extrabrain_eroded-3it_mask.nii.gz"
     ```
-
-    In this example, the SUVR reference region associated with the `cerebellumPons` label is located at `<clinica>/resources/masks/region-cerebellumPons_eroded-6mm_mask.nii.gz`.

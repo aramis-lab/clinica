@@ -1,18 +1,19 @@
 import typing as ty
+from pathlib import Path
 
 import pydra
 from nipype.interfaces.ants import ApplyTransforms, Registration, RegistrationSynQuick
 from pydra.engine import Workflow
 from pydra.tasks.nipype1.utils import Nipype1Task
 
+from clinica.pipelines.pet.utils import get_suvr_mask
 from clinica.pydra.engine import clinica_io
 from clinica.pydra.pet_linear.tasks import (
     concatenate_transforms_task,
     crop_nifti_task,
     suvr_normalization_task,
 )
-from clinica.pydra.tasks import download_mni_template_2009c, download_ref_template
-from clinica.utils.pet import get_suvr_mask
+from clinica.pydra.tasks import download_mni_template_2009c
 
 IMAGE_DIMENSION = 3
 
@@ -56,8 +57,6 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
     wf.split(("pet", "T1w", "t1w_to_mni"))
 
     wf.add(download_mni_template_2009c(name="download_mni_template"))
-
-    wf.add(download_ref_template(name="download_ref_template"))
 
     # RegistrationSynQuick by ANTS.
     ants_registration = Nipype1Task(
@@ -161,7 +160,7 @@ def build_core_workflow(name: str = "core", parameters: dict = {}) -> Workflow:
                 name="crop_nifti",
                 interface=crop_nifti_task,
                 input_img=wf.suvr_normalization.lzout.output_img,
-                ref_img=wf.download_ref_template.lzout.ref_template_file,
+                output_dir=Path.cwd(),
             )
         )
 

@@ -34,6 +34,7 @@ pipeline_name = "t1-freesurfer"
 @option.global_option_group
 @option.n_procs
 @click.pass_context
+@cli_param.option.caps_name
 def cli(
     ctx: click.Context,
     bids_directory: str,
@@ -45,6 +46,7 @@ def cli(
     overwrite_outputs: bool = False,
     yes: bool = False,
     atlas_path: Optional[str] = None,
+    caps_name: Optional[str] = None,
 ) -> None:
     """Cross-sectional pre-processing of T1w images with FreeSurfer.
 
@@ -68,6 +70,7 @@ def cli(
         },
         name=pipeline_name,
         overwrite_caps=overwrite_outputs,
+        caps_name=caps_name,
     )
     exec_pipeline = (
         pipeline.run(plugin="MultiProc", plugin_args={"n_procs": n_procs})

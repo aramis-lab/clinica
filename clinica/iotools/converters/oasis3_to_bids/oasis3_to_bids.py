@@ -1,24 +1,31 @@
-"""Convert the NIFD dataset into BIDS."""
+"""Convert the OASIS3 dataset into BIDS."""
 
-from os import PathLike
-from typing import List
+from typing import Optional
+
+from clinica.utils.filemanip import UserProvidedPath
+
+__all__ = ["convert"]
 
 
-def convert_images(
-    path_to_dataset: PathLike,
-    bids_dir: PathLike,
-    path_to_clinical: PathLike,
-) -> List[PathLike]:
+def convert(
+    path_to_dataset: UserProvidedPath,
+    bids_dir: UserProvidedPath,
+    path_to_clinical: UserProvidedPath,
+    subjects: Optional[UserProvidedPath] = None,
+    n_procs: Optional[int] = 1,
+    **kwargs,
+):
     """Convert the entire dataset in BIDS.
 
     Scans available files in the path_to_dataset,
     identifies the patients that have images described by the JSON file,
     converts the image with the highest quality for each category.
     """
-    from pathlib import Path
+    from clinica.iotools.bids_utils import StudyName, write_modality_agnostic_files
+    from clinica.iotools.converters.factory import get_converter_name
+    from clinica.utils.stream import cprint
 
-    import clinica.iotools.bids_utils as bids
-
+    from ..utils import validate_input_path
     from .oasis3_utils import (
         dataset_to_bids,
         intersect_data,
@@ -27,21 +34,27 @@ def convert_images(
         write_bids,
     )
 
-    bids_dir = Path(bids_dir)
-
-    # read the clinical data files
+    path_to_dataset = validate_input_path(path_to_dataset)
+    bids_dir = validate_input_path(bids_dir, check_exist=False)
+    path_to_clinical = validate_input_path(path_to_clinical)
+    if subjects:
+        cprint(
+            (
+                f"Subject filtering is not yet implemented in {get_converter_name(StudyName.OASIS3)} converter. "
+                "All subjects available will be converted."
+            ),
+            lvl="warning",
+        )
+    if n_procs != 1:
+        cprint(
+            f"{get_converter_name(StudyName.OASIS3)} converter does not support multiprocessing yet. n_procs set to 1.",
+            lvl="warning",
+        )
     dict_df = read_clinical_data(path_to_clinical)
-
-    # makes a df of the imaging data
     imaging_data = read_imaging_data(path_to_dataset)
-
-    # intersect the data
     imaging_data, df_small = intersect_data(imaging_data, dict_df)
-
-    # build the tsv
     participants, sessions, scans = dataset_to_bids(imaging_data, df_small)
-
-    written = write_bids(
+    write_bids(
         to=bids_dir,
         participants=participants,
         sessions=sessions,
@@ -62,10 +75,9 @@ def convert_images(
             "post-processed files from the Pet Unified Pipeline (PUP) are also available in OASIS-3."
         ),
     }
-    bids.write_modality_agnostic_files(
-        study_name=bids.StudyName.OASIS3,
+    write_modality_agnostic_files(
+        study_name=StudyName.OASIS3,
         readme_data=readme_data,
         bids_dir=bids_dir,
     )
-
-    return written
+    cprint("Conversion to BIDS succeeded.", lvl="info")
