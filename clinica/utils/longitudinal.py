@@ -26,16 +26,16 @@ def get_long_id(session_ids: List[str]) -> str:
     >>> get_long_id(['ses-M000'])
     'long-M000'
     >>> get_long_id(['ses-M000', 'ses-M018', 'ses-M036'])
-    'long-M000M018M036'
+    'long-M000.M018.M036'
     >>> get_long_id(['ses-M018', 'ses-M036', 'ses-M000'])
-    'long-M000M018M036'
+    'long-M000.M018.M036'
     """
     if not all([session_id.startswith("ses-") for session_id in session_ids]):
         raise ValueError(
             "Expected a list of session IDs of the form ses-XXX, "
             f"but received {session_ids} instead."
         )
-    return "long-" + "".join(
+    return "long-" + ".".join(
         [session_id.lstrip("ses-") for session_id in sorted(session_ids)]
     )
 
@@ -62,7 +62,7 @@ def get_participants_long_id(
     --------
     >>> from clinica.utils.longitudinal import get_participants_long_id
     >>> get_participants_long_id(['sub-CLNC01', 'sub-CLNC01', 'sub-CLNC02'], ['ses-M000', 'ses-M018', 'ses-M000'])
-    ['long-M000M018', 'long-M000M018', 'long-M000']
+    ['long-M000.M018', 'long-M000.M018', 'long-M000']
     """
     from .participant import get_unique_subjects
 
