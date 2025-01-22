@@ -59,7 +59,9 @@ def center_nifti(
             if not file.name.startswith(".")
         ]
         if files and not overwrite_existing_files:
-            raise ClinicaExistingDatasetError(output_bids_directory)
+            raise ClinicaExistingDatasetError(
+                output_bids_directory
+            )  # todo : triggered by .DS_Store
     cprint("Clinica is now centering the requested images.", lvl="info")
 
     centered_files = center_all_nifti(
@@ -73,6 +75,8 @@ def center_nifti(
     log_file = output_bids_directory / f"centered_nifti_list_{timestamp}.txt"
     if not write_list_of_files(centered_files, log_file):
         log_and_raise(f"Could not create log file {log_file}.", IOError)
+
+    # todo : better formatting for modalities print
 
     cprint(
         f"{len(centered_files)} NIfTI files/images of BIDS folder:\n"
