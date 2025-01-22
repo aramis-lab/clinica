@@ -68,11 +68,6 @@ def center_nifti(
         modalities,
         center_all_files,
     )
-    # Write list of created files
-    timestamp = time.strftime("%Y%m%d-%H%M%S", time.localtime(time.time()))
-    log_file = output_bids_directory / f"centered_nifti_list_{timestamp}.txt"
-    if not write_list_of_files(centered_files, log_file):
-        log_and_raise(f"Could not create log file {log_file}.", IOError)
 
     cprint(
         f"{len(centered_files)} NIfTI images of BIDS folder:\n"
@@ -80,15 +75,19 @@ def center_nifti(
         f"have been centered in the output folder:\n"
         f"\t{output_bids_directory}\n"
         f"for modalities:\n"
-        f"\t{(', ').join(modalities)}",
+        f"\t{modalities}\n"
+        f"Please note that the rest of the input BIDS folder has also been copied to the output folder.",
         lvl="info",
     )
+
+    # Write list of created files
+    timestamp = time.strftime("%Y%m%d-%H%M%S", time.localtime(time.time()))
+    log_file = output_bids_directory / f"centered_nifti_list_{timestamp}.txt"
+    if not write_list_of_files(centered_files, log_file):
+        log_and_raise(f"Could not create log file {log_file}.", IOError)
+
     if log_file.is_file():
         cprint(
             f"The list of centered NIfTI files is available here: {log_file}.",
             lvl="info",
         )
-    cprint(
-        "Please note that the rest of the input BIDS folder has also been copied to the output folder.",
-        lvl="info",
-    )

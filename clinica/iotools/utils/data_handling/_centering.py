@@ -271,6 +271,20 @@ def _compute_l2_norm(file_couples: List[Tuple[Path, Path]]) -> List[float]:
     return [np.linalg.norm(center[0] - center[1]) for center in center_coordinates]
 
 
+def _find_files_with_modality(
+    files_dir: PathLike, modalities: Optional[Iterable[str]] = None
+) -> List[Path]:
+    nifti_files = files_dir.glob("*.nii*")
+    nifti_files_filtered = []
+
+    if modalities is None:
+        return nifti_files
+    for f in nifti_files:
+        if any(elem.lower() in f.name.lower() for elem in modalities):
+            nifti_files_filtered.append(f)
+    return nifti_files_filtered
+
+
 def center_all_nifti(
     bids_dir: PathLike,
     output_dir: PathLike,
@@ -311,12 +325,7 @@ def center_all_nifti(
             copytree(f, output_dir / f.name, copy_function=copy)
         elif f.is_file() and not (output_dir / f.name).is_file():
             copy(f, output_dir / f.name)
-    nifti_files_filtered: List[Path] = []
-    for f in output_dir.glob("**/*.nii*"):
-        if modalities is None or any(
-            elem.lower() in f.name.lower() for elem in modalities
-        ):
-            nifti_files_filtered.append(f)
+    nifti_files_filtered = _find_files_with_modality(output_dir, modalities)
     if not center_all_files:
         nifti_files_filtered = [
             file for file in nifti_files_filtered if not _is_centered(file)
