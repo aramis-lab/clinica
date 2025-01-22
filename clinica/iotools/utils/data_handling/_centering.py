@@ -274,7 +274,7 @@ def _compute_l2_norm(file_couples: List[Tuple[Path, Path]]) -> List[float]:
 def _find_files_with_modality(
     files_dir: PathLike, modalities: Optional[Iterable[str]] = None
 ) -> List[Path]:
-    nifti_files = files_dir.glob("*.nii*")
+    nifti_files = files_dir.rglob("*.nii*")
     nifti_files_filtered = []
 
     if modalities is None:
