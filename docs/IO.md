@@ -245,31 +245,15 @@ This folder can be empty or nonexistent.
 
 Optional arguments:
 
-- `--modality` is a parameter that defines which modalities are converted.
+- `--modality` is a case-insensitive parameter that defines which modalities are converted.
 
-    !!! tip
-    If you want to convert FDG PET images (e.g. with `_trc-18FFDG` key/value in PET filename), use:
+    !!! tip "How to use :"
+        - If you want to convert T1w images only, do not use the option.
+        - If you want to convert all types of pet, use `--modality pet` or `-m pet`
+        - If you want to convert 18FFDG_PET, use `-m 18ffdg_pet`
+        - If you want to convert both pet and T1, use `-m T1 -m pet`
 
-    ```shell
-    clinica iotools center-nifti bids_directory new_bids_directory --modality "18ffdg_pet"
-    ```
-
-    If you want to convert AV45 PET images and T1w:
-
-    ```shell
-    clinica iotools center-nifti bids_directory new_bids_directory --modality "18fav45_pet t1w"
-    ```
-
-    To know if a NIfTI image must be centered, the algorithm checks the filenames of the NIfTI images.
-    For example, regarding the file `bids/sub-01/ses-M000/anat/sub-01_ses-M000_T1w.nii`:
-
-     - The filename is `sub-01_ses-M000_T1w.nii`.
-     - The algorithm tests (in a case insensitive way) if the string `18ffdg_pet` is in the filename: False.
-     - The algorithm tests (in a case insensitive way) if the string `t1w` is in the filename: True!
-     - The algorithm tests if the volume has its center at more than 50 mm (Euclidean distance) from the origin: True.
-     - This file will be centered by the algorithm.
-
-     Understanding this, you can now center any modality you want! If your files are named following this pattern : `sub-X_ses-Y_magnitude1.nii.gz`, specify the modality as follows:`--modality "magnitude1"`.
+        Basically, the software searches for the modality key inside the filename. Understanding this, you can now center any modality you want!
 
 - `--center_all_files` is an option that forces Clinica to center all the files of the modalities selected with the `--modality` flag.
 
