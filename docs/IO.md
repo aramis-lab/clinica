@@ -224,14 +224,14 @@ A complete list of optional arguments can be obtained with the command line `cli
 
 ## `center-nifti` - Center NIfTI files of a BIDS directory
 
-Your [BIDS](http://bids.neuroimaging.io) dataset may contain NIfTI files whose origin does not correspond to the center of the image (i.e. the anterior commissure).
-SPM is especially sensitive to this case, and segmentation procedures may result in blank images, or even fail.
-To mitigate this issue, we propose a simple tool that convert your BIDS dataset into a dataset with centered NIfTI files for the selected modalities.
+Your [BIDS](http://bids.neuroimaging.io) dataset may contain NIfTI files where the origin does not correspond to the center of the image (i.e. the anterior commissure).
+SPM is especially sensitive to this case and segmentation procedures may result in blank images or even fail.
+To mitigate this issue we offer a simple tool that converts generates from your BIDS a new dataset with centered NIfTI files for the selected modalities.
 
 !!! warning "By default :"
 
-    - This tool will only center T1w images.
-    - Only NIfTI volumes whose center is at more than 50 mm from the origin of the world coordinate system are centered. This threshold has been chosen empirically after a set of experiments to determine at which distance from the origin SPM segmentation and coregistration procedures stop working properly.
+    - This tool will only center **T1w** images.
+    - Only NIfTI volumes whose center is at **more than 50 mm** from the origin of the world coordinate system are centered. This threshold has been chosen empirically after a set of experiments to determine at which distance from the origin SPM segmentation and coregistration procedures stop working properly.
 
 ```shell
 clinica iotools center-nifti [OPTIONS] BIDS_DIRECTORY OUTPUT_BIDS_DIRECTORY
@@ -240,8 +240,15 @@ clinica iotools center-nifti [OPTIONS] BIDS_DIRECTORY OUTPUT_BIDS_DIRECTORY
 where:
 
 - `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](http://bids.neuroimaging.io) hierarchy.
+- `OUTPUT_BIDS_DIRECTORY` is the output path to the new version of your BIDS dataset, with faulty NIfTI centered.
+This folder can be empty or nonexistent.
+
+Optional arguments:
+
+- `--modality` is a parameter that defines which modalities are converted.
+
     !!! tip
-            If you want to convert FDG PET images (e.g. with `_trc-18FFDG` key/value in PET filename), use:
+    If you want to convert FDG PET images (e.g. with `_trc-18FFDG` key/value in PET filename), use:
 
     ```shell
     clinica iotools center-nifti bids_directory new_bids_directory --modality "18ffdg_pet"
@@ -264,12 +271,6 @@ where:
 
      Understanding this, you can now center any modality you want! If your files are named following this pattern : `sub-X_ses-Y_magnitude1.nii.gz`, specify the modality as follows:`--modality "magnitude1"`.
 
-- `OUTPUT_BIDS_DIRECTORY` is the output path to the new version of your BIDS dataset, with faulty NIfTI centered.
-This folder can be empty or nonexistent.
-
-Optional arguments:
-
-- `--modality` is a parameter that defines which modalities are converted.
 - `--center_all_files` is an option that forces Clinica to center all the files of the modalities selected with the `--modality` flag.
 
 !!! note
