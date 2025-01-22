@@ -8,7 +8,7 @@ import pandas as pd
 
 __all__ = [
     "center_nifti_origin",
-    "check_volume_location_in_world_coordinate_system",
+    "are_images_centered_around_origin_of_world_coordinate_system",
     "check_relative_volume_location_in_world_coordinate_system",
     "center_all_nifti",
 ]
@@ -60,36 +60,32 @@ def _compute_qform(header: nib.Nifti1Header) -> np.ndarray:
     return qform
 
 
-def check_volume_location_in_world_coordinate_system(
-    nifti_list: List[PathLike],
-    bids_dir: PathLike,
+def are_images_centered_around_origin_of_world_coordinate_system(
+    nifti_list: Iterable[Path],
+    bids_dir: Path,
     modality: str = "t1w",
-    skip_question: bool = False,
 ) -> bool:
     """Check if images are centered around the origin of the world coordinate.
 
     Parameters
     ----------
-    nifti_list : list of PathLike
-        List of path to nifti files.
+    nifti_list : Iterable of Path
+        The paths to nifti files.
 
-    bids_dir : PathLike
-        Path to bids directory associated with this check.
+    bids_dir : Path
+        The path to bids directory associated with this check.
 
     modality : str, optional
         The modality of the image. Default='t1w'.
 
-    skip_question : bool, optional
-        If True, assume answer is yes. Default=False.
-
     Returns
     -------
     bool :
-        True if they are centered, False otherwise
+        True if all images are centered, False otherwise.
 
     Warns
     ------
-    If volume is not centered on origin of the world coordinate system
+    If at least one volume is not centered on origin of the world coordinate system.
 
     Notes
     -----
@@ -98,38 +94,23 @@ def check_volume_location_in_world_coordinate_system(
     When not centered, we warn the user of the problem propose to exit clinica to run clinica iotools center-nifti
     or to continue with the execution of the pipeline.
     """
-    import click
     import numpy as np
 
-    bids_dir = Path(bids_dir)
-    list_non_centered_files = [
-        Path(file) for file in nifti_list if not _is_centered(Path(file))
-    ]
-    if len(list_non_centered_files) == 0:
+    from clinica.utils.stream import cprint
+
+    non_centered_files = [file for file in nifti_list if not _is_centered(file)]
+    if len(non_centered_files) == 0:
         return True
-    centers = [
-        _get_world_coordinate_of_center(file) for file in list_non_centered_files
-    ]
+    centers = [_get_world_coordinate_of_center(file) for file in non_centered_files]
     l2_norm = [np.linalg.norm(center, ord=2) for center in centers]
-    click.echo(
+    cprint(
         _build_warning_message(
-            list_non_centered_files, centers, l2_norm, bids_dir, modality
-        )
+            non_centered_files, centers, l2_norm, bids_dir, modality
+        ),
+        lvl="warning",
     )
-    if not skip_question:
-        _ask_for_confirmation()
 
     return False
-
-
-def _ask_for_confirmation() -> None:
-    import sys
-
-    import click
-
-    if not click.confirm("Do you still want to launch the pipeline?"):
-        click.echo("Clinica will now exit...")
-        sys.exit(0)
 
 
 def _build_warning_message(
