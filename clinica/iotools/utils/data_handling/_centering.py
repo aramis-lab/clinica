@@ -61,7 +61,7 @@ def _compute_qform(header: nib.Nifti1Header) -> np.ndarray:
 
 
 def are_images_centered_around_origin_of_world_coordinate_system(
-    nifti_list: Iterable[Path],
+    images: Iterable[Path],
     bids_dir: Path,
     modality: str = "t1w",
 ) -> bool:
@@ -69,7 +69,7 @@ def are_images_centered_around_origin_of_world_coordinate_system(
 
     Parameters
     ----------
-    nifti_list : Iterable of Path
+    images : Iterable of Path
         The paths to nifti files.
 
     bids_dir : Path
@@ -98,14 +98,14 @@ def are_images_centered_around_origin_of_world_coordinate_system(
 
     from clinica.utils.stream import cprint
 
-    non_centered_files = [file for file in nifti_list if not _is_centered(file)]
-    if len(non_centered_files) == 0:
+    non_centered_images = [image for image in images if not _is_centered(image)]
+    if len(non_centered_images) == 0:
         return True
-    centers = [_get_world_coordinate_of_center(file) for file in non_centered_files]
+    centers = [_get_world_coordinate_of_center(image) for image in non_centered_images]
     l2_norm = [np.linalg.norm(center, ord=2) for center in centers]
     cprint(
         _build_warning_message(
-            non_centered_files, centers, l2_norm, bids_dir, modality
+            non_centered_images, centers, l2_norm, bids_dir, modality
         ),
         lvl="warning",
     )
@@ -151,12 +151,11 @@ def _build_warning_message(
 
 def check_relative_volume_location_in_world_coordinate_system(
     label_1: str,
-    nifti_list1: List[PathLike],
+    nifti_list1: list[PathLike],
     label_2: str,
-    nifti_list2: List[PathLike],
+    nifti_list2: list[PathLike],
     bids_dir: PathLike,
     modality: str,
-    skip_question: bool = False,
 ):
     """Check if the NIfTI file list `nifti_list1` and `nifti_list2` provided in argument are not too far apart,
     otherwise coreg in SPM may fail. Norm between center of volumes of 2 files must be less than 80 mm.
@@ -182,21 +181,15 @@ def check_relative_volume_location_in_world_coordinate_system(
         String that must be used in argument of:
         clinica iotools bids --modality <MODALITY>
         (used in potential warning message).
-
-    skip_question : bool, optional
-        Disable prompts for user input (default is False)
     """
-    import warnings
+    from clinica.utils.stream import log_and_warn
 
-    from clinica.utils.stream import cprint
-
-    warning_message = _build_warning_message_relative_volume_location(
-        label_1, nifti_list1, label_2, nifti_list2, bids_dir, modality
-    )
-    cprint(msg=warning_message, lvl="warning")
-    warnings.warn(warning_message)
-    if not skip_question:
-        _ask_for_confirmation()
+    if (
+        msg := _build_warning_message_relative_volume_location(
+            label_1, nifti_list1, label_2, nifti_list2, bids_dir, modality
+        )
+    ) is not None:
+        log_and_warn(msg, UserWarning)
 
 
 def _build_warning_message_relative_volume_location(
@@ -206,7 +199,7 @@ def _build_warning_message_relative_volume_location(
     nifti_list2: List[PathLike],
     bids_dir: PathLike,
     modality: str,
-) -> str:
+) -> Optional[str]:
     bids_dir = Path(bids_dir)
     file_couples = [(Path(f1), Path(f2)) for f1, f2 in zip(nifti_list1, nifti_list2)]
     df = pd.DataFrame(
@@ -214,7 +207,7 @@ def _build_warning_message_relative_volume_location(
         columns=[label_1, label_2, "Relative distance"],
     )
     if len(df) == 0:
-        return
+        return None
     warning_message = (
         f"It appears that {len(df)} pairs of files have an important relative offset. "
         "SPM co-registration has a high probability to fail on these files:\n\n"
@@ -363,8 +356,7 @@ def _is_centered(nii_volume: Path, threshold_l2: int = 50) -> bool:
     the volume did not exceed 100 mm. Above this distance, either the volume is either not segmented (SPM error), or the
     produced segmentation is wrong (not the shape of a brain anymore)
     """
-    center = _get_world_coordinate_of_center(nii_volume)
-    if center is None:
+    if (center := _get_world_coordinate_of_center(nii_volume)) is None:
         raise ValueError(
             f"Unable to compute the world coordinates of center for image {nii_volume}."
             "Please verify the image data and header."

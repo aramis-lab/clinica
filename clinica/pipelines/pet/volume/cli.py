@@ -23,7 +23,6 @@ pipeline_name = "pet-volume"
 @cli_param.option.reconstruction_method
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
-@cli_param.option.yes
 @option.global_option_group
 @option.n_procs
 @cli_param.option_group.advanced_pipeline_options
@@ -74,7 +73,6 @@ def cli(
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
-    yes: bool = False,
 ) -> None:
     """SPM-based pre-processing of PET images.
 
@@ -106,7 +104,6 @@ def cli(
         "mask_threshold": mask_threshold,
         "pvc_mask_tissues": pvc_mask_tissues,
         "smooth": smooth,
-        "skip_question": yes,
     }
 
     pipeline = PETVolume(
