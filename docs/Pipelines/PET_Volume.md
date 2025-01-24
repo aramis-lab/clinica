@@ -11,7 +11,7 @@ This pipeline performs several processing steps on [PET](../glossary.md#pet) dat
 The list of available atlases can be found [here](../Atlases.md).
 
 !!! note "Clinica & BIDS specifications for PET modality"
-    Since Clinica `v0.6`, PET data following the official specifications in BIDS version 1.6.0 are now compatible with Clinica.
+    Since Clinica `v0.6`, PET data following the official specifications in BIDS version `1.6.0` are now compatible with Clinica.
     See [BIDS](../BIDS.md) page for more information.
 
 ## Prerequisite
@@ -53,6 +53,12 @@ Pipeline options:
     In this situation, these images will differ through at least one [BIDS](../BIDS.md) entity like the tracer or the reconstruction method.
     When running the `pet-volume` pipeline, clinica will raise an error if more than one image matches the criteria provided through the command line.
     To avoid that, it is important to specify values for these options such that a single image is selected per subject and session.
+
+!!! warning "Centering BIDS nifti"
+    The intra-subject registration of the PET image into the space of the subject’s T1-weighted MR image is very likely to fail if the images have important relative offsets.
+    In this situation, Clinica will give a warning displaying a command that should be run in order to generate a new BIDS directory with all images centered.
+    This relies on the IOTool [center-nifti](../IO.md#center-nifti---center-nifti-files-of-a-bids-directory).
+    It is highly recommended to follow this recommendation but Clinica won't force you to do so.
 
 !!! info
     Since the release of Clinica v0.3.8, the handling of PSF information in the TSV file has changed: `fwhm_x`, `fwhm_y`, `fwhm_z` columns have been replaced by `psf_x`, `psf_y`, `psf_z` and the `acq_label` column has been added.

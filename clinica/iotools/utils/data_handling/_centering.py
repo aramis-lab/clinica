@@ -8,7 +8,7 @@ import pandas as pd
 
 __all__ = [
     "center_nifti_origin",
-    "check_volume_location_in_world_coordinate_system",
+    "are_images_centered_around_origin_of_world_coordinate_system",
     "check_relative_volume_location_in_world_coordinate_system",
     "center_all_nifti",
 ]
@@ -60,36 +60,32 @@ def _compute_qform(header: nib.Nifti1Header) -> np.ndarray:
     return qform
 
 
-def check_volume_location_in_world_coordinate_system(
-    nifti_list: List[PathLike],
-    bids_dir: PathLike,
+def are_images_centered_around_origin_of_world_coordinate_system(
+    images: Iterable[Path],
+    bids_dir: Path,
     modality: str = "t1w",
-    skip_question: bool = False,
 ) -> bool:
     """Check if images are centered around the origin of the world coordinate.
 
     Parameters
     ----------
-    nifti_list : list of PathLike
-        List of path to nifti files.
+    images : Iterable of Path
+        The paths to nifti files.
 
-    bids_dir : PathLike
-        Path to bids directory associated with this check.
+    bids_dir : Path
+        The path to bids directory associated with this check.
 
     modality : str, optional
         The modality of the image. Default='t1w'.
 
-    skip_question : bool, optional
-        If True, assume answer is yes. Default=False.
-
     Returns
     -------
     bool :
-        True if they are centered, False otherwise
+        True if all images are centered, False otherwise.
 
     Warns
     ------
-    If volume is not centered on origin of the world coordinate system
+    If at least one volume is not centered on origin of the world coordinate system.
 
     Notes
     -----
@@ -98,38 +94,23 @@ def check_volume_location_in_world_coordinate_system(
     When not centered, we warn the user of the problem propose to exit clinica to run clinica iotools center-nifti
     or to continue with the execution of the pipeline.
     """
-    import click
     import numpy as np
 
-    bids_dir = Path(bids_dir)
-    list_non_centered_files = [
-        Path(file) for file in nifti_list if not _is_centered(Path(file))
-    ]
-    if len(list_non_centered_files) == 0:
+    from clinica.utils.stream import cprint
+
+    non_centered_images = [image for image in images if not _is_centered(image)]
+    if len(non_centered_images) == 0:
         return True
-    centers = [
-        _get_world_coordinate_of_center(file) for file in list_non_centered_files
-    ]
+    centers = [_get_world_coordinate_of_center(image) for image in non_centered_images]
     l2_norm = [np.linalg.norm(center, ord=2) for center in centers]
-    click.echo(
+    cprint(
         _build_warning_message(
-            list_non_centered_files, centers, l2_norm, bids_dir, modality
-        )
+            non_centered_images, centers, l2_norm, bids_dir, modality
+        ),
+        lvl="warning",
     )
-    if not skip_question:
-        _ask_for_confirmation()
 
     return False
-
-
-def _ask_for_confirmation() -> None:
-    import sys
-
-    import click
-
-    if not click.confirm("Do you still want to launch the pipeline?"):
-        click.echo("Clinica will now exit...")
-        sys.exit(0)
 
 
 def _build_warning_message(
@@ -170,12 +151,11 @@ def _build_warning_message(
 
 def check_relative_volume_location_in_world_coordinate_system(
     label_1: str,
-    nifti_list1: List[PathLike],
+    nifti_list1: list[PathLike],
     label_2: str,
-    nifti_list2: List[PathLike],
+    nifti_list2: list[PathLike],
     bids_dir: PathLike,
     modality: str,
-    skip_question: bool = False,
 ):
     """Check if the NIfTI file list `nifti_list1` and `nifti_list2` provided in argument are not too far apart,
     otherwise coreg in SPM may fail. Norm between center of volumes of 2 files must be less than 80 mm.
@@ -201,21 +181,15 @@ def check_relative_volume_location_in_world_coordinate_system(
         String that must be used in argument of:
         clinica iotools bids --modality <MODALITY>
         (used in potential warning message).
-
-    skip_question : bool, optional
-        Disable prompts for user input (default is False)
     """
-    import warnings
+    from clinica.utils.stream import log_and_warn
 
-    from clinica.utils.stream import cprint
-
-    warning_message = _build_warning_message_relative_volume_location(
-        label_1, nifti_list1, label_2, nifti_list2, bids_dir, modality
-    )
-    cprint(msg=warning_message, lvl="warning")
-    warnings.warn(warning_message)
-    if not skip_question:
-        _ask_for_confirmation()
+    if (
+        msg := _build_warning_message_relative_volume_location(
+            label_1, nifti_list1, label_2, nifti_list2, bids_dir, modality
+        )
+    ) is not None:
+        log_and_warn(msg, UserWarning)
 
 
 def _build_warning_message_relative_volume_location(
@@ -225,7 +199,7 @@ def _build_warning_message_relative_volume_location(
     nifti_list2: List[PathLike],
     bids_dir: PathLike,
     modality: str,
-) -> str:
+) -> Optional[str]:
     bids_dir = Path(bids_dir)
     file_couples = [(Path(f1), Path(f2)) for f1, f2 in zip(nifti_list1, nifti_list2)]
     df = pd.DataFrame(
@@ -233,7 +207,7 @@ def _build_warning_message_relative_volume_location(
         columns=[label_1, label_2, "Relative distance"],
     )
     if len(df) == 0:
-        return
+        return None
     warning_message = (
         f"It appears that {len(df)} pairs of files have an important relative offset. "
         "SPM co-registration has a high probability to fail on these files:\n\n"
@@ -391,8 +365,7 @@ def _is_centered(nii_volume: Path, threshold_l2: int = 50) -> bool:
     the volume did not exceed 100 mm. Above this distance, either the volume is either not segmented (SPM error), or the
     produced segmentation is wrong (not the shape of a brain anymore)
     """
-    center = _get_world_coordinate_of_center(nii_volume)
-    if center is None:
+    if (center := _get_world_coordinate_of_center(nii_volume)) is None:
         raise ValueError(
             f"Unable to compute the world coordinates of center for image {nii_volume}."
             "Please verify the image data and header."

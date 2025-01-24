@@ -89,7 +89,7 @@ class T1FreeSurfer(Pipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.iotools.utils.data_handling import (
-            check_volume_location_in_world_coordinate_system,
+            are_images_centered_around_origin_of_world_coordinate_system,
         )
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.filemanip import (
@@ -155,10 +155,9 @@ class T1FreeSurfer(Pipeline):
             synchronize=True,
             interface=nutil.IdentityInterface(fields=self.get_input_fields()),
         )
-        check_volume_location_in_world_coordinate_system(
-            t1w_files,
+        are_images_centered_around_origin_of_world_coordinate_system(
+            [Path(f) for f in t1w_files],
             self.bids_directory,
-            skip_question=self.parameters["skip_question"],
         )
 
         self.connect(

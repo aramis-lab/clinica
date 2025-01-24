@@ -1,8 +1,8 @@
 from ._centering import (
+    are_images_centered_around_origin_of_world_coordinate_system,
     center_all_nifti,
     center_nifti_origin,
     check_relative_volume_location_in_world_coordinate_system,
-    check_volume_location_in_world_coordinate_system,
 )
 from ._files import create_subs_sess_list, write_list_of_files
 from ._merging import create_merge_file
@@ -16,6 +16,6 @@ __all__ = [
     "compute_missing_processing",
     "create_subs_sess_list",
     "write_list_of_files",
-    "check_volume_location_in_world_coordinate_system",
+    "are_images_centered_around_origin_of_world_coordinate_system",
     "check_relative_volume_location_in_world_coordinate_system",
 ]

@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List
 
 from nipype import config
@@ -73,7 +74,7 @@ class T1VolumeTissueSegmentation(Pipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.iotools.utils.data_handling import (
-            check_volume_location_in_world_coordinate_system,
+            are_images_centered_around_origin_of_world_coordinate_system,
         )
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.input_files import T1W_NII
@@ -90,12 +91,10 @@ class T1VolumeTissueSegmentation(Pipeline):
         self.subjects = subjects
         self.sessions = sessions
 
-        check_volume_location_in_world_coordinate_system(
-            t1w_files,
+        are_images_centered_around_origin_of_world_coordinate_system(
+            [Path(f) for f in t1w_files],
             self.bids_directory,
-            skip_question=self.parameters["skip_question"],
         )
-
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
             cprint("The pipeline will last approximately 10 minutes per image.")

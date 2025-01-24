@@ -142,7 +142,6 @@ class PetSurface(PETPipeline):
             read_parameters_node.inputs.pet,
             self.bids_directory,
             self.parameters["acq_label"],
-            skip_question=self.parameters["skip_question"],
         )
 
         # fmt: off
@@ -232,7 +231,6 @@ class PetSurface(PETPipeline):
             read_parameters_node.inputs.pet,
             self.bids_directory,
             self.parameters["acq_label"],
-            skip_question=self.parameters["skip_question"],
         )
 
         # fmt: off
