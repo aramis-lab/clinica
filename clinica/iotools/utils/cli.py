@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Iterable, List, Optional, Union
 
 import click
 
@@ -37,12 +37,13 @@ def describe(dataset: Union[str, Path]):
     multiple=True,
     metavar="modalities",
     help="Process selected modalities.",
+    default=("T1w",),
 )
 @click.option("--center-all-files", is_flag=True, help="Force processing of all files.")
 def center_nifti(
     bids_directory: str,
     output_bids_directory: str,
-    modalities: Optional[List[str]] = None,
+    modalities: Optional[Iterable[str]] = None,
     center_all_files: bool = False,
 ) -> None:
     """Center NIfTI files in a BIDS dataset."""
@@ -58,7 +59,7 @@ def center_nifti(
             output_bids_directory,
             modalities=modalities,
             center_all_files=center_all_files,
-            overwrite_existing_files=False,
+            overwrite_existing_files=False,  # todo : technically can remove this one
         )
     except ClinicaExistingDatasetError:
         click.echo(
