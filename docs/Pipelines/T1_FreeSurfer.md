@@ -39,8 +39,8 @@ This can be achieved with the `--caps-name` option. The provided name will appea
 !!! note
     If you wish to obtain your results with another atlas, you can specify the option -ap/--atlas_path with the path to the atlas folder. Your atlas will need to be in FreeSurfer `gcs` format (e.g `hemisphere.atlasname_6p0.gcs`). The results will be stored in the same folder as the original results (additional files in `labels`, `stats` and `regional measures`).
 
-!!! note
-    If the images from the `BIDS_DIRECTORY` are not centered, Clinica will give a warning because this can be an issue in later processing steps (for instance if you are planning to run [pet-surface](./PET_Surface.md) afterwards), especially those involving SPM.
+!!! warning "Centering BIDS nifti"
+    If the images from the `BIDS_DIRECTORY` are not centered, Clinica will give a warning because this can be an issue **if** later processing steps involve SPM (for instance if you are planning to run [pet-surface](./PET_Surface.md) afterwards).
     The warning message will contain a suggestion of a command to be run on your `BIDS_DIRECTORY` in order to generate a new BIDS dataset with images centered. This relies on the IOTool [center-nifti](../IO.md#center-nifti---center-nifti-files-of-a-bids-directory).
     It is highly recommended to follow this recommendation but Clinica won't force you to do so.
 
