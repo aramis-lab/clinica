@@ -38,7 +38,6 @@ def create_participants_tsv_file(
         available in the BIDS dataset.
         Default=True.
     """
-    import glob
     from clinica.utils.stream import cprint
 
     study = StudyName.AIBL
@@ -54,8 +53,7 @@ def create_participants_tsv_file(
         if location == prev_location:
             pass
         else:
-            # todo : use function to read csvs from previous PR when merged
-            file_to_read = pd.read_csv(glob.glob(str(clinical_data_dir / location))[0])
+            file_to_read = _load_metadata_from_pattern(clinical_data_dir, location)
             prev_location = location
         participant_df[row["BIDS CLINICA"]] = file_to_read[row[study.value]].astype(str)
 
@@ -67,6 +65,8 @@ def create_participants_tsv_file(
             lambda x: bids_id_factory(StudyName.AIBL).from_original_study_id(x)
         ),
     )
+    participant_df.drop(labels="alternative_id_1", axis=1, inplace=True)
+
     # Keep year-of-birth only.
     participant_df["date_of_birth"] = participant_df["date_of_birth"].str.extract(
         r"/(\d{4}).*"
@@ -88,6 +88,7 @@ def create_participants_tsv_file(
                     lvl="warning",
                 )
                 participant_df.loc[subject] = "n/a"
+                participant_df.loc[subject, "participant_id"] = subject
         participant_df = participant_df.loc[keep]
 
     participant_df.to_csv(
