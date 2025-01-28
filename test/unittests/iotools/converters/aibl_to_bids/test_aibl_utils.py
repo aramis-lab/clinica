@@ -648,10 +648,12 @@ def test_load_metadata_from_pattern_optional(tmp_path):
 
 
 def test_create_scans_dict(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import create_scans_dict
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        _create_scans_dict,
+    )
     from clinica.utils.pet import Tracer
 
-    result = create_scans_dict(
+    result = _create_scans_dict(
         clinical_data_dir=build_clinical_data(tmp_path),
         clinical_specifications_folder=build_scans_spec(tmp_path),
         bids_path=build_bids_dir(tmp_path),

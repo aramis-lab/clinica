@@ -362,7 +362,7 @@ def create_scans_tsv_file(
         The path to the folder containing the clinical specification files.
     """
 
-    scans_dict = create_scans_dict(
+    scans_dict = _create_scans_dict(
         clinical_data_dir,
         clinical_specifications_folder,
         bids_path,
@@ -418,7 +418,7 @@ def _format_time(time: str) -> str:
     return date_obj.strftime("%Y-%m-%dT%H:%M:%S")
 
 
-def create_scans_dict(
+def _create_scans_dict(
     clinical_data_dir: Path,
     clinical_specifications_folder: Path,
     bids_path: Path,
