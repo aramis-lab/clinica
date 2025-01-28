@@ -14,7 +14,7 @@ __all__ = [
 
 
 def create_participants_tsv_file(
-    input_path: Path,
+    bids_path: Path,
     clinical_specifications_folder: Path,
     clinical_data_dir: Path,
     delete_non_bids_info: bool = True,
@@ -24,8 +24,8 @@ def create_participants_tsv_file(
 
     Parameters
     ----------
-    input_path : Path
-        The path to the input (BIDS) directory.
+    bids_path : Path
+        The path to the BIDS directory.
 
     clinical_specifications_folder : Path
         The path to the folder containing the clinical specification files.
@@ -39,6 +39,7 @@ def create_participants_tsv_file(
         Default=True.
     """
     import glob
+    from clinica.utils.stream import cprint
 
     study = StudyName.AIBL
     prev_location = ""
@@ -54,7 +55,7 @@ def create_participants_tsv_file(
             pass
         else:
             # todo : use function to read csvs from previous PR when merged
-            file_to_read = pd.read_csv(glob.glob(clinical_data_dir / location)[0])
+            file_to_read = pd.read_csv(glob.glob(str(clinical_data_dir / location))[0])
             prev_location = location
         participant_df[row["BIDS CLINICA"]] = file_to_read[row[study.value]].astype(str)
 
@@ -78,12 +79,19 @@ def create_participants_tsv_file(
 
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
-        keep = [d.name for d in input_path.glob("sub-*")]
+        keep = [d.name for d in bids_path.glob("sub-*")]
         participant_df.set_index("participant_id", inplace=True, drop=False)
+        for subject in keep:
+            if subject not in participant_df.index:
+                cprint(
+                    f"No clinical data was found for participant {subject}.",
+                    lvl="warning",
+                )
+                participant_df.loc[subject] = "n/a"
         participant_df = participant_df.loc[keep]
 
     participant_df.to_csv(
-        input_path / "participants.tsv",
+        bids_path / "participants.tsv",
         sep="\t",
         index=False,
         encoding="utf8",
