@@ -6,9 +6,11 @@ from unittest.mock import patch
 import pytest
 
 
-def build_folder_with_specific_modalities(tmp_path: Path) -> Path:
+def build_bids_folder(tmp_path: Path) -> Path:
     bids_path = tmp_path / "BIDS"
     bids_path.mkdir()
+
+    (bids_path / "dataset_description.json").touch()
 
     (bids_path / "sub-1_ses-1_T1w.nii.gz").touch()
     (bids_path / "sub-2_ses-1_T1w.nii.gz").touch()
@@ -52,7 +54,7 @@ def build_folder_with_specific_modalities(tmp_path: Path) -> Path:
 def test_find_files_with_modality(tmp_path, modalities, expected):
     from clinica.iotools.utils.data_handling._centering import _find_files_with_modality
 
-    bids_path = build_folder_with_specific_modalities(tmp_path)
+    bids_path = build_bids_folder(tmp_path)
     result = _find_files_with_modality(bids_path, modalities)
     assert set(r.name for r in result) == expected
 
@@ -61,14 +63,17 @@ def test_center_nifti_error(tmp_path):
     from clinica.iotools.utils import center_nifti
     from clinica.utils.exceptions import ClinicaExistingDatasetError
 
-    (tmp_path / "out").mkdir()
-    (tmp_path / "out" / "foo.txt").touch()
+    out_path = tmp_path / "out"
+    out_path.mkdir()
+    (out_path / "foo.txt").touch()
+
+    bids_path = build_bids_folder(tmp_path)
 
     with pytest.raises(
         ClinicaExistingDatasetError,
-        match=f"Dataset located at {tmp_path / 'out'} already contain some files.",
+        match=f"Dataset located at {out_path} already contain some files.",
     ):
-        center_nifti(tmp_path / "bids", tmp_path / "out")
+        center_nifti(bids_path, out_path)
 
 
 def center_all_nifti_mock(
@@ -87,8 +92,11 @@ def center_all_nifti_mock(
 def test_center_nifti_log_file_creation_error(tmp_path, mocker):
     from clinica.iotools.utils import center_nifti
 
-    (tmp_path / "bids").mkdir()
-    (tmp_path / "out").mkdir()
+    bids_path = build_bids_folder(tmp_path)
+
+    out_path = tmp_path / "out"
+    out_path.mkdir()
+
     mocker.patch(
         "clinica.iotools.utils.data_handling.write_list_of_files", return_value=False
     )
@@ -100,14 +108,14 @@ def test_center_nifti_log_file_creation_error(tmp_path, mocker):
             IOError,
             match="Could not create log file",
         ):
-            center_nifti(tmp_path / "bids", tmp_path / "out", center_all_files=True)
-        mock.assert_called_once_with(tmp_path / "bids", tmp_path / "out", None, True)
+            center_nifti(bids_path, out_path, center_all_files=True)
+        mock.assert_called_once_with(bids_path, out_path, None, True)
 
 
 def test_center_nifti(tmp_path):
     from clinica.iotools.utils import center_nifti
 
-    (tmp_path / "bids").mkdir()
+    bids_path = build_bids_folder(tmp_path)
     output_dir = tmp_path / "out"
     output_dir.mkdir()
 
@@ -115,9 +123,9 @@ def test_center_nifti(tmp_path):
         "clinica.iotools.utils.data_handling.center_all_nifti",
         wraps=center_all_nifti_mock,
     ) as mock:
-        center_nifti(tmp_path / "bids", tmp_path / "out", ("anat", "pet", "dwi"))
+        center_nifti(bids_path, output_dir, ("anat", "pet", "dwi"))
         mock.assert_called_once_with(
-            tmp_path / "bids", tmp_path / "out", ("anat", "pet", "dwi"), False
+            bids_path, output_dir, ("anat", "pet", "dwi"), False
         )
         assert (
             len([f for f in output_dir.iterdir()]) == 4
@@ -125,5 +133,5 @@ def test_center_nifti(tmp_path):
         logs = [f for f in output_dir.glob("centered_nifti_list_*.txt")]
         assert len(logs) == 1
         assert logs[0].read_text() == "\n".join(
-            [str(tmp_path / "out" / f) for f in ("foo.txt", "bar.tsv", "baz.nii.gz")]
+            [str(output_dir / f) for f in ("foo.txt", "bar.tsv", "baz.nii.gz")]
         )
