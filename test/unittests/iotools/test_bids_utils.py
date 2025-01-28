@@ -8,10 +8,10 @@ import pytest
 
 from clinica.iotools.bids_utils import (
     StudyName,
-    _get_pet_tracer_from_filename,
     _write_bids_validator_config,
     _write_bidsignore,
     _write_readme,
+    get_pet_tracer_from_filename,
 )
 from clinica.utils.pet import Tracer
 
@@ -57,7 +57,7 @@ EXPECTED_README_CONTENT = Template(
     ],
 )
 def test_get_pet_tracer_from_filename_success(filename, expected):
-    assert expected == _get_pet_tracer_from_filename(filename)
+    assert expected == get_pet_tracer_from_filename(filename)
 
 
 @pytest.mark.parametrize(
@@ -71,7 +71,7 @@ def test_get_pet_tracer_from_filename_success(filename, expected):
 )
 def test_get_pet_tracer_from_filename_error(filename):
     with pytest.raises(ValueError):
-        _get_pet_tracer_from_filename(filename)
+        get_pet_tracer_from_filename(filename)
 
 
 @pytest.mark.parametrize(

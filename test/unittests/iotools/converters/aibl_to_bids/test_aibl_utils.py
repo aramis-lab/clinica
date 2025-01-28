@@ -242,12 +242,12 @@ def test_init_scans_dict(tmp_path):
         (["1", "measured", "AUSTIN AC CT Brain H19s", "1"], None),
     ],
 )
-def test_flutemeta_badline(line, expected):
+def test_handle_flutemeta_badline(line, expected):
     from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _flutemeta_badline,
+        _handle_flutemeta_badline,
     )
 
-    assert _flutemeta_badline(line) == expected
+    assert _handle_flutemeta_badline(line) == expected
 
 
 @pytest.mark.parametrize(
@@ -617,7 +617,7 @@ def test_load_metadata_from_pattern_optional(tmp_path):
     from io import StringIO
 
     from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _flutemeta_badline,
+        _handle_flutemeta_badline,
         _load_metadata_from_pattern,
     )
 
@@ -634,7 +634,7 @@ def test_load_metadata_from_pattern_optional(tmp_path):
         _load_metadata_from_pattern(
             clinical_dir=tmp_path,
             pattern="bad_line.csv",
-            on_bad_lines=_flutemeta_badline,
+            on_bad_lines=_handle_flutemeta_badline,
         ),
         pd.DataFrame(
             {
@@ -700,7 +700,7 @@ def test_create_scans_dict(tmp_path):
 
 
 def test_write_scans_tsv(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import write_scans_tsv
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import _write_scans_tsv
     from clinica.utils.pet import Tracer
 
     scans_dict = {
@@ -716,7 +716,7 @@ def test_write_scans_tsv(tmp_path):
 
     bids_dir = build_bids_dir(tmp_path)
 
-    write_scans_tsv(bids_dir, scans_dict)
+    _write_scans_tsv(bids_dir, scans_dict)
 
     result_list = list(bids_dir.rglob("*sub-AIBL1_ses-M000_scans.tsv"))
 

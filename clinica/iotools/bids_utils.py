@@ -557,7 +557,7 @@ def write_modality_agnostic_files(
     _write_bidsignore(bids_dir)
 
 
-def _get_pet_tracer_from_filename(filename: str) -> Tracer:
+def get_pet_tracer_from_filename(filename: str) -> Tracer:
     """Return the PET tracer from the provided filename.
 
     Parameters

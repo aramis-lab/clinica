@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Iterator, List, Optional, Union
+from typing import Callable, Iterator, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -367,10 +367,10 @@ def create_scans_tsv_file(
         clinical_specifications_folder,
         bids_path,
     )
-    write_scans_tsv(bids_path, scans_dict)
+    _write_scans_tsv(bids_path, scans_dict)
 
 
-def _flutemeta_badline(line: List[str]) -> Optional[List[str]]:
+def _handle_flutemeta_badline(line: list[str]) -> Optional[list[str]]:
     # Fix for malformed flutemeta file in AIBL (see #796).
     # Some flutemeta lines contain a non-coded string value at the second-to-last position. This value
     # contains a comma which adds an extra column and shifts the remaining values to the right. In this
@@ -453,7 +453,9 @@ def create_scans_dict(
 
     for _, row in scans_specs.iterrows():
         on_bad_lines = (
-            _flutemeta_badline if "flutemeta" in row[f"{study} location"] else "error"
+            _handle_flutemeta_badline
+            if "flutemeta" in row[f"{study} location"]
+            else "error"
         )
         file = _load_metadata_from_pattern(
             clinical_data_dir, row[f"{study} location"], on_bad_lines
@@ -487,7 +489,7 @@ def create_scans_dict(
     return scans_dict
 
 
-def write_scans_tsv(bids_dir: Path, scans_dict: dict) -> None:
+def _write_scans_tsv(bids_dir: Path, scans_dict: dict) -> None:
     """Write the scans dict into TSV files.
 
     Parameters
@@ -507,29 +509,34 @@ def write_scans_tsv(bids_dir: Path, scans_dict: dict) -> None:
     write_sessions_tsv
     """
 
-    from clinica.iotools.bids_utils import _get_pet_tracer_from_filename
+    from clinica.iotools.bids_utils import get_pet_tracer_from_filename
 
     supported_modalities = ("anat", "dwi", "func", "pet")
 
-    for sub in scans_dict.keys():
-        for session in scans_dict[sub].keys():
+    for subject in scans_dict:
+        for session in scans_dict[subject]:
             scans_df = pd.DataFrame()
-            tsv_file = bids_dir / sub / session / f"{sub}_{session}_scans.tsv"
+            tsv_file = bids_dir / subject / session / f"{subject}_{session}_scans.tsv"
             tsv_file.unlink(missing_ok=True)
-            for mod in (bids_dir / sub / session).glob("*"):
-                if mod.name in supported_modalities:
-                    for file in [
-                        file for file in mod.iterdir() if mod.suffix != ".json"
-                    ]:
-                        f_type = (
-                            "T1/DWI/fMRI/FMAP"
-                            if mod.name in ("anat", "dwi", "func")
-                            else _get_pet_tracer_from_filename(file.name).value
-                        )
-                        row_to_append = pd.DataFrame(
-                            scans_dict[sub][session][f_type], index=[0]
-                        )
-                        row_to_append.insert(0, "filename", f"{mod.name} / {file.name}")
-                        scans_df = pd.concat([scans_df, row_to_append])
+            for modality in [
+                mod
+                for mod in (bids_dir / subject / session).glob("*")
+                if mod.name in supported_modalities
+            ]:
+                for file in [
+                    file for file in modality.iterdir() if modality.suffix != ".json"
+                ]:
+                    f_type = (
+                        "T1/DWI/fMRI/FMAP"
+                        if modality.name in ("anat", "dwi", "func")
+                        else get_pet_tracer_from_filename(file.name).value
+                    )
+                    row_to_append = pd.DataFrame(
+                        scans_dict[subject][session][f_type], index=[0]
+                    )
+                    row_to_append.insert(
+                        0, "filename", f"{modality.name} / {file.name}"
+                    )
+                    scans_df = pd.concat([scans_df, row_to_append])
                 scans_df = scans_df.fillna("n/a")
                 scans_df.to_csv(tsv_file, sep="\t", encoding="utf8", index=False)
