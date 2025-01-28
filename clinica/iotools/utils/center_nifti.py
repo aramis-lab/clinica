@@ -45,21 +45,15 @@ def center_nifti(
 
     from clinica.iotools.utils.data_handling import (
         center_all_nifti,
+        validate_bids_and_output_dir,
         write_list_of_files,
     )
-    from clinica.utils.exceptions import ClinicaExistingDatasetError
     from clinica.utils.stream import cprint, log_and_raise
 
-    bids_directory = Path(bids_directory)
-    output_bids_directory = Path(output_bids_directory)
-    if output_bids_directory.exists():
-        files = [
-            file.name
-            for file in output_bids_directory.iterdir()
-            if not file.name.startswith(".")
-        ]
-        if files and not overwrite_existing_files:
-            raise ClinicaExistingDatasetError(output_bids_directory)
+    bids_directory, output_bids_directory = validate_bids_and_output_dir(
+        bids_directory, output_bids_directory, overwrite_existing_files
+    )
+
     cprint("Clinica is now centering the requested images.", lvl="info")
 
     centered_files = center_all_nifti(
