@@ -371,14 +371,14 @@ def create_scans_tsv_file(
 
 
 def _handle_flutemeta_badline(line: list[str]) -> Optional[list[str]]:
-    # Fix for malformed flutemeta file in AIBL (see #796).
-    # Some flutemeta lines contain a non-coded string value at the second-to-last position. This value
-    # contains a comma which adds an extra column and shifts the remaining values to the right. In this
-    # case, we just remove the erroneous content and replace it with -4 which AIBL uses as n/a value.
+    """
+    Fix for malformed flutemeta file in AIBL (see #796).
+    Some flutemeta lines contain a non-coded string value at the second-to-last position. This value
+    contains a comma which adds an extra column and shifts the remaining values to the right. In this
+    case, we just remove the erroneous content and replace it with -4 which AIBL uses as n/a value.
 
-    # Example : bad_line = ['618', '1', 'm18', ... , '1', 'measured', 'AUSTIN AC CT Brain  H19s', '0']
-
-    # todo : RQ : means should be always at the same place
+    Example : bad_line = ['618', '1', 'm18', ... , '1', 'measured', 'AUSTIN AC CT Brain  H19s', '0']
+    """
 
     if line[-3] == "measured" and line[-2] == "AUSTIN AC CT Brain  H19s":
         return line[:-3] + ["-4", line[-1]]
