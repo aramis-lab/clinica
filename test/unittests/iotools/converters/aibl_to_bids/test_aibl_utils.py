@@ -192,42 +192,22 @@ def test_init_scans_dict(tmp_path):
     bids_dir = build_bids_dir(tmp_path)
     (bids_dir / "sub-AIBL1_foo.txt").touch()
 
+    modality_dict = {
+        "T1/DWI/fMRI/FMAP": {},
+        Tracer.PIB: {},
+        Tracer.AV45: {},
+        Tracer.FMM: {},
+    }
+
     expected = {
-        "sub-AIBL1": {
-            "ses-M000": {
-                "T1/DWI/fMRI/FMAP": {},
-                Tracer.PIB: {},
-                Tracer.AV45: {},
-                Tracer.FMM: {},
-            }
-        },
+        "sub-AIBL1": {"ses-M000": modality_dict},
         "sub-AIBL100": {
-            "ses-M000": {
-                "T1/DWI/fMRI/FMAP": {},
-                Tracer.PIB: {},
-                Tracer.AV45: {},
-                Tracer.FMM: {},
-            },
-            "ses-M012": {
-                "T1/DWI/fMRI/FMAP": {},
-                Tracer.PIB: {},
-                Tracer.AV45: {},
-                Tracer.FMM: {},
-            },
+            "ses-M000": modality_dict,
+            "ses-M012": modality_dict,
         },
         "sub-AIBL109": {
-            "ses-M000": {
-                "T1/DWI/fMRI/FMAP": {},
-                Tracer.PIB: {},
-                Tracer.AV45: {},
-                Tracer.FMM: {},
-            },
-            "ses-M006": {
-                "T1/DWI/fMRI/FMAP": {},
-                Tracer.PIB: {},
-                Tracer.AV45: {},
-                Tracer.FMM: {},
-            },
+            "ses-M000": modality_dict,
+            "ses-M006": modality_dict,
         },
     }
 
