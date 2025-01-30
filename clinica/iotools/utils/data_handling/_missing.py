@@ -259,7 +259,9 @@ def _compute_missing_processing_single_row(
     )
     row = _compute_missing_processing_t1_volume(row, groups, subject)
     for pipeline in ("t1-linear", "flair_linear"):
-        row.loc[0, pipeline] = "1" if (subject.session_path / pipeline).exists() else "0"
+        row.loc[0, pipeline] = (
+            "1" if (subject.session_path / pipeline).exists() else "0"
+        )
     row.loc[0, "t1-freesurfer"] = (
         "1"
         if (subject.session_path / "t1" / "freesurfer_cross_sectional").exists()
