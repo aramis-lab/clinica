@@ -214,9 +214,9 @@ def compute_missing_processing(
     tracers = _get_pet_tracers(bids_dir)
 
     for subject_path in (caps_dir / "subjects").glob("sub-*"):
-        participant_id = subject_path.parent.name
+        participant_id = subject_path.name
         for session_path in subject_path.glob("ses-*"):
-            session_id = session_path.parent.name
+            session_id = session_path.name
             subject = SubjectSession(participant_id, session_id, session_path)
             row = _compute_missing_processing_single_row(subject, groups, tracers)
             output_df = pd.concat([output_df, row])
@@ -259,12 +259,15 @@ def _compute_missing_processing_single_row(
     )
     row = _compute_missing_processing_t1_volume(row, groups, subject)
     for pipeline in ("t1-linear", "flair_linear"):
-        row[0, pipeline] = "1" if (subject.session_path / pipeline).exists() else "0"
-    row[0, "t1-freesurfer"] = (
+        row.loc[0, pipeline] = (
+            "1" if (subject.session_path / pipeline).exists() else "0"
+        )
+    row.loc[0, "t1-freesurfer"] = (
         "1"
         if (subject.session_path / "t1" / "freesurfer_cross_sectional").exists()
         else "0"
     )
+
     row = _compute_missing_processing_pet_volume(
         row, groups, tracers, subject.session_path
     )
