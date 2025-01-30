@@ -8,9 +8,12 @@ def test_t1_volume_dartel2mni_info_loading(tmp_path):
 
     caps = build_caps_directory(
         tmp_path / "caps",
-        {"pipelines": ["t1-volume-dartel2mni"], "subjects": {"sub-01": ["ses-M000"]}},
+        {
+            "pipelines": {"t1-volume-dartel2mni": {}},
+            "subjects": {"sub-01": ["ses-M000"]},
+        },
     )
-    pipeline = T1VolumeDartel2MNI(caps_directory=str(caps))
+    pipeline = T1VolumeDartel2MNI(caps_directory=str(caps), group_label="test")
 
     assert pipeline.info == {
         "id": "aramislab/t1-volume-dartel2mni",
@@ -37,9 +40,12 @@ def test_t1_volume_dartel2mni_dependencies(tmp_path, mocker):
     )
     caps = build_caps_directory(
         tmp_path / "caps",
-        {"pipelines": ["t1-volume-dartel2mni"], "subjects": {"sub-01": ["ses-M000"]}},
+        {
+            "pipelines": {"t1-volume-dartel2mni": {}},
+            "subjects": {"sub-01": ["ses-M000"]},
+        },
     )
-    pipeline = T1VolumeDartel2MNI(caps_directory=str(caps))
+    pipeline = T1VolumeDartel2MNI(caps_directory=str(caps), group_label="test")
 
     assert pipeline.dependencies == [
         SoftwareDependency(

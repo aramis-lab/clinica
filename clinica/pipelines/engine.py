@@ -11,7 +11,9 @@ import click
 from nipype.interfaces.utility import IdentityInterface
 from nipype.pipeline.engine import Node, Workflow
 
+from clinica.utils.bids import Visit
 from clinica.utils.check_dependency import SoftwareDependency, ThirdPartySoftware
+from clinica.utils.group import GroupID, GroupLabel
 from clinica.utils.stream import log_and_warn
 
 
@@ -593,6 +595,18 @@ class Pipeline(Workflow):
         self.is_built = False
 
     @property
+    def visits(self) -> list[Visit]:
+        return [
+            Visit(subject, session)
+            for subject, session in zip(self.subjects, self.sessions)
+        ]
+
+    @visits.setter
+    def visits(self, value: list[Visit]):
+        self.subjects = [v.subject for v in value]
+        self.sessions = [v.session for v in value]
+
+    @property
     def tsv_file(self) -> Optional[Path]:
         return self._tsv_file
 
@@ -600,24 +614,31 @@ class Pipeline(Workflow):
     def info_file(self) -> Path:
         return self._info_file
 
-    @staticmethod
-    def get_processed_images(
-        caps_directory: Path, subjects: List[str], sessions: List[str]
-    ) -> List[str]:
-        """Extract processed image IDs in `caps_directory` based on `subjects`_`sessions`.
+    def determine_subject_and_session_to_process(self):
+        """Query expected output files in the CAPS folder in order to process only those missing.
 
-        Todo:
-            [ ] Implement this static method in all pipelines
-            [ ] Make it abstract to force overload in future pipelines
+        If expected output files already exist in the CAPS folder for some subjects and sessions,
+        then do not process those again.
         """
-        from clinica.utils.exceptions import ClinicaException
-        from clinica.utils.stream import cprint
+        from clinica.utils.stream import log_and_warn
 
-        cprint(msg="Pipeline finished with errors.", lvl="error")
-        cprint(msg="CAPS outputs were not found for some image(s):", lvl="error")
-        raise ClinicaException(
-            "Implementation on which image(s) failed will appear soon."
+        visits_already_processed = self.get_processed_visits()
+        if len(visits_already_processed) == 0:
+            return
+        message = (
+            f"In the provided CAPS folder {self.caps_directory}, Clinica found already processed "
+            f"images for {len(visits_already_processed)} visit(s):\n- "
         )
+        message += "\n- ".join([str(visit) for visit in visits_already_processed])
+        message += "\nThose visits will be ignored by Clinica."
+        log_and_warn(message, UserWarning)
+        self.visits = [
+            visit for visit in self.visits if visit not in visits_already_processed
+        ]
+
+    def get_processed_visits(self) -> list[Visit]:
+        """Examine the files present in the CAPS output folder and return the visits for which processing has already been done."""
+        return []
 
     def _init_nodes(self) -> None:
         """Init the basic workflow and I/O nodes necessary before build."""
@@ -690,6 +711,7 @@ class Pipeline(Workflow):
             self._check_dependencies()
             self._check_pipeline_parameters()
             if not self.has_input_connections():
+                self.determine_subject_and_session_to_process()
                 self._build_input_node()
             self._build_core_nodes()
             if not self.has_output_connections():
@@ -1029,3 +1051,33 @@ class Pipeline(Workflow):
     @abc.abstractmethod
     def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
+
+
+class GroupPipeline(Pipeline):
+    def __init__(
+        self,
+        caps_directory: str,
+        group_label: str,
+        bids_directory: Optional[str] = None,
+        tsv_file: Optional[str] = None,
+        overwrite_caps: Optional[bool] = False,
+        base_dir: Optional[str] = None,
+        parameters: Optional[dict] = None,
+        name: Optional[str] = None,
+        ignore_dependencies: Optional[List[str]] = None,
+        caps_name: Optional[str] = None,
+    ):
+        super().__init__(
+            bids_directory=bids_directory,
+            caps_directory=caps_directory,
+            tsv_file=tsv_file,
+            overwrite_caps=overwrite_caps,
+            base_dir=base_dir,
+            parameters=parameters,
+            name=name,
+            ignore_dependencies=ignore_dependencies,
+            caps_name=caps_name,
+        )
+        self.group_label: GroupLabel = GroupLabel(group_label)
+        self.group_id: GroupID = GroupID.from_label(self.group_label)
+        self.group_directory: Path = self.caps_directory / "groups" / str(self.group_id)

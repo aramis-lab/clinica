@@ -131,7 +131,6 @@ def cli(
 
     parameters = {
         # Clinica compulsory arguments
-        "group_label": group_label,
         "orig_input_data_volume": orig_input_data_volume,
         "contrast": contrast,
         # Optional arguments
@@ -154,6 +153,7 @@ def cli(
         base_dir=working_directory,
         parameters=parameters,
         name=pipeline_name,
+        group_label=group_label,
     )
 
     exec_pipeline = (

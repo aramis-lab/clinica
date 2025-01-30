@@ -126,7 +126,7 @@ After activation, use `pip` to install Clinica.
 Depending on the pipeline that you want to use, you need to install pipeline-specific interfaces.
 Some of which uses a different runtime or use incompatible licensing terms, which prevent their distribution alongside Clinica.
 Not all the dependencies are necessary to run Clinica.
-Please refer to this [page](https://aramislab.paris.inria.fr/clinica/docs/public/latest/Third-party/)
+Please refer to this [page](https://aramislab.paris.inria.fr/clinica/docs/public/dev/Software/Third-party/)
 to determine which third-party libraries you need to install.
 
 ## Example

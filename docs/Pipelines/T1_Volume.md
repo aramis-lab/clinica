@@ -35,17 +35,22 @@ clinica run t1-volume [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY GROUP_LABEL
 
 where:
 
-- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
-- `CAPS_DIRECTORY` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
+- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../BIDS.md) hierarchy.
+- `CAPS_DIRECTORY` is the output folder containing the results in a [CAPS](../CAPS/Introduction.md) hierarchy.
 - `GROUP_LABEL` is the user-defined identifier for the provided group of subjects.
 
 Pipeline options:
 
-- `--smooth`: a list of integers specifying the different isomorphic full width at half maximum (FWHM) in millimeters used to smooth the images. Default value is: `8`.
+- `--smooth`: a list of integers specifying the different isomorphic [full width at half maximum (FWHM)](../glossary.md#fwhm) in millimeters used to smooth the images. Default value is: `8`.
 - `--tissue_classes`: a list of integers (possible values range from 1 to 6) that indicates the tissue classes to save after segmentation (in order: gray matter (GM), white matter (WM), cerebrospinal fluid (CSF), bone, soft-tissue, air/background). Default value is: `1, 2, 3` (GM, WM and CSF are saved).
 - `--dartel_tissues`: a list of integers (possible values range from 1 to 6) that indicates the tissue classes to use for the Dartel template calculation (in order: GM, WM, CSF, bone, soft-tissue, air/background). Default value is: `1, 2, 3` (GM, WM and CSF are used).
 - `--modulate / --no-modulate`: a flag. If enabled, output images are modulated and volumes are preserved. If disabled, they are not modulated and concentrations are preserved. Default value: `--modulate`.
 - `--caps-name` : Specify the name of the CAPS dataset that will be created to store the outputs of the pipeline. This works if this CAPS dataset does not exist yet, otherwise the existing name will be kept. The provided name will appear in the `dataset_description.json` file, at the root of the CAPS folder (see [CAPS Specifications](../CAPS/Specifications.md#the-dataset_descriptionjson-file) for more details).
+
+!!! warning "Centering BIDS nifti"
+    If the images from the `BIDS_DIRECTORY` are not centered, Clinica will give a warning because this can be an issue **if** later processing steps involve SPM (for instance if you are planning to run [pet-volume](./PET_Volume.md) afterwards).
+    The warning message will contain a suggestion of a command to be run on your `BIDS_DIRECTORY` in order to generate a new BIDS dataset with images centered. This relies on the IOTool [center-nifti](../IO.md#center-nifti---center-nifti-files-of-a-bids-directory).
+    It is highly recommended to follow this recommendation but Clinica won't force you to do so.
 
 !!! note
     - The arguments common to all Clinica pipelines are described in [Interacting with clinica](../../InteractingWithClinica).

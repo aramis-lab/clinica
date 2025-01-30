@@ -25,6 +25,16 @@ Each record consists of the same number of fields, and these are separated by co
 
 - [wikipedia](https://en.wikipedia.org/wiki/Comma-separated_values)
 
+#### fMRI
+
+**fMRI** stands for *Functional Magnetic Resonance Imaging*.
+
+It measures brain activity by detecting changes associated with blood flow.
+This technique relies on the fact that cerebral blood flow and neuronal activation are coupled.
+When an area of the brain is in use, blood flow to that region also increases.
+
+- [wikipedia](https://en.wikipedia.org/wiki/Functional_magnetic_resonance_imaging)
+
 #### FWHM
 
 **FWHM** stands for *Full Width at Half Maximum*.
@@ -62,6 +72,18 @@ It is a commonly used data format with diverse uses in electronic data interchan
 ##### References
 
 - [wikipedia](https://en.wikipedia.org/wiki/JSON)
+
+
+#### MRI 
+
+***MRI*** stands for *Magnetic Resonance Imaging*.
+
+It is a medical imaging technique used in radiology to form pictures of the anatomy and the physiological processes inside the body.
+MRI scanners use strong magnetic fields, magnetic field gradients, and radio waves to generate images of the organs in the body.
+
+##### References
+
+- [wikipedia](https://en.wikipedia.org/wiki/Magnetic_resonance_imaging)
 
 #### PET
 

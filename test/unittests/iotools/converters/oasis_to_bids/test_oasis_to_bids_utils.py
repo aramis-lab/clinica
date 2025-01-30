@@ -6,7 +6,9 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_utils import (
-    create_sessions_dict,
+    _convert_cdr_to_diagnosis,
+    create_sessions_df,
+    write_scans_tsv,
     write_sessions_tsv,
 )
 
@@ -37,9 +39,9 @@ def _build_clinical_data(clinical_data_path: Path) -> None:
             "Delay": [float("nan"), float("nan")],
         }
     )
-    df.to_csv(clinical_data_path / "oasis_cross-sectional.csv", index=False)
-
-    # todo : future with excel
+    df.to_excel(
+        clinical_data_path / "oasis_cross-sectional-5708aa0a98d82080.xlsx", index=False
+    )
 
 
 @pytest.fixture
@@ -57,9 +59,9 @@ def _build_spec_sessions_success(sessions_path_success: Path) -> None:
             "ADNI": [np.nan, np.nan, np.nan, "foo"],
             "OASIS": ["CDR", "MMSE", "CDR", np.nan],
             "OASIS location": [
-                "oasis_cross-sectional.csv",
-                "oasis_cross-sectional.csv",
-                "oasis_cross-sectional.csv",
+                "oasis_cross-sectional-5708aa0a98d82080.xlsx",
+                "oasis_cross-sectional-5708aa0a98d82080.xlsx",
+                "oasis_cross-sectional-5708aa0a98d82080.xlsx",
                 np.nan,
             ],
         }
@@ -102,67 +104,77 @@ def _build_bids_dir(bids_dir: Path) -> None:
 
 
 @pytest.fixture
-def expected() -> dict:
+def expected() -> pd.DataFrame:
     expected = {
         "sub-OASIS10001": {
-            "M000": {
-                "session_id": "ses-M000",
-                "cdr_global": 0,
-                "MMS": 29,
-                "diagnosis": 0,
-            },
-            "M006": {
-                "session_id": "ses-M006",
-                "cdr_global": 0,
-                "MMS": 29,
-                "diagnosis": 0,
-            },
+            "session_id": "ses-M000",
+            "cdr_global": 0,
+            "MMS": 29,
+            "diagnosis": "CN",
         },
         "sub-OASIS10002": {
-            "M000": {
-                "session_id": "ses-M000",
-                "cdr_global": 0,
-                "MMS": 29,
-                "diagnosis": 0,
-            }
+            "session_id": "ses-M000",
+            "cdr_global": 0,
+            "MMS": 29,
+            "diagnosis": "CN",
         },
     }
+
+    expected = pd.DataFrame.from_dict(expected).T
+    expected.index.names = ["BIDS ID"]
 
     return expected
 
 
-def test_create_sessions_dict_success(
+def test_create_sessions_df_success(
     tmp_path,
     clinical_data_path: Path,
-    bids_dir: Path,
     sessions_path_success: Path,
-    expected: dict,
+    expected: pd.DataFrame,
 ):
-    # todo : how does it handle nan inside excel/csv ? verify with excel
-
-    result = create_sessions_dict(
+    result = create_sessions_df(
         clinical_data_path,
-        bids_dir,
         sessions_path_success,
         ["sub-OASIS10001", "sub-OASIS10002"],
     )
+    assert_frame_equal(expected, result, check_like=True, check_dtype=False)
 
-    assert result == expected
 
-
-def test_create_sessions_dict_error(
+def test_create_sessions_df_missing_clinical_data(
     tmp_path,
     clinical_data_path: Path,
-    bids_dir: Path,
-    sessions_path_error: Path,
-    expected: dict,
+    sessions_path_success: Path,
+    expected: pd.DataFrame,
 ):
-    # todo : how does it handle nan inside excel/csv ? verify with excel
+    result = create_sessions_df(
+        clinical_data_path,
+        sessions_path_success,
+        ["sub-OASIS10001", "sub-OASIS10002", "sub-OASIS10004"],
+    )
+    missing_line = pd.DataFrame.from_dict(
+        {
+            "sub-OASIS10004": {
+                "session_id": "ses-M000",
+                "diagnosis": "n/a",
+                "cdr_global": "n/a",
+                "MMS": "n/a",
+            }
+        }
+    ).T
+    missing_line.index.names = ["BIDS ID"]
 
+    expected = pd.concat([expected, missing_line])
+    assert_frame_equal(expected, result, check_like=True, check_dtype=False)
+
+
+def test_create_sessions_df_file_not_found(
+    tmp_path,
+    clinical_data_path: Path,
+    sessions_path_error: Path,
+):
     with pytest.raises(FileNotFoundError):
-        create_sessions_dict(
+        create_sessions_df(
             clinical_data_path,
-            bids_dir,
             sessions_path_error,
             ["sub-OASIS10001", "sub-OASIS10002"],
         )
@@ -173,24 +185,66 @@ def test_write_sessions_tsv(
     clinical_data_path: Path,
     bids_dir: Path,
     sessions_path_success: Path,
-    expected: dict,
+    expected: pd.DataFrame,
 ):
-    sessions = create_sessions_dict(
+    sessions = create_sessions_df(
         clinical_data_path,
-        bids_dir,
         sessions_path_success,
         ["sub-OASIS10001", "sub-OASIS10002"],
     )
-    write_sessions_tsv(tmp_path / "BIDS", sessions)
-    sessions_files = list((tmp_path / "BIDS").rglob("*.tsv"))
+    write_sessions_tsv(bids_dir, sessions)
+    sessions_files = list(bids_dir.rglob("*.tsv"))
+
     assert len(sessions_files) == 2
     for file in sessions_files:
         assert_frame_equal(
-            pd.read_csv(file, sep="\t").set_index("session_id", drop=False),
-            pd.DataFrame(expected[file.parent.name]).T.set_index(
-                "session_id", drop=False
-            ),
+            pd.read_csv(file, sep="\t").reset_index(drop=True),
+            expected.loc[[file.parent.name]].reset_index(drop=True),
             check_like=True,
             check_dtype=False,
         )
         assert file.name == f"{file.parent.name}_sessions.tsv"
+
+
+def test_write_scans_tsv(tmp_path, bids_dir: Path) -> None:
+    image_path = (
+        bids_dir
+        / "sub-OASIS10001"
+        / "ses-M000"
+        / "anat"
+        / "sub-OASIS10001_ses-M000_T1.nii.gz"
+    )
+    image_path.parent.mkdir(parents=True)
+    image_path.touch()
+
+    write_scans_tsv(bids_dir)
+
+    for session_path in bids_dir.rglob("ses-M*"):
+        tsv_path = list(session_path.rglob("*scans.tsv"))
+        if session_path.name != "ses-M000":
+            assert not tsv_path
+        else:
+            assert len(tsv_path) == 1
+            sub = session_path.parent.name
+            assert (
+                tsv_path[0] == bids_dir / sub / "ses-M000" / f"{sub}_ses-M000_scans.tsv"
+            )
+            file = pd.read_csv(tsv_path[0], sep="\t")
+            if sub == "sub-OASIS10001":
+                assert file["filename"].loc[0] == f"anat/{image_path.name}"
+            elif sub == "sub-OASIS10002":
+                assert file.empty
+
+
+@pytest.mark.parametrize(
+    "cdr,diagnosis",
+    [
+        (0, "CN"),
+        (12, "AD"),
+        (-2, "n/a"),
+        ("n/a", "n/a"),
+        ("foo", "n/a"),
+    ],
+)
+def test_convert_cdr_to_diagnosis(cdr, diagnosis):
+    assert diagnosis == _convert_cdr_to_diagnosis(cdr)

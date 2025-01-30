@@ -11,6 +11,7 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 from clinica.pipelines.dwi.utils import DWIDataset
 
 __all__ = [
+    "build_test_image_cubic_object",
     "build_bids_directory",
     "build_caps_directory",
     "build_dwi_dataset",
@@ -19,6 +20,55 @@ __all__ = [
     "assert_nifti_almost_equal",
     "assert_large_nifti_almost_equal",
 ]
+
+
+def build_test_image_cubic_object(
+    shape: tuple[int, int, int],
+    background_value: float,
+    object_value: float,
+    object_size: int,
+    affine: Optional[np.ndarray] = None,
+) -> nib.Nifti1Image:
+    """Returns a 3D nifti image of a centered cube.
+
+    Parameters
+    ----------
+    shape : (int, int, int)
+        The shape of the image to generate.
+
+    background_value : float
+        The value that should be put in the background.
+
+    object_value : float
+        The value that should be put in the cubic object.
+
+    object_size : int
+        The size of the cube (in number of voxels).
+
+    affine : np.ndarray, optional
+        The affine to use for the generated image.
+        If None, np.eye(4) is used.
+
+    Returns
+    -------
+    nib.Nifti1Image :
+        The test image.
+    """
+    from clinica.utils.image import Bbox3D
+
+    if object_size > min(shape):
+        raise ValueError(
+            f"Cannot generate an image of dimension {shape} with an object of size {object_size} in it..."
+        )
+    bbox_coordinates = []
+    for c in (dim / 2 for dim in shape):
+        bbox_coordinates.append(int(c - object_size / 2))
+        bbox_coordinates.append(int(c + object_size / 2))
+    bbox = Bbox3D.from_coordinates(*bbox_coordinates)
+    data = np.ones(shape, dtype=np.float32) * background_value
+    x, y, z = bbox.get_slices()
+    data[x, y, z] = object_value
+    return nib.Nifti1Image(data, affine=(affine or np.eye(4)))
 
 
 def build_bids_directory(
@@ -100,7 +150,8 @@ def build_caps_directory(directory: Path, configuration: dict) -> Path:
         Dictionary containing the configuration for building the fake CAPS
         directory. It should have the following structure:
             - "groups": ["group_labels"...]
-            - "pipelines": ["pipeline_names"...]
+            - "pipelines": {"pipeline_names": config}, where config is a dictionary
+              specifying more details for the files that should be written.
             - "subjects": {"subject_labels": ["session_labels"...]}.
 
     Returns
@@ -136,13 +187,13 @@ def _build_groups(directory: Path, configuration: dict) -> None:
         (directory / "groups").mkdir()
         for group_label in configuration["groups"]:
             (directory / "groups" / f"group-{group_label}").mkdir()
-            for pipeline in configuration["pipelines"]:
-                (directory / "groups" / f"group-{group_label}" / pipeline).mkdir()
+            for pipeline_name, pipeline_config in configuration["pipelines"].items():
+                (directory / "groups" / f"group-{group_label}" / pipeline_name).mkdir()
                 (
                     directory
                     / "groups"
                     / f"group-{group_label}"
-                    / pipeline
+                    / pipeline_name
                     / f"group-{group_label}_template.nii.gz"
                 ).touch()
 
@@ -150,29 +201,55 @@ def _build_groups(directory: Path, configuration: dict) -> None:
 def _build_subjects(directory: Path, configuration: dict) -> None:
     """Build a fake subjects file structure in a CAPS directory if requested."""
     if "subjects" in configuration:
-        (directory / "subjects").mkdir()
+        (directory / "subjects").mkdir(exist_ok=True)
         for sub, sessions in configuration["subjects"].items():
-            (directory / "subjects" / sub).mkdir()
+            (directory / "subjects" / sub).mkdir(exist_ok=True)
             for ses in sessions:
-                (directory / "subjects" / sub / ses).mkdir()
-                for pipeline in configuration["pipelines"]:
-                    (directory / "subjects" / sub / ses / pipeline).mkdir()
-                    if pipeline == "t1_linear":
-                        _build_t1_linear(directory, sub, ses)
-                    if pipeline == "t1":
+                (directory / "subjects" / sub / ses).mkdir(exist_ok=True)
+                for pipeline_name, pipeline_config in configuration[
+                    "pipelines"
+                ].items():
+                    (directory / "subjects" / sub / ses / pipeline_name).mkdir(
+                        exist_ok=True
+                    )
+                    if pipeline_name == "t1_linear":
+                        _build_t1_linear(directory, sub, ses, pipeline_config)
+                    if pipeline_name == "pet_linear":
+                        _build_pet_linear(directory, sub, ses, pipeline_config)
+                    if pipeline_name == "t1":
                         _build_t1(directory, sub, ses, configuration)
 
 
-def _build_t1_linear(directory: Path, sub: str, ses: str) -> None:
+def _build_t1_linear(directory: Path, sub: str, ses: str, config: dict) -> None:
     """Build a fake t1-linear file structure in a CAPS directory."""
-    (
-        directory
-        / "subjects"
-        / sub
-        / ses
-        / "t1_linear"
-        / f"{sub}_{ses}_T1w_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz"
-    ).touch()
+    uncropped = config.get("uncropped_image", False)
+    for filename in (
+        f"{sub}_{ses}_space-MNI152NLin2009cSym{'' if uncropped else '_desc-Crop'}_res-1x1x1_T1w.nii.gz",
+        f"{sub}_{ses}_space-MNI152NLin2009cSym_res-1x1x1_affine.mat",
+    ):
+        (directory / "subjects" / sub / ses / "t1_linear" / filename).touch()
+
+
+def _build_pet_linear(directory: Path, sub: str, ses: str, config: dict) -> None:
+    """Build a fake pet-linear file structure in a CAPS directory."""
+    from clinica.utils.pet import SUVRReferenceRegion, Tracer
+
+    tracer = Tracer(config["acq_label"])
+    suvr = SUVRReferenceRegion(config["suvr_reference_region"])
+    if config.get("save_PETinT1w", False):
+        (
+            directory
+            / "subjects"
+            / sub
+            / ses
+            / "pet_linear"
+            / f"{sub}_{ses}_trc-{tracer.value}_space-T1w_pet.nii.gz"
+        ).touch()
+    for filename in (
+        f"{sub}_{ses}_trc-{tracer.value}_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_suvr-{suvr.value}_pet.nii.gz",
+        f"{sub}_{ses}_trc-{tracer.value}_space-T1w_rigid.mat",
+    ):
+        (directory / "subjects" / sub / ses / "pet_linear" / filename).touch()
 
 
 def _build_t1(directory: Path, sub: str, ses: str, configuration: dict) -> None:

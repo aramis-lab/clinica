@@ -6,10 +6,9 @@ from pydra.mark import annotate, task
 @task
 @annotate({"return": {"out_status": None}})
 def task_volume_location_in_world_coordinate_system(
-    nifti_input: PathLike,
-    bids_dir: PathLike,
+    nifti_input: str,
+    bids_dir: str,
     modality: str = "t1w",
-    skip_question: bool = False,
 ) -> bool:
     """Check if images are centered around the origin of the world coordinate
 
@@ -24,9 +23,6 @@ def task_volume_location_in_world_coordinate_system(
     modality: str, optional
         the modality of the image. Default="t1w".
 
-    skip_question: bool, optional
-        if True, assume answer is yes. Default=False.
-
     Returns
     -------
     bool
@@ -36,14 +32,16 @@ def task_volume_location_in_world_coordinate_system(
     ------
     If volume is not centered on origin of the world coordinate system
     """
+    from pathlib import Path
+
     from clinica.iotools.utils.data_handling import (
-        check_volume_location_in_world_coordinate_system,
+        are_images_centered_around_origin_of_world_coordinate_system,
     )
 
-    nifti_list = [str(nifti_input)]
+    nifti_list = [Path(nifti_input)]
 
-    return check_volume_location_in_world_coordinate_system(
-        nifti_list, bids_dir, modality, skip_question
+    return are_images_centered_around_origin_of_world_coordinate_system(
+        nifti_list, Path(bids_dir), modality
     )
 
 

@@ -79,7 +79,6 @@ def cli(
 
     parameters = {
         # Clinica compulsory arguments
-        "group_label": group_label,
         "orig_input_data_ml": orig_input_data_ml,
         # Optional arguments for inputs from pet-volume pipeline
         "acq_label": acq_label,
@@ -95,6 +94,7 @@ def cli(
         base_dir=working_directory,
         parameters=parameters,
         name=pipeline_name,
+        group_label=group_label,
     )
 
     exec_pipeline = (

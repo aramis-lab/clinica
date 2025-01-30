@@ -7,6 +7,7 @@ import clinica.pydra.t1_volume.dartel2mni.pipeline as pydra_t1_vol_dartel2mni
 from clinica import option
 from clinica.pipelines import cli_param
 from clinica.pipelines.engine import clinica_pipeline
+from clinica.utils.group import GroupLabel
 
 pipeline_name = "pydra-t1-volume-dartel2mni"
 
@@ -42,11 +43,8 @@ def cli(
     when running the t1-volume pipeline.
     https://aramislab.paris.inria.fr/clinica/docs/public/latest/Pipelines/T1_Volume/
     """
-    from clinica.utils.group import check_group_label
-
-    check_group_label(group_label)
     parameters = {
-        "group_label": group_label,
+        "group_label": GroupLabel(group_label),
         "tissues": tissues,
         "voxel_size": voxel_size,
         "modulate": modulate,

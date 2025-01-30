@@ -86,7 +86,7 @@ def run_t1_volume_create_dartel(
         caps_directory=fspath(output_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
-        parameters={"group_label": "UnitTest"},
+        group_label="UnitTest",
     )
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
@@ -162,7 +162,7 @@ def run_t1_volume_dartel_to_mni(
         caps_directory=fspath(output_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
-        parameters={"group_label": "UnitTest"},
+        group_label="UnitTest",
     )
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
@@ -222,7 +222,7 @@ def run_t1_volume_register_dartel(
         caps_directory=fspath(output_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
-        parameters={"group_label": "UnitTest"},
+        group_label="UnitTest",
     )
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
@@ -282,7 +282,7 @@ def run_t1_volume_parcellation(
         caps_directory=fspath(output_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
-        parameters={"group_label": "UnitTest"},
+        group_label="UnitTest",
     )
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)

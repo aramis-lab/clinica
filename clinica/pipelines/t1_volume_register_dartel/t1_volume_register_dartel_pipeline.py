@@ -1,9 +1,9 @@
 from typing import List
 
-from clinica.pipelines.engine import Pipeline
+from clinica.pipelines.engine import GroupPipeline
 
 
-class T1VolumeRegisterDartel(Pipeline):
+class T1VolumeRegisterDartel(GroupPipeline):
     """T1VolumeExistingDartel - Reuse existing Dartel template.
 
     Returns:
@@ -16,12 +16,7 @@ class T1VolumeRegisterDartel(Pipeline):
 
     def _check_pipeline_parameters(self) -> None:
         """Check pipeline parameters."""
-        from clinica.utils.group import check_group_label
-
-        if "group_label" not in self.parameters.keys():
-            raise KeyError("Missing compulsory group_label key in pipeline parameter.")
         self.parameters.setdefault("tissues", [1, 2, 3])
-        check_group_label(self.parameters["group_label"])
 
     def get_input_fields(self) -> List[str]:
         """Specify the list of possible inputs of this pipeline.
@@ -53,7 +48,11 @@ class T1VolumeRegisterDartel(Pipeline):
             t1_volume_dartel_input_tissue,
             t1_volume_i_th_iteration_group_template,
         )
-        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
+        from clinica.utils.inputs import (
+            clinica_file_reader,
+            clinica_group_reader,
+            clinica_list_of_files_reader,
+        )
         from clinica.utils.ux import print_images_to_process
 
         read_input_node = npe.Node(
@@ -67,18 +66,19 @@ class T1VolumeRegisterDartel(Pipeline):
 
         # Dartel Input Tissues
         # ====================
-        d_input = []
-        for tissue_number in self.parameters["tissues"]:
-            try:
-                current_file, _ = clinica_file_reader(
-                    self.subjects,
-                    self.sessions,
-                    self.caps_directory,
-                    t1_volume_dartel_input_tissue(tissue_number),
-                )
-                d_input.append(current_file)
-            except ClinicaException as e:
-                all_errors.append(e)
+        try:
+            d_input = clinica_list_of_files_reader(
+                self.subjects,
+                self.sessions,
+                self.caps_directory,
+                [
+                    t1_volume_dartel_input_tissue(tissue_number)
+                    for tissue_number in self.parameters["tissues"]
+                ],
+            )
+            read_input_node.inputs.dartel_input_images = d_input
+        except ClinicaException as e:
+            all_errors.append(e)
 
         # Dartel Templates
         # ================
@@ -87,22 +87,19 @@ class T1VolumeRegisterDartel(Pipeline):
             try:
                 current_iter = clinica_group_reader(
                     self.caps_directory,
-                    t1_volume_i_th_iteration_group_template(
-                        self.parameters["group_label"], i
-                    ),
+                    t1_volume_i_th_iteration_group_template(str(self.group_label), i),
                 )
 
                 dartel_iter_templates.append(current_iter)
             except ClinicaException as e:
                 all_errors.append(e)
 
-        if len(all_errors) > 0:
+        if any(all_errors):
             error_message = "Clinica faced error(s) while trying to read files in your CAPS/BIDS directories.\n"
             for msg in all_errors:
                 error_message += str(msg)
             raise ClinicaCAPSError(error_message)
 
-        read_input_node.inputs.dartel_input_images = d_input
         read_input_node.inputs.dartel_iteration_templates = dartel_iter_templates
 
         if len(self.subjects):
@@ -144,8 +141,7 @@ class T1VolumeRegisterDartel(Pipeline):
             + self.subjects[i]
             + "/"
             + self.sessions[i]
-            + "/t1/spm/dartel/group-"
-            + self.parameters["group_label"]
+            + f"/t1/spm/dartel/{self.group_id}"
             for i in range(len(self.subjects))
         ]
         write_flowfields_node.inputs.regexp_substitutions = [
@@ -161,7 +157,7 @@ class T1VolumeRegisterDartel(Pipeline):
             (
                 r"(.*)flow_fields/u_(sub-.*)_segm-.*(\.nii(\.gz)?)$",
                 r"\1\2_target-"
-                + re.escape(self.parameters["group_label"])
+                + re.escape(str(self.group_label))
                 + r"_transformation-forward_deformation\3",
             ),
             (r"trait_added", r""),

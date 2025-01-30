@@ -1,6 +1,12 @@
 <!-- markdownlint-disable MD007 MD046 -->
 # `adni-to-bids` – Conversion of the Alzheimer’s Disease Neuroimaging Initiative (ADNI) to BIDS
 
+!!! warning "October 2024 ADNI new download interface"
+    The LONI Image and Data Archive is currently refactoring the ADNI data download interface.
+    Because of the ongoing modifications, both the documentation and the code of this converter are not up-to-date.
+    The Clinica team will work on updating the converter once the interface stabilizes.
+    In the mean-time, we recommend using previous versions of the downloaded clinical data (before sept. 2024).
+
 ??? quote "Description adapted from the [ADNI website](http://adni.loni.usc.edu)"
     ADNI is a global research effort that actively supports the investigation and development of treatments that slow or stop the progression of Alzheimer's disease (AD).
     This multisite, longitudinal study assesses clinical, imaging, genetic and biospecimen biomarkers through the process of normal aging to mild cognitive impairment (MCI) and AD dementia.

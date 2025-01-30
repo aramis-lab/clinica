@@ -20,7 +20,15 @@ __all__ = [
     "write_scans",
     "write_participants",
     "check_modalities",
+    "write_dwi_b_values",
 ]
+
+
+def write_dwi_b_values(bids_dir: Path) -> None:
+    """Writes DWI bval and bvec files at the root of the BIDS directory"""
+    b_folder = Path(__file__).parents[0] / "dwi_b_files"
+    shutil.copy(b_folder / "bvals.txt", bids_dir / "dwi.bval")
+    shutil.copy(b_folder / "bvecs.txt", bids_dir / "dwi.bvec")
 
 
 def _get_subjects_list_from_data(data_directory: Path) -> List[str]:
@@ -308,7 +316,7 @@ def _write_subject_dti_if_exists(
 
 
 def _find_subject_dti_data(data_directory: Path, subject: str) -> List[Path]:
-    pattern = subject + r"(-\w*){2}-DTI(-\w*){1}.nii.gz$"
+    pattern = subject + r"(-\w*){2}-DTI(-(0[1-9]|[1-9][0-9])){1}.nii.gz$"
     return [
         path
         for path in data_directory.rglob(pattern="IXI*.nii.gz")
@@ -377,7 +385,7 @@ def write_participants(
     participants : List of converted subjects study source ids.
     """
     clinical_data.set_index("source_id", inplace=True, drop=False)
-    clinical_data.assign(
+    clinical_data = clinical_data.assign(
         participant_id=clinical_data.source_id.apply(
             lambda x: bids_id_factory(StudyName.IXI).from_original_study_id(x)
         )

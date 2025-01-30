@@ -60,7 +60,10 @@ class T1FreeSurferLongitudinalCorrection(Pipeline):
         )
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.input_files import T1_FS_DESTRIEUX, T1_FS_T_DESTRIEUX
-        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.inputs import (
+            clinica_file_reader,
+            format_clinica_file_reader_errors,
+        )
         from clinica.utils.stream import cprint
 
         from .utils import (
@@ -117,26 +120,19 @@ class T1FreeSurferLongitudinalCorrection(Pipeline):
                     to_process_ids
                 )
 
-        all_errors = []
-        try:
-            # Check that t1-freesurfer has run on the CAPS directory
-            clinica_file_reader(
-                self.subjects, self.sessions, self.caps_directory, T1_FS_DESTRIEUX
-            )
-        except ClinicaException as e:
-            all_errors.append(e)
-        try:
-            # Check that t1-freesurfer-template has run on the CAPS directory
-            clinica_file_reader(
-                self.subjects, list_long_id, self.caps_directory, T1_FS_T_DESTRIEUX
-            )
-        except ClinicaException as e:
-            all_errors.append(e)
-        if len(all_errors) > 0:
-            error_message = "Clinica faced errors while trying to read files in your CAPS directory.\n"
-            for msg in all_errors:
-                error_message += str(msg)
-            raise ClinicaException(error_message)
+        _, errors_destrieux = clinica_file_reader(
+            self.subjects, self.sessions, self.caps_directory, T1_FS_DESTRIEUX
+        )
+        _, errors_t_destrieux = clinica_file_reader(
+            self.subjects, list_long_id, self.caps_directory, T1_FS_T_DESTRIEUX
+        )
+        all_errors = [errors_destrieux, errors_t_destrieux]
+
+        if any(all_errors):
+            message = "Clinica faced errors while trying to read files in your CAPS directory.\n"
+            for error, info in zip(all_errors, [T1_FS_DESTRIEUX, T1_FS_T_DESTRIEUX]):
+                message += format_clinica_file_reader_errors(error, info)
+            raise ClinicaException(message)
 
         save_part_sess_long_ids_to_tsv(
             self.subjects, self.sessions, list_long_id, self.base_dir / self.name

@@ -6,6 +6,57 @@ from unittest.mock import patch
 import pytest
 
 
+def build_folder_with_specific_modalities(tmp_path: Path) -> Path:
+    bids_path = tmp_path / "BIDS"
+    bids_path.mkdir()
+
+    (bids_path / "sub-1_ses-1_T1w.nii.gz").touch()
+    (bids_path / "sub-2_ses-1_T1w.nii.gz").touch()
+    (bids_path / "sub-2_ses-2_pet.nii.gz").touch()
+    (bids_path / "sub-2_ses-2_T1toto.nii.gz").touch()
+
+    return bids_path
+
+
+@pytest.mark.parametrize(
+    "modalities, expected",
+    [
+        (
+            None,
+            {
+                "sub-1_ses-1_T1w.nii.gz",
+                "sub-2_ses-1_T1w.nii.gz",
+                "sub-2_ses-2_pet.nii.gz",
+                "sub-2_ses-2_T1toto.nii.gz",
+            },
+        ),
+        (("T1w",), {"sub-1_ses-1_T1w.nii.gz", "sub-2_ses-1_T1w.nii.gz"}),
+        (
+            ("T1",),
+            {
+                "sub-1_ses-1_T1w.nii.gz",
+                "sub-2_ses-1_T1w.nii.gz",
+                "sub-2_ses-2_T1toto.nii.gz",
+            },
+        ),
+        (
+            ("t1w", "pet"),
+            {
+                "sub-1_ses-1_T1w.nii.gz",
+                "sub-2_ses-1_T1w.nii.gz",
+                "sub-2_ses-2_pet.nii.gz",
+            },
+        ),
+    ],
+)
+def test_find_files_with_modality(tmp_path, modalities, expected):
+    from clinica.iotools.utils.data_handling._centering import _find_files_with_modality
+
+    bids_path = build_folder_with_specific_modalities(tmp_path)
+    result = _find_files_with_modality(bids_path, modalities)
+    assert set(r.name for r in result) == expected
+
+
 def test_center_nifti_error(tmp_path):
     from clinica.iotools.utils import center_nifti
     from clinica.utils.exceptions import ClinicaExistingDatasetError

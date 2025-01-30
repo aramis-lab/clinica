@@ -11,16 +11,16 @@ Future versions will include more extensive support of genotyping data and clini
 
 ## What are the main features of Clinica?
 
-- Neuroimaging data analysis
-  - Anatomical MRI
-  - Diffusion MRI
-  - [PET](glossary.md#pet)
+- Neuroimaging data analysis:
+    - anatomical MRI
+    - diffusion MRI
+    - [PET](glossary.md#pet)
 - Statistical analysis
 - Machine learning
 - Data management made easy:
-  - Standardized data structures for inputs
-  - Standardized data structures for outputs
-  - Conversion of datasets
+    - standardized data structures for inputs
+    - standardized data structures for outputs
+    - conversion of datasets
 
 ## Which technologies underlie Clinica?
 

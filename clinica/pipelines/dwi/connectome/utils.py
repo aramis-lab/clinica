@@ -59,9 +59,9 @@ def _download_mrtrix3_file(filename: str, path_to_mappings: Path) -> Path:
 
 def _get_checksum_for_filename(filename: str) -> str:
     if filename == "fs_default.txt":
-        return "a8d561694887a1ca8d9df223aa5ef861b6c79d43ce9ed93835b9ce8aadc331b1"
+        return "bfebee26de22dc4cd03d5ee3f26524b046cce232679e1ba1bc26f18180d491f1"
     if filename == "fs_a2009s.txt":
-        return "40b0d4d77bde7e1d265439347af5b30cc973748c1a88d203d7044cb35b3863e1"
+        return "ae9660f2a9fb44b7d828dcf1f390ce81ed600471810af89042ba011c7a2a675f"
     raise ValueError(f"File name {filename} is not supported.")
 
 

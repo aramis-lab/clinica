@@ -20,7 +20,6 @@ pipeline_name = "pet-surface"
 @cli_param.option.reconstruction_method
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
-@cli_param.option.yes
 @option.global_option_group
 @option.n_procs
 def cli(
@@ -33,7 +32,6 @@ def cli(
     subjects_sessions_tsv: Optional[str] = None,
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
-    yes: bool = False,
 ) -> None:
     """Surface-based processing of PET images.
 
@@ -61,7 +59,6 @@ def cli(
         "reconstruction_method": reconstruction_method,
         "pvc_psf_tsv": pvc_psf_tsv,
         "longitudinal": False,
-        "skip_question": yes,
     }
 
     pipeline = PetSurface(

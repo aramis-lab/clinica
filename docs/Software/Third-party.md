@@ -42,7 +42,7 @@ Some converters require **dcm2niix** to transform DICOM files into NIfTI :
 ### DCM2NIX
 
 !!! warning "Version required"
-    Clinica requires dcm2niix version `1.0.20190902` or later.
+    Clinica requires dcm2niix version `1.0.20230411` or later.
 
 Please check the installation instructions for all platforms on [dcm2niix Git repository](https://github.com/rordenlab/dcm2niix#install).
 

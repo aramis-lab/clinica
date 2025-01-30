@@ -68,7 +68,6 @@ def test_check_relative_volume_location_in_world_coordinate_system(tmp_path, moc
             ],
             tmp_path / "bids",
             "T1W",
-            skip_question=True,
         )
 
 

@@ -7,7 +7,7 @@
 *[FWHM] : Full Width at Half Maximum
 *[GLM] : Generalized Linear Model
 *[JSON] : JavaScript Object Notation
-*[MRI] : Medical Resonance Imaging
+*[MRI] : Magnetic Resonance Imaging
 *[PD] : Phase Difference
 *[PET] : Positron Emission Tomography
 *[PSF] : Point Spread Function

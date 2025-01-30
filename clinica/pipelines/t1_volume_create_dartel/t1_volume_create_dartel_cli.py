@@ -44,7 +44,7 @@ def cli(
 
     from .t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
 
-    parameters = {"group_label": group_label, "dartel_tissues": dartel_tissues}
+    parameters = {"dartel_tissues": dartel_tissues}
 
     pipeline = T1VolumeCreateDartel(
         bids_directory=bids_directory,
@@ -54,6 +54,7 @@ def cli(
         parameters=parameters,
         name=pipeline_name,
         caps_name=caps_name,
+        group_label=group_label,
     )
 
     exec_pipeline = (

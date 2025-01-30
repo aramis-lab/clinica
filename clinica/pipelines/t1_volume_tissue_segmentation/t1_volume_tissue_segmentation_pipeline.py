@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List
 
 from nipype import config
@@ -73,31 +74,27 @@ class T1VolumeTissueSegmentation(Pipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.iotools.utils.data_handling import (
-            check_volume_location_in_world_coordinate_system,
+            are_images_centered_around_origin_of_world_coordinate_system,
         )
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.input_files import T1W_NII
-        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.inputs import clinica_file_filter
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
         # Inputs from anat/ folder
         # ========================
         # T1w file:
-        try:
-            t1w_files, _ = clinica_file_reader(
-                self.subjects, self.sessions, self.bids_directory, T1W_NII
-            )
-        except ClinicaException as e:
-            err = f"Clinica faced error(s) while trying to read files in your BIDS directory.\n{str(e)}"
-            raise ClinicaBIDSError(err)
-
-        check_volume_location_in_world_coordinate_system(
-            t1w_files,
-            self.bids_directory,
-            skip_question=self.parameters["skip_question"],
+        t1w_files, subjects, sessions = clinica_file_filter(
+            self.subjects, self.sessions, self.bids_directory, T1W_NII
         )
+        self.subjects = subjects
+        self.sessions = sessions
 
+        are_images_centered_around_origin_of_world_coordinate_system(
+            [Path(f) for f in t1w_files],
+            self.bids_directory,
+        )
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
             cprint("The pipeline will last approximately 10 minutes per image.")

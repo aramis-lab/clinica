@@ -5,7 +5,10 @@ def test_pet_volume_info_loading(tmp_path):
     from clinica.pipelines.pet.volume.pipeline import PETVolume
 
     bids = build_bids_directory(tmp_path / "bids", {"sub-01": ["ses-M00"]})
-    pipeline = PETVolume(bids_directory=str(bids))
+    caps = tmp_path / "caps"
+    pipeline = PETVolume(
+        bids_directory=str(bids), caps_directory=str(caps), group_label="test"
+    )
 
     assert pipeline.info == {
         "id": "aramislab/pet-volume",
@@ -29,7 +32,10 @@ def test_pet_volume_dependencies(tmp_path, mocker):
         return_value=Version("12.7219"),
     )
     bids = build_bids_directory(tmp_path / "bids", {"sub-01": ["ses-M00"]})
-    pipeline = PETVolume(bids_directory=str(bids))
+    caps = tmp_path / "caps"
+    pipeline = PETVolume(
+        bids_directory=str(bids), caps_directory=str(caps), group_label="test"
+    )
 
     assert pipeline.dependencies == [
         SoftwareDependency(

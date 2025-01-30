@@ -1,7 +1,10 @@
 from pathlib import Path
-from typing import List, Optional
+from typing import Callable, Iterator, Optional, Union
 
+import numpy as np
 import pandas as pd
+
+from clinica.iotools.bids_utils import StudyName, bids_id_factory
 
 __all__ = [
     "create_participants_tsv_file",
@@ -11,7 +14,7 @@ __all__ = [
 
 
 def create_participants_tsv_file(
-    input_path: Path,
+    bids_path: Path,
     clinical_specifications_folder: Path,
     clinical_data_dir: Path,
     delete_non_bids_info: bool = True,
@@ -21,8 +24,8 @@ def create_participants_tsv_file(
 
     Parameters
     ----------
-    input_path : Path
-        The path to the input directory.
+    bids_path : Path
+        The path to the BIDS directory.
 
     clinical_specifications_folder : Path
         The path to the folder containing the clinical specification files.
@@ -35,101 +38,58 @@ def create_participants_tsv_file(
         available in the BIDS dataset.
         Default=True.
     """
-    import glob
-    import os
-    from os import path
+    from clinica.utils.stream import cprint
 
-    import numpy as np
-
-    from clinica.iotools.bids_utils import StudyName, bids_id_factory
-
-    fields_bids = ["participant_id"]
-    fields_dataset = []
+    study = StudyName.AIBL
     prev_location = ""
-    prev_sheet = ""
-    index_to_drop = []
 
     specifications = _load_specifications(
         clinical_specifications_folder, "participant.tsv"
-    )
-    participant_fields_db = specifications[StudyName.AIBL.value]
-    field_location = specifications[f"{StudyName.AIBL.value} location"]
-    participant_fields_bids = specifications["BIDS CLINICA"]
+    )[[study.value, f"{study.value} location", "BIDS CLINICA"]].dropna()
 
-    # Extract the list of the available fields for the dataset (and the corresponding BIDS version)
-    for i in range(0, len(participant_fields_db)):
-        if not pd.isnull(participant_fields_db[i]):
-            fields_bids.append(participant_fields_bids[i])
-            fields_dataset.append(participant_fields_db[i])
-
-    # Init the dataframe that will be saved in the file participant.tsv
-    participant_df = pd.DataFrame(columns=fields_bids)
-
-    for i in range(0, len(participant_fields_db)):
-        # If a field not empty is found
-        if not pd.isnull(participant_fields_db[i]):
-            # Extract the file location of the field and read the value from the file
-            tmp = field_location[i].split("/")
-            location = tmp[0]
-            # If a sheet is available
-            sheet = tmp[1] if len(tmp) > 1 else ""
-            # Check if the file to open for a certain field it's the same of the previous field
-            if location == prev_location and sheet == prev_sheet:
-                pass
-            else:
-                file_ext = os.path.splitext(location)[1]
-                file_to_read_path = path.join(clinical_data_dir, location)
-
-                if file_ext == ".xlsx":
-                    file_to_read = pd.read_excel(
-                        glob.glob(file_to_read_path)[0], sheet_name=sheet
-                    )
-                elif file_ext == ".csv":
-                    file_to_read = pd.read_csv(glob.glob(file_to_read_path)[0])
-                prev_location = location
-                prev_sheet = sheet
-
-            field_col_values = []
-            # For each field in fields_dataset extract all the column values
-            for j in range(0, len(file_to_read)):
-                # Convert the alternative_id_1 to string if is an integer/float
-                if participant_fields_bids[i] == "alternative_id_1" and (
-                    file_to_read[participant_fields_db[i]].dtype == np.float64
-                    or file_to_read[participant_fields_db[i]].dtype == np.int64
-                ):
-                    if not pd.isnull(file_to_read.at[j, participant_fields_db[i]]):
-                        # value_to_append = str(file_to_read.get_value(j, participant_fields_db[i])).rstrip('.0')
-                        value_to_append = str(
-                            file_to_read.at[j, participant_fields_db[i]]
-                        )
-                    else:
-                        value_to_append = "n/a"
-                else:
-                    value_to_append = file_to_read.at[j, participant_fields_db[i]]
-                field_col_values.append(value_to_append)
-            # Add the extracted column to the participant_df
-            participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
+    participant_df = pd.DataFrame()
+    for _, row in specifications.iterrows():
+        if (location := row[f"{study.value} location"]) != prev_location:
+            file_to_read = _load_metadata_from_pattern(clinical_data_dir, location)
+            prev_location = location
+        participant_df[row["BIDS CLINICA"]] = file_to_read[row[study.value]].astype(str)
 
     # Compute BIDS-compatible participant ID.
-    participant_df["participant_id"] = participant_df["alternative_id_1"].apply(
-        lambda x: bids_id_factory(StudyName.AIBL).from_original_study_id(x)
+    participant_df.insert(
+        0,
+        "participant_id",
+        participant_df["alternative_id_1"].apply(
+            lambda x: bids_id_factory(StudyName.AIBL).from_original_study_id(x)
+        ),
     )
+    participant_df.drop(labels="alternative_id_1", axis=1, inplace=True)
+
     # Keep year-of-birth only.
     participant_df["date_of_birth"] = participant_df["date_of_birth"].str.extract(
         r"/(\d{4}).*"
     )
     # Normalize sex value.
-    participant_df["sex"] = participant_df["sex"].map({1: "M", 2: "F"}).fillna("n/a")
-
+    participant_df["sex"] = participant_df["sex"].map({"1": "M", "2": "F"})
     # Normalize known NA values.
-    participant_df.replace(-4, "n/a", inplace=True)
+    participant_df.fillna("n/a", inplace=True)
+    participant_df.replace("-4", "n/a", inplace=True)
 
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
-        participant_df = participant_df.drop(index_to_drop)
+        subjects_to_keep = [d.name for d in bids_path.glob("sub-*")]
+        participant_df.set_index("participant_id", inplace=True, drop=False)
+        for subject in subjects_to_keep:
+            if subject not in participant_df.index:
+                cprint(
+                    f"No clinical data was found for participant {subject}.",
+                    lvl="warning",
+                )
+                participant_df.loc[subject] = "n/a"
+                participant_df.loc[subject, "participant_id"] = subject
+        participant_df = participant_df.loc[subjects_to_keep]
 
     participant_df.to_csv(
-        input_path / "participants.tsv",
+        bids_path / "participants.tsv",
         sep="\t",
         index=False,
         encoding="utf8",
@@ -148,17 +108,92 @@ def _load_specifications(
     return pd.read_csv(specifications, sep="\t")
 
 
+def _load_metadata_from_pattern(
+    clinical_dir: Path,
+    pattern: str,
+    on_bad_lines: Optional[Union[str, Callable]] = "error",
+) -> pd.DataFrame:
+    try:
+        return pd.read_csv(
+            next(clinical_dir.glob(pattern)),
+            dtype={"text": str},
+            sep=",",
+            engine="python",
+            on_bad_lines=on_bad_lines,
+        )
+    except StopIteration:
+        raise FileNotFoundError(
+            f"Clinical data file corresponding to pattern {pattern} was not found in folder "
+            f"{clinical_dir}"
+        )
+
+
+def _map_diagnosis(diagnosis: int) -> str:
+    if diagnosis == 1:
+        return "CN"
+    elif diagnosis == 2:
+        return "MCI"
+    elif diagnosis == 3:
+        return "AD"
+    else:
+        return "n/a"
+
+
+def _format_metadata_for_rid(
+    input_df: pd.DataFrame, source_id: int, bids_metadata: str, source_metadata: str
+) -> pd.DataFrame:
+    from clinica.iotools.converter_utils import viscode_to_session
+
+    extract = input_df.loc[(input_df["RID"] == source_id), ["VISCODE", source_metadata]]
+    extract.rename(columns={source_metadata: bids_metadata}, inplace=True)
+    extract = extract.assign(
+        session_id=extract.VISCODE.apply(lambda x: viscode_to_session(x))
+    )
+    extract.drop(labels="VISCODE", inplace=True, axis=1)
+    extract.set_index("session_id", inplace=True, drop=True)
+
+    return extract
+
+
+def _compute_age_at_exam(
+    birth_date: Optional[str], exam_date: Optional[str]
+) -> Optional[int]:
+    from datetime import datetime
+
+    if birth_date and exam_date:
+        date_of_birth = datetime.strptime(birth_date, "/%Y")
+        exam_date = datetime.strptime(exam_date, "%m/%d/%Y")
+        return exam_date.year - date_of_birth.year
+    return None
+
+
+def _set_age_from_birth(df: pd.DataFrame) -> pd.DataFrame:
+    if "date_of_birth" not in df.columns or "examination_date" not in df.columns:
+        raise ValueError(
+            "Columns date_of_birth or/and examination_date were not found in the sessions metadata dataframe."
+            "Please check your study metadata."
+        )
+    if len(df["date_of_birth"].dropna().unique()) <= 1:
+        df["date_of_birth"] = df["date_of_birth"].ffill()
+        df["age"] = df.apply(
+            lambda x: _compute_age_at_exam(x.date_of_birth, x.examination_date), axis=1
+        )
+    else:
+        df["age"] = None
+    return df.drop(labels="date_of_birth", axis=1)
+
+
 def create_sessions_tsv_file(
-    input_path: Path,
+    bids_dir: Path,
     clinical_data_dir: Path,
     clinical_specifications_folder: Path,
 ) -> None:
-    """Extract the information regarding the sessions and save them in a tsv file.
+    """Extract the information regarding a subject sessions and save them in a tsv file.
 
     Parameters
     ----------
-    input_path : Path
-        The path to the input folder.
+    bids_dir : Path
+        The path to the BIDS directory.
 
     clinical_data_dir : Path
         The path to the directory to the clinical data files.
@@ -166,213 +201,109 @@ def create_sessions_tsv_file(
     clinical_specifications_folder : Path
         The path to the folder containing the clinical specification files.
     """
-    import glob
+    from clinica.iotools.bids_utils import (
+        get_bids_sess_list,
+        get_bids_subjs_list,
+    )
 
-    from clinica.iotools.bids_utils import StudyName, bids_id_factory
-
+    study = StudyName.AIBL.value
     specifications = _load_specifications(
         clinical_specifications_folder, "sessions.tsv"
-    )
-    sessions_fields = specifications[StudyName.AIBL.value]
-    field_location = specifications[f"{StudyName.AIBL.value} location"]
-    sessions_fields_bids = specifications["BIDS CLINICA"]
-    fields_dataset = []
-    fields_bids = []
+    )[["BIDS CLINICA", f"{study} location", study]].dropna()
 
-    for i in range(0, len(sessions_fields)):
-        if not pd.isnull(sessions_fields[i]):
-            fields_bids.append(sessions_fields_bids[i])
-            fields_dataset.append(sessions_fields[i])
-
-    files_to_read: List[str] = []
-    sessions_fields_to_read: List[str] = []
-    for i in range(0, len(sessions_fields)):
-        # If the i-th field is available
-        if not pd.isnull(sessions_fields[i]):
-            # Load the file
-            file_to_read_path = clinical_data_dir / field_location[i]
-            files_to_read.append(glob.glob(str(file_to_read_path))[0])
-            sessions_fields_to_read.append(sessions_fields[i])
-
-    rids = pd.read_csv(files_to_read[0], dtype={"text": str}, low_memory=False).RID
-    unique_rids = list(set(rids))
-    for rid in unique_rids:
-        for file in files_to_read:
-            df = pd.read_csv(file, dtype={"text": str})
-            if len(df.columns) == 1:
-                df = pd.read_csv(file, sep=";", low_memory=False)
-
-            visit_code = df.loc[(df["RID"] == rid), "VISCODE"]
-
-            for field in sessions_fields_to_read:
-                if field in list(df.columns.values) and field == "MMSCORE":
-                    mm_score = df.loc[(df["RID"] == rid), field]
-                    mm_score[mm_score == -4] = "n/a"
-
-                elif field in list(df.columns.values) and field == "CDGLOBAL":
-                    cd_global = df.loc[(df["RID"] == rid), field]
-                    cd_global[cd_global == -4] = "n/a"
-
-                elif field in list(df.columns.values) and field == "DXCURREN":
-                    dx_curren = df.loc[(df["RID"] == rid), field]
-                    dx_curren[dx_curren == -4] = "n/a"
-                    dx_curren[dx_curren == 1] = "CN"
-                    dx_curren[dx_curren == 2] = "MCI"
-                    dx_curren[dx_curren == 3] = "AD"
-
-                elif field in list(df.columns.values) and field == "EXAMDATE":
-                    exam_date = df.loc[(df["RID"] == rid), field]
-
-                elif field in list(df.columns.values) and field == "PTDOB":
-                    patient_date_of_birth = df.loc[(df["RID"] == rid), field]
-
-        exam_dates = _clean_exam_dates(
-            rid, exam_date.to_list(), visit_code.to_list(), clinical_data_dir
-        )
-        age = _compute_ages_at_each_exam(patient_date_of_birth.values[0], exam_dates)
-
-        visit_code[visit_code == "bl"] = "M000"
-        visit_code = visit_code.str.upper()
-
+    for bids_id in get_bids_subjs_list(bids_dir):
+        rid = int(bids_id_factory(study)(bids_id).to_original_study_id())
         sessions = pd.DataFrame(
-            {
-                "months": visit_code.str[1:],
-                "age": age,
-                "MMS": mm_score,
-                "cdr_global": cd_global,
-                "diagnosis": dx_curren,
-                "examination_date": exam_dates,
-            }
+            {"session_id": get_bids_sess_list(bids_dir / bids_id)}
+        ).set_index("session_id", drop=False)
+
+        for _, row in specifications.iterrows():
+            df = _load_metadata_from_pattern(
+                clinical_data_dir, row[f"{study} location"]
+            )
+            data = _format_metadata_for_rid(
+                input_df=df,
+                source_id=rid,
+                bids_metadata=row["BIDS CLINICA"],
+                source_metadata=row[study],
+            )
+            sessions = pd.concat([sessions, data], axis=1)
+
+        sessions.sort_index(inplace=True)
+
+        # -4 are considered missing values in AIBL
+        sessions.replace([-4, "-4", np.nan], None, inplace=True)
+        sessions["diagnosis"] = sessions.diagnosis.apply(lambda x: _map_diagnosis(x))
+        sessions["examination_date"] = sessions.apply(
+            lambda x: _complete_examination_dates(
+                rid, clinical_data_dir, x.session_id, x.examination_date
+            ),
+            axis=1,
         )
-        sessions = sessions.assign(
-            session_id=lambda df: df.months.apply(lambda x: f"ses-M{int(x):03d}")
-        )
-        cols = sessions.columns.tolist()
-        sessions = sessions[cols[-1:] + cols[:-1]]
+        sessions = _set_age_from_birth(sessions)
+
+        # in case there is a session in clinical data that was not actually converted
+        sessions.dropna(subset=["session_id"], inplace=True)
+        sessions.fillna("n/a", inplace=True)
 
         bids_id = bids_id_factory(StudyName.AIBL).from_original_study_id(str(rid))
-
-        bids_paths = input_path / bids_id
-        if bids_paths.exists():
-            sessions.to_csv(
-                input_path / bids_id / f"{bids_id}_sessions.tsv",
-                sep="\t",
-                index=False,
-                encoding="utf8",
-            )
+        sessions.to_csv(
+            bids_dir / bids_id / f"{bids_id}_sessions.tsv",
+            sep="\t",
+            index=False,
+            encoding="utf8",
+        )
 
 
-def _clean_exam_dates(
-    rid: str, exam_dates: List[str], visit_codes: List[str], clinical_data_dir: Path
-) -> List[str]:
-    """Clean the exam dates when necessary by trying to compute them from other sources."""
-    from clinica.utils.stream import cprint
-
-    exam_dates_cleaned: List[str] = []
-    for visit_code, exam_date in zip(visit_codes, exam_dates):
-        if exam_date == "-4":
-            exam_date = _find_exam_date_in_other_csv_files(
-                rid, visit_code, clinical_data_dir
-            ) or _compute_exam_date_from_baseline(visit_code, exam_dates, visit_codes)
-            if not exam_date:
-                cprint(f"No EXAMDATE for subject %{rid}, at session {visit_code}")
-                exam_date = "-4"
-        exam_dates_cleaned.append(exam_date)
-
-    return exam_dates_cleaned
+def _complete_examination_dates(
+    rid: int,
+    clinical_data_dir: Path,
+    session_id: Optional[str] = None,
+    examination_date: Optional[str] = None,
+) -> Optional[str]:
+    if examination_date:
+        return examination_date
+    if session_id:
+        return _find_exam_date_in_other_csv_files(rid, session_id, clinical_data_dir)
+    return None
 
 
 def _find_exam_date_in_other_csv_files(
-    rid: str, visit_code: str, clinical_data_dir: Path
+    rid: int, session_id: str, clinical_data_dir: Path
 ) -> Optional[str]:
     """Try to find an alternative exam date by searching in other CSV files."""
-    for csv_file in _get_cvs_files(clinical_data_dir):
-        if "aibl_flutemeta" in csv_file:
-            csv_data = pd.read_csv(
-                csv_file, low_memory=False, usecols=list(range(0, 36))
-            )
-        else:
-            csv_data = pd.read_csv(csv_file, low_memory=False)
-        exam_date = csv_data[(csv_data.RID == rid) & (csv_data.VISCODE == visit_code)]
+    from clinica.iotools.converter_utils import viscode_to_session
+
+    for csv in _get_csv_files_for_alternative_exam_date(clinical_data_dir):
+        csv_data = pd.read_csv(csv, low_memory=False)
+        csv_data["SESSION"] = csv_data.VISCODE.apply(lambda x: viscode_to_session(x))
+        exam_date = csv_data[(csv_data.RID == rid) & (csv_data.SESSION == session_id)]
         if not exam_date.empty and exam_date.iloc[0].EXAMDATE != "-4":
             return exam_date.iloc[0].EXAMDATE
     return None
 
 
-def _get_cvs_files(clinical_data_dir: Path) -> List[str]:
+def _get_csv_files_for_alternative_exam_date(
+    clinical_data_dir: Path,
+) -> Iterator[Path]:
     """Return a list of paths to CSV files in which an alternative exam date could be found."""
-    import glob
 
-    return [
-        glob.glob(str(clinical_data_dir / pattern))[0]
-        for pattern in (
-            "aibl_mri3meta_*.csv",
-            "aibl_mrimeta_*.csv",
-            "aibl_cdr_*.csv",
-            "aibl_flutemeta_*.csv",
-            "aibl_mmse_*.csv",
-            "aibl_pibmeta_*.csv",
-        )
-    ]
-
-
-def _compute_exam_date_from_baseline(
-    visit_code: str, exam_dates: List[str], visit_codes: List[str]
-) -> Optional[str]:
-    """Try to find an alternative exam date by computing the number of months from the visit code."""
-    from datetime import datetime
-
-    from dateutil.relativedelta import relativedelta
-
-    baseline_index = visit_codes.index("bl")
-    if baseline_index > -1:
-        baseline_date = datetime.strptime(exam_dates[baseline_index], "%m/%d/%Y")
-        if visit_code != "bl":
-            try:
-                months = int(visit_code[1:])
-            except TypeError:
-                raise ValueError(
-                    f"Unexpected visit code {visit_code}. Should be in format MXXX."
-                    "Ex: M000, M006, M048..."
-                )
-            exam_date = baseline_date + relativedelta(months=+months)
-            return exam_date.strftime("%m/%d/%Y")
-    return None
-
-
-def _compute_ages_at_each_exam(
-    patient_date_of_birth: str, exam_dates: List[str]
-) -> List[float]:
-    """Compute the ages of the patient at each exam date.
-
-    Parameters
-    ----------
-    patient_date_of_birth : str
-        Date of birth of patient ("/%Y" format)
-
-    exam_dates : list of str
-        List of exam dates ("%m/%d/%Y" format)
-
-    Return
-    ------
-    list of float
-        The ages of the patient at each exam date.
-    """
-    from datetime import datetime
-
-    ages: List[float] = []
-    date_of_birth = datetime.strptime(patient_date_of_birth, "/%Y")
-
-    for exam_date in exam_dates:
-        exam_date = datetime.strptime(exam_date, "%m/%d/%Y")
-        delta = exam_date - date_of_birth
-        ages.append(round(delta.days / 365.25, 1))
-
-    return ages
+    for pattern in (
+        "aibl_mri3meta_*.csv",
+        "aibl_mrimeta_*.csv",
+        "aibl_cdr_*.csv",
+        "aibl_flutemeta_*.csv",
+        "aibl_mmse_*.csv",
+        "aibl_pibmeta_*.csv",
+    ):
+        try:
+            yield next(clinical_data_dir.glob(pattern))
+        except StopIteration:
+            continue
 
 
 def create_scans_tsv_file(
-    input_path: Path,
+    bids_path: Path,
     clinical_data_dir: Path,
     clinical_specifications_folder: Path,
 ) -> None:
@@ -380,8 +311,8 @@ def create_scans_tsv_file(
 
     Parameters
     ----------
-    input_path : Path
-        The path to the input folder.
+    bids_path : Path
+        The path to the BIDS folder.
 
     clinical_data_dir : Path
         The path to the directory to the clinical data files.
@@ -389,47 +320,182 @@ def create_scans_tsv_file(
     clinical_specifications_folder : Path
         The path to the folder containing the clinical specification files.
     """
-    import glob
-    from os import path
 
-    import clinica.iotools.bids_utils as bids
-
-    specifications = _load_specifications(clinical_specifications_folder, "scans.tsv")
-    scans_fields = specifications[bids.StudyName.AIBL.value]
-    field_location = specifications[f"{bids.StudyName.AIBL.value} location"]
-    scans_fields_bids = specifications["BIDS CLINICA"]
-    fields_dataset = []
-    fields_bids = []
-
-    # Keep only fields for which there are AIBL fields
-    for i in range(0, len(scans_fields)):
-        if not pd.isnull(scans_fields[i]):
-            fields_bids.append(scans_fields_bids[i])
-            fields_dataset.append(scans_fields[i])
-
-    files_to_read = []
-    sessions_fields_to_read = []
-    for i in range(0, len(scans_fields)):
-        # If the i-th field is available
-        if not pd.isnull(scans_fields[i]):
-            file_to_read_path = clinical_data_dir / field_location[i]
-            files_to_read.append(glob.glob(str(file_to_read_path))[0])
-            sessions_fields_to_read.append(scans_fields[i])
-
-    bids_ids = [
-        path.basename(sub_path) for sub_path in glob.glob(str(input_path / "sub-AIBL*"))
-    ]
-    ses_dict = {
-        bids_id: {"M000": "bl", "M018": "m18", "M036": "m36", "M054": "m54"}
-        for bids_id in bids_ids
-    }
-    scans_dict = bids.create_scans_dict(
+    scans_dict = _create_scans_dict(
         clinical_data_dir,
-        bids.StudyName.AIBL,
         clinical_specifications_folder,
-        bids_ids,
-        "RID",
-        "VISCODE",
-        ses_dict,
+        bids_path,
     )
-    bids.write_scans_tsv(input_path, bids_ids, scans_dict)
+    _write_scans_tsv(bids_path, scans_dict)
+
+
+def _handle_flutemeta_badline(line: list[str]) -> Optional[list[str]]:
+    """
+    Fix for malformed flutemeta file in AIBL (see #796).
+    Some flutemeta lines contain a non-coded string value at the second-to-last position. This value
+    contains a comma which adds an extra column and shifts the remaining values to the right. In this
+    case, we just remove the erroneous content and replace it with -4 which AIBL uses as n/a value.
+
+    Example : bad_line = ['618', '1', 'm18', ... , '1', 'measured', 'AUSTIN AC CT Brain  H19s', '0']
+    """
+
+    if line[-3] == "measured" and line[-2] == "AUSTIN AC CT Brain  H19s":
+        return line[:-3] + ["-4", line[-1]]
+
+
+def _init_scans_dict(bids_path: Path) -> dict:
+    from clinica.utils.pet import Tracer
+
+    bids_ids = (
+        sub_path.name
+        for sub_path in bids_path.rglob("./sub-AIBL*")
+        if sub_path.is_dir()
+    )
+
+    scans_dict = {}
+    for bids_id in bids_ids:
+        scans_dict[bids_id] = dict()
+        ses_list = (
+            ses_path.name
+            for ses_path in (bids_path / bids_id).rglob("ses-M*")
+            if ses_path.is_dir()
+        )
+        for session in ses_list:
+            scans_dict[bids_id][session] = {
+                "T1/DWI/fMRI/FMAP": {},
+                Tracer.PIB: {},
+                Tracer.AV45: {},
+                Tracer.FMM: {},
+            }
+    return scans_dict
+
+
+def _format_time(time: str) -> str:
+    import datetime
+
+    date_obj = datetime.datetime.strptime(time, "%m/%d/%Y")
+    return date_obj.strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def _create_scans_dict(
+    clinical_data_dir: Path,
+    clinical_specifications_folder: Path,
+    bids_path: Path,
+) -> dict:
+    """Create a dictionary containing metadata per subject/session to write in scans.tsv.
+
+    Parameters
+    ----------
+    clinical_data_dir : Path
+        The path to the directory where the clinical data are stored.
+
+    clinical_specifications_folder : Path
+        The path to the folder containing the clinical specification files.
+
+    bids_path: Path
+        The path to the BIDS directory.
+
+    Returns
+    -------
+    pd.DataFrame :
+        A pandas DataFrame that contains the scans information for all sessions of all participants.
+    """
+    from clinica.iotools.converter_utils import viscode_to_session
+
+    scans_dict = _init_scans_dict(bids_path)
+
+    study = StudyName.AIBL.value
+
+    scans_specs = _load_specifications(clinical_specifications_folder, "scans.tsv")[
+        [study, f"{study} location", "BIDS CLINICA", "Modalities related"]
+    ].dropna()
+
+    for _, row in scans_specs.iterrows():
+        on_bad_lines = (
+            _handle_flutemeta_badline
+            if "flutemeta" in row[f"{study} location"]
+            else "error"
+        )
+        file = _load_metadata_from_pattern(
+            clinical_data_dir, row[f"{study} location"], on_bad_lines
+        )
+        file["session_id"] = file["VISCODE"].apply(lambda x: viscode_to_session(x))
+
+        for bids_id in scans_dict.keys():
+            original_id = bids_id_factory(StudyName.AIBL)(
+                bids_id
+            ).to_original_study_id()
+            for session in scans_dict[bids_id].keys():
+                try:
+                    value = file[
+                        (file["RID"] == int(original_id))
+                        & (file["session_id"] == session)
+                    ][row[study]].item()
+                    if value == "-4":
+                        value = "n/a"
+                    elif row["BIDS CLINICA"] == "acq_time":
+                        value = _format_time(value)
+                except ValueError:
+                    value = "n/a"
+
+                modality = scans_dict[bids_id][session][row["Modalities related"]]
+
+                # Avoid writing over in case of modality "T1/..." because it is used twice
+                if (row["BIDS CLINICA"] not in modality) or (
+                    modality[row["BIDS CLINICA"]] == "n/a"
+                ):
+                    modality[row["BIDS CLINICA"]] = value
+    return scans_dict
+
+
+def _write_scans_tsv(bids_dir: Path, scans_dict: dict) -> None:
+    """Write the scans dict into TSV files.
+
+    Parameters
+    ----------
+    bids_dir : Path
+        The path to the BIDS directory.
+
+    scans_dict : dict
+        Dictionary containing scans metadata.
+
+        .. note::
+            This is the output of the function
+            `clinica.iotools.bids_utils.create_scans_dict`.
+
+    See also
+    --------
+    write_sessions_tsv
+    """
+
+    from clinica.iotools.bids_utils import get_pet_tracer_from_filename
+
+    supported_modalities = ("anat", "dwi", "func", "pet")
+
+    for subject in scans_dict:
+        for session in scans_dict[subject]:
+            scans_df = pd.DataFrame()
+            tsv_file = bids_dir / subject / session / f"{subject}_{session}_scans.tsv"
+            tsv_file.unlink(missing_ok=True)
+            for modality in [
+                mod
+                for mod in (bids_dir / subject / session).glob("*")
+                if mod.name in supported_modalities
+            ]:
+                for file in [
+                    file for file in modality.iterdir() if modality.suffix != ".json"
+                ]:
+                    f_type = (
+                        "T1/DWI/fMRI/FMAP"
+                        if modality.name in ("anat", "dwi", "func")
+                        else get_pet_tracer_from_filename(file.name).value
+                    )
+                    row_to_append = pd.DataFrame(
+                        scans_dict[subject][session][f_type], index=[0]
+                    )
+                    row_to_append.insert(
+                        0, "filename", f"{modality.name} / {file.name}"
+                    )
+                    scans_df = pd.concat([scans_df, row_to_append])
+                scans_df = scans_df.fillna("n/a")
+                scans_df.to_csv(tsv_file, sep="\t", encoding="utf8", index=False)

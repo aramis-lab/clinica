@@ -11,6 +11,7 @@ from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
     check_modalities,
     define_participants,
     read_clinical_data,
+    write_dwi_b_values,
     write_participants,
     write_scans,
     write_sessions,
@@ -64,6 +65,9 @@ def convert(
             bids_dir=bids_dir, participant=participant, clinical_data=clinical_data
         )
         write_scans(bids_dir=bids_dir, participant=participant)
+
+    if list(bids_dir.rglob("dwi")):
+        write_dwi_b_values(bids_dir=bids_dir)
 
     readme_data = {
         "link": "https://brain-development.org/ixi-dataset/",

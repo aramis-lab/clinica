@@ -3,6 +3,8 @@
 These functions are mainly called by the pipelines.
 """
 
+from pathlib import Path
+
 LINES_TO_DISPLAY = 25
 
 
@@ -139,18 +141,18 @@ def print_crash_files_and_exit(log_file, working_directory):
     raise ClinicaException("")
 
 
-def print_groups_in_caps_directory(caps_directory):
+def print_groups_in_caps_directory(caps_directory: Path):
     """Print group IDs based on `caps_directory`/groups folder."""
     from .stream import cprint
 
     cprint(_get_group_message(caps_directory))
 
 
-def _get_group_message(caps_directory: str) -> str:
+def _get_group_message(caps_directory: Path) -> str:
     from .group import extract_group_ids
 
     group_ids = extract_group_ids(caps_directory)
     if group_ids:
-        found_groups = ", ".join(g_id.replace("group-", "") for g_id in group_ids)
+        found_groups = ", ".join([str(group_id.label) for group_id in group_ids])
         return f"Groups that exist in your CAPS directory are {found_groups}."
     return "No group was found in CAPS directory"
