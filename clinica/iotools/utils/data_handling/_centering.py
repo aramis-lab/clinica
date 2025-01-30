@@ -278,6 +278,23 @@ def _find_files_with_modality(
     return nifti_files_filtered
 
 
+def _validate_bids_and_output_dir(
+    bids_dir: PathLike, output_dir: PathLike
+) -> Tuple[Path, Path]:
+    from clinica.utils.exceptions import ClinicaBIDSError
+    from clinica.utils.inputs import check_bids_folder
+
+    bids_dir = Path(bids_dir)
+    output_dir = Path(output_dir)
+    if bids_dir == output_dir:
+        raise ClinicaBIDSError(
+            f"Input BIDS ({bids_dir}) and output ({output_dir}) directories must be different."
+        )
+    check_bids_folder(bids_dir)
+
+    return bids_dir, output_dir
+
+
 def center_all_nifti(
     bids_dir: Union[str, PathLike],
     output_dir: Union[str, PathLike],
@@ -318,21 +335,10 @@ def center_all_nifti(
 
     from shutil import copy2, copytree
 
-    from clinica.utils.exceptions import ClinicaBIDSError
-    from clinica.utils.inputs import check_bids_folder
     from clinica.utils.stream import cprint
 
-    bids_dir = Path(bids_dir)
-    output_dir = Path(output_dir)
-    check_bids_folder(bids_dir)
-
-    if bids_dir == output_dir:
-        raise ClinicaBIDSError(
-            f"Input BIDS ({bids_dir}) and output ({output_dir}) directories must be different."
-        )
-
+    bids_dir, output_dir = _validate_bids_and_output_dir(bids_dir, output_dir)
     _handle_output_existing_files(output_dir, overwrite_existing_files)
-
     copytree(bids_dir, output_dir, copy_function=copy2)
 
     nifti_files_filtered = _find_files_with_modality(output_dir, modalities)
