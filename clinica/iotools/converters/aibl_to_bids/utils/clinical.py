@@ -49,10 +49,7 @@ def create_participants_tsv_file(
 
     participant_df = pd.DataFrame()
     for _, row in specifications.iterrows():
-        location = row[f"{study.value} location"]
-        if location == prev_location:
-            pass
-        else:
+        if (location := row[f"{study.value} location"]) != prev_location:
             file_to_read = _load_metadata_from_pattern(clinical_data_dir, location)
             prev_location = location
         participant_df[row["BIDS CLINICA"]] = file_to_read[row[study.value]].astype(str)
@@ -79,9 +76,9 @@ def create_participants_tsv_file(
 
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
-        keep = [d.name for d in bids_path.glob("sub-*")]
+        subjects_to_keep = [d.name for d in bids_path.glob("sub-*")]
         participant_df.set_index("participant_id", inplace=True, drop=False)
-        for subject in keep:
+        for subject in subjects_to_keep:
             if subject not in participant_df.index:
                 cprint(
                     f"No clinical data was found for participant {subject}.",
@@ -89,7 +86,7 @@ def create_participants_tsv_file(
                 )
                 participant_df.loc[subject] = "n/a"
                 participant_df.loc[subject, "participant_id"] = subject
-        participant_df = participant_df.loc[keep]
+        participant_df = participant_df.loc[subjects_to_keep]
 
     participant_df.to_csv(
         bids_path / "participants.tsv",
