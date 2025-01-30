@@ -59,7 +59,6 @@ def center_nifti(
             output_bids_directory,
             modalities=modalities,
             center_all_files=center_all_files,
-            overwrite_existing_files=False,  # todo : technically can remove this one
         )
     except ClinicaExistingDatasetError:
         click.echo(

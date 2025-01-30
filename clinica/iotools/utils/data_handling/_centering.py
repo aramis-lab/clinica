@@ -1,6 +1,6 @@
 from os import PathLike
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, Optional, Tuple
 
 import nibabel as nib
 import numpy as np
@@ -30,7 +30,6 @@ def validate_bids_and_output_dir(
             f"Input BIDS ({bids_dir}) and output ({output_dir}) directories must be different."
         )
     check_bids_folder(bids_dir)
-    # todo : should create output_dir if does not exist?
 
     if output_dir.exists():
         files = [
@@ -142,9 +141,9 @@ def are_images_centered_around_origin_of_world_coordinate_system(
 
 
 def _build_warning_message(
-    non_centered_files: List[Path],
-    centers: List[np.array],
-    l2_norm: List[np.ndarray],
+    non_centered_files: list[Path],
+    centers: list[np.array],
+    l2_norm: list[np.ndarray],
     bids_dir: Path,
     modality: str,
 ) -> str:
@@ -222,9 +221,9 @@ def check_relative_volume_location_in_world_coordinate_system(
 
 def _build_warning_message_relative_volume_location(
     label_1: str,
-    nifti_list1: List[PathLike],
+    nifti_list1: list[PathLike],
     label_2: str,
-    nifti_list2: List[PathLike],
+    nifti_list2: list[PathLike],
     bids_dir: PathLike,
     modality: str,
 ) -> Optional[str]:
@@ -252,9 +251,9 @@ def _build_warning_message_relative_volume_location(
 
 
 def _get_problematic_pairs_with_l2_norm(
-    file_couples: List[Tuple[Path, Path]],
+    file_couples: list[Tuple[Path, Path]],
     threshold: float = 80.0,
-) -> List[Tuple[str, str, float]]:
+) -> list[Tuple[str, str, float]]:
     l2_norm = _compute_l2_norm(file_couples)
     pairs_with_problems = [i for i, norm in enumerate(l2_norm) if norm > threshold]
 
@@ -264,7 +263,7 @@ def _get_problematic_pairs_with_l2_norm(
     ]
 
 
-def _compute_l2_norm(file_couples: List[Tuple[Path, Path]]) -> List[float]:
+def _compute_l2_norm(file_couples: list[Tuple[Path, Path]]) -> list[float]:
     center_coordinates = [
         (_get_world_coordinate_of_center(f[0]), _get_world_coordinate_of_center(f[1]))
         for f in file_couples
@@ -275,12 +274,12 @@ def _compute_l2_norm(file_couples: List[Tuple[Path, Path]]) -> List[float]:
 
 def _find_files_with_modality(
     files_dir: Path, modalities: Optional[Iterable[str]] = None
-) -> List[Path]:
+) -> list[Path]:
     nifti_files = files_dir.rglob("*.nii*")
     nifti_files_filtered = []
 
     if modalities is None:
-        return nifti_files
+        return list(nifti_files)
     for f in nifti_files:
         if any(modality.lower() in f.name.lower() for modality in modalities):
             nifti_files_filtered.append(f)
@@ -288,14 +287,15 @@ def _find_files_with_modality(
 
 
 def _copy_bids(bids_dir: Path, output_dir: Path) -> Path:
-    # todo :test
-    from shutil import copy, copytree
+    from shutil import copy2, copytree
 
-    for f in bids_dir.iterdir():
-        if f.is_dir() and not (output_dir / f.name).is_dir():
-            copytree(f, output_dir / f.name, copy_function=copy)
-        elif f.is_file() and not (output_dir / f.name).is_file():
-            copy(f, output_dir / f.name)
+    # for f in bids_dir.iterdir():
+    #     if f.is_dir() and not (output_dir / f.name).is_dir():
+    #         copytree(f, output_dir / f.name, copy_function=copy)
+    #     elif f.is_file() and not (output_dir / f.name).is_file():
+    #         copy(f, output_dir / f.name)
+
+    copytree(bids_dir, output_dir, copy_function=copy2)
     return output_dir
 
 
@@ -304,7 +304,7 @@ def center_all_nifti(
     output_dir: Path,
     modalities: Optional[Iterable[str]] = None,
     center_all_files: bool = False,
-) -> List[Path]:
+) -> list[Path]:
     """Center all the NIfTI images of the input BIDS folder into the empty output_dir specified in argument.
 
     All the files from bids_dir are copied into output_dir, then all the NIfTI images found are replaced by their
@@ -339,7 +339,7 @@ def center_all_nifti(
         nifti_files_filtered = [
             file for file in nifti_files_filtered if not _is_centered(file)
         ]
-    errors: List[str] = []
+    errors: list[str] = []
     for f in nifti_files_filtered:
         cprint(msg=f"Handling file {f}", lvl="debug")
         try:

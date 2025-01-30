@@ -41,7 +41,6 @@ def center_nifti(
     are copied verbatim.
     """
     import time
-    from pathlib import Path
 
     from clinica.iotools.utils.data_handling import (
         center_all_nifti,

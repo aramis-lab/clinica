@@ -12,10 +12,13 @@ def build_bids_folder(tmp_path: Path) -> Path:
 
     (bids_path / "dataset_description.json").touch()
 
-    (bids_path / "sub-1_ses-1_T1w.nii.gz").touch()
-    (bids_path / "sub-2_ses-1_T1w.nii.gz").touch()
-    (bids_path / "sub-2_ses-2_pet.nii.gz").touch()
-    (bids_path / "sub-2_ses-2_T1toto.nii.gz").touch()
+    (bids_path / "sub-1" / "ses-1").mkdir(parents=True)
+    (bids_path / "sub-1" / "ses-1" / "sub-1_ses-1_T1w.nii.gz").touch()
+    (bids_path / "sub-2" / "ses-1").mkdir(parents=True)
+    (bids_path / "sub-2" / "ses-1" / "sub-2_ses-1_T1w.nii.gz").touch()
+    (bids_path / "sub-2" / "ses-2").mkdir(parents=True)
+    (bids_path / "sub-2" / "ses-2" / "sub-2_ses-2_pet.nii.gz").touch()
+    (bids_path / "sub-2" / "ses-2" / "sub-2_ses-2_T1toto.nii.gz").touch()
 
     return bids_path
 
