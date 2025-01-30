@@ -44,6 +44,23 @@ def build_scans_spec(tmp_path: Path) -> Path:
     return tmp_path
 
 
+def build_participants_spec(tmp_path: Path) -> Path:
+    part = pd.DataFrame(
+        {
+            "BIDS CLINICA": ["alternative_id_1", "date_of_birth", "sex", "apoe_gen1"],
+            "AIBL": ["RID", "PTDOB", "PTGENDER", "APGEN1"],
+            "AIBL location": [
+                "aibl_ptdemog_*.csv",
+                "aibl_ptdemog_*.csv",
+                "aibl_ptdemog_*.csv",
+                "aibl_apoeres_*.csv",
+            ],
+        }
+    )
+    part.to_csv(tmp_path / "participant.tsv", index=False, sep="\t")
+    return tmp_path
+
+
 def build_sessions_spec(tmp_path: Path) -> Path:
     spec = pd.DataFrame(
         {
@@ -72,6 +89,15 @@ def build_clinical_data(tmp_path: Path) -> Path:
     data_path = tmp_path / "clinical_data"
     data_path.mkdir()
 
+    apo = pd.DataFrame(
+        {
+            "RID": [1, 2, 100, 100],
+            "VISCODE": ["bl", "bl", "bl", "m12"],
+            "APGEN1": [1, 2, -4, 3],
+        }
+    )
+    apo.to_csv(data_path / "aibl_apoeres_230ct2024.csv", index=False)
+
     neuro = pd.DataFrame(
         {
             "RID": [1, 2, 12, 100, 100, 109, 109],  # %m/%d/%Y
@@ -94,6 +120,7 @@ def build_clinical_data(tmp_path: Path) -> Path:
             "RID": [1, 2, 12, 101],
             "VISCODE": ["bl", "bl", "bl", "bl"],
             "PTDOB": ["/1901", "/1902", "/1912", "/2001"],
+            "PTGENDER": [1, 2, 1, 2],
         }
     )
     ptdemog.to_csv(data_path / "aibl_ptdemog_230ct2024.csv", index=False)
@@ -714,3 +741,32 @@ def test_write_scans_tsv(tmp_path):
     )
 
     assert_frame_equal(result, expected)
+
+
+def test_create_participants_tsv(tmp_path):
+    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+        create_participants_tsv_file,
+    )
+
+    bids_path = build_bids_dir(tmp_path)
+    create_participants_tsv_file(
+        bids_path, build_participants_spec(tmp_path), build_clinical_data(tmp_path)
+    )
+
+    result_list = list(bids_path.rglob("*participants.tsv"))
+
+    assert len(result_list) == 1
+
+    result = pd.read_csv(result_list[0], sep="\t", na_filter=False).set_index(
+        "participant_id"
+    )
+
+    expected = pd.DataFrame(
+        {
+            "participant_id": ["sub-AIBL1", "sub-AIBL100", "sub-AIBL109"],
+            "date_of_birth": ["1901", "n/a", "n/a"],
+            "sex": ["M", "n/a", "n/a"],
+            "apoe_gen1": ["1", "n/a", "n/a"],
+        }
+    ).set_index("participant_id")
+    assert_frame_equal(result, expected, check_like=True)
