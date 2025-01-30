@@ -21,7 +21,6 @@ def _handle_output_existing_files(
 
     from clinica.utils.exceptions import ClinicaExistingDatasetError
 
-    # todo : test
     if output_dir.exists():
         files = [
             file.name for file in output_dir.iterdir() if not file.name.startswith(".")

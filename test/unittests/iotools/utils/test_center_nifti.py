@@ -1,6 +1,6 @@
 from os import PathLike
 from pathlib import Path
-from typing import Iterable, List, Optional
+from typing import Iterable, Optional, Union
 from unittest.mock import patch
 
 import pytest
@@ -21,6 +21,57 @@ def build_bids_folder(tmp_path: Path) -> Path:
     (bids_path / "sub-2" / "ses-2" / "sub-2_ses-2_T1toto.nii.gz").touch()
 
     return bids_path
+
+
+def test_handle_output_existing_files(tmp_path):
+    from clinica.iotools.utils.data_handling._centering import (
+        _handle_output_existing_files,
+    )
+    from clinica.utils.exceptions import ClinicaExistingDatasetError
+
+    output_path = tmp_path / "COPY"
+    assert _handle_output_existing_files(output_path) == output_path
+
+    output_path = build_bids_folder(tmp_path)
+    with pytest.raises(ClinicaExistingDatasetError):
+        _handle_output_existing_files(output_path)
+
+    _handle_output_existing_files(output_path, overwrite_existing_files=True)
+    assert not output_path.exists()
+
+
+def test_validate_bids_and_output_dir_equal_error(tmp_path):
+    from clinica.iotools.utils.data_handling._centering import (
+        _validate_bids_and_output_dir,
+    )
+    from clinica.utils.exceptions import ClinicaBIDSError
+
+    with pytest.raises(ClinicaBIDSError):
+        _validate_bids_and_output_dir(tmp_path / "BIDS", tmp_path / "BIDS")
+
+
+def test_validate_bids_and_output_dir_not_bids_error(tmp_path):
+    from clinica.iotools.utils.data_handling._centering import (
+        _validate_bids_and_output_dir,
+    )
+
+    (tmp_path / "BIDS").mkdir()
+    from clinica.utils.exceptions import ClinicaBIDSError
+
+    with pytest.raises(ClinicaBIDSError):
+        _validate_bids_and_output_dir(tmp_path / "BIDS", tmp_path / "COPY")
+
+
+def test_validate_bids_and_output_dir_not_bids_success(tmp_path):
+    from clinica.iotools.utils.data_handling._centering import (
+        _validate_bids_and_output_dir,
+    )
+
+    bids_path = build_bids_folder(tmp_path)
+    output_path = tmp_path / "COPY"
+    assert bids_path, output_path == _validate_bids_and_output_dir(
+        bids_path, output_path
+    )
 
 
 @pytest.mark.parametrize(
@@ -80,11 +131,12 @@ def test_center_nifti_error(tmp_path):
 
 
 def center_all_nifti_mock(
-    bids_dir: PathLike,
-    output_dir: PathLike,
+    bids_dir: Union[str, PathLike],
+    output_dir: Union[str, PathLike],
     modalities: Optional[Iterable[str]] = None,
     center_all_files: bool = False,
-) -> List[Path]:
+    overwrite_existing_file: bool = False,
+) -> list[Path]:
     result = []
     for filename in ("foo.txt", "bar.tsv", "baz.nii.gz"):
         (Path(output_dir) / filename).touch()
@@ -112,7 +164,7 @@ def test_center_nifti_log_file_creation_error(tmp_path, mocker):
             match="Could not create log file",
         ):
             center_nifti(bids_path, out_path, center_all_files=True)
-        mock.assert_called_once_with(bids_path, out_path, None, True)
+        mock.assert_called_once_with(bids_path, out_path, None, True, False)
 
 
 def test_center_nifti(tmp_path):
@@ -128,7 +180,7 @@ def test_center_nifti(tmp_path):
     ) as mock:
         center_nifti(bids_path, output_dir, ("anat", "pet", "dwi"))
         mock.assert_called_once_with(
-            bids_path, output_dir, ("anat", "pet", "dwi"), False
+            bids_path, output_dir, ("anat", "pet", "dwi"), False, False
         )
         assert (
             len([f for f in output_dir.iterdir()]) == 4
