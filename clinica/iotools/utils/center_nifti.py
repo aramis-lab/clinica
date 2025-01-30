@@ -19,10 +19,10 @@ def center_nifti(
         The path to the BIDS directory.
 
     output_bids_directory : PathLike
-        The path to
+        The path to the output BIDS directory that contains the centered images.
 
     modalities : Iterable of str, optional
-        The modalities
+        The modalities that will be processed.
 
     center_all_files : bool, optional
         Whether to center all file or not.
@@ -41,17 +41,13 @@ def center_nifti(
     are copied verbatim.
     """
     import time
+    from pathlib import Path
 
     from clinica.iotools.utils.data_handling import (
         center_all_nifti,
-        validate_bids_and_output_dir,
         write_list_of_files,
     )
     from clinica.utils.stream import cprint, log_and_raise
-
-    bids_directory, output_bids_directory = validate_bids_and_output_dir(
-        bids_directory, output_bids_directory, overwrite_existing_files
-    )
 
     cprint("Clinica is now centering the requested images.", lvl="info")
 
@@ -60,6 +56,7 @@ def center_nifti(
         output_bids_directory,
         modalities,
         center_all_files,
+        overwrite_existing_files,
     )
 
     cprint(
@@ -75,7 +72,7 @@ def center_nifti(
 
     # Write list of created files
     timestamp = time.strftime("%Y%m%d-%H%M%S", time.localtime(time.time()))
-    log_file = output_bids_directory / f"centered_nifti_list_{timestamp}.txt"
+    log_file = Path(output_bids_directory) / f"centered_nifti_list_{timestamp}.txt"
     if not write_list_of_files(centered_files, log_file):
         log_and_raise(f"Could not create log file {log_file}.", IOError)
 

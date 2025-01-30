@@ -61,9 +61,7 @@ def center_nifti(
             center_all_files=center_all_files,
         )
     except ClinicaExistingDatasetError:
-        click.echo(
-            "Target BIDS directory is not empty. Existing files may be overwritten."
-        )
+        click.echo("Target BIDS directory is not empty. Existing files will disappear.")
         if click.confirm("Do you wish to continue?"):
             center_nifti_(
                 bids_directory,
