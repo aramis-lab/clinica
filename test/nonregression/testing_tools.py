@@ -483,3 +483,51 @@ def compare_folders_structures(
             if key not in hashes_check:
                 error_message2 += f"{key}'s creation was not expected !\n"
         raise ValueError(error_message1 + error_message2)
+
+
+def _load_participant_tsv(
+    bids_dir: Path,
+) -> pd.DataFrame:
+    return pd.read_csv(bids_dir / "participants.tsv", sep="\t").sort_values(
+        by="participant_id", ignore_index=True
+    )
+
+
+def _load_sessions_tsv(bids_dir: Path, ref_tsv: Path) -> pd.DataFrame:
+    return pd.read_csv(
+        bids_dir / ref_tsv.parent.name / ref_tsv.name, sep="\t"
+    ).sort_values(by="session_id", ignore_index=True)
+
+
+def _load_scans_tsv(bids_dir: Path, ref_tsv: Path) -> pd.DataFrame:
+    return pd.read_csv(
+        bids_dir / ref_tsv.parent.parent.name / ref_tsv.parent.name / ref_tsv.name,
+        sep="\t",
+    )
+
+
+def _compare_frames(df1: pd.DataFrame, df2: pd.DataFrame):
+    from pandas.testing import assert_frame_equal
+
+    assert_frame_equal(df1, df2, check_like=True)
+
+
+def _iteratively_compare_frames(bids_ref: Path, bids_out: Path, name: str):
+    if name == "sessions":
+        load_function = _load_sessions_tsv
+    elif name == "scans":
+        load_function = _load_scans_tsv
+    else:
+        raise (
+            ValueError,
+            f"Load function not implemented for tsv file with name {name}.",
+        )
+    for tsv in bids_ref.rglob(f"*{name}.tsv"):
+        _compare_frames(load_function(bids_out, tsv), load_function(bids_ref, tsv))
+
+
+def compare_bids_tsv(bids_out: Path, bids_ref: Path):
+    _compare_frames(_load_participant_tsv(bids_out), _load_participant_tsv(bids_ref))
+    _iteratively_compare_frames(bids_ref, bids_out, name="sessions")
+    _iteratively_compare_frames(bids_ref, bids_out, name="scans")
+    return True

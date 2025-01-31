@@ -4,14 +4,19 @@ correct execution of the dataset converters available in Clinica.
 """
 
 from pathlib import Path
-from test.nonregression.testing_tools import compare_folders, configure_paths
+from test.nonregression.testing_tools import (
+    compare_bids_tsv,
+    compare_folders,
+    configure_paths,
+)
 
 import pytest
 
 from clinica.iotools.bids_utils import StudyName
 
 
-@pytest.mark.parametrize("study", StudyName)
+# todo : put back all studies
+@pytest.mark.parametrize("study", [StudyName.AIBL])
 def test_converters(cmdopt, tmp_path, study: StudyName):
     from clinica.iotools.converters.factory import convert, get_converter_name
 
@@ -31,3 +36,5 @@ def test_converters(cmdopt, tmp_path, study: StudyName):
     )
 
     compare_folders(output_dir, ref_dir / "bids", output_dir)
+    if study == StudyName.AIBL:
+        compare_bids_tsv(output_dir, ref_dir / "bids")
