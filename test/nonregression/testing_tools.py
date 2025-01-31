@@ -1,9 +1,10 @@
 # coding: utf8
 
 import os
+from enum import Enum
 from os import PathLike
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Callable, Dict
 
 import numpy as np
 import pandas as pd
@@ -13,7 +14,7 @@ def configure_paths(
     base_dir: Path,
     tmp_path: Path,
     name: str,
-) -> Tuple[Path, Path, Path]:
+) -> tuple[Path, Path, Path]:
     """Configure paths for tests."""
     input_dir = base_dir / name / "in"
     ref_dir = base_dir / name / "ref"
@@ -26,8 +27,8 @@ def configure_paths(
 def likeliness_measure(
     file1: PathLike,
     file2: PathLike,
-    threshold1: Tuple,
-    threshold2: Tuple,
+    threshold1: tuple,
+    threshold2: tuple,
     display: bool = False,
 ) -> bool:
     """Compares 2 Nifti inputs, with 2 different thresholds.
@@ -245,7 +246,7 @@ def _is_included(sub_ses_tsv_1: PathLike, sub_ses_tsv_2: PathLike) -> bool:
     return True
 
 
-def _sort_subject_field(subjects: List, fields: List) -> List:
+def _sort_subject_field(subjects: list, fields: list) -> list:
     """Helper function for `same_missing_modality_tsv`.
     Returns a sorted list of fields. The list is sorted by corresponding
     subject_id and by field_id if the subject_ids are equal.
@@ -361,8 +362,8 @@ def clean_folder(path: PathLike, recreate: bool = True):
 
 def list_files_with_extensions(
     path_folder: PathLike,
-    extensions_to_keep: Tuple[str, ...],
-) -> List[str]:
+    extensions_to_keep: tuple[str, ...],
+) -> list[str]:
     """List all the files with the provided extensions
     in the path_folder.
 
@@ -387,7 +388,7 @@ def list_files_with_extensions(
 
 def create_list_hashes(
     path_folder: PathLike,
-    extensions_to_keep: Tuple[str, ...] = (".nii.gz", ".tsv", ".json"),
+    extensions_to_keep: tuple[str, ...] = (".nii.gz", ".tsv", ".json"),
 ) -> Dict:
     """Computes a dictionary of files with their corresponding hashes.
 
@@ -485,8 +486,15 @@ def compare_folders_structures(
         raise ValueError(error_message1 + error_message2)
 
 
-def _load_participant_tsv(
+class Level(str, Enum):
+    PARTICIPANTS = "participants"
+    SESSIONS = "sessions"
+    SCANS = "scans"
+
+
+def _load_participants_tsv(
     bids_dir: Path,
+    ref_tsv: Path,
 ) -> pd.DataFrame:
     return pd.read_csv(bids_dir / "participants.tsv", sep="\t").sort_values(
         by="participant_id", ignore_index=True
@@ -506,28 +514,33 @@ def _load_scans_tsv(bids_dir: Path, ref_tsv: Path) -> pd.DataFrame:
     )
 
 
-def _compare_frames(df1: pd.DataFrame, df2: pd.DataFrame):
+LoaderInterface = Callable[[Path, Path], pd.DataFrame]
+
+
+def _loader_factory(level: str | Level) -> LoaderInterface:
+    if (level := Level(level)) == Level.PARTICIPANTS:
+        return _load_participants_tsv
+    if level == Level.SESSIONS:
+        return _load_sessions_tsv
+    if level == Level.SCANS:
+        return _load_scans_tsv
+    raise (ValueError, f"TSV metadata file loader not implemented for level {level}.")
+
+
+def _compare_frames(df1: pd.DataFrame, df2: pd.DataFrame, object: str):
     from pandas.testing import assert_frame_equal
 
-    assert_frame_equal(df1, df2, check_like=True)
+    assert_frame_equal(df1, df2, check_like=True, obj=object)
 
 
-def _iteratively_compare_frames(bids_ref: Path, bids_out: Path, name: str):
-    if name == "sessions":
-        load_function = _load_sessions_tsv
-    elif name == "scans":
-        load_function = _load_scans_tsv
-    else:
-        raise (
-            ValueError,
-            f"Load function not implemented for tsv file with name {name}.",
-        )
-    for tsv in bids_ref.rglob(f"*{name}.tsv"):
-        _compare_frames(load_function(bids_out, tsv), load_function(bids_ref, tsv))
+def _iteratively_compare_frames(bids_ref: Path, bids_out: Path, level: Level):
+    loader = _loader_factory(level)
+    for tsv in bids_ref.rglob(f"*{level.value}.tsv"):
+        _compare_frames(loader(bids_out, tsv), loader(bids_ref, tsv), tsv.name)
 
 
 def compare_bids_tsv(bids_out: Path, bids_ref: Path):
-    _compare_frames(_load_participant_tsv(bids_out), _load_participant_tsv(bids_ref))
-    _iteratively_compare_frames(bids_ref, bids_out, name="sessions")
-    _iteratively_compare_frames(bids_ref, bids_out, name="scans")
+    # todo : Find a way to print all errors at the same time (probs try/except)
+    for level in Level:
+        _iteratively_compare_frames(bids_ref, bids_out, level)
     return True
