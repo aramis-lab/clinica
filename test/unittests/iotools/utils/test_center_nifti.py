@@ -5,6 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
+from clinica.utils.exceptions import ClinicaBIDSError, ClinicaExistingDatasetError
+
 
 def build_bids_folder(tmp_path: Path) -> Path:
     bids_path = tmp_path / "BIDS"
@@ -27,7 +29,6 @@ def test_handle_output_existing_files(tmp_path):
     from clinica.iotools.utils.data_handling._centering import (
         _handle_output_existing_files,
     )
-    from clinica.utils.exceptions import ClinicaExistingDatasetError
 
     output_path = tmp_path / "COPY"
     assert _handle_output_existing_files(output_path) == output_path
@@ -44,7 +45,6 @@ def test_validate_bids_and_output_dir_equal_error(tmp_path):
     from clinica.iotools.utils.data_handling._centering import (
         _validate_bids_and_output_dir,
     )
-    from clinica.utils.exceptions import ClinicaBIDSError
 
     with pytest.raises(ClinicaBIDSError):
         _validate_bids_and_output_dir(tmp_path / "BIDS", tmp_path / "BIDS")
@@ -56,8 +56,6 @@ def test_validate_bids_and_output_dir_not_bids_error(tmp_path):
     )
 
     (tmp_path / "BIDS").mkdir()
-    from clinica.utils.exceptions import ClinicaBIDSError
-
     with pytest.raises(ClinicaBIDSError):
         _validate_bids_and_output_dir(tmp_path / "BIDS", tmp_path / "COPY")
 
@@ -115,7 +113,6 @@ def test_find_files_with_modality(tmp_path, modalities, expected):
 
 def test_center_nifti_error(tmp_path):
     from clinica.iotools.utils import center_nifti
-    from clinica.utils.exceptions import ClinicaExistingDatasetError
 
     out_path = tmp_path / "out"
     out_path.mkdir()

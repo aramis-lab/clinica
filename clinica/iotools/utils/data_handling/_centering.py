@@ -1,6 +1,6 @@
 from os import PathLike
 from pathlib import Path
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Optional, Union
 
 import nibabel as nib
 import numpy as np
@@ -242,9 +242,9 @@ def _build_warning_message_relative_volume_location(
 
 
 def _get_problematic_pairs_with_l2_norm(
-    file_couples: list[Tuple[Path, Path]],
+    file_couples: list[tuple[Path, Path]],
     threshold: float = 80.0,
-) -> list[Tuple[str, str, float]]:
+) -> list[tuple[str, str, float]]:
     l2_norm = _compute_l2_norm(file_couples)
     pairs_with_problems = [i for i, norm in enumerate(l2_norm) if norm > threshold]
 
@@ -254,7 +254,7 @@ def _get_problematic_pairs_with_l2_norm(
     ]
 
 
-def _compute_l2_norm(file_couples: list[Tuple[Path, Path]]) -> list[float]:
+def _compute_l2_norm(file_couples: list[tuple[Path, Path]]) -> list[float]:
     center_coordinates = [
         (_get_world_coordinate_of_center(f[0]), _get_world_coordinate_of_center(f[1]))
         for f in file_couples
@@ -279,7 +279,7 @@ def _find_files_with_modality(
 
 def _validate_bids_and_output_dir(
     bids_dir: PathLike, output_dir: PathLike
-) -> Tuple[Path, Path]:
+) -> tuple[Path, Path]:
     from clinica.utils.exceptions import ClinicaBIDSError
     from clinica.utils.inputs import check_bids_folder
 
