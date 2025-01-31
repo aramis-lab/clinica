@@ -1,6 +1,6 @@
 from os import PathLike
 from pathlib import Path
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, Optional, Union
 
 import nibabel as nib
 import numpy as np
@@ -12,6 +12,24 @@ __all__ = [
     "check_relative_volume_location_in_world_coordinate_system",
     "center_all_nifti",
 ]
+
+
+def _handle_output_existing_files(
+    output_dir: Path, overwrite_existing_files: bool = False
+) -> Path:
+    from shutil import rmtree
+
+    from clinica.utils.exceptions import ClinicaExistingDatasetError
+
+    if output_dir.exists():
+        files = [
+            file.name for file in output_dir.iterdir() if not file.name.startswith(".")
+        ]
+        if files and not overwrite_existing_files:
+            raise ClinicaExistingDatasetError(output_dir)
+        elif files and overwrite_existing_files:
+            rmtree(output_dir)
+    return output_dir
 
 
 def center_nifti_origin(input_image: PathLike, output_image: PathLike) -> PathLike:
@@ -114,9 +132,9 @@ def are_images_centered_around_origin_of_world_coordinate_system(
 
 
 def _build_warning_message(
-    non_centered_files: List[Path],
-    centers: List[np.array],
-    l2_norm: List[np.ndarray],
+    non_centered_files: list[Path],
+    centers: list[np.array],
+    l2_norm: list[np.ndarray],
     bids_dir: Path,
     modality: str,
 ) -> str:
@@ -194,9 +212,9 @@ def check_relative_volume_location_in_world_coordinate_system(
 
 def _build_warning_message_relative_volume_location(
     label_1: str,
-    nifti_list1: List[PathLike],
+    nifti_list1: list[PathLike],
     label_2: str,
-    nifti_list2: List[PathLike],
+    nifti_list2: list[PathLike],
     bids_dir: PathLike,
     modality: str,
 ) -> Optional[str]:
@@ -224,9 +242,9 @@ def _build_warning_message_relative_volume_location(
 
 
 def _get_problematic_pairs_with_l2_norm(
-    file_couples: List[Tuple[Path, Path]],
+    file_couples: list[tuple[Path, Path]],
     threshold: float = 80.0,
-) -> List[Tuple[str, str, float]]:
+) -> list[tuple[str, str, float]]:
     l2_norm = _compute_l2_norm(file_couples)
     pairs_with_problems = [i for i, norm in enumerate(l2_norm) if norm > threshold]
 
@@ -236,7 +254,7 @@ def _get_problematic_pairs_with_l2_norm(
     ]
 
 
-def _compute_l2_norm(file_couples: List[Tuple[Path, Path]]) -> List[float]:
+def _compute_l2_norm(file_couples: list[tuple[Path, Path]]) -> list[float]:
     center_coordinates = [
         (_get_world_coordinate_of_center(f[0]), _get_world_coordinate_of_center(f[1]))
         for f in file_couples
@@ -247,24 +265,42 @@ def _compute_l2_norm(file_couples: List[Tuple[Path, Path]]) -> List[float]:
 
 def _find_files_with_modality(
     files_dir: Path, modalities: Optional[Iterable[str]] = None
-) -> List[Path]:
+) -> list[Path]:
     nifti_files = files_dir.rglob("*.nii*")
     nifti_files_filtered = []
 
     if modalities is None:
-        return nifti_files
+        return list(nifti_files)
     for f in nifti_files:
         if any(modality.lower() in f.name.lower() for modality in modalities):
             nifti_files_filtered.append(f)
     return nifti_files_filtered
 
 
+def _validate_bids_and_output_dir(
+    bids_dir: PathLike, output_dir: PathLike
+) -> tuple[Path, Path]:
+    from clinica.utils.exceptions import ClinicaBIDSError
+    from clinica.utils.inputs import check_bids_folder
+
+    bids_dir = Path(bids_dir)
+    output_dir = Path(output_dir)
+    if bids_dir == output_dir:
+        raise ClinicaBIDSError(
+            f"Input BIDS ({bids_dir}) and output ({output_dir}) directories must be different."
+        )
+    check_bids_folder(bids_dir)
+
+    return bids_dir, output_dir
+
+
 def center_all_nifti(
-    bids_dir: PathLike,
-    output_dir: PathLike,
+    bids_dir: Union[str, PathLike],
+    output_dir: Union[str, PathLike],
     modalities: Optional[Iterable[str]] = None,
     center_all_files: bool = False,
-) -> List[Path]:
+    overwrite_existing_files: bool = False,
+) -> list[Path]:
     """Center all the NIfTI images of the input BIDS folder into the empty output_dir specified in argument.
 
     All the files from bids_dir are copied into output_dir, then all the NIfTI images found are replaced by their
@@ -284,27 +320,32 @@ def center_all_nifti(
     center_all_files:  bool, default=False
         Center files that may cause problem for SPM if set to False, all files otherwise.
 
+    overwrite_existing_files : bool, optional
+        If True and if the output BIDS directory already contain files,
+        they might be overwritten. If False, the output BIDS has to be empty
+        or non-existing otherwise a ClinicaExistingDatasetError will be raised.
+
+
     Returns
     -------
     list of Path
         Centered NIfTI files.
     """
-    from shutil import copy, copytree
+
+    from shutil import copy2, copytree
 
     from clinica.utils.stream import cprint
 
     bids_dir, output_dir = _validate_bids_and_output_dir(bids_dir, output_dir)
-    for f in bids_dir.iterdir():
-        if f.is_dir() and not (output_dir / f.name).is_dir():
-            copytree(f, output_dir / f.name, copy_function=copy)
-        elif f.is_file() and not (output_dir / f.name).is_file():
-            copy(f, output_dir / f.name)
+    _handle_output_existing_files(output_dir, overwrite_existing_files)
+    copytree(bids_dir, output_dir, copy_function=copy2)
+
     nifti_files_filtered = _find_files_with_modality(output_dir, modalities)
     if not center_all_files:
         nifti_files_filtered = [
             file for file in nifti_files_filtered if not _is_centered(file)
         ]
-    errors: List[str] = []
+    errors: list[str] = []
     for f in nifti_files_filtered:
         cprint(msg=f"Handling file {f}", lvl="debug")
         try:
@@ -317,23 +358,6 @@ def center_all_nifti(
             + "\n".join(errors)
         )
     return nifti_files_filtered
-
-
-def _validate_bids_and_output_dir(
-    bids_dir: PathLike, output_dir: PathLike
-) -> Tuple[Path, Path]:
-    from clinica.utils.exceptions import ClinicaBIDSError
-    from clinica.utils.inputs import check_bids_folder
-
-    bids_dir = Path(bids_dir)
-    output_dir = Path(output_dir)
-    if bids_dir == output_dir:
-        raise ClinicaBIDSError(
-            f"Input BIDS ({bids_dir}) and output ({output_dir}) directories must be different."
-        )
-    check_bids_folder(bids_dir)
-
-    return bids_dir, output_dir
 
 
 def _is_centered(nii_volume: Path, threshold_l2: int = 50) -> bool:
