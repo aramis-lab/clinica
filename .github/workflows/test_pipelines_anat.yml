@@ -8,54 +8,54 @@ permissions:
   contents: read
 
 jobs:
-  test-t1-linear-MacOS:
-    runs-on:
-      - self-hosted
-      - macOS
-    timeout-minutes: 120
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run tests for t1 linear pipelines
-        run: |
-          make env.conda
-          source ~/miniconda3/etc/profile.d/conda.sh
-          conda activate "${{ github.workspace }}"/env
-          source "$(brew --prefix)/opt/modules/init/bash"
-          module load clinica/ants/2.4.4
-          make install
-          cd test
-          poetry run pytest --verbose \
-          --working_directory=/Volumes/data/working_dir_mac \
-          --input_data_directory=/Volumes/data_ci \
-          --basetemp=/Volumes/data/tmp \
-          --junitxml=./test-reports/non_regression_anat_t1_linear_mac.xml \
-          --disable-warnings \
-          ./nonregression/pipelines/anat/test_t1_linear.py
-
-  test-t1-volume-MacOS:
-    runs-on:
-      - self-hosted
-      - macOS
-    timeout-minutes: 720
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run tests for t1 volume pipelines
-        run: |
-          make env.conda
-          source ~/miniconda3/etc/profile.d/conda.sh
-          conda activate "${{ github.workspace }}"/env
-          source "$(brew --prefix)/opt/modules/init/bash"
-          module load clinica/matlab/2019b
-          module load clinica/spm12/r7771
-          make install
-          cd test
-          poetry run pytest --verbose \
-          --working_directory=/Volumes/data/working_dir_mac \
-          --input_data_directory=/Volumes/data_ci \
-          --basetemp=/Volumes/data/tmp \
-          --junitxml=./test-reports/non_regression_anat_t1_volume_mac.xml \
-          --disable-warnings \
-          ./nonregression/pipelines/anat/test_t1_volume.py
+#  test-t1-linear-MacOS:
+#    runs-on:
+#      - self-hosted
+#      - macOS
+#    timeout-minutes: 120
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Run tests for t1 linear pipelines
+#        run: |
+#          make env.conda
+#          source ~/miniconda3/etc/profile.d/conda.sh
+#          conda activate "${{ github.workspace }}"/env
+#          source "$(brew --prefix)/opt/modules/init/bash"
+#          module load clinica/ants/2.4.4
+#          make install
+#          cd test
+#          poetry run pytest --verbose \
+#          --working_directory=/Volumes/data/working_dir_mac \
+#          --input_data_directory=/Volumes/data_ci \
+#          --basetemp=/Volumes/data/tmp \
+#          --junitxml=./test-reports/non_regression_anat_t1_linear_mac.xml \
+#          --disable-warnings \
+#          ./nonregression/pipelines/anat/test_t1_linear.py
+#
+#  test-t1-volume-MacOS:
+#    runs-on:
+#      - self-hosted
+#      - macOS
+#    timeout-minutes: 720
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Run tests for t1 volume pipelines
+#        run: |
+#          make env.conda
+#          source ~/miniconda3/etc/profile.d/conda.sh
+#          conda activate "${{ github.workspace }}"/env
+#          source "$(brew --prefix)/opt/modules/init/bash"
+#          module load clinica/matlab/2019b
+#          module load clinica/spm12/r7771
+#          make install
+#          cd test
+#          poetry run pytest --verbose \
+#          --working_directory=/Volumes/data/working_dir_mac \
+#          --input_data_directory=/Volumes/data_ci \
+#          --basetemp=/Volumes/data/tmp \
+#          --junitxml=./test-reports/non_regression_anat_t1_volume_mac.xml \
+#          --disable-warnings \
+#          ./nonregression/pipelines/anat/test_t1_volume.py
 
   test-t1-linear-Linux:
     runs-on:

@@ -8,53 +8,53 @@ permissions:
   contents: read
 
 jobs:
-  test-dwi-preproc-t1-MacOS:
-    runs-on:
-      - self-hosted
-      - macOS
-    timeout-minutes: 720
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run tests for dwi pre-processing using t1 pipelines
-        run: |
-          make env.conda
-          source ~/miniconda3/etc/profile.d/conda.sh
-          conda activate "${{ github.workspace }}"/env
-          source "$(brew --prefix)/opt/modules/init/bash"
-          module load clinica.all
-          make install
-          cd test
-          poetry run pytest --verbose \
-          --working_directory=/Volumes/data/working_dir_mac \
-          --input_data_directory=/Volumes/data_ci \
-          --basetemp=/Volumes/data/tmp \
-          --junitxml=./test-reports/non_regression_dwi_preproc_using_t1_mac.xml \
-          --disable-warnings \
-          ./nonregression/pipelines/dwi/preprocessing/test_t1.py
-
-  test-dwi-preproc-phasediff-MacOS:
-    runs-on:
-      - self-hosted
-      - macOS
-    timeout-minutes: 720
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run tests for dwi pre-processing using phasediff pipelines
-        run: |
-          make env.conda
-          source ~/miniconda3/etc/profile.d/conda.sh
-          conda activate "${{ github.workspace }}"/env
-          source "$(brew --prefix)/opt/modules/init/bash"
-          module load clinica.all
-          make install
-          cd test
-          poetry run pytest --verbose \
-          --working_directory=/Volumes/data/working_dir_mac \
-          --input_data_directory=/Volumes/data_ci \
-          --basetemp=/Volumes/data/tmp \
-          --junitxml=./test-reports/non_regression_dwi_preproc_using_phasediff_mac.xml \
-          --disable-warnings \
-          ./nonregression/pipelines/dwi/preprocessing/test_phase_diff.py
+#  test-dwi-preproc-t1-MacOS:
+#    runs-on:
+#      - self-hosted
+#      - macOS
+#    timeout-minutes: 720
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Run tests for dwi pre-processing using t1 pipelines
+#        run: |
+#          make env.conda
+#          source ~/miniconda3/etc/profile.d/conda.sh
+#          conda activate "${{ github.workspace }}"/env
+#          source "$(brew --prefix)/opt/modules/init/bash"
+#          module load clinica.all
+#          make install
+#          cd test
+#          poetry run pytest --verbose \
+#          --working_directory=/Volumes/data/working_dir_mac \
+#          --input_data_directory=/Volumes/data_ci \
+#          --basetemp=/Volumes/data/tmp \
+#          --junitxml=./test-reports/non_regression_dwi_preproc_using_t1_mac.xml \
+#          --disable-warnings \
+#          ./nonregression/pipelines/dwi/preprocessing/test_t1.py
+#
+#  test-dwi-preproc-phasediff-MacOS:
+#    runs-on:
+#      - self-hosted
+#      - macOS
+#    timeout-minutes: 720
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Run tests for dwi pre-processing using phasediff pipelines
+#        run: |
+#          make env.conda
+#          source ~/miniconda3/etc/profile.d/conda.sh
+#          conda activate "${{ github.workspace }}"/env
+#          source "$(brew --prefix)/opt/modules/init/bash"
+#          module load clinica.all
+#          make install
+#          cd test
+#          poetry run pytest --verbose \
+#          --working_directory=/Volumes/data/working_dir_mac \
+#          --input_data_directory=/Volumes/data_ci \
+#          --basetemp=/Volumes/data/tmp \
+#          --junitxml=./test-reports/non_regression_dwi_preproc_using_phasediff_mac.xml \
+#          --disable-warnings \
+#          ./nonregression/pipelines/dwi/preprocessing/test_phase_diff.py
 
   test-dwi-preproc-t1-Linux:
     runs-on:
