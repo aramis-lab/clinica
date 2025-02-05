@@ -540,6 +540,11 @@ def _iteratively_compare_frames(bids_ref: Path, bids_out: Path, level: Level):
 
 
 def compare_bids_tsv(bids_out: Path, bids_ref: Path):
-    # todo : Find a way to print all errors at the same time (probs try/except)
+    errors = []
     for level in Level:
-        _iteratively_compare_frames(bids_ref, bids_out, level)
+        try:
+            _iteratively_compare_frames(bids_ref, bids_out, level)
+        except AssertionError as e:
+            errors += [str(e).replace("\n\n", "\n")]
+    if errors:
+        raise AssertionError("\n\n".join(errors))
