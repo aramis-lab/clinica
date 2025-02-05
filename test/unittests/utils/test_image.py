@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
 
+from clinica.utils.exceptions import ClinicaImageDimensionError
 from clinica.utils.testing_utils import (
     assert_nifti_equal,
     build_test_image_cubic_object,
@@ -192,6 +193,24 @@ def test_slice():
     assert s.get_slice() == slice(3, 16)
 
 
+@pytest.mark.parametrize(
+    "array,coords,expected",
+    [
+        (np.ones((10, 10, 10)), (3, 6, 0, 10, 6, 6), True),
+        (np.ones((10, 10, 10)), (3, 11, 0, 10, 6, 6), False),
+        (np.ones((10, 10, 10)), (3, 6, -1, 10, 6, 6), False),
+        (np.ones((10, 10, 10)), (1, 1, 1, 1, 1, 1), True),
+        (np.ones((10, 10, 10)), (11, 11, 11, 11, 11, 11), False),
+    ],
+)
+def test_is_bbox_within_array(
+    array: np.ndarray, coords: tuple[int, int, int, int, int, int], expected: bool
+):
+    from clinica.utils.image import Bbox3D, _is_bbox_within_array  # noqa
+
+    assert _is_bbox_within_array(array, Bbox3D.from_coordinates(*coords)) is expected
+
+
 def test_mni_cropped_bbox():
     from clinica.utils.image import MNI_CROP_BBOX  # noqa
 
@@ -253,7 +272,7 @@ def test_get_mni_template(tmp_path, mocker):
     assert img.shape == expected_shape
 
 
-def test_crop_nifti_error(tmp_path):
+def test_crop_nifti_input_image_not_3d_error(tmp_path):
     from clinica.utils.image import crop_nifti
 
     nib.Nifti1Image(np.random.random((10, 10, 10, 10)), np.eye(4)).to_filename(
@@ -261,13 +280,33 @@ def test_crop_nifti_error(tmp_path):
     )
 
     with pytest.raises(
-        ValueError,
+        ClinicaImageDimensionError,
         match=re.escape(
             "The function crop_nifti is implemented for anatomical 3D images. "
             "You provided an image of shape (10, 10, 10, 10)."
         ),
     ):
         crop_nifti(tmp_path / "test.nii.gz")
+
+
+def test_crop_nifti_with_resampling(tmp_path):
+    from clinica.utils.image import (
+        crop_nifti,
+        get_mni_cropped_template,
+        get_mni_template,
+    )
+
+    nib.load(get_mni_template("flair")).to_filename(tmp_path / "mni.nii.gz")
+    with pytest.warns(
+        UserWarning,
+        match=re.escape(
+            f"The image {tmp_path / 'mni.nii.gz'} has dimensions (182, 218, 182) and cannot "
+            "be cropped using the bounding box ( ( 12, 181 ), ( 13, 221 ), ( 0, 179 ) ). "
+            "The `crop_nifti` function will try to resample the input image to the reference template"
+        ),
+    ):
+        cropped = crop_nifti(tmp_path / "mni.nii.gz", output_dir=tmp_path)
+        assert nib.load(cropped).shape == nib.load(get_mni_cropped_template()).shape
 
 
 def test_crop_nifti(tmp_path):
