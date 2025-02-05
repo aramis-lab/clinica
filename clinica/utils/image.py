@@ -300,10 +300,26 @@ class Bbox3D:
 MNI_CROP_BBOX = Bbox3D.from_coordinates(12, 181, 13, 221, 0, 179)
 
 
+def _is_bbox_within_array(array: np.ndarray, bbox: Bbox3D) -> bool:
+    if not (0 <= bbox.x_slice.start and bbox.x_slice.end <= array.shape[0]):
+        return False
+    if not (0 <= bbox.y_slice.start and bbox.y_slice.end <= array.shape[1]):
+        return False
+    if not (0 <= bbox.z_slice.start and bbox.z_slice.end <= array.shape[2]):
+        return False
+    return True
+
+
 def _crop_array(array: np.ndarray, bbox: Bbox3D) -> np.ndarray:
     # TODO: When Python 3.10 is dropped, replace with 'return array[*bbox.get_slices()]'
-    x, y, z = bbox.get_slices()
-    return array[x, y, z]
+    from clinica.utils.exceptions import ClinicaImageDimensionError
+
+    if _is_bbox_within_array(array, bbox):
+        x, y, z = bbox.get_slices()
+        return array[x, y, z]
+    raise ClinicaImageDimensionError(
+        f"Cannot use the bounding box {bbox} to crop the provided array of shape {array.shape}."
+    )
 
 
 def _get_file_locally_or_download(
@@ -387,7 +403,7 @@ def _get_mni_template_flair() -> Path:
     )
 
 
-def crop_nifti(input_image: Path, output_dir: Optional[Path] = None) -> Path:
+def crop_nifti(input_image_path: Path, output_dir: Optional[Path] = None) -> Path:
     """Crop input image.
 
     The function expects a 3D anatomical image and will crop it
@@ -397,9 +413,13 @@ def crop_nifti(input_image: Path, output_dir: Optional[Path] = None) -> Path:
     into the cropped template (located in
     clinica/resources/masks/ref_cropped_template.nii.gz).
 
+    If the bounding box falls outside of the image limits, the
+    function will perform resampling of the input image onto the
+    reference cropped template.
+
     Parameters
     ----------
-    input_image : Path
+    input_image_path : Path
         The path to the input image to be cropped.
 
     output_dir : Path, optional
@@ -413,25 +433,42 @@ def crop_nifti(input_image: Path, output_dir: Optional[Path] = None) -> Path:
 
     Raises
     ------
-    ValueError:
-        If the input image is not 3D.
+    ClinicaImageDimensionError:
+        If the input image is not 3D or if the output image has unexpected dimension.
     """
-    from nilearn.image import new_img_like
+    from nilearn.image import new_img_like, resample_to_img
 
+    from clinica.utils.exceptions import ClinicaImageDimensionError
     from clinica.utils.filemanip import get_filename_no_ext
+    from clinica.utils.stream import log_and_warn
 
-    filename_no_ext = get_filename_no_ext(input_image)
-    input_image = nib.load(input_image)
+    filename_no_ext = get_filename_no_ext(input_image_path)
+    input_image = nib.load(input_image_path)
+    reference_image = nib.load(get_mni_cropped_template())
     if len(input_image.shape) != 3:
-        raise ValueError(
+        raise ClinicaImageDimensionError(
             "The function crop_nifti is implemented for anatomical 3D images. "
             f"You provided an image of shape {input_image.shape}."
         )
     output_dir = output_dir or Path.cwd()
-    crop_img = new_img_like(
-        nib.load(get_mni_cropped_template()),
-        _crop_array(input_image.get_fdata(), MNI_CROP_BBOX),
-    )
+    try:
+        cropped_array = _crop_array(input_image.get_fdata(), MNI_CROP_BBOX)
+        crop_img = new_img_like(reference_image, cropped_array)
+    except ClinicaImageDimensionError:
+        log_and_warn(
+            (
+                f"The image {input_image_path} has dimensions {input_image.get_fdata().shape} and cannot be "
+                f"cropped using the bounding box {MNI_CROP_BBOX}. The `crop_nifti` function will try to resample the "
+                f"input image to the reference template {get_mni_cropped_template()} instead of cropping."
+            ),
+            UserWarning,
+        )
+        crop_img = resample_to_img(input_image, reference_image, force_resample=True)
+    if crop_img.shape != reference_image.shape:
+        raise ClinicaImageDimensionError(
+            f"The cropped image has shape {crop_img.shape} different from the expected shape "
+            f"{reference_image.shape} of the reference template {get_mni_cropped_template()}."
+        )
     output_img = output_dir / f"{filename_no_ext}_cropped.nii.gz"
     crop_img.to_filename(output_img)
 
