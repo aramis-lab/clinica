@@ -494,7 +494,7 @@ class Level(str, Enum):
 
 def _load_participants_tsv(
     bids_dir: Path,
-    ref_tsv: Path,
+    _: Path,
 ) -> pd.DataFrame:
     return pd.read_csv(bids_dir / "participants.tsv", sep="\t").sort_values(
         by="participant_id", ignore_index=True
@@ -543,4 +543,3 @@ def compare_bids_tsv(bids_out: Path, bids_ref: Path):
     # todo : Find a way to print all errors at the same time (probs try/except)
     for level in Level:
         _iteratively_compare_frames(bids_ref, bids_out, level)
-    return True

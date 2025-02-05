@@ -15,7 +15,7 @@ import pytest
 from clinica.iotools.bids_utils import StudyName
 
 
-@pytest.mark.parametrize("study", StudyName.AIBL)
+@pytest.mark.parametrize("study", StudyName)
 def test_converters(cmdopt, tmp_path, study: StudyName):
     from clinica.iotools.converters.factory import convert, get_converter_name
 
