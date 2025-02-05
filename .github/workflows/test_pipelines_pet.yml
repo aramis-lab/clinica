@@ -8,29 +8,29 @@ permissions:
   contents: read
 
 jobs:
-  test-pipelines-pet-MacOS:
-    runs-on:
-      - self-hosted
-      - macOS
-    timeout-minutes: 720
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run tests for pet pipelines
-        run: |
-          make env.conda
-          source ~/miniconda3/etc/profile.d/conda.sh
-          conda activate "${{ github.workspace }}"/env
-          source "$(brew --prefix)/opt/modules/init/bash"
-          module load clinica.all
-          make install
-          cd test
-          poetry run pytest --verbose \
-          --working_directory=/Volumes/data/working_dir_mac \
-          --input_data_directory=/Volumes/data_ci \
-          --basetemp=/Volumes/data/tmp \
-          --junitxml=./test-reports/non_regression_pet_mac.xml \
-          --disable-warnings \
-          ./nonregression/pipelines/pet
+#  test-pipelines-pet-MacOS:
+#    runs-on:
+#      - self-hosted
+#      - macOS
+#    timeout-minutes: 720
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Run tests for pet pipelines
+#        run: |
+#          make env.conda
+#          source ~/miniconda3/etc/profile.d/conda.sh
+#          conda activate "${{ github.workspace }}"/env
+#          source "$(brew --prefix)/opt/modules/init/bash"
+#          module load clinica.all
+#          make install
+#          cd test
+#          poetry run pytest --verbose \
+#          --working_directory=/Volumes/data/working_dir_mac \
+#          --input_data_directory=/Volumes/data_ci \
+#          --basetemp=/Volumes/data/tmp \
+#          --junitxml=./test-reports/non_regression_pet_mac.xml \
+#          --disable-warnings \
+#          ./nonregression/pipelines/pet
 
   test-pipelines-pet-Linux:
     runs-on:

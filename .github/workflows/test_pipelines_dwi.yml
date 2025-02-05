@@ -8,31 +8,31 @@ permissions:
   contents: read
 
 jobs:
-  test-dwi-MacOS:
-    runs-on:
-      - self-hosted
-      - macOS
-    timeout-minutes: 720
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run tests for dwi pipelines
-        run: |
-          make env.conda
-          source ~/miniconda3/etc/profile.d/conda.sh
-          conda activate "${{ github.workspace }}"/env
-          source "$(brew --prefix)/opt/modules/init/bash"
-          module load clinica/fsl/6.0.5
-          module load clinica/ants/2.4.4
-          module load clinica/freesurfer/6.0.0
-          make install
-          cd test
-          poetry run pytest --verbose \
-          --working_directory=/Volumes/data/working_dir_mac \
-          --input_data_directory=/Volumes/data_ci \
-          --basetemp=/Volumes/data/tmp \
-          --junitxml=./test-reports/non_regression_dwi_mac.xml \
-          --disable-warnings \
-          ./nonregression/pipelines/dwi/test_pipelines.py
+#  test-dwi-MacOS:
+#    runs-on:
+#      - self-hosted
+#      - macOS
+#    timeout-minutes: 720
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Run tests for dwi pipelines
+#        run: |
+#          make env.conda
+#          source ~/miniconda3/etc/profile.d/conda.sh
+#          conda activate "${{ github.workspace }}"/env
+#          source "$(brew --prefix)/opt/modules/init/bash"
+#          module load clinica/fsl/6.0.5
+#          module load clinica/ants/2.4.4
+#          module load clinica/freesurfer/6.0.0
+#          make install
+#          cd test
+#          poetry run pytest --verbose \
+#          --working_directory=/Volumes/data/working_dir_mac \
+#          --input_data_directory=/Volumes/data_ci \
+#          --basetemp=/Volumes/data/tmp \
+#          --junitxml=./test-reports/non_regression_dwi_mac.xml \
+#          --disable-warnings \
+#          ./nonregression/pipelines/dwi/test_pipelines.py
 
   test-dwi-Linux:
     runs-on:

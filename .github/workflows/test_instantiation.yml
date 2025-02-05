@@ -14,28 +14,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-instantiation-MacOS:
-    runs-on:
-      - self-hosted
-      - macOS
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run instantiation tests
-        run: |
-          make env.conda
-          source ~/miniconda3/etc/profile.d/conda.sh
-          conda activate "${{ github.workspace }}"/env
-          source "$(brew --prefix)/opt/modules/init/bash"
-          module load clinica.all
-          make install
-          cd test
-          poetry run pytest --verbose \
-          --working_directory=/Volumes/data/working_dir_mac \
-          --input_data_directory=/Volumes/data_ci \
-          --basetemp=/Volumes/data/tmp \
-          --junitxml=./test-reports/instantiation_mac.xml \
-          --disable-warnings \
-          ./instantiation/
+#  test-instantiation-MacOS:
+#    runs-on:
+#      - self-hosted
+#      - macOS
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Run instantiation tests
+#        run: |
+#          make env.conda
+#          source ~/miniconda3/etc/profile.d/conda.sh
+#          conda activate "${{ github.workspace }}"/env
+#          source "$(brew --prefix)/opt/modules/init/bash"
+#          module load clinica.all
+#          make install
+#          cd test
+#          poetry run pytest --verbose \
+#          --working_directory=/Volumes/data/working_dir_mac \
+#          --input_data_directory=/Volumes/data_ci \
+#          --basetemp=/Volumes/data/tmp \
+#          --junitxml=./test-reports/instantiation_mac.xml \
+#          --disable-warnings \
+#          ./instantiation/
 
   test-instantiation-Linux:
     runs-on:
