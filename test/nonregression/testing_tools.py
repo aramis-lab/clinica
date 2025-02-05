@@ -4,7 +4,7 @@ import os
 from enum import Enum
 from os import PathLike
 from pathlib import Path
-from typing import Callable, Dict
+from typing import Callable, Dict, Union
 
 import numpy as np
 import pandas as pd
@@ -511,13 +511,13 @@ def _load_scans_tsv(bids_dir: Path, ref_tsv: Path) -> pd.DataFrame:
     return pd.read_csv(
         bids_dir / ref_tsv.parent.parent.name / ref_tsv.parent.name / ref_tsv.name,
         sep="\t",
-    )
+    ).sort_values(by="filename", ignore_index=True)
 
 
 LoaderInterface = Callable[[Path, Path], pd.DataFrame]
 
 
-def _loader_factory(level: str | Level) -> LoaderInterface:
+def _loader_factory(level: Union[str, Level]) -> LoaderInterface:
     if (level := Level(level)) == Level.PARTICIPANTS:
         return _load_participants_tsv
     if level == Level.SESSIONS:
