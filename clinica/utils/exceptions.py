@@ -34,6 +34,10 @@ class ClinicaExistingDatasetError(ClinicaDatasetError):
         )
 
 
+class ClinicaImageDimensionError(ClinicaException):
+    """Base class for errors linked to image dimensions."""
+
+
 class ClinicaParserError(ClinicaException):
     """Base class for parser errors."""
 
