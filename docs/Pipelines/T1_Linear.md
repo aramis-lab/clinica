@@ -20,7 +20,7 @@ If you only installed the core of Clinica, this pipeline needs the installation 
     required in this case. The ANTsPy package is installed with other Python dependencies of Clinica.
     To use this options, you simply need to add the `--use-antspy` option flag to the command line (see below).
     Note however that this is a new and not extensively tested option such that bugs or unexpected
-    results are possible.**Please contact the Clinica developer team if you encounter issues**.
+    results are possible. **Please contact the Clinica developer team if you encounter issues**.
 
 ## Running the pipeline
 
