@@ -30,12 +30,12 @@ The pipeline can be run with the following command line:
 clinica run t1-linear [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY
 ```
 
-where:
+where :
 
 - `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../BIDS.md) hierarchy.
 - `CAPS_DIRECTORY` is the output folder containing the results in a [CAPS](../CAPS/Introduction.md) hierarchy.
 
-with options : 
+with specific options : 
 
 - `-ui`/`--uncropped_image` : By default, output images are cropped to a **fixed** matrix size of 169×208×179, 1 mm isotropic voxels. This allows reducing the computing power required when training deep learning models afterwards.
 Use this option if you do not want to get cropped images.

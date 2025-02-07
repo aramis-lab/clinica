@@ -130,6 +130,7 @@ You might also use `CNvsAD`, for instance, as group ID for a statistical group c
 
 --8<-- "snippets/pipelines_options.md"
 
+## Common options for pipelines
 --8<-- "snippets/converters_options.md"
 
 --8<-- "snippets/known_issues.md:matlab"
