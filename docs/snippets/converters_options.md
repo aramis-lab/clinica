@@ -3,7 +3,7 @@
 - `-- subjects_list` / `- sl`  : path to a text file containing a list of specific subjects to extract. The expected format is one subject per line :
 
 === "Example with the ADNI dataset"
-```
+```{ .text .copy }
   001_S_0001
   002_S_0002
 ```

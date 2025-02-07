@@ -7,18 +7,19 @@ For instance, running the [FreeSurfer pipeline](/Pipelines/T1_FreeSurfer.md) on 
 clinica run t1-freesurfer BIDS_PATH OUTPUT_PATH -tsv my_subjects.tsv
 ```
 
-where your TSV file looks as follows:
+<div class="grid" markdown>
 
-```text
-participant_id  session_id
-sub-CLNC0001    ses-M000
-sub-CLNC0001    ses-M018
-sub-CLNC0002    ses-M000
-...
-```
-
-!!! warning "Writing the TSV"
+=== "TSV Example :"
+    ```{ .text .copy }
+    participant_id  session_id
+    sub-CLNC0001    ses-M000
+    sub-CLNC0001    ses-M018
+    sub-CLNC0002    ses-M000
+    ```
+    
+    !!! warning "Writing the TSV"
     To make the display clearer the rows here contain successive tabs but that should not happen in an actual TSV.
+</div>
 
 - `-wd` / `--working_directory`
 
