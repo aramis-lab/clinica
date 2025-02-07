@@ -49,7 +49,7 @@ Use this option if you do not want to get cropped images.
 !!! tip
     Do not hesitate to type `clinica run t1-linear --help` to see the full list of parameters.
 
---8<-- "snippets/converters_options.md"
+--8<-- "snippets/pipelines_options.md"
 
 ## Outputs
 
