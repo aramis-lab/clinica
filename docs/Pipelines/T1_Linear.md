@@ -50,7 +50,7 @@ Use this option if you do not want to get cropped images.
 
 ## Outputs
 
-Results are stored in the folder following the [CAPS hierarchy](../CAPS/Specifications.md#t1-linear---affine-registration-of-t1w-images-to-the-mni-standard-space): `subjects/<participant_id>/<session_id>/t1_linear`, including the outputs:
+Results are stored in the folder `subjects/<participant_id>/<session_id>/t1_linear` following the [CAPS hierarchy](../CAPS/Specifications.md#t1-linear---affine-registration-of-t1w-images-to-the-mni-standard-space) and include the outputs:
 
 - `<source_file>_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz`: T1w image affinely registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html).
 - `<source_file>_space-MNI152NLin2009cSym_res-1x1x1_affine.mat`: affine transformation estimated with [ANTs](https://stnava.github.io/ANTs/).
