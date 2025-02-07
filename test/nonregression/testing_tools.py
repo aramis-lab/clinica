@@ -552,13 +552,17 @@ def compare_bids_tsv(bids_out: Path, bids_ref: Path):
 
 def _find_path_from_base(base_path: Path, file_path: Path):
     # todo :test
-    # todo : this or create a new pattern with base*file_name ?
     return Path(str(file_path).replace(str(base_path), ""))
 
 
 def compare_niftis(out_path: Path, ref_path: Path):
     import nibabel as nib
 
+    # : outpath type .../caps
+    # outfile type .../caps/subjects
+
+    # todo : investigate Path().relative_to, or parts
+
     for out_file in out_path.rglob("*.nii.gz"):
         nib.load(out_file)
-        file_path = ref_path / out_file
+        file_path = ref_path.parent
