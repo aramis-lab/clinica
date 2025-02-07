@@ -251,7 +251,7 @@ def build_bids_tsv(tmp_path: Path) -> Path:
     return bids_path
 
 
-def test_loaders(tmp_path):
+def test_loader_participants(tmp_path):
     bids_path = build_bids_tsv(tmp_path)
 
     assert_frame_equal(
@@ -259,10 +259,18 @@ def test_loaders(tmp_path):
         _load_participants_tsv(bids_path, Path("")),
     )
 
+
+def test_loader_sessions(tmp_path):
+    bids_path = build_bids_tsv(tmp_path)
+
     assert_frame_equal(
         pd.DataFrame({"session_id": ["ses-M006", "ses-M012"], "age": [20, 20]}),
         _load_sessions_tsv(bids_path, bids_path / "sub-001" / "sub-001_sessions.tsv"),
     )
+
+
+def test_loader_scans(tmp_path):
+    bids_path = build_bids_tsv(tmp_path)
 
     assert_frame_equal(
         pd.DataFrame(
@@ -304,15 +312,17 @@ def test_compare_bids_tsv_success(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "modified_frame, frame_path",
+    "modified_frame, frame_path, error_message",
     [
         (
             pd.DataFrame({"participant_id": ["sub-001"], "age": [26]}),
             "participants.tsv",
+            "participants.tsv shape mismatch",
         ),
         (
             pd.DataFrame({"session_id": ["ses-M012", "ses-M006"], "age": [20, 25]}),
             "sub-001/sub-001_sessions.tsv",
+            r"sub-001_sessions.tsv.* values are different",
         ),
         (
             pd.DataFrame(
@@ -322,15 +332,16 @@ def test_compare_bids_tsv_success(tmp_path):
                 }
             ),
             "sub-001/ses-M016/sub-001_ses-M016_scans.tsv",
+            r"sub-001_ses-M016_scans.tsv.* values are different",
         ),
     ],
 )
-def test_compare_bids_tsv_error(tmp_path, modified_frame, frame_path):
+def test_compare_bids_tsv_error(tmp_path, modified_frame, frame_path, error_message):
     from shutil import copytree
 
     bids_path = build_bids_tsv(tmp_path)
     copy = tmp_path / "BIDS_copy"
     copytree(bids_path, copy)
     modified_frame.to_csv(copy / frame_path, sep="\t", index=False)
-    with pytest.raises(AssertionError):
+    with pytest.raises(AssertionError, match=error_message):
         compare_bids_tsv(bids_path, copy)
