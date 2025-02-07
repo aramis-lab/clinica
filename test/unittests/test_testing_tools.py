@@ -1,7 +1,12 @@
 import os
 from os import PathLike
-from pathlib import PurePath
+from pathlib import Path, PurePath
 from test.nonregression.testing_tools import (
+    Level,
+    _load_participants_tsv,
+    _load_scans_tsv,
+    _load_sessions_tsv,
+    compare_bids_tsv,
     compare_folders_structures,
     compare_folders_with_hashes,
     create_list_hashes,
@@ -10,7 +15,9 @@ from typing import Callable
 
 import nibabel as nib
 import numpy as np
+import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
 
 
 def test_likeliness_measure(tmp_path: PurePath):
@@ -221,3 +228,120 @@ def test_compare_folders_structures(
     shutil.rmtree(tmp_path / "sub-02")
     with pytest.raises(ValueError, match="/sub-02/bar.tsv not found !"):
         compare_func(tmp_path, tmp_path / "hashes.pl")
+
+
+def build_bids_tsv(tmp_path: Path) -> Path:
+    bids_path = tmp_path / "BIDS"
+    bids_path.mkdir()
+    prpc = pd.DataFrame({"participant_id": ["sub-002", "sub-001"], "age": [20, 26]})
+    prpc.to_csv(bids_path / "participants.tsv", sep="\t", index=False)
+    sub_path = bids_path / "sub-001"
+    sub_path.mkdir()
+    sess = pd.DataFrame({"session_id": ["ses-M012", "ses-M006"], "age": [20, 20]})
+    sess.to_csv(sub_path / "sub-001_sessions.tsv", sep="\t", index=False)
+    ses_path = sub_path / "ses-M016"
+    ses_path.mkdir()
+    scans = pd.DataFrame(
+        {
+            "filename": ["pet/foo.json", "anat/foo.json"],
+            "acq_time": ["00:00:00", "00:00:00"],
+        }
+    )
+    scans.to_csv(ses_path / "sub-001_ses-M016_scans.tsv", sep="\t", index=False)
+    return bids_path
+
+
+def test_loader_participants(tmp_path):
+    bids_path = build_bids_tsv(tmp_path)
+
+    assert_frame_equal(
+        pd.DataFrame({"participant_id": ["sub-001", "sub-002"], "age": [26, 20]}),
+        _load_participants_tsv(bids_path, Path("")),
+    )
+
+
+def test_loader_sessions(tmp_path):
+    bids_path = build_bids_tsv(tmp_path)
+
+    assert_frame_equal(
+        pd.DataFrame({"session_id": ["ses-M006", "ses-M012"], "age": [20, 20]}),
+        _load_sessions_tsv(bids_path, bids_path / "sub-001" / "sub-001_sessions.tsv"),
+    )
+
+
+def test_loader_scans(tmp_path):
+    bids_path = build_bids_tsv(tmp_path)
+
+    assert_frame_equal(
+        pd.DataFrame(
+            {
+                "filename": ["anat/foo.json", "pet/foo.json"],
+                "acq_time": ["00:00:00", "00:00:00"],
+            }
+        ),
+        _load_scans_tsv(
+            bids_path, bids_path / "sub-001" / "ses-M016" / "sub-001_ses-M016_scans.tsv"
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    "level, expected",
+    [
+        ("participants", _load_participants_tsv),
+        (Level.SESSIONS, _load_sessions_tsv),
+        (Level.SCANS, _load_scans_tsv),
+    ],
+)
+def test_loader_factory(level, expected):
+    from test.nonregression.testing_tools import _loader_factory
+
+    assert expected == _loader_factory(level)
+
+
+def test_loader_factory_error():
+    from test.nonregression.testing_tools import _loader_factory
+
+    with pytest.raises(ValueError):
+        _loader_factory("foo")
+
+
+def test_compare_bids_tsv_success(tmp_path):
+    bids_path = build_bids_tsv(tmp_path)
+    compare_bids_tsv(bids_path, bids_path)
+
+
+@pytest.mark.parametrize(
+    "modified_frame, frame_path, error_message",
+    [
+        (
+            pd.DataFrame({"participant_id": ["sub-001"], "age": [26]}),
+            "participants.tsv",
+            "participants.tsv shape mismatch",
+        ),
+        (
+            pd.DataFrame({"session_id": ["ses-M012", "ses-M006"], "age": [20, 25]}),
+            "sub-001/sub-001_sessions.tsv",
+            r"sub-001_sessions.tsv.* values are different",
+        ),
+        (
+            pd.DataFrame(
+                {
+                    "filename": ["pet/foo.nii.gz", "anat/foo.json"],
+                    "acq_time": ["00:00:00", "00:00:00"],
+                }
+            ),
+            "sub-001/ses-M016/sub-001_ses-M016_scans.tsv",
+            r"sub-001_ses-M016_scans.tsv.* values are different",
+        ),
+    ],
+)
+def test_compare_bids_tsv_error(tmp_path, modified_frame, frame_path, error_message):
+    from shutil import copytree
+
+    bids_path = build_bids_tsv(tmp_path)
+    copy = tmp_path / "BIDS_copy"
+    copytree(bids_path, copy)
+    modified_frame.to_csv(copy / frame_path, sep="\t", index=False)
+    with pytest.raises(AssertionError, match=error_message):
+        compare_bids_tsv(bids_path, copy)
