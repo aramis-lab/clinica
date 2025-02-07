@@ -17,20 +17,15 @@ clinica run t1-freesurfer BIDS_PATH OUTPUT_PATH -tsv my_subjects.tsv
     sub-CLNC0002    ses-M000
     ```
     
-!!! warning "  "
+!!! warning "Creating the TSV"
     To make the display clearer the rows here contain successive tabs but that should not happen in an actual TSV.
 </div>
 
 - `-wd` / `--working_directory`
 
-In every pipeline, a working directory can be specified.
-This directory gathers all the inputs and outputs of the different steps of the pipeline.
-It is then very useful for the debugging process.
-In the case where your pipeline execution crashes, you can relaunch it with the exact same parameters which will allow you to continue from the last successfully executed node.
+By default when running a pipeline, a temporary working directory is created. This directory stores all the intermediary inputs and outputs of the different steps of the pipeline. If everything goes well, the output directory is eventually created and the working directory is deleted. 
 
-!!! info "No working directory"
-    If you do not specify any working directory, a temporary one will be created, then deleted at the end if everything went well.
-
+With this option, a working directory of your choice can be specified. It is very useful for the debugging process or if your pipeline crashes. Then, you can relaunch it with the exact same parameters which will allow you to continue from the last successfully executed node.
 For the pipelines that generate many files, such as `dwi-preprocessing` (especially if you run it on multiple subjects), a specific drive/partition with enough space can be used to store the working directory.
 
 - `-np` / `--n_procs`
