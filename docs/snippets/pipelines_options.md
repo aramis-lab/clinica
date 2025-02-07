@@ -17,7 +17,7 @@ clinica run t1-freesurfer BIDS_PATH OUTPUT_PATH -tsv my_subjects.tsv
     sub-CLNC0002    ses-M000
     ```
     
-    !!! warning "Writing the TSV"
+!!! warning "Writing the TSV"
     To make the display clearer the rows here contain successive tabs but that should not happen in an actual TSV.
 </div>
 
