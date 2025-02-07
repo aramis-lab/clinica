@@ -480,7 +480,7 @@ class PETLinear(PETPipeline):
                 (
                     ants_registration_nonlinear_node,
                     ants_applytransform_nonlinear_node,
-                    [("forward_transforms", "transforms")],
+                    [("reverse_forward_transforms", "transforms")],
                 ),
                 (
                     ants_applytransform_node,
