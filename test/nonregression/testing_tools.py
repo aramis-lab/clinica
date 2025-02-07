@@ -548,3 +548,17 @@ def compare_bids_tsv(bids_out: Path, bids_ref: Path):
             errors += [str(e).replace("\n\n", "\n")]
     if errors:
         raise AssertionError("\n\n".join(errors))
+
+
+def _find_path_from_base(base_path: Path, file_path: Path):
+    # todo :test
+    # todo : this or create a new pattern with base*file_name ?
+    return Path(str(file_path).replace(str(base_path), ""))
+
+
+def compare_niftis(out_path: Path, ref_path: Path):
+    import nibabel as nib
+
+    for out_file in out_path.rglob("*.nii.gz"):
+        nib.load(out_file)
+        file_path = ref_path / out_file
