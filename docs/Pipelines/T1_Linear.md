@@ -14,13 +14,13 @@ This pipeline was designed as a prerequisite for the [`extract](https://clinicad
 
 If you only installed the core of Clinica, this pipeline needs the installation of [ANTs](../Software/Third-party.md#ants) on your computer.
 
-!!! tip
+!!! tip "Using ANTsPy instead of ANTs"
     Since clinica `0.9.0` you have the option to rely on [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html)
     instead of [ANTs](../Software/Third-party.md#ants) to run this pipeline, which means that the installation of ANTs is not
     required in this case. The ANTsPy package is installed with other Python dependencies of Clinica.
     To use this options, you simply need to add the `--use-antspy` option flag to the command line (see below).
     Note however that this is a new and not extensively tested option such that bugs or unexpected
-    results are possible. **Please contact the Clinica developer team if you encounter issues**.
+    results are possible.**Please contact the Clinica developer team if you encounter issues**.
 
 ## Running the pipeline
 
@@ -35,16 +35,12 @@ where:
 - `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../BIDS.md) hierarchy.
 - `CAPS_DIRECTORY` is the output folder containing the results in a [CAPS](../CAPS/Introduction.md) hierarchy.
 
-On default, cropped images (matrix size 169×208×179, 1 mm isotropic voxels) are generated to reduce the computing power required when training deep learning models.
-Use the option `--uncropped_image` if you do not want to crop the image.
+with options : 
 
-It is also possible to obtain a deterministic result by setting the value of the random seed used by ANTs with the option `--random_seed`. Default will lead to a non-deterministic result.
-This option requires [ANTs](../Software/Third-party.md#ants) version `2.3.0` onwards. It is also compatible with [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html).
-
-It is possible to specify the name of the CAPS dataset that will be created to store the outputs of the pipeline. This works if this CAPS dataset does not exist yet, otherwise the existing name will be kept.
-This can be achieved with the `--caps-name` option. The provided name will appear in the `dataset_description.json` file, at the root of the CAPS folder (see [CAPS Specifications](../CAPS/Specifications.md#the-dataset_descriptionjson-file) for more details).
-
-Finally, it is possible to use [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html) instead of [ANTs](../Software/Third-party.md#ants) by passing the `--use-antspy` flag.
+- `-ui`/`--uncropped_image` : By default, output images are cropped to a **fixed** matrix size of 169×208×179, 1 mm isotropic voxels. This allows reducing the computing power required when training deep learning models afterwards.
+Use this option if you do not want to get cropped images.
+- `--random_seed` : By default, results are not deterministic. Use this option if you want to obtain a deterministic result. The value you set corresponds to the random seed used by ANTs. This option requires [ANTs](../Software/Third-party.md#ants) version `2.3.0` onwards and is also compatible with [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html).
+- `--use-antspy` : By default, the pipeline is running with [ANTs](../Software/Third-party.md#ants). Use this flag option if you want to use [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html) instead.
 
 !!! note
     The arguments common to all Clinica pipelines are described in
@@ -53,13 +49,15 @@ Finally, it is possible to use [ANTsPy](https://antspyx.readthedocs.io/en/latest
 !!! tip
     Do not hesitate to type `clinica run t1-linear --help` to see the full list of parameters.
 
+--8<-- "snippets/converters_options.md"
+
 ## Outputs
 
-Results are stored in the following folder of the [CAPS hierarchy](../CAPS/Specifications.md#t1-linear---affine-registration-of-t1w-images-to-the-mni-standard-space): `subjects/<participant_id>/<session_id>/t1_linear` with the following outputs:
+Results are stored in the folder following the [CAPS hierarchy](../CAPS/Specifications.md#t1-linear---affine-registration-of-t1w-images-to-the-mni-standard-space): `subjects/<participant_id>/<session_id>/t1_linear`, including the outputs:
 
 - `<source_file>_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz`: T1w image affinely registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html).
-- (optional) `<source_file>_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz`: T1w image registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html) and cropped.
 - `<source_file>_space-MNI152NLin2009cSym_res-1x1x1_affine.mat`: affine transformation estimated with [ANTs](https://stnava.github.io/ANTs/).
+- (optional) `<source_file>_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz`: T1w image registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html) and cropped. By default this file will be present but the flag `--uncropped_image` can be used to avoid computing it.
 
 ## Going further
 
