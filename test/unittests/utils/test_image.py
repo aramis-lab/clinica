@@ -281,17 +281,25 @@ def test_crop_nifti_input_image_not_3d_error(tmp_path):
 
     with pytest.raises(
         ClinicaImageDimensionError,
-        match=re.escape(
-            "The function crop_nifti is implemented for anatomical 3D images. "
-            "You provided an image of shape (10, 10, 10, 10)."
-        ),
+        match=f"The image in {tmp_path / 'test.nii.gz'} is not 3D.",
     ):
         crop_nifti(tmp_path / "test.nii.gz")
 
 
-def test_crop_nifti_with_resampling(tmp_path):
+def test_crop_nifti_no_cropping(tmp_path):
+    from clinica.utils.image import crop_nifti
+
+    input_image = nib.Nifti1Image(np.random.random((10, 10, 10)), np.eye(4))
+    input_image.to_filename(tmp_path / "test.nii.gz")
+
+    cropped = crop_nifti(tmp_path / "test.nii.gz", output_dir=tmp_path)
+
+    assert_nifti_equal(tmp_path / "test.nii.gz", tmp_path / "test_cropped.nii.gz")
+
+
+def test_crop_nifti_using_t1_mni_template_with_resampling(tmp_path):
     from clinica.utils.image import (
-        crop_nifti,
+        crop_nifti_using_t1_mni_template,
         get_mni_cropped_template,
         get_mni_template,
     )
@@ -305,19 +313,21 @@ def test_crop_nifti_with_resampling(tmp_path):
             "The `crop_nifti` function will try to resample the input image to the reference template"
         ),
     ):
-        cropped = crop_nifti(tmp_path / "mni.nii.gz", output_dir=tmp_path)
+        cropped = crop_nifti_using_t1_mni_template(
+            tmp_path / "mni.nii.gz", output_dir=tmp_path
+        )
         assert nib.load(cropped).shape == nib.load(get_mni_cropped_template()).shape
 
 
-def test_crop_nifti(tmp_path):
+def test_crop_nifti_using_t1_mni_template(tmp_path):
     from clinica.utils.image import (
-        crop_nifti,
+        crop_nifti_using_t1_mni_template,
         get_mni_cropped_template,
         get_mni_template,
     )
 
     nib.load(get_mni_template("t1")).to_filename(tmp_path / "mni.nii.gz")
-    crop_nifti(tmp_path / "mni.nii.gz", output_dir=tmp_path)
+    crop_nifti_using_t1_mni_template(tmp_path / "mni.nii.gz", output_dir=tmp_path)
 
     assert (tmp_path / "mni_cropped.nii.gz").exists()
     cropped = nib.load(tmp_path / "mni_cropped.nii.gz")
