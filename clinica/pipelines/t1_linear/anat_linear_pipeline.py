@@ -261,7 +261,10 @@ class AnatLinear(Pipeline):
             run_ants_registration_task,
             run_n4biasfieldcorrection_task,
         )
-        from clinica.pipelines.tasks import crop_nifti_task, get_filename_no_ext_task
+        from clinica.pipelines.tasks import (
+            crop_nifti_using_t1_mni_template_task,
+            get_filename_no_ext_task,
+        )
 
         from .anat_linear_utils import print_end_pipeline
 
@@ -335,7 +338,7 @@ class AnatLinear(Pipeline):
         cropnifti = npe.Node(
             name="cropnifti",
             interface=nutil.Function(
-                function=crop_nifti_task,
+                function=crop_nifti_using_t1_mni_template_task,
                 input_names=["input_image", "output_path"],
                 output_names=["output_img"],
             ),
