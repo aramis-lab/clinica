@@ -16,6 +16,7 @@ __all__ = [
     "remove_dummy_dimension_from_image",
     "crop_nifti",
     "clip_nifti",
+    "crop_nifti_using_t1_mni_template",
     "get_mni_template",
     "get_mni_cropped_template",
 ]
@@ -261,6 +262,9 @@ class Slice:
         return f"( {self.start}, {self.end} )"
 
 
+BboxTuple = tuple[tuple[int, int], tuple[int, int], tuple[int, int]]
+
+
 @dataclass
 class Bbox3D:
     """3D Bounding Box."""
@@ -285,7 +289,11 @@ class Bbox3D:
             Slice(start_z, end_z),
         )
 
-    def get_slices(self) -> Tuple[slice, slice, slice]:
+    @classmethod
+    def from_tuple(cls, box: BboxTuple):
+        return cls.from_coordinates(*box[0], *box[1], *box[2])
+
+    def get_slices(self) -> tuple[slice, slice, slice]:
         return (
             self.x_slice.get_slice(),
             self.y_slice.get_slice(),
@@ -403,26 +411,95 @@ def _get_mni_template_flair() -> Path:
     )
 
 
-def crop_nifti(input_image_path: Path, output_dir: Optional[Path] = None) -> Path:
-    """Crop input image.
+class NiftiImage:
+    """Wrapper around the nib.Nifti1Image."""
 
-    The function expects a 3D anatomical image and will crop it
-    using a pre-computed bounding box. This bounding box has been
-    used to crop the MNI template (located in
-    clinica/resources/masks/mni_icbm152_t1_tal_nlin_sym_09c.nii)
-    into the cropped template (located in
-    clinica/resources/masks/ref_cropped_template.nii.gz).
+    def __init__(self, image_path: Union[str, Path]):
+        from nibabel.filebasedimages import ImageFileError
 
-    If the bounding box falls outside of the image limits, the
-    function will perform resampling of the input image onto the
-    reference cropped template.
+        image_path = Path(image_path)
+        if not image_path.is_file():
+            raise FileNotFoundError(f"File {image_path} does not exist.")
+        try:
+            nib.load(image_path)
+        except ImageFileError:
+            raise IOError(f"File {image_path} is not a nifti image or is corrupted.")
+        self.path = Path(image_path)
+
+    def load(self) -> nib.Nifti1Image:
+        return nib.load(self.path)
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        return self.load().shape
+
+    @property
+    def bbox(self) -> Bbox3D:
+        return Bbox3D.from_coordinates(
+            0, self.shape[0], 0, self.shape[1], 0, self.shape[2]
+        )
+
+    @property
+    def data(self) -> np.ndarray:
+        return self.load().get_fdata()
+
+    @property
+    def affine(self) -> np.ndarray:
+        return self.load().affine
+
+    def get_filename(self, with_extension: bool = True) -> str:
+        from clinica.utils.filemanip import get_filename_no_ext
+
+        if with_extension:
+            return self.path.name
+        return get_filename_no_ext(self.path.name)
+
+
+class NiftiImage3D(NiftiImage):
+    def __init__(self, image_path: Union[str, Path]):
+        from clinica.utils.exceptions import ClinicaImageDimensionError
+
+        super().__init__(image_path)
+        if len(self.shape) != 3:
+            raise ClinicaImageDimensionError(f"The image in {self.path} is not 3D.")
+
+
+def crop_nifti(
+    input_image: Union[str, Path, NiftiImage3D],
+    bounding_box: Optional[Union[Bbox3D, BboxTuple]] = None,
+    reference_image: Optional[Union[str, Path, NiftiImage3D]] = None,
+    output_dir: Optional[Union[str, Path]] = None,
+) -> Path:
+    """Crop the input image using the provided bounding box.
+
+    If no bounding box is provided, the function performs no cropping.
+
+    The function expects a 3D anatomical image.
+
+    If the bounding box falls outside the image limits, the function will perform
+    resampling of the input image onto the reference cropped template.
 
     Parameters
     ----------
-    input_image_path : Path
-        The path to the input image to be cropped.
+    input_image : str, Path, or NiftiImage3D
+        The input image to be cropped. It can be a path to a nifti file,
+        provided as a plain string or a Path object, or it can be an
+        instance of NiftiImage3D. If the image is not 3D, an error will
+        be raised.
 
-    output_dir : Path, optional
+    bounding_box : Bbox3D or BboxTuple, optional
+        The bounding box to be used for cropping.
+        It can be either an instance of Bbox3D or provided as tuples:
+        ((start_x, end_x), (start_y, end_y), (start_z, end_z))
+        If no bounding box is provided, the function performs no cropping.
+
+    reference_image : str, Path, or NiftiImage3D, optional
+        The reference image used to get the header of the cropped image.
+        If nothing is provided, the header of the input image will be used.
+        This can be provided as a plain string or a Path object. It can also
+        be an instance of NiftiImage3D.
+
+    output_dir : str or Path, optional
         The folder in which to write the output cropped image.
         If not provided, the image will be written in current folder.
 
@@ -439,37 +516,81 @@ def crop_nifti(input_image_path: Path, output_dir: Optional[Path] = None) -> Pat
     from nilearn.image import new_img_like, resample_to_img
 
     from clinica.utils.exceptions import ClinicaImageDimensionError
-    from clinica.utils.filemanip import get_filename_no_ext
     from clinica.utils.stream import log_and_warn
 
-    filename_no_ext = get_filename_no_ext(input_image_path)
-    input_image = nib.load(input_image_path)
-    reference_image = nib.load(get_mni_cropped_template())
-    if len(input_image.shape) != 3:
-        raise ClinicaImageDimensionError(
-            "The function crop_nifti is implemented for anatomical 3D images. "
-            f"You provided an image of shape {input_image.shape}."
-        )
-    output_dir = output_dir or Path.cwd()
+    if not isinstance(input_image, NiftiImage3D):
+        input_image = NiftiImage3D(input_image)
+    if bounding_box is None:
+        bounding_box = input_image.bbox
+    if not isinstance(bounding_box, Bbox3D):
+        bounding_box = Bbox3D.from_tuple(bounding_box)
+    if reference_image:
+        if not isinstance(reference_image, NiftiImage3D):
+            reference_image = NiftiImage3D(reference_image)
+    else:
+        reference_image = input_image
     try:
-        cropped_array = _crop_array(input_image.get_fdata(), MNI_CROP_BBOX)
-        crop_img = new_img_like(reference_image, cropped_array)
+        cropped_array = _crop_array(input_image.data, bounding_box)
+        crop_img = new_img_like(reference_image.load(), cropped_array)
     except ClinicaImageDimensionError:
         log_and_warn(
             (
-                f"The image {input_image_path} has dimensions {input_image.get_fdata().shape} and cannot be "
-                f"cropped using the bounding box {MNI_CROP_BBOX}. The `crop_nifti` function will try to resample the "
-                f"input image to the reference template {get_mni_cropped_template()} instead of cropping."
+                f"The image {input_image.path} has dimensions {input_image.shape} and cannot be "
+                f"cropped using the bounding box {bounding_box}. The `crop_nifti` function will try to resample the "
+                f"input image to the reference template {reference_image.path} instead of cropping."
             ),
             UserWarning,
         )
-        crop_img = resample_to_img(input_image, reference_image, force_resample=True)
+        crop_img = resample_to_img(
+            input_image.load(), reference_image.load(), force_resample=True
+        )
     if crop_img.shape != reference_image.shape:
         raise ClinicaImageDimensionError(
             f"The cropped image has shape {crop_img.shape} different from the expected shape "
-            f"{reference_image.shape} of the reference template {get_mni_cropped_template()}."
+            f"{reference_image.shape} of the reference template {reference_image.path}."
         )
-    output_img = output_dir / f"{filename_no_ext}_cropped.nii.gz"
+    output_img = (
+        output_dir or Path.cwd()
+    ) / f"{input_image.get_filename(with_extension=False)}_cropped.nii.gz"
     crop_img.to_filename(output_img)
 
     return output_img
+
+
+def crop_nifti_using_t1_mni_template(
+    input_image: Union[str, Path, NiftiImage3D],
+    output_dir: Optional[Path] = None,
+) -> Path:
+    """The function expects a 3D anatomical image and will crop it using a pre-computed bounding box.
+
+    This bounding box has been used to crop the MNI template (located in clinica/resources/masks/mni_icbm152_t1_tal_nlin_sym_09c.nii)
+    into the cropped template (located in clinica/resources/masks/ref_cropped_template.nii.gz).
+
+    Parameters
+    ----------
+    input_image : str, Path, or NiftiImage3D
+        The input image to be cropped. It can be a path to a nifti file,
+        provided as a plain string or a Path object, or it can be an
+        instance of NiftiImage3D. If the image is not 3D, an error will
+        be raised.
+
+    output_dir : str or Path, optional
+        The folder in which to write the output cropped image.
+        If not provided, the image will be written in current folder.
+
+    Returns
+    -------
+    output_img : Path
+        The path to the cropped image.
+
+    Raises
+    ------
+    ClinicaImageDimensionError:
+        If the input image is not 3D or if the output image has unexpected dimension.
+    """
+    return crop_nifti(
+        input_image,
+        bounding_box=MNI_CROP_BBOX,
+        reference_image=get_mni_cropped_template(),
+        output_dir=output_dir,
+    )
