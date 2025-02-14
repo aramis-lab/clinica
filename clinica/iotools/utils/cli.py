@@ -43,10 +43,10 @@ def describe(dataset: Union[str, Path]):
 @click.option(
     "-t",
     "--threshold",
-    "threshold",
+    "centering_threshold",
     show_default=True,
     help="Centering threshold above which centering is performed.",
-    default=(50,),
+    default=50,
 )
 def center_nifti(
     bids_directory: str,

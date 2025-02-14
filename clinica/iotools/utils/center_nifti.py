@@ -49,7 +49,10 @@ def center_nifti(
     )
     from clinica.utils.stream import cprint, log_and_raise
 
-    cprint("Clinica is now centering the requested images.", lvl="info")
+    cprint(
+        f"Clinica is now centering the requested images with a threshold of {centering_threshold} mm.",
+        lvl="info",
+    )
 
     centered_files = center_all_nifti(
         bids_directory,
