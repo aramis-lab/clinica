@@ -8,7 +8,7 @@ def center_nifti(
     bids_directory: Union[str, PathLike],
     output_bids_directory: Union[str, PathLike],
     modalities: Optional[Iterable[str]] = None,
-    center_all_files: bool = False,
+    centering_threshold: int = 50,
     overwrite_existing_files: bool = False,
 ):
     """Center NIfTI files in a BIDS dataset.
@@ -24,9 +24,9 @@ def center_nifti(
     modalities : Iterable of str, optional
         The modalities that will be processed.
 
-    center_all_files : bool, optional
-        Whether to center all file or not.
-        Default=False.
+    centering_threshold : float, optional
+        Threshold above which images are centered. See the documentation for the reason behind the default.
+        Default=50 (mm).
 
     overwrite_existing_files : bool, optional
         If True and if the output BIDS directory already contain files,
@@ -55,7 +55,7 @@ def center_nifti(
         bids_directory,
         output_bids_directory,
         modalities,
-        center_all_files,
+        centering_threshold,
         overwrite_existing_files,
     )
 

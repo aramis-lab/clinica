@@ -298,7 +298,7 @@ def center_all_nifti(
     bids_dir: Union[str, PathLike],
     output_dir: Union[str, PathLike],
     modalities: Optional[Iterable[str]] = None,
-    center_all_files: bool = False,
+    centering_threshold: int = 50,
     overwrite_existing_files: bool = False,
 ) -> list[Path]:
     """Center all the NIfTI images of the input BIDS folder into the empty output_dir specified in argument.
@@ -317,8 +317,8 @@ def center_all_nifti(
     modalities : iterable of str, optional
         Process these modalities only. Process all modalities otherwise.
 
-    center_all_files:  bool, default=False
-        Center files that may cause problem for SPM if set to False, all files otherwise.
+    centering_threshold:  float, default=50
+        Center files above this threshold.
 
     overwrite_existing_files : bool, optional
         If True and if the output BIDS directory already contain files,
@@ -341,10 +341,11 @@ def center_all_nifti(
     copytree(bids_dir, output_dir, copy_function=copy2)
 
     nifti_files_filtered = _find_files_with_modality(output_dir, modalities)
-    if not center_all_files:
-        nifti_files_filtered = [
-            file for file in nifti_files_filtered if not _is_centered(file)
-        ]
+    nifti_files_filtered = [
+        file
+        for file in nifti_files_filtered
+        if not _is_centered(file, centering_threshold)
+    ]
     errors: list[str] = []
     for f in nifti_files_filtered:
         cprint(msg=f"Handling file {f}", lvl="debug")
