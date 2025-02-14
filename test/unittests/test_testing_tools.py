@@ -9,9 +9,10 @@ from test.nonregression.testing_tools import (
     compare_bids_tsv,
     compare_folders_structures,
     compare_folders_with_hashes,
+    compare_niftis,
     create_list_hashes,
 )
-from typing import Callable
+from typing import Callable, Optional
 
 import nibabel as nib
 import numpy as np
@@ -345,3 +346,31 @@ def test_compare_bids_tsv_error(tmp_path, modified_frame, frame_path, error_mess
     modified_frame.to_csv(copy / frame_path, sep="\t", index=False)
     with pytest.raises(AssertionError, match=error_message):
         compare_bids_tsv(bids_path, copy)
+
+
+def _create_nifti_in_dir(dir_path: Path, zeroes: Optional[bool] = False) -> Path:
+    dir_path.mkdir()
+    data = (
+        np.random.RandomState(42).random((16, 16, 16, 16))
+        if not zeroes
+        else np.zeros((16, 16, 16, 16))
+    )
+    nib.Nifti1Image(data, affine=np.eye(4)).to_filename(dir_path / "nifti.nii.gz")
+    return dir_path
+
+
+def test_compare_niftis_success(tmp_path):
+    compare_niftis(
+        _create_nifti_in_dir(tmp_path / "ref"), _create_nifti_in_dir(tmp_path / "out")
+    )
+
+
+def test_compare_niftis_error(tmp_path):
+    with pytest.raises(
+        AssertionError,
+        match="Following images do not meet the similarity criteria : \n\n nifti.nii.gz",
+    ):
+        compare_niftis(
+            _create_nifti_in_dir(tmp_path / "ref"),
+            _create_nifti_in_dir(tmp_path / "out", True),
+        )

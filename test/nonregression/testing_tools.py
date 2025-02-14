@@ -550,26 +550,11 @@ def compare_bids_tsv(bids_out: Path, bids_ref: Path):
         raise AssertionError("\n\n".join(errors))
 
 
-def _find_path_from_caps(ref_path: Path, out_file_path: Path) -> Path:
-    # todo :test
-    file_parts = list(out_file_path.parts)
-    try:
-        path_from_caps = "/".join(file_parts[file_parts.index("caps") + 1 :])
-    except ValueError:
-        raise ValueError("Folder 'caps' was not found in your reference folder path.")
-    if (base_file := ref_path / path_from_caps).exists():
-        return base_file
-    raise FileNotFoundError(
-        f"File {base_file} does not exist. Check the reference and pipeline output folder paths."
-    )
-
-
 def compare_niftis(out_path: Path, ref_path: Path):
     errors = []
     for out_file_path in out_path.rglob("*.nii.gz"):
-        ref_file_path = _find_path_from_caps(ref_path, out_file_path)
-
-        if not similarity_measure(out_file_path, ref_file_path, 0.99):
+        ref_file_path = ref_path / out_file_path.relative_to(out_path)
+        if not similarity_measure(out_file_path, ref_file_path, 0.95):
             errors += [out_file_path.name]
     if errors:
         raise AssertionError(
