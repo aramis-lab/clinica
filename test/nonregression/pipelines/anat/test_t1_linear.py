@@ -1,6 +1,10 @@
 from os import fspath
 from pathlib import Path
-from test.nonregression.testing_tools import compare_folders, configure_paths
+from test.nonregression.testing_tools import (
+    compare_folders,
+    compare_niftis,
+    configure_paths,
+)
 
 import pytest
 
@@ -26,9 +30,12 @@ def run_t1_linear(
 ) -> None:
     from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
 
+    out_caps = output_dir / "caps"
+    ref_caps = ref_dir / "caps"
+
     pipeline = AnatLinear(
         bids_directory=fspath(input_dir / "bids"),
-        caps_directory=fspath(output_dir / "caps"),
+        caps_directory=fspath(out_caps),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
         parameters={"uncropped_image": False},
@@ -36,7 +43,8 @@ def run_t1_linear(
     )
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
-    compare_folders(output_dir / "caps", ref_dir / "caps", output_dir)
+    compare_folders(out_caps, ref_caps, output_dir)
+    compare_niftis(out_caps, ref_caps)
 
 
 def run_flair_linear(
