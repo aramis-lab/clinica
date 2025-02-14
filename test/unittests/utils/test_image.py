@@ -384,3 +384,50 @@ def test_clip_nifti(
     ).to_filename(tmp_path / "expected.nii.gz")
 
     assert_nifti_equal(clipped, tmp_path / "expected.nii.gz")
+
+
+def test_nifti_image_file_not_exist_error(tmp_path):
+    from clinica.utils.image import NiftiImage
+
+    with pytest.raises(
+        FileNotFoundError,
+        match=f"File {tmp_path / 'image.nii.gz'} does not exist.",
+    ):
+        NiftiImage(tmp_path / "image.nii.gz")
+
+
+def test_nifti_image_file_corrupted_error(tmp_path):
+    from clinica.utils.image import NiftiImage
+
+    (tmp_path / "image.nii.gz").touch()
+
+    with pytest.raises(
+        IOError,
+        match=f"File {tmp_path / 'image.nii.gz'} is not a nifti image or is corrupted.",
+    ):
+        NiftiImage(tmp_path / "image.nii.gz")
+
+
+def test_nifti_image_get_filename(tmp_path):
+    from clinica.utils.image import NiftiImage
+
+    image = nib.Nifti1Image(np.random.random((10, 10, 10)), np.eye(4))
+    nib.save(image, tmp_path / "image.nii.gz")
+    image_instance = NiftiImage(tmp_path / "image.nii.gz")
+
+    assert image_instance.get_filename() == "image.nii.gz"
+    assert image_instance.get_filename(with_extension=False) == "image"
+
+
+def test_nifti_image_3d_error(tmp_path):
+    from clinica.utils.exceptions import ClinicaImageDimensionError
+    from clinica.utils.image import NiftiImage3D
+
+    image = nib.Nifti1Image(np.random.random((10, 10, 10, 10)), np.eye(4))
+    nib.save(image, tmp_path / "image.nii.gz")
+
+    with pytest.raises(
+        ClinicaImageDimensionError,
+        match=f"The image in {tmp_path / 'image.nii.gz'} is not 3D.",
+    ):
+        NiftiImage3D(tmp_path / "image.nii.gz")
