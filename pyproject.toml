@@ -1,14 +1,19 @@
-[tool.poetry]
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[project]
 name = "clinica"
 version = "0.9.3"
 description = "Software platform for clinical neuroimaging studies"
 license = "MIT"
-authors = ["ARAMIS Lab"]
-maintainers = ["Clinica developers <clinica.run@gmail.com>"]
+authors = [
+    { name = "ARAMIS Lab" },
+]
+maintainers = [
+    { name = "Clinica developers", email = "clinica.run@gmail.com>" },
+]
 readme = "README.md"
-homepage = "https://www.clinica.run"
-repository = "https://github.com/aramis-lab/clinica.git"
-documentation =  "https://aramislab.paris.inria.fr/clinica/docs/public/latest"
 keywords = [
     "bids",
     "image processing",
@@ -25,6 +30,12 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
     "Topic :: Scientific/Engineering :: Image Processing"
 ]
+
+[project.urls]
+homepage = "https://www.clinica.run"
+documentation = "https://aramislab.paris.inria.fr/clinica/docs/public/latest"
+sources = "https://github.com/aramis-lab/clinica"
+issues = "https://github.com/aramis-lab/clinica/issues"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
@@ -78,16 +89,11 @@ mkdocs = "^1.1"
 mkdocs-material = ">=7.1.8"
 pymdown-extensions = "*"
 
-
 [tool.poetry.group.optional.dependencies]
 brainstat = "^0.4.2"
 
 [tool.poetry.scripts]
 clinica = "clinica.cmdline:main"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 target-version = "py38"
