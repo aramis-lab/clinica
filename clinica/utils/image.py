@@ -434,12 +434,6 @@ class NiftiImage:
         return self.load().shape
 
     @property
-    def bbox(self) -> Bbox3D:
-        return Bbox3D.from_coordinates(
-            0, self.shape[0], 0, self.shape[1], 0, self.shape[2]
-        )
-
-    @property
     def data(self) -> np.ndarray:
         return self.load().get_fdata()
 
@@ -462,6 +456,12 @@ class NiftiImage3D(NiftiImage):
         super().__init__(image_path)
         if len(self.shape) != 3:
             raise ClinicaImageDimensionError(f"The image in {self.path} is not 3D.")
+
+    @property
+    def bbox(self) -> Bbox3D:
+        return Bbox3D.from_coordinates(
+            0, self.shape[0], 0, self.shape[1], 0, self.shape[2]
+        )
 
 
 def crop_nifti(
