@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from functools import cached_property
 from os import PathLike
 from pathlib import Path
 from typing import Callable, Optional, Tuple, Union
@@ -10,6 +11,8 @@ from nibabel.nifti1 import Nifti1Image
 
 __all__ = [
     "HemiSphere",
+    "NiftiImage",
+    "NiftiImage3D",
     "compute_aggregated_volume",
     "get_new_image_like",
     "merge_nifti_images_in_time_dimension",
@@ -426,20 +429,21 @@ class NiftiImage:
             raise IOError(f"File {image_path} is not a nifti image or is corrupted.")
         self.path = Path(image_path)
 
-    def load(self) -> nib.Nifti1Image:
+    @cached_property
+    def image(self) -> nib.Nifti1Image:
         return nib.load(self.path)
 
     @property
     def shape(self) -> tuple[int, ...]:
-        return self.load().shape
+        return self.image.shape
 
-    @property
+    @cached_property
     def data(self) -> np.ndarray:
-        return self.load().get_fdata()
+        return self.image.get_fdata()
 
     @property
     def affine(self) -> np.ndarray:
-        return self.load().affine
+        return self.image.affine
 
     def get_filename(self, with_extension: bool = True) -> str:
         from clinica.utils.filemanip import get_filename_no_ext
@@ -531,7 +535,7 @@ def crop_nifti(
         reference_image = input_image
     try:
         cropped_array = _crop_array(input_image.data, bounding_box)
-        crop_img = new_img_like(reference_image.load(), cropped_array)
+        crop_img = new_img_like(reference_image.image, cropped_array)
     except ClinicaImageDimensionError:
         log_and_warn(
             (
@@ -542,7 +546,7 @@ def crop_nifti(
             UserWarning,
         )
         crop_img = resample_to_img(
-            input_image.load(), reference_image.load(), force_resample=True
+            input_image.image, reference_image.image, force_resample=True
         )
     if crop_img.shape != reference_image.shape:
         raise ClinicaImageDimensionError(
