@@ -281,17 +281,25 @@ def test_crop_nifti_input_image_not_3d_error(tmp_path):
 
     with pytest.raises(
         ClinicaImageDimensionError,
-        match=re.escape(
-            "The function crop_nifti is implemented for anatomical 3D images. "
-            "You provided an image of shape (10, 10, 10, 10)."
-        ),
+        match=f"The image in {tmp_path / 'test.nii.gz'} is not 3D.",
     ):
         crop_nifti(tmp_path / "test.nii.gz")
 
 
-def test_crop_nifti_with_resampling(tmp_path):
+def test_crop_nifti_no_cropping(tmp_path):
+    from clinica.utils.image import crop_nifti
+
+    input_image = nib.Nifti1Image(np.random.random((10, 10, 10)), np.eye(4))
+    input_image.to_filename(tmp_path / "test.nii.gz")
+
+    cropped = crop_nifti(tmp_path / "test.nii.gz", output_dir=tmp_path)
+
+    assert_nifti_equal(tmp_path / "test.nii.gz", tmp_path / "test_cropped.nii.gz")
+
+
+def test_crop_nifti_using_t1_mni_template_with_resampling(tmp_path):
     from clinica.utils.image import (
-        crop_nifti,
+        crop_nifti_using_t1_mni_template,
         get_mni_cropped_template,
         get_mni_template,
     )
@@ -305,19 +313,21 @@ def test_crop_nifti_with_resampling(tmp_path):
             "The `crop_nifti` function will try to resample the input image to the reference template"
         ),
     ):
-        cropped = crop_nifti(tmp_path / "mni.nii.gz", output_dir=tmp_path)
+        cropped = crop_nifti_using_t1_mni_template(
+            tmp_path / "mni.nii.gz", output_dir=tmp_path
+        )
         assert nib.load(cropped).shape == nib.load(get_mni_cropped_template()).shape
 
 
-def test_crop_nifti(tmp_path):
+def test_crop_nifti_using_t1_mni_template(tmp_path):
     from clinica.utils.image import (
-        crop_nifti,
+        crop_nifti_using_t1_mni_template,
         get_mni_cropped_template,
         get_mni_template,
     )
 
     nib.load(get_mni_template("t1")).to_filename(tmp_path / "mni.nii.gz")
-    crop_nifti(tmp_path / "mni.nii.gz", output_dir=tmp_path)
+    crop_nifti_using_t1_mni_template(tmp_path / "mni.nii.gz", output_dir=tmp_path)
 
     assert (tmp_path / "mni_cropped.nii.gz").exists()
     cropped = nib.load(tmp_path / "mni_cropped.nii.gz")
@@ -374,3 +384,50 @@ def test_clip_nifti(
     ).to_filename(tmp_path / "expected.nii.gz")
 
     assert_nifti_equal(clipped, tmp_path / "expected.nii.gz")
+
+
+def test_nifti_image_file_not_exist_error(tmp_path):
+    from clinica.utils.image import NiftiImage
+
+    with pytest.raises(
+        FileNotFoundError,
+        match=f"File {tmp_path / 'image.nii.gz'} does not exist.",
+    ):
+        NiftiImage(tmp_path / "image.nii.gz")
+
+
+def test_nifti_image_file_corrupted_error(tmp_path):
+    from clinica.utils.image import NiftiImage
+
+    (tmp_path / "image.nii.gz").touch()
+
+    with pytest.raises(
+        IOError,
+        match=f"File {tmp_path / 'image.nii.gz'} is not a nifti image or is corrupted.",
+    ):
+        NiftiImage(tmp_path / "image.nii.gz")
+
+
+def test_nifti_image_get_filename(tmp_path):
+    from clinica.utils.image import NiftiImage
+
+    image = nib.Nifti1Image(np.random.random((10, 10, 10)), np.eye(4))
+    nib.save(image, tmp_path / "image.nii.gz")
+    image_instance = NiftiImage(tmp_path / "image.nii.gz")
+
+    assert image_instance.get_filename() == "image.nii.gz"
+    assert image_instance.get_filename(with_extension=False) == "image"
+
+
+def test_nifti_image_3d_error(tmp_path):
+    from clinica.utils.exceptions import ClinicaImageDimensionError
+    from clinica.utils.image import NiftiImage3D
+
+    image = nib.Nifti1Image(np.random.random((10, 10, 10, 10)), np.eye(4))
+    nib.save(image, tmp_path / "image.nii.gz")
+
+    with pytest.raises(
+        ClinicaImageDimensionError,
+        match=f"The image in {tmp_path / 'image.nii.gz'} is not 3D.",
+    ):
+        NiftiImage3D(tmp_path / "image.nii.gz")

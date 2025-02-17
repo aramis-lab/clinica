@@ -315,7 +315,7 @@ class PETLinear(PETPipeline):
         import nipype.pipeline.engine as npe
         from nipype.interfaces import ants
 
-        from clinica.pipelines.tasks import crop_nifti_task
+        from clinica.pipelines.tasks import crop_nifti_using_t1_mni_template_task
 
         from .tasks import (
             clip_task,
@@ -417,7 +417,7 @@ class PETLinear(PETPipeline):
         crop_nifti_node = npe.Node(
             name="cropNifti",
             interface=nutil.Function(
-                function=crop_nifti_task,
+                function=crop_nifti_using_t1_mni_template_task,
                 input_names=["input_image", "output_path"],
                 output_names=["output_image"],
             ),
