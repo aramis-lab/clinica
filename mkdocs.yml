@@ -137,8 +137,8 @@ nav:
     - center-nifti: IOTools/center_nifti.md
     - describe: IOTools/describe.md
   - Presentations & demos:
-    - NOW 2023: ClinicaConferences.md#neuro-openscience-workshop-2023
-    - NOW 2019: ClinicaConferences.md#neuro-openscience-workshop-2019
-    - OHBM 2018: ClinicaConferences.md#educational-course-on-pattern-recognition-for-clinical-neuroimaging-ohbm-2018
+    - NOW 2023: Conferences/neuro_openscience_workshop_2023.md
+    - NOW 2019: Conferences/neuro_openscience_workshop_2019.md
+    - OHBM 2018: Conferences/ohbm_2018.md
   - Glossary: glossary.md
   - What's new: CHANGELOG.md

@@ -50,7 +50,7 @@ Currently only supported for the [`t1-freesurfer` pipeline](./Pipelines/T1_FreeS
 
 ## Clinica at conferences
 
-Find on [this page](./ClinicaConferences.md) the presentations and demo materials used when we showcase Clinica.
+--8<-- "snippets/inventory_conferences.md"
 
 ## Support
 
