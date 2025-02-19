@@ -49,7 +49,7 @@ Pipeline options:
 
 !!! warning "Centering BIDS nifti"
     If the images from the `BIDS_DIRECTORY` are not centered, Clinica will give a warning because this can be an issue **if** later processing steps involve SPM (for instance if you are planning to run [pet-volume](./PET_Volume.md) afterwards).
-    The warning message will contain a suggestion of a command to be run on your `BIDS_DIRECTORY` in order to generate a new BIDS dataset with images centered. This relies on the IOTool [center-nifti](../IO.md#center-nifti---center-nifti-files-of-a-bids-directory).
+    The warning message will contain a suggestion of a command to be run on your `BIDS_DIRECTORY` in order to generate a new BIDS dataset with images centered. This relies on the IOTool [center-nifti](../IOTools/center_nifti.md).
     It is highly recommended to follow this recommendation but Clinica won't force you to do so.
 
 !!! note

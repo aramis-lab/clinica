@@ -57,7 +57,7 @@ Pipeline options:
 !!! warning "Centering BIDS nifti"
     The intra-subject registration of the PET image into the space of the subject’s T1-weighted MR image is very likely to fail if the images have important relative offsets.
     In this situation, Clinica will give a warning displaying a command that should be run in order to generate a new BIDS directory with all images centered.
-    This relies on the IOTool [center-nifti](../IO.md#center-nifti---center-nifti-files-of-a-bids-directory).
+    This relies on the IOTool [center-nifti](../IOTools/center_nifti.md).
     It is highly recommended to follow this recommendation but Clinica won't force you to do so.
 
 !!! info

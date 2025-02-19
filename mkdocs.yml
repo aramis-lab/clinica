@@ -130,15 +130,15 @@ nav:
     - OASIS-3 to BIDS: Converters/OASIS3TOBIDS.md
     - UK Biobank to BIDS: Converters/UKBtoBIDS.md
   - I/O tools:
-    - create-subjects-visits: IO#create-subjects-visits-generate-the-list-all-subjects-and-visits-of-a-given-dataset
-    - check-missing-modalities: IO#check-missing-modalities-check-missing-modalities-for-each-subject
-    - check-missing-processing: IO#check-missing-processing-check-missing-processing-in-a-caps-directory
-    - merge-tsv: IO#merge-tsv-gather-bids-and-caps-data-into-a-single-tsv-file
-    - center-nifti: IO#center-nifti-center-the-nifti-files-of-a-bids-directory
-    - describe: IO#describe-Describe-a-BIDS-or-CAPS-dataset
+    - create-subjects-visits: IOTools/create_subjects_visits.md
+    - check-missing-modalities: IOTools/check_missing_modalities.md
+    - check-missing-processing: IOTools/check_missing_processing.md
+    - merge-tsv: IOTools/merge_tsv.md
+    - center-nifti: IOTools/center_nifti.md
+    - describe: IOTools/describe.md
   - Presentations & demos:
-    - NOW 2023: ClinicaConferences#neuro-openscience-workshop-2023
-    - NOW 2019: ClinicaConferences#neuro-openscience-workshop-2019
-    - OHBM 2018: ClinicaConferences#educational-course-on-pattern-recognition-for-clinical-neuroimaging-ohbm-2018
+    - NOW 2023: ClinicaConferences.md#neuro-openscience-workshop-2023
+    - NOW 2019: ClinicaConferences.md#neuro-openscience-workshop-2019
+    - OHBM 2018: ClinicaConferences.md#educational-course-on-pattern-recognition-for-clinical-neuroimaging-ohbm-2018
   - Glossary: glossary.md
   - What's new: CHANGELOG.md
