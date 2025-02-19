@@ -1,14 +1,20 @@
-[tool.poetry]
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[project]
 name = "clinica"
 version = "0.9.3"
 description = "Software platform for clinical neuroimaging studies"
 license = "MIT"
-authors = ["ARAMIS Lab"]
-maintainers = ["Clinica developers <clinica.run@gmail.com>"]
+authors = [
+    { name = "ARAMIS Lab" },
+]
+maintainers = [
+    { name = "Clinica developers", email = "clinica.run@gmail.com>" },
+]
 readme = "README.md"
-homepage = "https://www.clinica.run"
-repository = "https://github.com/aramis-lab/clinica.git"
-documentation =  "https://aramislab.paris.inria.fr/clinica/docs/public/latest"
+requires-python = ">=3.9,<3.13"
 keywords = [
     "bids",
     "image processing",
@@ -25,42 +31,48 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
     "Topic :: Scientific/Engineering :: Image Processing"
 ]
+dependencies = [
+    "nibabel (>=5)",
+    "nipype (>=1.8.6)",
+    "argcomplete (>=1.9.4,<2)",
+    "pandas (>=2,<3)",
+    "jinja2 (>=3,<4)",
+    "xvfbwrapper",
+    "numpy (>=2,<3)",
+    "scikit-learn (>=1.0,<2)",
+    "nilearn (>=0.10.3,<1.0)",
+    "colorlog (>=5,<6)",
+    "xgboost",
+    "scipy (>=1.12,<2)",
+    "matplotlib",
+    "scikit-image",
+    "pydicom",
+    "networkx",
+    "click",
+    "click-option-group (>=0.5,<1.0)",
+    "xlrd",
+    "openpyxl",
+    "fsspec",
+    "pydra-nipype1",
+    "pydra (>=0.22,<1.0)",
+    "pybids (>=0.16,<1.0)",
+    "joblib (>=1.2.0,<2.0)",
+    "attrs (>=20.1.0)",
+    "cattrs",
+    "pydra-bids (>=0.0.10)",
+    "pydra-freesurfer (>=0.0.9)",
+    "pydra-petpvc (>=0.0.4)",
+    "pydra-fsl (>=0.0.22)",
+    "antspyx (>=0.4.2)",
+    "rich (>=13.8.0)",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.9,<3.13"
-nibabel = "^5"
-nipype = ">=1.8.6"
-argcomplete = "^1.9.4"
-pandas = "^2"
-jinja2 = "^3"
-xvfbwrapper = "*"
-numpy = "^2"
-scikit-learn = "^1.0"
-nilearn = "^0.10.3"
-colorlog = "^5"
-xgboost = "*"
-scipy = "^1.12"
-matplotlib = "*"
-scikit-image = "*"
-pydicom = "*"
-networkx = "^2"
-click = "^8"
-click-option-group = "^0.5"
-xlrd = "*"
-openpyxl = "*"
-fsspec = "*"
-pydra-nipype1 = "^0.2"
-pydra = "^0.22"
-pybids = "^0.16"
-joblib = "^1.2.0"
-attrs = ">=20.1.0"
-cattrs = "*"
-pydra-bids = "^0.0.10"
-pydra-freesurfer = "^0.0.9"
-pydra-petpvc="^0.0.4"
-pydra-fsl = "^0.0.22"
-antspyx = "^0.4.2"
-rich = "^13.8.0"
+[project.urls]
+homepage = "https://www.clinica.run"
+documentation = "https://aramislab.paris.inria.fr/clinica/docs/public/latest"
+sources = "https://github.com/aramis-lab/clinica"
+issues = "https://github.com/aramis-lab/clinica/issues"
+
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
@@ -78,16 +90,11 @@ mkdocs = "^1.1"
 mkdocs-material = ">=7.1.8"
 pymdown-extensions = "*"
 
-
 [tool.poetry.group.optional.dependencies]
 brainstat = "^0.4.2"
 
-[tool.poetry.scripts]
+[project.scripts]
 clinica = "clinica.cmdline:main"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 target-version = "py38"
