@@ -98,7 +98,9 @@ Clinica currently includes some converters for public datasets :
 
 `iotools` is a set of tools that allows the user to handle [BIDS](http://bids.neuroimaging.io) and [CAPS](../CAPS/Introduction.md) datasets.
 It allows generating lists of subjects or merging all tabular data into a single TSV file for analysis with external statistical software packages.
-See [here](../IO.md) for more details.
+
+??? info "Clinica available IOTools"
+    --8<-- "snippets/inventory_iotools.md"
 
 ### `clinica generate` (for developers)
 
