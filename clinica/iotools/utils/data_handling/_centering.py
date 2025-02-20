@@ -317,7 +317,7 @@ def center_all_nifti(
     modalities : iterable of str, optional
         Process these modalities only. Process all modalities otherwise.
 
-    centering_threshold:  float, default=50
+    centering_threshold:  int, default=50
         Center files above this threshold.
 
     overwrite_existing_files : bool, optional
