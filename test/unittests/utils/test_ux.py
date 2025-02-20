@@ -49,7 +49,7 @@ def test_get_message_images_to_process(subjects, sessions, expected_message):
 @pytest.mark.parametrize("max_number_of_lines", [0, 1, 2])
 def test_get_message_images_to_process_custom_max_number_of_lines_too_small(
     max_number_of_lines,
-):  
+):
     from clinica.utils.ux import _get_message_images_to_process
 
     assert (

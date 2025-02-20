@@ -3,8 +3,8 @@
 These functions are mainly called by the pipelines.
 """
 
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 LINES_TO_DISPLAY = 25
 

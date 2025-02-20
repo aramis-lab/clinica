@@ -2,8 +2,9 @@
 
 See CAPS specifications for details about long ID.
 """
+from collections.abc import Sequence
 from os import PathLike
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 
 def get_unique_subjects(
