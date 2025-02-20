@@ -9,6 +9,7 @@ from .nifd_to_bids import nifd_to_bids_cli
 from .oasis3_to_bids import oasis3_to_bids_cli
 from .oasis_to_bids import oasis_to_bids_cli
 from .ukb_to_bids import ukb_to_bids_cli
+from .kirby_to_bids import kirby_to_bids_cli
 
 
 @click.group("convert")
@@ -26,6 +27,7 @@ cli.add_command(oasis3_to_bids_cli.cli)
 cli.add_command(ukb_to_bids_cli.cli)
 cli.add_command(genfi_to_bids_cli.cli)
 cli.add_command(ixi_to_bids_cli.cli)
+cli.add_command(kirby_to_bids_cli.cli)
 
 if __name__ == "__main__":
     cli()
