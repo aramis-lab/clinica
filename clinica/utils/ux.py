@@ -3,36 +3,75 @@
 These functions are mainly called by the pipelines.
 """
 
+from collections.abc import Sequence
 from pathlib import Path
 
 LINES_TO_DISPLAY = 25
 
 
-def print_images_to_process(list_participant_id, list_session_id):
-    """Print which images will be processed by the pipeline."""
-    from clinica.utils.participant import get_unique_subjects
+def print_images_to_process(
+    participant_ids: Sequence[str],
+    session_ids: Sequence[str],
+    logging_level: str = "info",
+):
+    """Print which images will be processed by the pipeline.
 
+    Parameters
+    ----------
+    participant_ids : Sequence of str
+        The IDs of the participants.
+
+    session_ids : Sequence of str
+        The IDs of the corresponding sessions.
+
+    logging_level : str, optional
+        The logging level to use for displaying this information.
+        Default="info".
+    """
     from .stream import cprint
 
-    unique_participants, sessions_per_participant = get_unique_subjects(
-        list_participant_id, list_session_id
-    )
-
     cprint(
-        f"The pipeline will be run on the following {len(list_participant_id)} image(s):"
+        _get_message_images_to_process(
+            participant_ids, session_ids, max_number_of_lines=LINES_TO_DISPLAY
+        ),
+        lvl=logging_level,
     )
-    for i in range(0, min(len(unique_participants), LINES_TO_DISPLAY)):
-        sessions_i_th_participant = ", ".join(
-            s_id for s_id in sessions_per_participant[i]
-        )
-        cprint(f"\t{unique_participants[i]} | {sessions_i_th_participant},")
 
-    if len(unique_participants) > LINES_TO_DISPLAY:
-        cprint("\t...")
-        sessions_last_participant = ", ".join(
-            s_id for s_id in sessions_per_participant[-1]
+
+def _get_message_images_to_process(
+    participant_ids: Sequence[str],
+    session_ids: Sequence[str],
+    max_number_of_lines: int = 25,
+) -> str:
+    """Build the message displaying the images to process."""
+    from collections import defaultdict
+
+    subject_to_sessions = defaultdict(list)
+    for participant, session in zip(participant_ids, session_ids):
+        subject_to_sessions[participant].append(session)
+    # If there is no image or if the maximum number of lines is too short to print
+    # a meaningful list, then return a simple message
+    if len(subject_to_sessions) == 0 or max_number_of_lines <= 2:
+        return f"The pipeline will be run on {len(participant_ids)} image(s)."
+    message = (
+        f"The pipeline will be run on the following {len(participant_ids)} image(s):"
+    )
+    lines = [
+        f"{subject} | {', '.join(session)}"
+        for subject, session in subject_to_sessions.items()
+    ]
+    # If there is a single line we need to format it properly
+    if len(subject_to_sessions) == 1:
+        return message + "\n\t- " + "\n\t- ".join(lines)
+    # If the number of lines is larger than the maximum number,
+    # then use ... to mask subjects in the middle of the list
+    if len(lines) > max_number_of_lines:
+        return (
+            f"{message}\n\t- "
+            + "\n\t- ".join(lines[: max_number_of_lines - 2])
+            + f"\n\t\t...\n\t- {lines[-1]}"
         )
-        cprint(f"\t{unique_participants[-1]} | {sessions_last_participant},")
+    return f"{message}\n\t- " + "\n\t- ".join(lines)
 
 
 def print_begin_image(image_id, list_keys=None, list_values=None):

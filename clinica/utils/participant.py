@@ -2,23 +2,24 @@
 
 See CAPS specifications for details about long ID.
 """
+from collections.abc import Sequence
 from os import PathLike
 from typing import List, Optional, Tuple, Union
 
 
 def get_unique_subjects(
-    subjects: List[str], sessions: List[str]
-) -> Tuple[List[str], List[List[str]]]:
+    subjects: Sequence[str], sessions: Sequence[str]
+) -> tuple[list[str], list[list[str]]]:
     """Get unique participant IDs with their sessions.
 
     This function generates a list of unique participant IDs from `in_subject_list` with their sessions.
 
     Parameters
     ----------
-    subjects : list of str
+    subjects : Sequence of str
         List of participant IDs.
 
-    sessions : list of str
+    sessions : Sequence of str
         List of session IDs.
 
     Returns
