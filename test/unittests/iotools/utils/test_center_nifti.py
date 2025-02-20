@@ -131,11 +131,16 @@ def center_all_nifti_mock(
     bids_dir: Union[str, PathLike],
     output_dir: Union[str, PathLike],
     modalities: Optional[Iterable[str]] = None,
-    center_all_files: bool = False,
+    centering_threshold: int = 50,
     overwrite_existing_file: bool = False,
 ) -> list[Path]:
+    files = ("foo.txt", "bar.tsv", "baz.nii.gz")
+    if centering_threshold > 50:
+        files = files[:-1]
+    if centering_threshold < 50:
+        files += ("foobar.nii.gz",)
     result = []
-    for filename in ("foo.txt", "bar.tsv", "baz.nii.gz"):
+    for filename in files:
         (Path(output_dir) / filename).touch()
         result.append(Path(output_dir) / filename)
     return result
@@ -160,11 +165,19 @@ def test_center_nifti_log_file_creation_error(tmp_path, mocker):
             IOError,
             match="Could not create log file",
         ):
-            center_nifti(bids_path, out_path, center_all_files=True)
-        mock.assert_called_once_with(bids_path, out_path, None, True, False)
+            center_nifti(bids_path, out_path)
+        mock.assert_called_once_with(bids_path, out_path, None, 50, False)
 
 
-def test_center_nifti(tmp_path):
+@pytest.mark.parametrize(
+    "centering_threshold, expected_files",
+    [
+        (50, ("foo.txt", "bar.tsv", "baz.nii.gz")),
+        (20, ("foo.txt", "bar.tsv", "baz.nii.gz", "foobar.nii.gz")),
+        (80, ("foo.txt", "bar.tsv")),
+    ],
+)
+def test_center_nifti(tmp_path, centering_threshold, expected_files):
     from clinica.iotools.utils import center_nifti
 
     bids_path = build_bids_folder(tmp_path)
@@ -175,15 +188,15 @@ def test_center_nifti(tmp_path):
         "clinica.iotools.utils.data_handling.center_all_nifti",
         wraps=center_all_nifti_mock,
     ) as mock:
-        center_nifti(bids_path, output_dir, ("anat", "pet", "dwi"))
+        center_nifti(bids_path, output_dir, ("anat", "pet", "dwi"), centering_threshold)
         mock.assert_called_once_with(
-            bids_path, output_dir, ("anat", "pet", "dwi"), False, False
+            bids_path, output_dir, ("anat", "pet", "dwi"), centering_threshold, False
         )
         assert (
-            len([f for f in output_dir.iterdir()]) == 4
+            len([f for f in output_dir.iterdir()]) == len(expected_files) + 1
         )  # 3 files written by mock and 1 log file
         logs = [f for f in output_dir.glob("centered_nifti_list_*.txt")]
         assert len(logs) == 1
         assert logs[0].read_text() == "\n".join(
-            [str(output_dir / f) for f in ("foo.txt", "bar.tsv", "baz.nii.gz")]
+            [str(output_dir / f) for f in expected_files]
         )
