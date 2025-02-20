@@ -45,14 +45,14 @@ def describe(dataset: Union[str, Path]):
     "--threshold",
     "centering_threshold",
     show_default=True,
-    help="Centering threshold above which centering is performed.",
+    help="Threshold above which centering is performed.",
     default=50,
 )
 def center_nifti(
     bids_directory: str,
     output_bids_directory: str,
     modalities: Optional[Iterable[str]] = None,
-    centering_threshold: Optional[int] = 50,
+    centering_threshold: int = 50,
 ) -> None:
     """Center NIfTI files in a BIDS dataset."""
     import sys

@@ -340,10 +340,9 @@ def center_all_nifti(
     _handle_output_existing_files(output_dir, overwrite_existing_files)
     copytree(bids_dir, output_dir, copy_function=copy2)
 
-    nifti_files_filtered = _find_files_with_modality(output_dir, modalities)
     nifti_files_filtered = [
         file
-        for file in nifti_files_filtered
+        for file in _find_files_with_modality(output_dir, modalities)
         if not _is_centered(file, centering_threshold)
     ]
     errors: list[str] = []
@@ -390,6 +389,10 @@ def _is_centered(nii_volume: Path, threshold_l2: int = 50) -> bool:
     the volume did not exceed 100 mm. Above this distance, either the volume is either not segmented (SPM error), or the
     produced segmentation is wrong (not the shape of a brain anymore)
     """
+    if threshold_l2 < 0:
+        raise ValueError(
+            f"The value of the threshold should be positive or null : t = {threshold_l2} is invalid."
+        )
     if (center := _get_world_coordinate_of_center(nii_volume)) is None:
         raise ValueError(
             f"Unable to compute the world coordinates of center for image {nii_volume}."
