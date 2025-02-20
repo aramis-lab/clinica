@@ -24,7 +24,7 @@ def center_nifti(
     modalities : Iterable of str, optional
         The modalities that will be processed.
 
-    centering_threshold : float, optional
+    centering_threshold : int, optional
         Threshold above which images are centered. See the documentation for the reason behind the default.
         Default=50 (mm).
 
