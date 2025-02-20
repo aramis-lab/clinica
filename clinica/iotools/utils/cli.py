@@ -7,10 +7,6 @@ bids_directory = click.argument(
     "bids_directory", type=click.Path(exists=True, resolve_path=True)
 )
 
-current_directory = click.argument(
-    "current_directory", type=click.Path(exists=True, resolve_path=True)
-)
-
 
 @click.group("iotools")
 def cli() -> None:
@@ -124,10 +120,10 @@ def check_missing_processing(
 
 
 @cli.command()
-@current_directory
+@click.argument("input_directory", type=click.Path(exists=True, resolve_path=True))
 @click.argument("output_tsv", type=click.Path(resolve_path=True))
-def create_subjects_visits(current_directory: str, output_tsv: str) -> None:
-    """Export participants with their sessions."""
+def create_subjects_visits(input_directory: str, output_tsv: str) -> None:
+    """Export participants with their sessions from a BIDS or a CAPS directory"""
     from os import makedirs
     from os.path import basename, dirname
 
@@ -135,11 +131,11 @@ def create_subjects_visits(current_directory: str, output_tsv: str) -> None:
     from clinica.utils.inputs import determine_caps_or_bids
     from clinica.utils.stream import cprint
 
-    is_bids = determine_caps_or_bids(current_directory)
+    is_bids = determine_caps_or_bids(input_directory)
     output_directory = dirname(output_tsv)
     makedirs(output_directory, exist_ok=True)
     create_subs_sess_list(
-        current_directory, output_directory, basename(output_tsv), is_bids_dir=is_bids
+        input_directory, output_directory, basename(output_tsv), is_bids_dir=is_bids
     )
     cprint(f"The TSV file was saved to {output_tsv}.")
 
