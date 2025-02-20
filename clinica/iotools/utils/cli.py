@@ -37,14 +37,22 @@ def describe(dataset: Union[str, Path]):
     multiple=True,
     metavar="modalities",
     help="Process selected modalities.",
+    show_default=True,
     default=("T1w",),
 )
-@click.option("--center-all-files", is_flag=True, help="Force processing of all files.")
+@click.option(
+    "-t",
+    "--threshold",
+    "centering_threshold",
+    show_default=True,
+    help="Threshold above which centering is performed.",
+    default=50,
+)
 def center_nifti(
     bids_directory: str,
     output_bids_directory: str,
     modalities: Optional[Iterable[str]] = None,
-    center_all_files: bool = False,
+    centering_threshold: int = 50,
 ) -> None:
     """Center NIfTI files in a BIDS dataset."""
     import sys
@@ -58,7 +66,7 @@ def center_nifti(
             bids_directory,
             output_bids_directory,
             modalities=modalities,
-            center_all_files=center_all_files,
+            centering_threshold=centering_threshold,
         )
     except ClinicaExistingDatasetError:
         click.echo("Target BIDS directory is not empty. Existing files will disappear.")
@@ -67,7 +75,7 @@ def center_nifti(
                 bids_directory,
                 output_bids_directory,
                 modalities=modalities,
-                center_all_files=center_all_files,
+                centering_threshold=centering_threshold,
                 overwrite_existing_files=True,
             )
         else:
