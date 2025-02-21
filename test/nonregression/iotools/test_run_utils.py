@@ -89,13 +89,13 @@ def test_compute_missing_modalities(cmdopt, tmp_path):
 def test_center_nifti(cmdopt, tmp_path):
     from test.nonregression.testing_tools import compare_niftis, create_list_hashes
 
-    from clinica.iotools.utils.data_handling import center_all_nifti
+    from clinica.iotools.utils import center_nifti
 
     base_dir = Path(cmdopt["input"])
     output_dir = tmp_path / "bids_centered"
     ref_dir = base_dir / "CenterNifti" / "ref"
 
-    center_all_nifti(
+    center_nifti(
         str(base_dir / "CenterNifti" / "in" / "bids"),
         output_dir,
         centering_threshold=0,
@@ -111,3 +111,6 @@ def test_center_nifti(cmdopt, tmp_path):
         raise RuntimeError("Hashes of nii* files are different between out and ref")
 
     compare_niftis(output_dir, ref_dir / "bids_centered")
+    # todo : compare txt
+
+    # todo : test with text file in data_ci then CI PR
