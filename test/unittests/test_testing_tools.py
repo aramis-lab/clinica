@@ -366,7 +366,7 @@ def test_compare_niftis_success(tmp_path):
 def test_compare_niftis_error(tmp_path):
     with pytest.raises(
         AssertionError,
-        match="Following images do not meet the similarity criteria : \n\n nifti.nii.gz",
+        match="Following images do not meet the similarity criteria : \n\nnifti.nii.gz",
     ):
         rds = np.random.RandomState(42)
         compare_niftis(
