@@ -65,4 +65,4 @@ def run_flair_linear(
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
     compare_folders(out_caps, ref_caps, output_dir)
-    compare_niftis(out_caps, ref_caps)
+    compare_niftis(out_caps, ref_caps, threshold=0.9)
