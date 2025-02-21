@@ -98,7 +98,7 @@ def test_center_nifti(cmdopt, tmp_path):
     center_all_nifti(
         str(base_dir / "CenterNifti" / "in" / "bids"),
         output_dir,
-        center_all_files=True,
+        centering_threshold=0,
     )
     hashes_out = create_list_hashes(output_dir, extensions_to_keep=(".nii.gz", ".nii"))
     hashes_ref = create_list_hashes(
