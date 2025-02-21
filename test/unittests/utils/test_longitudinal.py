@@ -5,9 +5,9 @@ import pytest
     "session_ids,expected",
     [
         (["ses-M000"], "long-M000"),
-        (["ses-M000", "ses-M018", "ses-M036"], "long-M000.M018.M036"),
-        (["ses-M018", "ses-M036", "ses-M000"], "long-M000.M018.M036"),
-        (["ses-foo", "ses-bar", "ses-baz", "ses-foobar"], "long-bar.baz.foo.foobar"),
+        (["ses-M000", "ses-M018", "ses-M036"], "long-M000+M018+M036"),
+        (["ses-M018", "ses-M036", "ses-M000"], "long-M000+M018+M036"),
+        (["ses-foo", "ses-bar", "ses-baz", "ses-foobar"], "long-bar+baz+foo+foobar"),
     ],
 )
 def test_get_long_id(session_ids, expected):
@@ -40,7 +40,7 @@ def test_get_long_id_errors(session_ids):
         (
             ["sub-CLNC01", "sub-CLNC01", "sub-CLNC02"],
             ["ses-M000", "ses-M018", "ses-M000"],
-            ["long-M000.M018", "long-M000.M018", "long-M000"],
+            ["long-M000+M018", "long-M000+M018", "long-M000"],
         )
     ],
 )
@@ -64,8 +64,8 @@ def test_save_long_id(tmp_path):
 
     save_long_id(["ses-M000", "ses-M018", "ses-M036"], output_dir)
 
-    assert (output_dir / "long-M000.M018.M036_sessions.tsv").exists()
-    saved_ids = (output_dir / "long-M000.M018.M036_sessions.tsv").read_text()
+    assert (output_dir / "long-M000+M018+M036_sessions.tsv").exists()
+    saved_ids = (output_dir / "long-M000+M018+M036_sessions.tsv").read_text()
     assert saved_ids == "session_id\nses-M000\nses-M018\nses-M036\n"
 
 
