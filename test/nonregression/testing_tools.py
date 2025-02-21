@@ -550,14 +550,14 @@ def compare_bids_tsv(bids_out: Path, bids_ref: Path):
         raise AssertionError("\n\n".join(errors))
 
 
-def compare_niftis(out_path: Path, ref_path: Path):
+def compare_niftis(out_path: Path, ref_path: Path, threshold: float = 0.95):
     errors = []
     for out_file_path in out_path.rglob("*.nii.gz"):
         ref_file_path = ref_path / out_file_path.relative_to(out_path)
-        if not similarity_measure(out_file_path, ref_file_path, 0.95):
+        if not similarity_measure(out_file_path, ref_file_path, threshold):
             errors += [out_file_path.name]
     if errors:
         newline = "\n"
         raise AssertionError(
-            f"Following images do not meet the similarity criteria : \n\n {newline.join(errors)}"
+            f"Following images do not meet the similarity criteria : \n\n{newline.join(errors)}"
         )
