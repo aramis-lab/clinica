@@ -13,6 +13,7 @@ __all__ = [
     "extract_visits",
     "extract_metadata_from_json",
     "extract_subjects_sessions_from_filename",
+    "replace_special_characters_with_symbol",
     "get_filename_no_ext",
     "get_parent",
     "get_subject_id",
@@ -296,6 +297,30 @@ def get_subject_id(bids_or_caps_file: Union[str, Path]) -> str:
     subject_id = match.group(1) + "_" + match.group(2)
 
     return subject_id
+
+
+def replace_special_characters_with_symbol(input_string: str, symbol: str = "_") -> str:
+    """Replace special characters in the provided string by provided symbol.
+
+    underscores (as done for corresponding folder names in ADNI).
+
+    Parameters
+    ----------
+    input_string : str
+        The input string to work on .
+
+    symbol : str, optional
+        The symbol to use as a replacement.
+        Default="_"
+
+    Returns
+    -------
+    str :
+        The cleaned string.
+    """
+    import re
+
+    return re.sub("[ /;*()<>:]", symbol, input_string)
 
 
 def get_filename_no_ext(filename: Union[str, Path]) -> str:

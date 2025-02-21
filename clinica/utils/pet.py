@@ -1,10 +1,12 @@
 """This module contains utilities for PET data handling."""
-import os
-import typing as ty
 from enum import Enum
-from pathlib import Path
 
-import pandas as pd
+__all__ = [
+    "Tracer",
+    "SUVRReferenceRegion",
+    "ReconstructionMethod",
+    "get_pet_tracer_from_filename",
+]
 
 
 class Tracer(str, Enum):
@@ -53,3 +55,36 @@ class ReconstructionMethod(str, Enum):
     CO_REGISTERED_AVERAGED = "coregavg"  # Corresponds to ADNI processing steps 2
     CO_REGISTERED_STANDARDIZED = "coregstd"  # Corresponds to ADNI processing steps 3
     COREGISTERED_ISOTROPIC = "coregiso"  # Corresponds to ADNI processing steps 4
+
+
+def get_pet_tracer_from_filename(filename: str) -> Tracer:
+    """Return the PET tracer from the provided filename.
+
+    Parameters
+    ----------
+    filename : str
+        The filename from which to extract the PET tracer.
+
+    Returns
+    -------
+    tracer : Tracer
+        The PET tracer.
+
+    Raises
+    ------
+    ValueError
+        If no tracer found in the filename.
+    """
+    import re
+
+    tracer = None
+    for entity in ("trc", "acq"):
+        m = re.search(rf"({entity}-[a-zA-Z0-9]+)", filename)
+        if m:
+            tracer = m.group(1)[4:].upper()
+    if tracer is None:
+        raise ValueError(
+            f"Could not extract the PET tracer from the following file name {filename}."
+        )
+
+    return Tracer(tracer)
