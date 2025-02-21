@@ -559,5 +559,5 @@ def compare_niftis(out_path: Path, ref_path: Path, threshold: float = 0.95):
     if errors:
         newline = "\n"
         raise AssertionError(
-            f"Following images do not meet the similarity criteria : \n\n {newline.join(errors)}"
+            f"Following images do not meet the similarity criteria : \n\n{newline.join(errors)}"
         )
