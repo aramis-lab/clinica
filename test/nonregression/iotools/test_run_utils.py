@@ -97,7 +97,7 @@ def test_center_nifti(cmdopt, tmp_path):
 
     base_dir = Path(cmdopt["input"])
     output_dir = tmp_path / "bids_centered"
-    ref_dir = base_dir / "CenterNifti" / "ref"
+    ref_dir = base_dir / "CenterNifti" / "ref" / "bids_centered"
 
     center_nifti(
         str(base_dir / "CenterNifti" / "in" / "bids"),
@@ -105,14 +105,12 @@ def test_center_nifti(cmdopt, tmp_path):
         centering_threshold=0,
     )
     hashes_out = create_list_hashes(output_dir, extensions_to_keep=(".nii.gz", ".nii"))
-    hashes_ref = create_list_hashes(
-        ref_dir / "bids_centered", extensions_to_keep=(".nii.gz", ".nii")
-    )
+    hashes_ref = create_list_hashes(ref_dir, extensions_to_keep=(".nii.gz", ".nii"))
 
     assert hashes_out == hashes_ref
 
     if hashes_out != hashes_ref:
         raise RuntimeError("Hashes of nii* files are different between out and ref")
 
-    compare_niftis(output_dir, ref_dir / "bids_centered")
-    compare_txt_files(output_dir, ref_dir / "bids_centered")
+    compare_niftis(output_dir, ref_dir)
+    compare_txt_files(output_dir, ref_dir)
