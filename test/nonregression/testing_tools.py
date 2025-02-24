@@ -561,3 +561,16 @@ def compare_niftis(out_path: Path, ref_path: Path):
         raise AssertionError(
             f"Following images do not meet the similarity criteria : \n\n {newline.join(errors)}"
         )
+
+
+def _open_txt_file(directory_path: Path) -> set:
+    directory_path = directory_path.resolve()
+    file_path = next(directory_path.rglob("*.txt"))
+    with open(file_path, "r") as f:
+        return set(Path(line.strip("\n")).name for line in f.readlines())
+
+
+def compare_txt_files(out_path: Path, ref_path: Path):
+    assert _open_txt_file(out_path) == _open_txt_file(
+        ref_path
+    ), f"The text files inside {out_path.name} and {ref_path.name} do not match"
