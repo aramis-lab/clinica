@@ -106,7 +106,7 @@ Results stored in the following folder of the
 [CAPS hierarchy](../../CAPS/Specifications/#t1-freesurfer-longitudinal-freesurfer-based-longitudinal-processing-of-t1-weighted-mr-images):
 `subjects/<participant_id>/<long_id>/freesurfer_unbiased_template/<participant_id>_<long_id>`.
 
-`<long_label>` is an identifier defined by concatenating all the sessions associated with the current `<participant_id>` (e.g. if the template for participant `sub-CLNC01` is built from sessions `M00`, `M01`, `M05`, then `<long_label>` will be `M00M01M05`).
+`<long_label>` is an identifier defined by concatenating all the sessions associated with the current `<participant_id>` (e.g. if the template for participant `sub-CLNC01` is built from sessions `M00`, `M01`, `M05`, then `<long_label>` will be `M00+M01+M05`).
 See [CAPS specifications](../../CAPS/Introduction/#subject-and-group-naming) for full definition and example of `<long_id>`.
 
 This folder contains the standard output structure of the `recon-all` command (`label/`, `mri/`, `surf/`, etc.) already explained in the [`t1-freesurfer`](../T1_FreeSurfer) pipeline.
