@@ -563,21 +563,13 @@ def compare_niftis(out_path: Path, ref_path: Path):
         )
 
 
-def strftime_mock(format: str, struct_time: tuple) -> str:
-    """The mock returns the timestamp of the reference file in the CI data."""
-    return "20250225-151004"
-
-
-def _open_txt_file(file_path: Path) -> set:
-    with open(file_path, "r") as f:
-        return set(line.strip("\n") for line in f.readlines())
-
-
 def compare_txt_files(out_path: Path, ref_path: Path):
+    from filecmp import cmp
+
     errors = []
     for out_file_path in out_path.rglob("*.txt"):
         ref_file_path = ref_path / out_file_path.relative_to(out_path)
-        if not _open_txt_file(ref_file_path) == _open_txt_file(out_file_path):
+        if not cmp(ref_file_path, out_file_path, shallow=False):
             errors += [out_file_path.name]
     if errors:
         newline = "\n"

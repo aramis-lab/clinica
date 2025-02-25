@@ -384,15 +384,6 @@ def _write_txt_file_in_directory(
     return dir_path
 
 
-def test_open_txt_files(tmp_path):
-    from test.nonregression.testing_tools import _open_txt_file
-
-    out_path = _write_txt_file_in_directory(tmp_path / "out")
-    assert {"foo/bar.nii.gz", "foo/foobar.nii.gz"} == _open_txt_file(
-        out_path / "out.txt"
-    )
-
-
 def test_compare_txt_files(tmp_path):
     from test.nonregression.testing_tools import compare_txt_files
 
@@ -410,5 +401,7 @@ def test_compare_txt_files_error(tmp_path):
         tmp_path / "ref", files_to_write=("foo/test.nii.gz",)
     )
 
-    with pytest.raises(AssertionError, match="Following text files are different"):
+    with pytest.raises(
+        AssertionError, match="Following text files are different : \n\n out.txt"
+    ):
         compare_txt_files(out_path, ref_path)
