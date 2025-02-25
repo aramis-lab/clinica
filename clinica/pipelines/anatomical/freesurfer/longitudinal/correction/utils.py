@@ -282,7 +282,7 @@ def get_processed_images(
     atlas: Optional[str] = None,
 ) -> list[str]:
     """
-    Extract image IDs (e.g. ["sub-CLNC01_ses-M000_long-M000M018", "sub-CLNC01_ses-M018_long-M000M018"]) of outputs
+    Extract image IDs (e.g. ["sub-CLNC01_ses-M000_long-M000+M018", "sub-CLNC01_ses-M018_long-M000+M018"]) of outputs
     already processed by T1FreeSurferLongitudinalCorrection pipeline.
     """
     image_ids = []
