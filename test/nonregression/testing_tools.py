@@ -563,14 +563,26 @@ def compare_niftis(out_path: Path, ref_path: Path):
         )
 
 
-def _open_txt_file(directory_path: Path) -> set:
-    directory_path = directory_path.resolve()
-    file_path = next(directory_path.rglob("*.txt"))
+def strftime_mock(format: str, struct_time: tuple) -> str:
+    """The mock returns the timestamp of the reference file in the CI data."""
+    return "20250225-151004"
+
+
+def _open_txt_file(file_path: Path) -> set:
+    # todo : change unit tests
     with open(file_path, "r") as f:
-        return set(Path(line.strip("\n")).name for line in f.readlines())
+        return set(line.strip("\n") for line in f.readlines())
 
 
 def compare_txt_files(out_path: Path, ref_path: Path):
-    assert _open_txt_file(out_path) == _open_txt_file(
-        ref_path
-    ), f"The text files inside {out_path.name} and {ref_path.name} do not match"
+    # todo : change unit tests
+    errors = []
+    for out_file_path in out_path.rglob("*.txt"):
+        ref_file_path = ref_path / out_file_path.relative_to(out_path)
+        if not _open_txt_file(ref_file_path) == _open_txt_file(out_file_path):
+            errors += [out_file_path.name]
+    if errors:
+        newline = "\n"
+        raise AssertionError(
+            f"Following text files are different : \n\n {newline.join(errors)}"
+        )

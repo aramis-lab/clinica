@@ -91,7 +91,9 @@ def test_center_nifti(cmdopt, tmp_path):
         compare_niftis,
         compare_txt_files,
         create_list_hashes,
+        strftime_mock,
     )
+    from unittest.mock import patch
 
     from clinica.iotools.utils import center_nifti
 
@@ -99,11 +101,14 @@ def test_center_nifti(cmdopt, tmp_path):
     output_dir = tmp_path / "bids_centered"
     ref_dir = base_dir / "CenterNifti" / "ref" / "bids_centered"
 
-    center_nifti(
-        str(base_dir / "CenterNifti" / "in" / "bids"),
-        output_dir,
-        centering_threshold=0,
-    )
+    with patch("time.strftime", wraps=strftime_mock) as time_mock:
+        center_nifti(
+            str(base_dir / "CenterNifti" / "in" / "bids"),
+            output_dir,
+            centering_threshold=0,
+        )
+        time_mock.assert_called_once()
+
     hashes_out = create_list_hashes(output_dir, extensions_to_keep=(".nii.gz", ".nii"))
     hashes_ref = create_list_hashes(ref_dir, extensions_to_keep=(".nii.gz", ".nii"))
 
