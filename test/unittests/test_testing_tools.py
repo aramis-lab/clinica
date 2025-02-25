@@ -376,12 +376,11 @@ def test_compare_niftis_error(tmp_path):
 
 
 def _write_txt_file_in_directory(
-    dir_path: Path, files_to_write: list[str] = ["foo/bar.nii.gz", "foo/foobar.nii.gz"]
+    dir_path: Path, files_to_write: tuple[str] = ("foo/bar.nii.gz", "foo/foobar.nii.gz")
 ) -> Path:
     dir_path.mkdir()
     with open(dir_path / "out.txt", "w") as fp:
         fp.write(f"\n".join([str(f) for f in files_to_write]))
-
     return dir_path
 
 
@@ -389,7 +388,9 @@ def test_open_txt_files(tmp_path):
     from test.nonregression.testing_tools import _open_txt_file
 
     out_path = _write_txt_file_in_directory(tmp_path / "out")
-    assert {"bar.nii.gz", "foobar.nii.gz"} == _open_txt_file(out_path)
+    assert {"foo/bar.nii.gz", "foo/foobar.nii.gz"} == _open_txt_file(
+        out_path / "out.txt"
+    )
 
 
 def test_compare_txt_files(tmp_path):
@@ -406,11 +407,8 @@ def test_compare_txt_files_error(tmp_path):
 
     out_path = _write_txt_file_in_directory(tmp_path / "out")
     ref_path = _write_txt_file_in_directory(
-        tmp_path / "ref", files_to_write=["foo/test.nii.gz"]
+        tmp_path / "ref", files_to_write=("foo/test.nii.gz",)
     )
 
-    with pytest.raises(
-        AssertionError,
-        match=f"The text files inside {out_path.name} and {ref_path.name} do not match",
-    ):
+    with pytest.raises(AssertionError, match="Following text files are different"):
         compare_txt_files(out_path, ref_path)

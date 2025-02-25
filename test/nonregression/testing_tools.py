@@ -569,13 +569,11 @@ def strftime_mock(format: str, struct_time: tuple) -> str:
 
 
 def _open_txt_file(file_path: Path) -> set:
-    # todo : change unit tests
     with open(file_path, "r") as f:
         return set(line.strip("\n") for line in f.readlines())
 
 
 def compare_txt_files(out_path: Path, ref_path: Path):
-    # todo : change unit tests
     errors = []
     for out_file_path in out_path.rglob("*.txt"):
         ref_file_path = ref_path / out_file_path.relative_to(out_path)
