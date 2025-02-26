@@ -85,29 +85,41 @@ def test_compute_missing_modalities(cmdopt, tmp_path):
         assert compare_missing_modality_tsv(out_name, ref_name)
 
 
+def _strftime_mock(format: str, struct_time: tuple) -> str:
+    """The mock returns the timestamp of the reference file in the CI data."""
+    return "20250225-151004"
+
+
 @pytest.mark.fast
 def test_center_nifti(cmdopt, tmp_path):
-    from test.nonregression.testing_tools import compare_niftis, create_list_hashes
+    from test.nonregression.testing_tools import (
+        compare_niftis,
+        compare_txt_files,
+        create_list_hashes,
+    )
+    from unittest.mock import patch
 
-    from clinica.iotools.utils.data_handling import center_all_nifti
+    from clinica.iotools.utils import center_nifti
 
     base_dir = Path(cmdopt["input"])
     output_dir = tmp_path / "bids_centered"
-    ref_dir = base_dir / "CenterNifti" / "ref"
+    ref_dir = base_dir / "CenterNifti" / "ref" / "bids_centered"
 
-    center_all_nifti(
-        str(base_dir / "CenterNifti" / "in" / "bids"),
-        output_dir,
-        centering_threshold=0,
-    )
+    with patch("time.strftime", wraps=_strftime_mock) as time_mock:
+        center_nifti(
+            str(base_dir / "CenterNifti" / "in" / "bids"),
+            output_dir,
+            centering_threshold=0,
+        )
+        time_mock.assert_called_once()
+
     hashes_out = create_list_hashes(output_dir, extensions_to_keep=(".nii.gz", ".nii"))
-    hashes_ref = create_list_hashes(
-        ref_dir / "bids_centered", extensions_to_keep=(".nii.gz", ".nii")
-    )
+    hashes_ref = create_list_hashes(ref_dir, extensions_to_keep=(".nii.gz", ".nii"))
 
     assert hashes_out == hashes_ref
 
     if hashes_out != hashes_ref:
         raise RuntimeError("Hashes of nii* files are different between out and ref")
 
-    compare_niftis(output_dir, ref_dir / "bids_centered")
+    compare_niftis(output_dir, ref_dir)
+    compare_txt_files(output_dir, ref_dir)

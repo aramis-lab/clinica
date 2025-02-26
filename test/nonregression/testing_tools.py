@@ -561,3 +561,18 @@ def compare_niftis(out_path: Path, ref_path: Path, threshold: float = 0.95):
         raise AssertionError(
             f"Following images do not meet the similarity criteria : \n\n{newline.join(errors)}"
         )
+
+
+def compare_txt_files(out_path: Path, ref_path: Path):
+    from filecmp import cmp
+
+    errors = []
+    for out_file_path in out_path.rglob("*.txt"):
+        ref_file_path = ref_path / out_file_path.relative_to(out_path)
+        if not cmp(ref_file_path, out_file_path, shallow=False):
+            errors += [out_file_path.name]
+    if errors:
+        newline = "\n"
+        raise AssertionError(
+            f"Following text files are different : \n\n {newline.join(errors)}"
+        )

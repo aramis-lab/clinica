@@ -197,6 +197,4 @@ def test_center_nifti(tmp_path, centering_threshold, expected_files):
         )  # 3 files written by mock and 1 log file
         logs = [f for f in output_dir.glob("centered_nifti_list_*.txt")]
         assert len(logs) == 1
-        assert logs[0].read_text() == "\n".join(
-            [str(output_dir / f) for f in expected_files]
-        )
+        assert logs[0].read_text() == "\n".join([f for f in expected_files])

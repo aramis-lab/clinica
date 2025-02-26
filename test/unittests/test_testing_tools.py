@@ -373,3 +373,35 @@ def test_compare_niftis_error(tmp_path):
             _create_nifti_in_dir(tmp_path / "ref", rds),
             _create_nifti_in_dir(tmp_path / "out", rds),
         )
+
+
+def _write_txt_file_in_directory(
+    dir_path: Path, files_to_write: tuple[str] = ("foo/bar.nii.gz", "foo/foobar.nii.gz")
+) -> Path:
+    dir_path.mkdir()
+    with open(dir_path / "out.txt", "w") as fp:
+        fp.write(f"\n".join([str(f) for f in files_to_write]))
+    return dir_path
+
+
+def test_compare_txt_files(tmp_path):
+    from test.nonregression.testing_tools import compare_txt_files
+
+    out_path = _write_txt_file_in_directory(tmp_path / "out")
+    ref_path = _write_txt_file_in_directory(tmp_path / "ref")
+
+    compare_txt_files(out_path, ref_path)
+
+
+def test_compare_txt_files_error(tmp_path):
+    from test.nonregression.testing_tools import compare_txt_files
+
+    out_path = _write_txt_file_in_directory(tmp_path / "out")
+    ref_path = _write_txt_file_in_directory(
+        tmp_path / "ref", files_to_write=("foo/test.nii.gz",)
+    )
+
+    with pytest.raises(
+        AssertionError, match="Following text files are different : \n\n out.txt"
+    ):
+        compare_txt_files(out_path, ref_path)
