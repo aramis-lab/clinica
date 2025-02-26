@@ -12,7 +12,7 @@ These steps include:
 
 If you only installed the core of Clinica, this pipeline needs the installation of [ANTs](../Software/Third-party.md#ants) on your computer.
 
-!!! tip
+!!! tip "Using ANTsPy instead of ANTs"
     Since clinica `0.9.0` you have the option to rely on [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html)
     instead of [ANTs](../Software/Third-party.md#ants) to run this pipeline, which means that the installation of ANTs is not
     required in this case. The ANTsPy package is installed with other Python dependencies of Clinica.
@@ -33,24 +33,26 @@ where:
 - `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../BIDS.md) hierarchy.
 - `CAPS_DIRECTORY` is the output folder containing the results in a [CAPS](../CAPS/Introduction.md) hierarchy.
 
-On default, cropped images (matrix size 169×208×179, 1 mm isotropic voxels) are generated to reduce the computing power required when training deep learning models.
-Use the option `--uncropped_image` if you do not want to crop the image.
+with specific options : 
 
-Finally, it is possible to use [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html) instead of [ANTs](../Software/Third-party.md#ants) by passing the `--use-antspy` flag.
+- `-ui`/`--uncropped_image` : By default, output images are cropped to a **fixed** matrix size of 169×208×179, 1 mm isotropic voxels. This allows reducing the computing power required when training deep learning models afterwards.
+Use this option if you do not want to get cropped images.
+- `--random_seed` : By default, results are not deterministic. Use this option if you want to obtain a deterministic output. The value you set corresponds to the random seed used by ANTs. This option requires [ANTs](../Software/Third-party.md#ants) version `2.3.0` onwards and is also compatible with [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html).
+- `--use-antspy` : By default, the pipeline is running with [ANTs](../Software/Third-party.md#ants). Use this flag option if you want to use [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html) instead.
 
-!!! note
-    The arguments common to all Clinica pipelines are described in [Interacting with clinica](../Software/InteractingWithClinica.md).
+??? info "Optional parameters common to all pipelines"
+    --8<-- "snippets/pipelines_options.md"
 
 !!! tip
     Do not hesitate to type `clinica run flair-linear --help` to see the full list of parameters.
 
 ## Outputs
 
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#flair-linear-affine-registration-of-flair-images-to-the-mni-standard-space): `subjects/<participant_id>/<session_id>/flair_linear` with the following outputs:
+Results are stored in the folder `subjects/<participant_id>/<session_id>/flair_linear` following the [CAPS hierarchy](../../CAPS/Specifications/#flair-linear-affine-registration-of-flair-images-to-the-mni-standard-space) and include the outputs:
 
 - `<source_file>_space-MNI152NLin2009cSym_res-1x1x1_FLAIR.nii.gz`: FLAIR image affinely registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html).
-- (optional) `<source_file>_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_FLAIR.nii.gz`: FLAIR image registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html) and cropped.
 - `<source_file>_space-MNI152NLin2009cSym_res-1x1x1_affine.mat`: affine transformation estimated with [ANTs](https://stnava.github.io/ANTs/).
+- (optional) `<source_file>_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_FLAIR.nii.gz`: FLAIR image registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html) and cropped. By default this file will be present but the flag `--uncropped_image` can be used to avoid computing it.
 
 ## Describing this pipeline in your paper
 
