@@ -77,7 +77,7 @@ def center_nifti(
     timestamp = time.strftime("%Y%m%d-%H%M%S", time.localtime(time.time()))
     log_file = Path(output_bids_directory) / f"centered_nifti_list_{timestamp}.txt"
     if not write_list_of_files(
-        [f.relative_to(output_bids_directory) for f in centered_files], log_file
+        sorted([f.relative_to(output_bids_directory) for f in centered_files]), log_file
     ):
         log_and_raise(f"Could not create log file {log_file}.", IOError)
 

@@ -172,9 +172,9 @@ def test_center_nifti_log_file_creation_error(tmp_path, mocker):
 @pytest.mark.parametrize(
     "centering_threshold, expected_files",
     [
-        (50, ("foo.txt", "bar.tsv", "baz.nii.gz")),
-        (20, ("foo.txt", "bar.tsv", "baz.nii.gz", "foobar.nii.gz")),
-        (80, ("foo.txt", "bar.tsv")),
+        (50, ("bar.tsv", "baz.nii.gz", "foo.txt")),
+        (20, ("bar.tsv", "baz.nii.gz", "foo.txt", "foobar.nii.gz")),
+        (80, ("bar.tsv", "foo.txt")),
     ],
 )
 def test_center_nifti(tmp_path, centering_threshold, expected_files):
