@@ -549,7 +549,7 @@ def create_adni_scans_files(conversion_path: Path, bids_subjs_paths: list[Path])
     """
     from os import path
 
-    from clinica.converters.bids_utils import StudyName, bids_id_factory
+    from clinica.converters.study_models import StudyName, bids_id_factory
     from clinica.utils.stream import cprint
 
     scans_fields_bids = ["filename", "scan_id", "mri_field"]
@@ -788,11 +788,11 @@ def _create_file(
     import numpy as np
 
     from clinica.cmdline import setup_clinica_logging
-    from clinica.converters.bids_utils import StudyName, bids_id_factory, run_dcm2niix
-    from clinica.iotools.utils.data_handling import center_nifti_origin
+    from clinica.converters.study_models import StudyName, bids_id_factory
+    from clinica.iotools.data_handling import center_nifti_origin
     from clinica.utils.stream import cprint, log_and_raise, log_and_warn
 
-    from .._utils import viscode_to_session
+    from .._utils import run_dcm2niix, viscode_to_session
 
     # This function is executed in a multiprocessing context
     # such that we need to re-configure the clinica logger in the child processes.

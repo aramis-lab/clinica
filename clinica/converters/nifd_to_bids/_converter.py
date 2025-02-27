@@ -21,12 +21,12 @@ def convert(
     identifies the patients that have images described by the JSON file,
     converts the image with the highest quality for each category.
     """
-    from clinica.converters.bids_utils import StudyName, write_modality_agnostic_files
-    from clinica.converters.factory import get_converter_name
     from clinica.utils.check_dependency import ThirdPartySoftware, check_software
     from clinica.utils.stream import cprint
 
-    from ..utils import validate_input_path
+    from .._utils import validate_input_path, write_modality_agnostic_files
+    from ..factory import get_converter_name
+    from ..study_models import StudyName
     from ._utils import (
         dataset_to_bids,
         read_clinical_data,

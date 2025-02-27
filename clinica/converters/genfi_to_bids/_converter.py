@@ -52,12 +52,12 @@ def convert(
         If specified, it should be between 1 and the number of available CPUs.
         Default=1.
     """
-    from clinica.converters.bids_utils import StudyName, write_modality_agnostic_files
-    from clinica.converters.factory import get_converter_name
     from clinica.utils.check_dependency import ThirdPartySoftware, check_software
     from clinica.utils.stream import cprint
 
-    from ..utils import validate_input_path
+    from .._utils import validate_input_path, write_modality_agnostic_files
+    from ..factory import get_converter_name
+    from ..study_models import StudyName
     from ._utils import (
         merge_imaging_and_clinical_data,
         parse_clinical_data,
@@ -110,8 +110,8 @@ def convert(
 
 def _check_clinical_path_inputs(path_to_clinical_tsv: Path, path_to_clinical: Path):
     """Check that if a clinical tsv is given, a path to the clinical data is given as well."""
-    from clinica.converters.bids_utils import StudyName
     from clinica.converters.factory import get_converter_name
+    from clinica.converters.study_models import StudyName
     from clinica.utils.stream import cprint
 
     if path_to_clinical_tsv and not path_to_clinical:

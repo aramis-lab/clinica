@@ -20,8 +20,8 @@ def convert(
     n_procs: Optional[int] = 1,
     **kwargs,
 ):
-    from clinica.converters.bids_utils import StudyName
     from clinica.converters.factory import get_converter_name
+    from clinica.converters.study_models import StudyName
     from clinica.utils.stream import cprint
 
     from .._utils import validate_input_path
@@ -63,7 +63,7 @@ class OasisToBids(Converter):
             clinical_data_dir: path to the folder with the original clinical data
             bids_dir: path to the BIDS directory
         """
-        from clinica.converters.bids_utils import get_subjects_from_bids_dataset
+        from clinica.converters._utils import get_subjects_from_bids_dataset
         from clinica.utils.stream import cprint
 
         cprint("Converting clinical data...", lvl="info")
@@ -79,7 +79,8 @@ class OasisToBids(Converter):
         bids_dir: Path,
         bids_ids: list[str],
     ):
-        from clinica.converters.bids_utils import StudyName, create_participants_df
+        from clinica.converters._utils import create_participants_df
+        from clinica.converters.study_models import StudyName
 
         participants_df = create_participants_df(
             study_name=StudyName.OASIS,
@@ -125,10 +126,8 @@ class OasisToBids(Converter):
         write_scans_tsv(bids_dir)
 
     def _create_modality_agnostic_files(self, bids_dir: Path):
-        from clinica.converters.bids_utils import (
-            StudyName,
-            write_modality_agnostic_files,
-        )
+        from clinica.converters._utils import write_modality_agnostic_files
+        from clinica.converters.study_models import StudyName
 
         readme_data = {
             "link": "https://sites.wustl.edu/oasisbrains/#access",
@@ -150,7 +149,7 @@ class OasisToBids(Converter):
     @staticmethod
     def convert_single_subject(subj_folder: Path, dest_dir: Path):
         from clinica.cmdline import setup_clinica_logging
-        from clinica.converters.bids_utils import StudyName, bids_id_factory
+        from clinica.converters.study_models import StudyName, bids_id_factory
         from clinica.utils.stream import cprint
 
         # This function is executed in a multiprocessing context

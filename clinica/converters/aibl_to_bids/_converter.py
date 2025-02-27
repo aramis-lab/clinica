@@ -50,12 +50,12 @@ def convert(
         If specified, it should be between 1 and the number of available CPUs.
         Default=1.
     """
-    from clinica.converters.bids_utils import StudyName
     from clinica.converters.factory import get_converter_name
+    from clinica.converters.study_models import StudyName
     from clinica.utils.check_dependency import ThirdPartySoftware, check_software
     from clinica.utils.stream import cprint
 
-    from ..utils import validate_input_path
+    from .._utils import validate_input_path
 
     input_dataset = validate_input_path(input_dataset)
     output_dataset = validate_input_path(output_dataset, check_exist=False)
@@ -152,12 +152,13 @@ def _convert_clinical_data(input_clinical_data: Path, output_dataset: Path) -> N
     output_dataset : Path
         The path to the BIDS directory in which to write the output.
     """
+    from clinica.converters._utils import write_modality_agnostic_files
     from clinica.converters.aibl_to_bids.utils import (
         create_participants_tsv_file,
         create_scans_tsv_file,
         create_sessions_tsv_file,
     )
-    from clinica.converters.bids_utils import StudyName, write_modality_agnostic_files
+    from clinica.converters.study_models import StudyName
     from clinica.utils.stream import cprint
 
     clinical_specifications_folder = Path(__file__).parents[1] / "specifications"
