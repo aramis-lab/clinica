@@ -59,10 +59,10 @@ def run_flair_linear(
         bids_directory=fspath(input_dir / "bids"),
         caps_directory=fspath(out_caps),
         base_dir=fspath(working_dir),
-        parameters={"uncropped_image": False},
+        parameters={"uncropped_image": False, "random_seed": 1},
         name="flair-linear",
     )
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
     compare_folders(out_caps, ref_caps, output_dir)
-    compare_niftis(out_caps, ref_caps, threshold=0.8)
+    compare_niftis(out_caps, ref_caps)
