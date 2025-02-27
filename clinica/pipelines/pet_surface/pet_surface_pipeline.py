@@ -73,7 +73,7 @@ class PetSurface(PETPipeline):
         import nipype.pipeline.engine as npe
 
         import clinica.utils.input_files as input_files
-        from clinica.iotools.utils.data_handling import (
+        from clinica.iotools.data_handling import (
             check_relative_volume_location_in_world_coordinate_system,
         )
         from clinica.utils.exceptions import ClinicaException
@@ -164,7 +164,7 @@ class PetSurface(PETPipeline):
         import nipype.pipeline.engine as npe
 
         import clinica.utils.input_files as input_files
-        from clinica.iotools.utils.data_handling import (
+        from clinica.iotools.data_handling import (
             check_relative_volume_location_in_world_coordinate_system,
         )
         from clinica.utils.exceptions import ClinicaException
