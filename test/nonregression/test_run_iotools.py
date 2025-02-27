@@ -3,7 +3,6 @@ This file contains a set of functional tests designed to check the correct
 execution of the pipeline and the different functions available in Clinica.
 """
 
-
 from pathlib import Path
 
 import pytest
@@ -13,7 +12,7 @@ import pytest
 def test_create_subject_session(cmdopt, tmp_path):
     from test.nonregression.testing_tools import compare_subject_session_tsv
 
-    from clinica.iotools.utils.data_handling import create_subs_sess_list
+    from clinica.iotools.data_handling import create_subs_sess_list
 
     base_dir = Path(cmdopt["input"])
     ref_dir = base_dir / "CreateSubjectSessionList" / "ref"
@@ -32,7 +31,7 @@ def test_create_merge_file(cmdopt, tmp_path):
 
     import pandas as pd
 
-    from clinica.iotools.utils.data_handling import create_merge_file
+    from clinica.iotools.data_handling import create_merge_file
 
     base_dir = Path(cmdopt["input"])
     ref_dir = base_dir / "CreateMergeFile" / "ref"
@@ -64,7 +63,7 @@ def test_create_merge_file(cmdopt, tmp_path):
 def test_compute_missing_modalities(cmdopt, tmp_path):
     from test.nonregression.testing_tools import compare_missing_modality_tsv
 
-    from clinica.iotools.utils.data_handling import compute_missing_mods
+    from clinica.iotools.data_handling import compute_missing_mods
 
     base_dir = Path(cmdopt["input"])
     ref_dir = base_dir / "ComputeMissingModalities" / "ref"
@@ -99,7 +98,7 @@ def test_center_nifti(cmdopt, tmp_path):
     )
     from unittest.mock import patch
 
-    from clinica.iotools.utils import center_nifti
+    from clinica.iotools import center_nifti
 
     base_dir = Path(cmdopt["input"])
     output_dir = tmp_path / "bids_centered"

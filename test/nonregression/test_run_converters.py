@@ -12,12 +12,12 @@ from test.nonregression.testing_tools import (
 
 import pytest
 
-from clinica.iotools.bids_utils import StudyName
+from clinica.converters.study_models import StudyName
 
 
 @pytest.mark.parametrize("study", StudyName)
 def test_converters(cmdopt, tmp_path, study: StudyName):
-    from clinica.iotools.converters.factory import convert, get_converter_name
+    from clinica.converters.factory import convert, get_converter_name
 
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(
