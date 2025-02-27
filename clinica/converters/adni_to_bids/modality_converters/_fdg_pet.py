@@ -8,7 +8,7 @@ from typing import Iterable, List, Set, Tuple
 
 import pandas as pd
 
-from clinica.converters.adni_to_bids.adni_utils import ADNIModalityConverter
+from .._utils import ADNIModalityConverter
 
 __all__ = [
     "convert_fdg_pet",
@@ -87,8 +87,9 @@ def _convert_fdg_pet(
         If specified, it should be between 1 and the number of available CPUs.
         Default=1.
     """
-    from clinica.converters.adni_to_bids.adni_utils import paths_to_bids
     from clinica.utils.stream import cprint
+
+    from .._utils import paths_to_bids
 
     cprint(
         "Calculating paths of FDG PET images. "
@@ -225,7 +226,7 @@ def _load_df_with_column_check(
     csv_dir: Path, filename: str, required_columns: Set[str]
 ) -> pd.DataFrame:
     """Load the requested CSV file in a dataframe and check that the requested columns are present."""
-    from clinica.converters.adni_to_bids.adni_utils import load_clinical_csv
+    from clinica.converters._utils import load_clinical_csv
 
     df = load_clinical_csv(csv_dir, filename)
     if not required_columns.issubset(set(df.columns)):

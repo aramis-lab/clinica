@@ -27,9 +27,9 @@ from clinica.utils.exceptions import ClinicaXMLParserError
         ("1_XY_22", None),
     ],
 )
-def test_bids_id_to_loni(input_value, expected):
+def test_bids_id_to_loni(input_value: str, expected: Optional[str]):
     """Test function `bids_id_to_loni`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import _bids_id_to_loni  # noqa
+    from clinica.converters.adni_to_bids._json import _bids_id_to_loni
 
     assert _bids_id_to_loni(input_value) == expected
 
@@ -45,7 +45,7 @@ def _get_xml_templates() -> list[str]:
 
 
 @pytest.fixture
-def basic_xml_tree():
+def basic_xml_tree() -> ET.Element:
     """Basic XML tree used for testing."""
     xml_tree = ET.Element("root")
     xml_tree.text = "100"
@@ -55,7 +55,7 @@ def basic_xml_tree():
 
 def test_check_xml_tag():
     """Test function `_check_xml_tag`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import _check_xml_tag  # noqa
+    from clinica.converters.adni_to_bids._json import _check_xml_tag
 
     _check_xml_tag("foo", "foo")
     with pytest.raises(
@@ -67,7 +67,7 @@ def test_check_xml_tag():
 
 def test_check_xml_nb_children(basic_xml_tree):
     """Test function `_check_xml_nb_children`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import _check_xml_nb_children  # noqa
+    from clinica.converters.adni_to_bids._json import _check_xml_nb_children
 
     _check_xml_nb_children(basic_xml_tree, 2)
     _check_xml_nb_children(basic_xml_tree, [1, 2, 6])
@@ -85,7 +85,7 @@ def test_check_xml_nb_children(basic_xml_tree):
 
 def test_check_xml(basic_xml_tree):
     """Test function `_check_xml`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import _check_xml  # noqa
+    from clinica.converters.adni_to_bids._json import _check_xml
 
     assert _check_xml(basic_xml_tree, "root", 2) == basic_xml_tree
     assert _check_xml(basic_xml_tree, "root", [1, 2]) == basic_xml_tree
@@ -99,7 +99,7 @@ def test_check_xml(basic_xml_tree):
 
 def test_get_text(basic_xml_tree):
     """Test function `_get_text`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import _get_text  # noqa
+    from clinica.converters.adni_to_bids._json import _get_text
 
     assert _get_text(basic_xml_tree) == "100"
     assert _get_text(basic_xml_tree, cast=int) == 100
@@ -107,8 +107,8 @@ def test_get_text(basic_xml_tree):
 
 def test_check_xml_and_get_text(basic_xml_tree):
     """Test function `_check_xml_and_get_text`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import (
-        _check_xml_and_get_text,  # noqa
+    from clinica.converters.adni_to_bids._json import (
+        _check_xml_and_get_text,
     )
 
     xml_leaf = ET.Element("leaf")
@@ -124,7 +124,7 @@ def test_check_xml_and_get_text(basic_xml_tree):
 
 def test_read_xml_files_error(tmp_path):
     """Test function `_read_xml_files`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import _read_xml_files  # noqa
+    from clinica.converters.adni_to_bids._json import _read_xml_files
 
     with pytest.raises(
         FileNotFoundError,
@@ -137,7 +137,7 @@ def test_read_xml_files_error(tmp_path):
 
 def test_read_xml_files(tmp_path):
     """Test function `_read_xml_files`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import _read_xml_files  # noqa
+    from clinica.converters.adni_to_bids._json import _read_xml_files
 
     xml_path = tmp_path / "xml_files"
     xml_path.mkdir()
@@ -203,11 +203,12 @@ def _write_xml_example(
 @pytest.mark.parametrize("template_id", _get_xml_templates())
 def test_get_root_from_xml_path(tmp_path, template_id):
     """Test function `_get_root_from_xml_path`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import (
-        _get_root_from_xml_path,  # noqa
+    from clinica.converters.adni_to_bids._json import (
+        _get_root_from_xml_path,
     )
 
     xml_file = _write_xml_example(tmp_path, template_id=template_id)
+
     assert isinstance(_get_root_from_xml_path(xml_file), ET.Element)
 
 
@@ -232,13 +233,13 @@ def expected_image_metadata(template_id):
 @pytest.mark.parametrize("template_id", _get_xml_templates())
 def test_parsing(tmp_path, template_id, expected_image_metadata):
     """Test function `_get_root_from_xml_path`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import (
-        _get_root_from_xml_path,  # noqa
-        _parse_images,  # noqa
-        _parse_project,  # noqa
-        _parse_series,  # noqa
-        _parse_study,  # noqa
-        _parse_subject,  # noqa
+    from clinica.converters.adni_to_bids._json import (
+        _get_root_from_xml_path,
+        _parse_images,
+        _parse_project,
+        _parse_series,
+        _parse_study,
+        _parse_subject,
     )
 
     expected_subject_id = template_id[5:]
@@ -319,7 +320,7 @@ def test_parsing(tmp_path, template_id, expected_image_metadata):
 
 
 @pytest.fixture
-def expected_mprage(template_id):
+def expected_mprage(template_id: str) -> str:
     expected = {
         "ADNI_123_S_4567": "Accelerated Sagittal MPRAGE",
         "ADNI_234_S_5678": "MPRAGE GRAPPA2",
@@ -329,9 +330,9 @@ def expected_mprage(template_id):
 
 
 @pytest.mark.parametrize("template_id", _get_xml_templates())
-def test_parse_xml_file(template_id, tmp_path, expected_mprage):
+def test_parse_xml_file(template_id: str, tmp_path, expected_mprage: str):
     """Test function `_parse_xml_file`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import _parse_xml_file  # noqa
+    from clinica.converters.adni_to_bids._json import _parse_xml_file
 
     xml_file = _write_xml_example(tmp_path, template_id=template_id)
     scan_metadata = _parse_xml_file(xml_file)
@@ -357,8 +358,8 @@ def test_get_existing_scan_dataframe(tmp_path):
     """Test function `_get_existing_scan_dataframe`."""
     from pandas.testing import assert_frame_equal
 
-    from clinica.iotools.converters.adni_to_bids.adni_json import (
-        _get_existing_scan_dataframe,  # noqa
+    from clinica.converters.adni_to_bids._json import (
+        _get_existing_scan_dataframe,
     )
 
     subj_path = tmp_path / "sub-01"
@@ -379,8 +380,8 @@ def test_get_existing_scan_dataframe(tmp_path):
 
 def test_get_json_filename_from_scan_filename():
     """Test function _get_json_filename_from_scan_filename`."""
-    from clinica.iotools.converters.adni_to_bids.adni_json import (
-        _get_json_filename_from_scan_filename,  # noqa
+    from clinica.converters.adni_to_bids._json import (
+        _get_json_filename_from_scan_filename,
     )
 
     assert _get_json_filename_from_scan_filename(Path("foo.nii.gz")) == Path("foo.json")
@@ -401,8 +402,8 @@ def test_add_json_scan_metadata(tmp_path, keep_none):
     """Test function `_add_json_scan_metadata`."""
     import json
 
-    from clinica.iotools.converters.adni_to_bids.adni_json import (
-        _add_json_scan_metadata,  # noqa
+    from clinica.converters.adni_to_bids._json import (
+        _add_json_scan_metadata,
     )
 
     existing_metadata = {

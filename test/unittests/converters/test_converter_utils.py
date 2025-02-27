@@ -6,146 +6,15 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from clinica.iotools.bids_utils import (
-    StudyName,
+from clinica.converters._utils import (
     _write_bids_validator_config,
     _write_bidsignore,
     _write_readme,
-    get_pet_tracer_from_filename,
 )
-from clinica.utils.pet import Tracer
-
-MODALITY_AGNOSTIC_FILE_WRITERS = {
-    #    "readme": _write_readme,
-    "bids-validator": _write_bids_validator_config,
-    "bidsignore": _write_bidsignore,
-}
+from clinica.converters.study_models import StudyName
 
 
-EXPECTED_MODALITY_AGNOSTIC_FILES = {
-    "description": "dataset_description.json",
-    "readme": "README",
-    "bids-validator": ".bids-validator-config.json",
-    "bidsignore": ".bidsignore",
-}
-
-
-EXPECTED_README_CONTENT = Template(
-    (
-        "This BIDS directory was generated with Clinica v$version.\n"
-        "More information on $website\n"
-        "\n"
-        "Study: $study\n"
-        "\n"
-        "description\n\n"
-        "Find more about it and about the data user agreement: link"
-    )
-)
-
-
-@pytest.mark.parametrize(
-    "filename, expected",
-    [
-        ("sub-1_ses-1_trc-18FFDG_pet.nii.gz", Tracer.FDG),
-        ("sub-1_ses-1_acq-18FFDG_pet.nii.gz", Tracer.FDG),
-        ("sub-1_ses-1_trc-18FFDG_acq-18FFDG_pet.nii.gz", Tracer.FDG),
-        ("sub-1_ses-1_trc-11CPIB_pet.nii.gz", Tracer.PIB),
-        ("sub-1_ses-1_trc-18FFBB_pet.nii.gz", Tracer.FBB),
-        ("sub-1_ses-1_trc-18FFMM_pet.nii.gz", Tracer.FMM),
-        ("sub-1_ses-1_trc-18FAV1451_pet.nii.gz", Tracer.AV1451),
-        ("sub-1_ses-1_trc-18FAV45_pet.nii.gz", Tracer.AV45),
-    ],
-)
-def test_get_pet_tracer_from_filename_success(filename, expected):
-    assert expected == get_pet_tracer_from_filename(filename)
-
-
-@pytest.mark.parametrize(
-    "filename",
-    [
-        "sub-1_ses-1_trc18FFDG_pet.nii.gz",
-        "sub-1_ses-1_trc-///_pet.nii.gz",
-        "sub-1_ses-1_trc-foo_pet.nii.gz",
-        "sub-1_ses-1_pet.nii.gz",
-    ],
-)
-def test_get_pet_tracer_from_filename_error(filename):
-    with pytest.raises(ValueError):
-        get_pet_tracer_from_filename(filename)
-
-
-@pytest.mark.parametrize(
-    "study,study_id,expected",
-    [
-        (StudyName.ADNI, "001_S_0001", "sub-ADNI001S0001"),
-        (StudyName.NIFD, "1_S_0001", "sub-NIFD1S0001"),
-        (StudyName.AIBL, "10", "sub-AIBL10"),
-        (StudyName.UKB, "0101001", "sub-UKB0101001"),
-        (StudyName.GENFI, "MAPT009", "sub-MAPT009"),
-        (StudyName.OASIS3, "OAS30001", "sub-OAS30001"),
-        (StudyName.HABS, "P_INIBUB", "sub-HABSINIBUB"),
-        (StudyName.OASIS, "OAS1_0001_MR1", "sub-OASIS10001"),
-        (StudyName.IXI, "IXI001", "sub-IXI001"),
-    ],
-)
-def test_study_to_bids_id_passing(study, study_id, expected):
-    from clinica.iotools.bids_utils import bids_id_factory
-
-    assert bids_id_factory(study).from_original_study_id(study_id) == expected
-
-
-@pytest.mark.parametrize(
-    "study,study_id",
-    [
-        (StudyName.ADNI, "001S0001"),
-        (StudyName.ADNI, "001_X_0001"),
-        (StudyName.ADNI, "foo_S_0001"),
-        (StudyName.NIFD, "1S0001"),
-        (StudyName.NIFD, "1_X_0001"),
-        (StudyName.NIFD, "foo_S_0001"),
-        (StudyName.AIBL, "10A"),
-        (StudyName.UKB, "0101001A"),
-        (StudyName.GENFI, "MAPT009?"),
-        (StudyName.OASIS3, "OAS3_0001"),
-        (StudyName.OASIS3, "OAS3001"),
-        (StudyName.HABS, "PINIBUB"),
-        (StudyName.HABS, "X_INIBUB"),
-        (StudyName.HABS, "P_INIBUB?"),
-        (StudyName.OASIS, "OAS10001MR1"),
-        (StudyName.OASIS, "OAS1_0001_MRI1"),
-        (StudyName.OASIS, "OAS1_001_MR1"),
-        (StudyName.IXI, "IXI_001"),
-        (StudyName.IXI, "IXI0001"),
-    ],
-)
-def test_study_to_bids_id_value_error(study, study_id):
-    from clinica.iotools.bids_utils import bids_id_factory
-
-    with pytest.raises(ValueError):
-        bids_id_factory(study).from_original_study_id(study_id)
-
-
-@pytest.mark.parametrize(
-    "study,source_id,bids_id",
-    [
-        (StudyName.ADNI, "001_S_0001", "sub-ADNI001S0001"),
-        (StudyName.NIFD, "1_S_0001", "sub-NIFD1S0001"),
-        (StudyName.AIBL, "10", "sub-AIBL10"),
-        (StudyName.UKB, "0101001", "sub-UKB0101001"),
-        (StudyName.GENFI, "MAPT009", "sub-MAPT009"),
-        (StudyName.OASIS3, "OAS30001", "sub-OAS30001"),
-        (StudyName.HABS, "P_INIBUB", "sub-HABSINIBUB"),
-        (StudyName.OASIS, "OAS1_0001_MR1", "sub-OASIS10001"),
-        (StudyName.IXI, "IXI001", "sub-IXI001"),
-    ],
-)
-def test_bids_to_study(study, bids_id, source_id):
-    from clinica.iotools.bids_utils import bids_id_factory
-
-    assert bids_id_factory(study)(bids_id).to_original_study_id() == source_id
-
-
-def create_participants_spec(tmp_path: Path) -> Path:
+def _create_participants_spec(tmp_path: Path) -> Path:
     spec_df = pd.DataFrame(
         {
             "BIDS CLINICA": [
@@ -178,7 +47,7 @@ def create_participants_spec(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def create_clinical_data(
+def _create_clinical_data(
     tmp_path: Path, study_name: StudyName, adni_genotype: Optional[bool] = False
 ) -> Path:
     clinical_path = tmp_path / "clinical_data"
@@ -309,13 +178,15 @@ def create_clinical_data(
 def test_create_participants_df(
     tmp_path, bids_ids, expected, study_name, adni_genotype
 ):
-    from clinica.iotools.bids_utils import create_participants_df
+    from clinica.converters._utils import create_participants_df
 
     assert (
         create_participants_df(
             study_name,
-            clinical_specifications_folder=create_participants_spec(tmp_path),
-            clinical_data_dir=create_clinical_data(tmp_path, study_name, adni_genotype),
+            clinical_specifications_folder=_create_participants_spec(tmp_path),
+            clinical_data_dir=_create_clinical_data(
+                tmp_path, study_name, adni_genotype
+            ),
             bids_ids=bids_ids,
         )
         .reset_index(drop=True)
@@ -323,8 +194,8 @@ def test_create_participants_df(
     )
 
 
-def test_get_bids_subjs_list(tmp_path):
-    from clinica.iotools.bids_utils import get_bids_subjs_list
+def test_get_subjects_from_bids_dataset(tmp_path):
+    from clinica.converters._utils import get_subjects_from_bids_dataset
 
     (tmp_path / "file").touch()
     (tmp_path / "sub-03").touch()
@@ -333,29 +204,17 @@ def test_get_bids_subjs_list(tmp_path):
     for sub in ("sub-01", "sub-02", "sub-16"):
         (tmp_path / sub).mkdir()
 
-    assert set(get_bids_subjs_list(tmp_path)) == {"sub-01", "sub-02", "sub-16"}
-
-
-@pytest.mark.parametrize(
-    "input_string,expected",
-    [
-        ("foo", "foo"),
-        ("foo_bar", "foobar"),
-        ("foo bar", "foobar"),
-        ("foo bar_baz", "foobarbaz"),
-        ("foo-ba_r baz", "foobarbaz"),
-    ],
-)
-def test_remove_space_and_symbols(input_string, expected):
-    from clinica.iotools.bids_utils import remove_space_and_symbols
-
-    assert remove_space_and_symbols(input_string) == expected
+    assert set(get_subjects_from_bids_dataset(tmp_path)) == {
+        "sub-01",
+        "sub-02",
+        "sub-16",
+    }
 
 
 @pytest.mark.parametrize("compress", [True, False])
 @pytest.mark.parametrize("sidecar", [True, False])
-def test_build_dcm2niix_command(tmp_path, compress, sidecar):
-    from clinica.iotools.bids_utils import _build_dcm2niix_command
+def test_build_dcm2niix_command(tmp_path, compress: bool, sidecar: bool):
+    from clinica.converters._utils import _build_dcm2niix_command
 
     compress_flag = "y" if compress else "n"
     sidecar_flag = "y" if sidecar else "n"
@@ -366,6 +225,7 @@ def test_build_dcm2niix_command(tmp_path, compress, sidecar):
     if sidecar:
         expected += ["-ba", "y"]
     expected += [str(tmp_path / "in")]
+
     assert (
         _build_dcm2niix_command(
             tmp_path / "in",
@@ -378,9 +238,34 @@ def test_build_dcm2niix_command(tmp_path, compress, sidecar):
     )
 
 
+@pytest.fixture
+def expected_content(name: str, study_name: StudyName) -> str:
+    if name == "readme":
+        return _get_expected_readme_content(study_name)
+    elif name == "bids-validator":
+        return _expected_validator_content()
+    return "\n".join(["swi/", "conversion_info/"])
+
+
+def _expected_validator_content() -> str:
+    import json
+
+    from clinica.converters._utils import BIDS_VALIDATOR_CONFIG
+
+    return json.dumps(BIDS_VALIDATOR_CONFIG, indent=4)
+
+
 def _validate_file_and_content(file: Path, expected_content: str) -> None:
     assert file.exists()
     assert file.read_text() == expected_content
+
+
+EXPECTED_MODALITY_AGNOSTIC_FILES = {
+    "description": "dataset_description.json",
+    "readme": "README",
+    "bids-validator": ".bids-validator-config.json",
+    "bidsignore": ".bidsignore",
+}
 
 
 @pytest.fixture
@@ -405,8 +290,8 @@ def expected_description_content(
 @pytest.mark.parametrize("bids_version", [None, "1.6.0", "1.7.0"])
 def test_write_bids_dataset_description(
     tmp_path,
-    study_name,
-    bids_version,
+    study_name: StudyName,
+    bids_version: Optional[str],
     expected_description_content,
 ):
     """Test function `_write_bids_dataset_description`.
@@ -416,7 +301,7 @@ def test_write_bids_dataset_description(
         a different set of input parameters.
 
     """
-    from clinica.iotools.bids_utils import _write_bids_dataset_description
+    from clinica.converters._utils import _write_bids_dataset_description
 
     _write_bids_dataset_description(study_name, tmp_path, bids_version=bids_version)
     _validate_file_and_content(
@@ -425,21 +310,11 @@ def test_write_bids_dataset_description(
     )
 
 
-def expected_validator_content() -> str:
-    import json
-
-    from clinica.iotools.bids_utils import BIDS_VALIDATOR_CONFIG
-
-    return json.dumps(BIDS_VALIDATOR_CONFIG, indent=4)
-
-
-@pytest.fixture
-def expected_content(name: str, study_name: StudyName) -> str:
-    if name == "readme":
-        return get_expected_readme_content(study_name)
-    elif name == "bids-validator":
-        return expected_validator_content()
-    return "\n".join(["swi/", "conversion_info/"])
+MODALITY_AGNOSTIC_FILE_WRITERS = {
+    #    "readme": _write_readme,
+    "bids-validator": _write_bids_validator_config,
+    "bidsignore": _write_bidsignore,
+}
 
 
 @pytest.mark.parametrize("study_name", StudyName)
@@ -458,7 +333,7 @@ def test_write_modality_agnostic_files(tmp_path):
     """Test function `write_modality_agnostic_files`."""
     import os
 
-    from clinica.iotools.bids_utils import write_modality_agnostic_files
+    from clinica.converters._utils import write_modality_agnostic_files
 
     data_dict = {"link": "", "desc": ""}
     assert len(os.listdir(tmp_path)) == 0
@@ -467,6 +342,29 @@ def test_write_modality_agnostic_files(tmp_path):
     assert len(files) == 4
     for _, v in EXPECTED_MODALITY_AGNOSTIC_FILES.items():
         assert v in files
+
+
+EXPECTED_README_CONTENT = Template(
+    (
+        "This BIDS directory was generated with Clinica v$version.\n"
+        "More information on $website\n"
+        "\n"
+        "Study: $study\n"
+        "\n"
+        "description\n\n"
+        "Find more about it and about the data user agreement: link"
+    )
+)
+
+
+def _get_expected_readme_content(study_name: StudyName) -> str:
+    import clinica
+
+    return EXPECTED_README_CONTENT.safe_substitute(
+        version=clinica.__version__,
+        website="https://www.clinica.run",
+        study=study_name.value,
+    )
 
 
 @pytest.mark.parametrize("study_name", StudyName)
@@ -483,20 +381,52 @@ def test_write_bids_readme(
         a different set of input parameters.
 
     """
-
     data_dict = {"link": "link", "desc": "description"}
     _write_readme(study_name=study_name, data_dict=data_dict, bids_dir=tmp_path)
     _validate_file_and_content(
         file=tmp_path / EXPECTED_MODALITY_AGNOSTIC_FILES["readme"],
-        expected_content=get_expected_readme_content(study_name),
+        expected_content=_get_expected_readme_content(study_name),
     )
 
 
-def get_expected_readme_content(study_name: StudyName) -> str:
-    import clinica
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        ("bl", "ses-M000"),
+        ("m0", "ses-M000"),
+        ("m3", "ses-M003"),
+        ("m03", "ses-M003"),
+        ("m003", "ses-M003"),
+        ("m0003", "ses-M003"),
+        ("m00", "ses-M000"),
+        ("m0000000", "ses-M000"),
+    ],
+)
+def test_viscode_to_session(input: str, expected: str):
+    """Test function `viscode_to_session`."""
+    from clinica.converters._utils import viscode_to_session
 
-    return EXPECTED_README_CONTENT.safe_substitute(
-        version=clinica.__version__,
-        website="https://www.clinica.run",
-        study=study_name.value,
+    assert viscode_to_session(input) == expected
+
+
+@pytest.mark.parametrize(
+    "viscode", ["c1", "A123", "foo", "foo-M1", "ses-M000", "None", ""]
+)
+def test_viscode_to_session_error(viscode: str):
+    from clinica.converters._utils import viscode_to_session
+
+    with pytest.raises(
+        ValueError, match=f"The viscode {viscode} is not correctly formatted."
+    ):
+        viscode_to_session(viscode)
+
+
+def test_viscode_to_session_with_custom_baseline_identifiers():
+    from clinica.converters._utils import viscode_to_session
+
+    assert (
+        viscode_to_session("base", baseline_identifiers={"base", "foo"}) == "ses-M000"
     )
+    assert viscode_to_session("foo", baseline_identifiers={"base", "foo"}) == "ses-M000"
+    with pytest.raises(ValueError, match="The viscode bl is not correctly formatted."):
+        viscode_to_session("bl", baseline_identifiers={"base", "foo"})

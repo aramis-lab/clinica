@@ -11,7 +11,7 @@ def test_scale_coordinates_by_pixdim():
     """Test function `_scale_coordinates_by_pixdim`."""
     from nibabel.nifti1 import Nifti1Header
 
-    from clinica.iotools.utils.data_handling._centering import (
+    from clinica.iotools.data_handling._centering import (
         _scale_coordinates_by_pixdim,
     )
 
@@ -32,12 +32,12 @@ def test_scale_coordinates_by_pixdim():
 
 
 def test_check_relative_volume_location_in_world_coordinate_system(tmp_path, mocker):
-    from clinica.iotools.utils.data_handling import (
+    from clinica.iotools.data_handling import (
         check_relative_volume_location_in_world_coordinate_system,
     )
 
     mocker.patch(
-        "clinica.iotools.utils.data_handling._centering._get_problematic_pairs_with_l2_norm",
+        "clinica.iotools.data_handling._centering._get_problematic_pairs_with_l2_norm",
         return_value=[
             ("foo.nii.gz", "bar.nii.gz", 81.2),
             ("baz.nii", "goo.nii", 113.3),
@@ -72,12 +72,12 @@ def test_check_relative_volume_location_in_world_coordinate_system(tmp_path, moc
 
 
 def test_get_problematic_pairs_empty(tmp_path, mocker):
-    from clinica.iotools.utils.data_handling._centering import (
+    from clinica.iotools.data_handling._centering import (
         _get_problematic_pairs_with_l2_norm,
     )
 
     mocker.patch(
-        "clinica.iotools.utils.data_handling._centering._get_world_coordinate_of_center",
+        "clinica.iotools.data_handling._centering._get_world_coordinate_of_center",
         return_value=np.zeros((3, 3)),
     )
     assert (
@@ -92,12 +92,12 @@ def test_get_problematic_pairs_empty(tmp_path, mocker):
 
 
 def test_get_problematic_pairs(tmp_path, mocker):
-    from clinica.iotools.utils.data_handling._centering import (
+    from clinica.iotools.data_handling._centering import (
         _get_problematic_pairs_with_l2_norm,
     )
 
     mocker.patch(
-        "clinica.iotools.utils.data_handling._centering._compute_l2_norm",
+        "clinica.iotools.data_handling._centering._compute_l2_norm",
         return_value=[81.0, 79.9],
     )
     assert _get_problematic_pairs_with_l2_norm(
@@ -109,7 +109,7 @@ def test_get_problematic_pairs(tmp_path, mocker):
 
 
 def test_build_warning_message(tmp_path):
-    from clinica.iotools.utils.data_handling._centering import _build_warning_message
+    from clinica.iotools.data_handling._centering import _build_warning_message
 
     assert (
         "It appears that 3 files have a center way out of the origin of the world coordinate system. "
@@ -133,7 +133,7 @@ def test_build_warning_message(tmp_path):
 
 
 def test_validate_output_tsv_path(tmp_path):
-    from clinica.iotools.utils.data_handling._merging import _validate_output_tsv_path
+    from clinica.iotools.data_handling._merging import _validate_output_tsv_path
 
     (tmp_path / "foo.tsv").touch()
 
@@ -148,7 +148,7 @@ def test_validate_output_tsv_path(tmp_path):
 
 
 def test_validate_output_tsv_path_error(tmp_path):
-    from clinica.iotools.utils.data_handling._merging import _validate_output_tsv_path
+    from clinica.iotools.data_handling._merging import _validate_output_tsv_path
 
     (tmp_path / "bar.txt").touch()
 
@@ -160,7 +160,7 @@ def test_validate_output_tsv_path_error(tmp_path):
 
 
 def test_get_groups(tmp_path):
-    from clinica.iotools.utils.data_handling._missing import _get_groups
+    from clinica.iotools.data_handling._missing import _get_groups
 
     assert _get_groups(tmp_path) == []
     (tmp_path / "groups").mkdir()
@@ -190,7 +190,7 @@ def create_bids_dataset(folder: Path, write_tsv_files: bool = False) -> None:
 
 
 def test_find_mods_and_sess(tmp_path):
-    from clinica.iotools.utils.data_handling._missing import _find_mods_and_sess
+    from clinica.iotools.data_handling._missing import _find_mods_and_sess
 
     create_bids_dataset(tmp_path / "bids")
     ses_mod = _find_mods_and_sess(tmp_path / "bids")
@@ -213,24 +213,26 @@ def expected_tsv_content() -> str:
     )
 
 
-def test_create_subs_sess_list_as_text(tmp_path, expected_tsv_content):
-    from clinica.iotools.utils.data_handling._files import (
+def test_create_subs_sess_list_as_text(tmp_path, expected_tsv_content: str):
+    from clinica.iotools.data_handling._files import (
         _create_subs_sess_list_as_text,
     )
 
     create_bids_dataset(tmp_path / "bids")
+
     assert (
         _create_subs_sess_list_as_text(tmp_path / "bids", use_session_tsv=False)
         == expected_tsv_content
     )
 
 
-def test_create_subs_sess_list_as_text_using_tsv(tmp_path, expected_tsv_content):
-    from clinica.iotools.utils.data_handling._files import (
+def test_create_subs_sess_list_as_text_using_tsv(tmp_path, expected_tsv_content: str):
+    from clinica.iotools.data_handling._files import (
         _create_subs_sess_list_as_text,
     )
 
     create_bids_dataset(tmp_path / "bids", write_tsv_files=True)
+
     assert (
         _create_subs_sess_list_as_text(tmp_path / "bids", use_session_tsv=True)
         == expected_tsv_content
@@ -238,22 +240,25 @@ def test_create_subs_sess_list_as_text_using_tsv(tmp_path, expected_tsv_content)
 
 
 def test_create_subs_sess_list_as_text_errors(tmp_path):
-    from clinica.iotools.utils.data_handling._files import (
+    from clinica.iotools.data_handling._files import (
         _create_subs_sess_list_as_text,
     )
 
     with pytest.raises(IOError, match="Dataset empty or not BIDS/CAPS compliant."):
         _create_subs_sess_list_as_text(tmp_path, use_session_tsv=False)
+
     create_bids_dataset(tmp_path / "bids")
+
     with pytest.raises(
-        ValueError, match="there is no session TSV file for subject sub-01"
+        ValueError,
+        match="there is no session TSV file for subject sub-01",
     ):
         _create_subs_sess_list_as_text(tmp_path / "bids", use_session_tsv=True)
 
 
 @pytest.mark.parametrize("use_tsv", [True, False])
-def test_create_subs_sess_list(tmp_path, use_tsv, expected_tsv_content):
-    from clinica.iotools.utils.data_handling import create_subs_sess_list
+def test_create_subs_sess_list(tmp_path, use_tsv: bool, expected_tsv_content: str):
+    from clinica.iotools.data_handling import create_subs_sess_list
 
     create_bids_dataset(tmp_path / "bids", write_tsv_files=True)
     create_subs_sess_list(
@@ -262,19 +267,22 @@ def test_create_subs_sess_list(tmp_path, use_tsv, expected_tsv_content):
         file_name="foo.tsv",
         use_session_tsv=use_tsv,
     )
+
     assert (tmp_path / "output" / "foo.tsv").exists()
     assert (tmp_path / "output" / "foo.tsv").read_text() == expected_tsv_content
 
 
 def test_write_list_of_files_errors(tmp_path):
-    from clinica.iotools.utils.data_handling import write_list_of_files
+    from clinica.iotools.data_handling import write_list_of_files
 
     with pytest.raises(
         TypeError,
         match="`file_list` argument must be a list of paths. Instead <class 'int'> was provided.",
     ):
         write_list_of_files(10, tmp_path / "foo.txt")
+
     (tmp_path / "foo.txt").touch()
+
     with pytest.raises(
         IOError,
         match=f"Output file {tmp_path / 'foo.txt'} already exists.",
@@ -283,7 +291,7 @@ def test_write_list_of_files_errors(tmp_path):
 
 
 def test_write_list_of_files(tmp_path):
-    from clinica.iotools.utils.data_handling import write_list_of_files
+    from clinica.iotools.data_handling import write_list_of_files
 
     file_list = [
         tmp_path / "foo.csv",
@@ -291,12 +299,13 @@ def test_write_list_of_files(tmp_path):
         tmp_path / "boo.nii",
     ]
     write_list_of_files(file_list, tmp_path / "foo.txt")
+
     assert (tmp_path / "foo.txt").exists()
     assert (tmp_path / "foo.txt").read_text() == "\n".join([str(f) for f in file_list])
 
 
 def test_get_participants_and_subjects_sessions_df(tmp_path):
-    from clinica.iotools.utils.data_handling._merging import (
+    from clinica.iotools.data_handling._merging import (
         _get_participants_and_subjects_sessions_df,
     )
 
@@ -307,14 +316,15 @@ def test_get_participants_and_subjects_sessions_df(tmp_path):
     assert_frame_equal(
         participants, pd.DataFrame({"participant_id": ["sub-01", "sub-02", "sub-03"]})
     )
+
     assert len(sessions) == 6
 
 
 @pytest.mark.parametrize("ignore_sessions", (True, False))
 def test_create_merge_file_from_bids_ignore_sessions_and_scans(
-    tmp_path, ignore_sessions
+    tmp_path, ignore_sessions: bool
 ):
-    from clinica.iotools.utils.data_handling._merging import (
+    from clinica.iotools.data_handling._merging import (
         _create_merge_file_from_bids,
         _get_participants_and_subjects_sessions_df,
     )
@@ -350,11 +360,12 @@ def test_create_merge_file_from_bids_ignore_sessions_and_scans(
             ],
         }
     )
+
     assert_frame_equal(df.reset_index(drop=True), expected.reset_index(drop=True))
 
 
 def test_create_merge_file_from_bids(tmp_path):
-    from clinica.iotools.utils.data_handling._merging import (
+    from clinica.iotools.data_handling._merging import (
         _create_merge_file_from_bids,
         _get_participants_and_subjects_sessions_df,
     )
@@ -416,11 +427,12 @@ def test_create_merge_file_from_bids(tmp_path):
 
 
 def test_post_process_merge_file_from_bids_column_reordering():
-    from clinica.iotools.utils.data_handling._merging import (
+    from clinica.iotools.data_handling._merging import (
         _post_process_merge_file_from_bids,
     )
 
     df = pd.DataFrame(columns=["foo", "session_id", "bar", "participant_id", "baz"])
+
     assert_frame_equal(
         _post_process_merge_file_from_bids(df),
         pd.DataFrame(columns=["participant_id", "session_id", "foo", "bar", "baz"]),
@@ -428,7 +440,7 @@ def test_post_process_merge_file_from_bids_column_reordering():
 
 
 def test_post_process_merge_file_from_bids_number_rounding():
-    from clinica.iotools.utils.data_handling._merging import (
+    from clinica.iotools.data_handling._merging import (
         _post_process_merge_file_from_bids,
     )
 
@@ -450,7 +462,7 @@ def test_post_process_merge_file_from_bids_number_rounding():
 
 
 def test_add_data_to_merge_file_from_caps_wrong_handler(tmp_path):
-    from clinica.iotools.utils.data_handling._merging import (
+    from clinica.iotools.data_handling._merging import (
         _add_data_to_merge_file_from_caps,
     )
 
@@ -462,7 +474,7 @@ def test_add_data_to_merge_file_from_caps_wrong_handler(tmp_path):
 
 
 def test_add_data_to_merge_file_from_caps_empty_pipeline(tmp_path):
-    from clinica.iotools.utils.data_handling._merging import (
+    from clinica.iotools.data_handling._merging import (
         _add_data_to_merge_file_from_caps,
     )
 
@@ -489,3 +501,195 @@ def test_add_data_to_merge_file_from_caps_empty_pipeline(tmp_path):
         ),
     ):
         _add_data_to_merge_file_from_caps(tmp_path, df, pipelines=[])
+
+
+@pytest.mark.parametrize(
+    "input_list,expected",
+    [
+        (
+            ["ses-M000", "ses-M006", "ses-M012", "ses-M024", "ses-M048", "ses-M003"],
+            ["ses-M000", "ses-M003", "ses-M006", "ses-M012", "ses-M024", "ses-M048"],
+        ),
+        (
+            ["ses-M00", "ses-M06", "ses-M12", "ses-M24", "ses-M48", "ses-M03"],
+            ["ses-M00", "ses-M03", "ses-M06", "ses-M12", "ses-M24", "ses-M48"],
+        ),
+        (
+            ["ses-M0", "ses-M6", "ses-M12", "ses-M24", "ses-M48", "ses-M3"],
+            ["ses-M0", "ses-M3", "ses-M6", "ses-M12", "ses-M24", "ses-M48"],
+        ),
+    ],
+)
+def test_sort_session_list(input_list, expected):
+    """Test function `sort_session_list`."""
+    from clinica.iotools.data_handling._missing_modality_tracker import (
+        _sort_session_list,
+    )
+
+    assert _sort_session_list(input_list) == expected
+
+
+@pytest.mark.parametrize(
+    "sessions,modalities,expected",
+    [
+        ([], None, {}),
+        (
+            ["ses-M000", "ses-M006"],
+            None,
+            {
+                k: {
+                    "session": 0,
+                    "dwi": 0,
+                    "func": 0,
+                    "fieldmap": 0,
+                    "flair": 0,
+                    "t1w": 0,
+                }
+                for k in ["ses-M000", "ses-M006"]
+            },
+        ),
+        ([], ["fmri"], {}),
+        (
+            ["ses-M000", "ses-M006"],
+            ["fmri", "dwi"],
+            {k: {"session": 0, "dwi": 0, "fmri": 0} for k in ["ses-M000", "ses-M006"]},
+        ),
+    ],
+)
+def test_missing_mods_tracker_instantiation(sessions, modalities, expected):
+    from clinica.iotools.data_handling._missing_modality_tracker import (
+        MissingModsTracker,
+    )
+
+    tracker = MissingModsTracker(sessions, modalities)
+
+    assert tracker.missing == expected
+    assert tracker.ses == sessions
+    assert tracker.get_missing_list() == expected
+
+
+def test_missing_mods_tracker_add_errors():
+    from clinica.iotools.data_handling._missing_modality_tracker import (
+        MissingModsTracker,
+    )
+
+    tracker = MissingModsTracker(["ses-M000", "ses-M006"], ["fmri", "dwi"])
+
+    with pytest.raises(
+        ValueError,
+        match="Session foo was not provided to the MissingModsTracker constructor.",
+    ):
+        tracker.add_missing_mod("foo", "fmri")
+        tracker.increase_missing_ses("foo")
+
+    with pytest.raises(
+        ValueError,
+        match="Modality foo is not tracked by this instance of MissingModsTracker.",
+    ):
+        tracker.add_missing_mod("ses-M006", "foo")
+
+
+def test_missing_mods_tracker_add():
+    from clinica.iotools.data_handling._missing_modality_tracker import (
+        MissingModsTracker,
+    )
+
+    tracker = MissingModsTracker(["ses-M000", "ses-M006"], ["fmri", "dwi"])
+    tracker.increase_missing_ses("ses-M000")
+    assert tracker.missing["ses-M000"]["session"] == 1
+    assert tracker.missing["ses-M006"]["session"] == 0
+    tracker.add_missing_mod("ses-M006", "dwi")
+    assert tracker.missing["ses-M006"]["dwi"] == 1
+    assert tracker.missing["ses-M000"]["dwi"] == 0
+    tracker.add_missing_mod("ses-M000", "dwi")
+    assert tracker.missing["ses-M006"]["dwi"] == 1
+    assert tracker.missing["ses-M000"]["dwi"] == 1
+
+
+def test_compute_statistics():
+    from clinica.iotools.data_handling._missing_modality_tracker import (
+        MissingModsTracker,
+        _compute_statistics,
+    )
+
+    tracker = MissingModsTracker(["ses-M000", "ses-M006"], ["fmri", "dwi"])
+    tracker.increase_missing_ses("ses-M000")
+    tracker.add_missing_mod("ses-M006", "dwi")
+
+    assert _compute_statistics(2, ["ses-M000", "ses-M006"], tracker) == (
+        "**********************************************\n"
+        "Number of subjects converted: 2\n"
+        "Sessions available: ['ses-M000', 'ses-M006']\n\n"
+        "Number of sessions ses-M000 found: 1 (50.0%)\n\n"
+        "Number of sessions ses-M006 found: 2 (100.0%)\n\n"
+        "**********************************************\n\n"
+        "Number of missing modalities for each session:\n\n"
+        "ses-M000\nfmri: 0 (0.0%) \ndwi: 0 (0.0%) \n\n"
+        "ses-M006\nfmri: 0 (0.0%) \ndwi: 1 (50.0%) \n"
+    )
+
+
+def test_compute_table():
+    from clinica.iotools.data_handling._missing_modality_tracker import _compute_table
+
+    mods = {
+        "foo": {
+            "missing": 42,
+            "n/a": 16,
+            "bar": 23,
+        },
+        "bar": {
+            "missing": 0,
+            "baz": 7,
+        },
+    }
+
+    assert _compute_table(mods) == (
+        "\tbar\t| baz\t| missing\t| n/a\n------------------------------------------------\n"
+        "foo\t23\t| 0\t| 42\t| 16\nbar\t0\t| 7\t| 0\t| 0\n"
+    )
+
+
+def test_compute_longitudinal_analysis(tmp_path):
+    from clinica.iotools.data_handling._missing_modality_tracker import (
+        _compute_longitudinal_analysis,
+    )
+
+    sessions = ["ses-M000", "ses-M006"]
+    for subject in ("sub-01", "sub-03"):
+        (tmp_path / "bids" / subject).mkdir(parents=True)
+    for ses in sessions:
+        df = pd.DataFrame(
+            [["sub-01", 1, 0, 1], ["sub-03", 0, 1, 1]],
+            columns=["participant_id", "foo", "bar", "baz"],
+        )
+        df.to_csv(tmp_path / f"missing_mods_{ses}.tsv", sep="\t", index=False)
+    df = pd.DataFrame(
+        [
+            ["ses-M000", 18, "foooo", "CN", "ADNI"],
+            ["ses-M006", 19, "foooo", "AD", "ADNI"],
+        ],
+        columns=["session_id", "age", "foobarbaz", "diagnosis", "study"],
+    )
+    df.to_csv(
+        tmp_path / "bids" / "sub-01" / "sub-01_sessions.tsv", sep="\t", index=False
+    )
+    df = pd.DataFrame(
+        [["ses-M000", 66, "bar", 42, "ADNI"], ["ses-M012", 67, "baz", 69, "ADNI"]],
+        columns=["session_id", "age", "bar", "diagnosis", "study"],
+    )
+    df.to_csv(
+        tmp_path / "bids" / "sub-03" / "sub-03_sessions.tsv", sep="\t", index=False
+    )
+
+    assert _compute_longitudinal_analysis(
+        tmp_path / "bids", tmp_path, sessions, "missing_mods_"
+    ) == (
+        "**********************************************\n\n"
+        "Number of present diagnoses and modalities "
+        "for each session:\nses-M000\n\tCN\t| n/a\n"
+        "--------------------------------\nfoo\t1\t| 0\nbar\t0\t| "
+        "1\nbaz\t1\t| 1\n\n\nses-M006\n\tAD\t| missing\n"
+        "--------------------------------\nfoo\t1\t| "
+        "0\nbar\t0\t| 1\nbaz\t1\t| 1\n\n\n"
+    )

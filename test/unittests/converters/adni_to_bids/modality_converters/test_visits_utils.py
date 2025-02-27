@@ -1,8 +1,8 @@
 import pandas as pd
 import pytest
-from pandas.testing import assert_frame_equal, assert_series_equal
+from pandas.testing import assert_series_equal
 
-from clinica.iotools.converters.adni_to_bids.adni_utils import ADNIStudy
+from clinica.converters.adni_to_bids._utils import ADNIStudy
 
 
 @pytest.mark.parametrize(
@@ -36,17 +36,17 @@ from clinica.iotools.converters.adni_to_bids.adni_utils import ADNIStudy
         ("ADNIGO", "m54", "ADNIGO Month 54"),
     ],
 )
-def test_get_preferred_visit_name(study_name, visit_code, expected):
-    from clinica.iotools.converters.adni_to_bids.modality_converters._visits_utils import (
-        _get_preferred_visit_name,  # noqa
+def test_get_preferred_visit_name(study_name: str, visit_code: str, expected: str):
+    from clinica.converters.adni_to_bids.modality_converters._visits_utils import (
+        _get_preferred_visit_name,
     )
 
     assert _get_preferred_visit_name(ADNIStudy(study_name), visit_code) == expected
 
 
 def test_get_preferred_visit_name_visit_code_error():
-    from clinica.iotools.converters.adni_to_bids.modality_converters._visits_utils import (
-        _get_preferred_visit_name,  # noqa
+    from clinica.converters.adni_to_bids.modality_converters._visits_utils import (
+        _get_preferred_visit_name,
     )
 
     with pytest.raises(
@@ -59,9 +59,9 @@ def test_get_preferred_visit_name_visit_code_error():
 @pytest.mark.parametrize(
     "visits,expected", [([], 0), ([pd.Series({"EXAMDATE": "2010-06-06"})], 1)]
 )
-def test_get_closest_and_second_closest_visits_errors(visits, expected):
-    from clinica.iotools.converters.adni_to_bids.modality_converters._visits_utils import (
-        _get_closest_and_second_closest_visits,  # noqa
+def test_get_closest_and_second_closest_visits_errors(visits, expected: int):
+    from clinica.converters.adni_to_bids.modality_converters._visits_utils import (
+        _get_closest_and_second_closest_visits,
     )
 
     with pytest.raises(
@@ -100,15 +100,15 @@ def visits() -> list[pd.Series]:
     ],
 )
 def test_get_closest_and_second_closest_visits(
-    visits,
-    image_acquisition_date,
-    expected_closest_visit_date,
-    expected_second_closest_visit_date,
-    expected_difference_with_closest,
-    expected_difference_with_second_closest,
+    visits: list[pd.Series],
+    image_acquisition_date: str,
+    expected_closest_visit_date: str,
+    expected_second_closest_visit_date: str,
+    expected_difference_with_closest: int,
+    expected_difference_with_second_closest: int,
 ):
-    from clinica.iotools.converters.adni_to_bids.modality_converters._visits_utils import (
-        _get_closest_and_second_closest_visits,  # noqa
+    from clinica.converters.adni_to_bids.modality_converters._visits_utils import (
+        _get_closest_and_second_closest_visits,
     )
 
     closest, second, diff1, diff2 = _get_closest_and_second_closest_visits(
@@ -122,8 +122,8 @@ def test_get_closest_and_second_closest_visits(
 
 
 def test_get_smallest_time_difference_too_large_message():
-    from clinica.iotools.converters.adni_to_bids.modality_converters._visits_utils import (
-        _get_smallest_time_difference_too_large_message,  # noqa
+    from clinica.converters.adni_to_bids.modality_converters._visits_utils import (
+        _get_smallest_time_difference_too_large_message,
     )
 
     assert _get_smallest_time_difference_too_large_message(
@@ -147,7 +147,7 @@ def test_get_smallest_time_difference_too_large_message():
 
 
 def test_get_closest_visit_empty():
-    from clinica.iotools.converters.adni_to_bids.modality_converters._visits_utils import (
+    from clinica.converters.adni_to_bids.modality_converters._visits_utils import (
         _get_closest_visit,
     )
 
@@ -204,9 +204,9 @@ def closest_visit_timepoints() -> list[pd.Series]:
     "image_acquisition_date", ["1809-03-04", "2012-01-01", "2066-12-31"]
 )
 def test_get_closest_visit_single_visit(
-    closest_visit_timepoints, image_acquisition_date
+    closest_visit_timepoints: list[pd.Series], image_acquisition_date: str
 ):
-    from clinica.iotools.converters.adni_to_bids.modality_converters._visits_utils import (
+    from clinica.converters.adni_to_bids.modality_converters._visits_utils import (
         _get_closest_visit,
     )
 
@@ -233,8 +233,12 @@ def test_get_closest_visit_single_visit(
         ),  # Special case where the second-closest visit is preferred over the closest one
     ],
 )
-def test_get_closest_visit(closest_visit_timepoints, image_acquisition_date, expected):
-    from clinica.iotools.converters.adni_to_bids.modality_converters._visits_utils import (
+def test_get_closest_visit(
+    closest_visit_timepoints: list[pd.Series],
+    image_acquisition_date: str,
+    expected: int,
+):
+    from clinica.converters.adni_to_bids.modality_converters._visits_utils import (
         _get_closest_visit,
     )
 

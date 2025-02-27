@@ -1,7 +1,7 @@
 import os
 import re
 from functools import partial
-from test.unittests.iotools.converters.adni_to_bids.modality_converters.test_adni_fmap import (
+from test.unittests.converters.adni_to_bids.modality_converters.test_adni_fmap import (
     expected,
 )
 from typing import Optional, Union

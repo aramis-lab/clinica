@@ -5,11 +5,12 @@ from typing import Iterable, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-from clinica.iotools.utils.pipeline_handling import (
+from clinica.utils.stream import cprint, log_and_raise, log_and_warn
+
+from ..pipeline_handling import (
     PipelineNameForMetricExtraction,
     pipeline_metric_extractor_factory,
 )
-from clinica.utils.stream import cprint, log_and_raise, log_and_warn
 
 __all__ = ["create_merge_file"]
 

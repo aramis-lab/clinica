@@ -30,7 +30,7 @@ def _bids_id_to_loni(bids_id: str) -> Optional[str]:
     """Convert a subject id of the form sub-ADNI000S0000
     back to original format 000_S_0000
     """
-    from clinica.converters.bids_utils import StudyName, bids_id_factory
+    from clinica.converters.study_models import StudyName, bids_id_factory
 
     try:
         return bids_id_factory(StudyName.ADNI)(bids_id).to_original_study_id()
@@ -565,7 +565,7 @@ def _add_json_scan_metadata(
 
 def _add_metadata_to_scans(df_meta: pd.DataFrame, bids_subjects_paths: Iterable[Path]):
     """Add the metadata to the appropriate tsv and json files."""
-    from clinica.converters.bids_utils import get_sessions_from_bids_dataset
+    from clinica.converters._utils import get_sessions_from_bids_dataset
 
     merge_strategy = {"how": "left", "left_on": "scan_id", "right_on": "T1w_scan_id"}
 

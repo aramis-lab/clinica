@@ -3,7 +3,7 @@ from typing import Iterable, Union
 
 import pandas as pd
 
-from clinica.converters.bids_utils import StudyName, bids_id_factory
+from clinica.converters.study_models import StudyName, bids_id_factory
 
 __all__ = ["create_sessions_df", "write_sessions_tsv", "write_scans_tsv"]
 

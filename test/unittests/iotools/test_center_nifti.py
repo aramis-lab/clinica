@@ -26,7 +26,7 @@ def build_bids_folder(tmp_path: Path) -> Path:
 
 
 def test_handle_output_existing_files(tmp_path):
-    from clinica.iotools.utils.data_handling._centering import (
+    from clinica.iotools.data_handling._centering import (
         _handle_output_existing_files,
     )
 
@@ -42,7 +42,7 @@ def test_handle_output_existing_files(tmp_path):
 
 
 def test_validate_bids_and_output_dir_equal_error(tmp_path):
-    from clinica.iotools.utils.data_handling._centering import (
+    from clinica.iotools.data_handling._centering import (
         _validate_bids_and_output_dir,
     )
 
@@ -51,7 +51,7 @@ def test_validate_bids_and_output_dir_equal_error(tmp_path):
 
 
 def test_validate_bids_and_output_dir_not_bids_error(tmp_path):
-    from clinica.iotools.utils.data_handling._centering import (
+    from clinica.iotools.data_handling._centering import (
         _validate_bids_and_output_dir,
     )
 
@@ -61,7 +61,7 @@ def test_validate_bids_and_output_dir_not_bids_error(tmp_path):
 
 
 def test_validate_bids_and_output_dir_not_bids_success(tmp_path):
-    from clinica.iotools.utils.data_handling._centering import (
+    from clinica.iotools.data_handling._centering import (
         _validate_bids_and_output_dir,
     )
 
@@ -103,16 +103,17 @@ def test_validate_bids_and_output_dir_not_bids_success(tmp_path):
         ),
     ],
 )
-def test_find_files_with_modality(tmp_path, modalities, expected):
-    from clinica.iotools.utils.data_handling._centering import _find_files_with_modality
+def test_find_files_with_modality(tmp_path, modalities, expected: set[str]):
+    from clinica.iotools.data_handling._centering import _find_files_with_modality
 
     bids_path = build_bids_folder(tmp_path)
     result = _find_files_with_modality(bids_path, modalities)
+
     assert set(r.name for r in result) == expected
 
 
 def test_center_nifti_error(tmp_path):
-    from clinica.iotools.utils import center_nifti
+    from clinica.iotools import center_nifti
 
     out_path = tmp_path / "out"
     out_path.mkdir()
@@ -147,7 +148,7 @@ def center_all_nifti_mock(
 
 
 def test_center_nifti_log_file_creation_error(tmp_path, mocker):
-    from clinica.iotools.utils import center_nifti
+    from clinica.iotools import center_nifti
 
     bids_path = build_bids_folder(tmp_path)
 
@@ -155,10 +156,10 @@ def test_center_nifti_log_file_creation_error(tmp_path, mocker):
     out_path.mkdir()
 
     mocker.patch(
-        "clinica.iotools.utils.data_handling.write_list_of_files", return_value=False
+        "clinica.iotools.data_handling.write_list_of_files", return_value=False
     )
     with patch(
-        "clinica.iotools.utils.data_handling.center_all_nifti",
+        "clinica.iotools.data_handling.center_all_nifti",
         wraps=center_all_nifti_mock,
     ) as mock:
         with pytest.raises(
@@ -178,14 +179,14 @@ def test_center_nifti_log_file_creation_error(tmp_path, mocker):
     ],
 )
 def test_center_nifti(tmp_path, centering_threshold, expected_files):
-    from clinica.iotools.utils import center_nifti
+    from clinica.iotools import center_nifti
 
     bids_path = build_bids_folder(tmp_path)
     output_dir = tmp_path / "out"
     output_dir.mkdir()
 
     with patch(
-        "clinica.iotools.utils.data_handling.center_all_nifti",
+        "clinica.iotools.data_handling.center_all_nifti",
         wraps=center_all_nifti_mock,
     ) as mock:
         center_nifti(bids_path, output_dir, ("anat", "pet", "dwi"), centering_threshold)

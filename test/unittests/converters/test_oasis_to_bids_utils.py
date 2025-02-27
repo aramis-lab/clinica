@@ -5,13 +5,6 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
-from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_utils import (
-    _convert_cdr_to_diagnosis,
-    create_sessions_df,
-    write_scans_tsv,
-    write_sessions_tsv,
-)
-
 
 @pytest.fixture
 def clinical_data_path(tmp_path: Path) -> Path:
@@ -132,11 +125,14 @@ def test_create_sessions_df_success(
     sessions_path_success: Path,
     expected: pd.DataFrame,
 ):
+    from clinica.converters.oasis_to_bids._utils import create_sessions_df
+
     result = create_sessions_df(
         clinical_data_path,
         sessions_path_success,
         ["sub-OASIS10001", "sub-OASIS10002"],
     )
+
     assert_frame_equal(expected, result, check_like=True, check_dtype=False)
 
 
@@ -146,6 +142,8 @@ def test_create_sessions_df_missing_clinical_data(
     sessions_path_success: Path,
     expected: pd.DataFrame,
 ):
+    from clinica.converters.oasis_to_bids._utils import create_sessions_df
+
     result = create_sessions_df(
         clinical_data_path,
         sessions_path_success,
@@ -162,8 +160,8 @@ def test_create_sessions_df_missing_clinical_data(
         }
     ).T
     missing_line.index.names = ["BIDS ID"]
-
     expected = pd.concat([expected, missing_line])
+
     assert_frame_equal(expected, result, check_like=True, check_dtype=False)
 
 
@@ -172,6 +170,8 @@ def test_create_sessions_df_file_not_found(
     clinical_data_path: Path,
     sessions_path_error: Path,
 ):
+    from clinica.converters.oasis_to_bids._utils import create_sessions_df
+
     with pytest.raises(FileNotFoundError):
         create_sessions_df(
             clinical_data_path,
@@ -187,6 +187,11 @@ def test_write_sessions_tsv(
     sessions_path_success: Path,
     expected: pd.DataFrame,
 ):
+    from clinica.converters.oasis_to_bids._utils import (
+        create_sessions_df,
+        write_sessions_tsv,
+    )
+
     sessions = create_sessions_df(
         clinical_data_path,
         sessions_path_success,
@@ -207,6 +212,8 @@ def test_write_sessions_tsv(
 
 
 def test_write_scans_tsv(tmp_path, bids_dir: Path) -> None:
+    from clinica.converters.oasis_to_bids._utils import write_scans_tsv
+
     image_path = (
         bids_dir
         / "sub-OASIS10001"
@@ -246,5 +253,7 @@ def test_write_scans_tsv(tmp_path, bids_dir: Path) -> None:
         ("foo", "n/a"),
     ],
 )
-def test_convert_cdr_to_diagnosis(cdr, diagnosis):
+def test_convert_cdr_to_diagnosis(cdr, diagnosis: str):
+    from clinica.converters.oasis_to_bids._utils import _convert_cdr_to_diagnosis
+
     assert diagnosis == _convert_cdr_to_diagnosis(cdr)

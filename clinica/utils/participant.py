@@ -222,7 +222,7 @@ def get_subject_session_list(
     from pathlib import Path
     from time import localtime, strftime, time
 
-    from clinica.iotools.utils.data_handling import create_subs_sess_list
+    from clinica.iotools.data_handling import create_subs_sess_list
 
     if not subject_session_file:
         output_dir = Path(tsv_dir) if tsv_dir else Path(tempfile.mkdtemp())

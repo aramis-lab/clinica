@@ -211,9 +211,7 @@ def build_clinical_data(tmp_path: Path) -> Path:
 
 
 def test_init_scans_dict(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _init_scans_dict,
-    )
+    from clinica.converters.aibl_to_bids.utils.clinical import _init_scans_dict
     from clinica.utils.pet import Tracer
 
     bids_dir = build_bids_dir(tmp_path)
@@ -250,9 +248,7 @@ def test_init_scans_dict(tmp_path):
     ],
 )
 def test_handle_flutemeta_badline(line, expected):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _handle_flutemeta_badline,
-    )
+    from clinica.converters.aibl_to_bids.utils.clinical import _handle_flutemeta_badline
 
     assert _handle_flutemeta_badline(line) == expected
 
@@ -262,9 +258,7 @@ def test_handle_flutemeta_badline(line, expected):
     [(None, "foo", None), ("foo", None, None), ("/2000", "01/01/2012", 12)],
 )
 def test_compute_age_at_exam(birth_date, exam_date, expected):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _compute_age_at_exam,
-    )
+    from clinica.converters.aibl_to_bids.utils.clinical import _compute_age_at_exam
 
     assert _compute_age_at_exam(birth_date, exam_date) == expected
 
@@ -281,17 +275,13 @@ def test_compute_age_at_exam(birth_date, exam_date, expected):
     ],
 )
 def test_map_diagnosis(diagnosis, expected):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _map_diagnosis,
-    )
+    from clinica.converters.aibl_to_bids.utils.clinical import _map_diagnosis
 
     assert _map_diagnosis(diagnosis) == expected
 
 
 def test_load_specifications_success(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _load_specifications,
-    )
+    from clinica.converters.aibl_to_bids.utils.clinical import _load_specifications
 
     filename = "foo.tsv"
     file = pd.DataFrame(columns=["foo"])
@@ -300,9 +290,7 @@ def test_load_specifications_success(tmp_path):
 
 
 def test_load_specifications_error_tmp_path(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _load_specifications,
-    )
+    from clinica.converters.aibl_to_bids.utils.clinical import _load_specifications
 
     with pytest.raises(
         FileNotFoundError,
@@ -313,7 +301,7 @@ def test_load_specifications_error_tmp_path(tmp_path):
 
 
 def test_listdir_nohidden(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.bids import _listdir_nohidden
+    from clinica.converters.aibl_to_bids.utils.bids import _listdir_nohidden
 
     (tmp_path / "file").touch()
     (tmp_path / ".hidden_file").touch()
@@ -324,7 +312,7 @@ def test_listdir_nohidden(tmp_path):
 
 
 def test_get_first_file_matching_pattern(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.bids import (
+    from clinica.converters.aibl_to_bids.utils.bids import (
         _get_first_file_matching_pattern,
     )
 
@@ -342,7 +330,7 @@ def test_get_first_file_matching_pattern(tmp_path):
     [("", "Pattern is not valid."), ("foo*.txt*", "No file matching pattern")],
 )
 def test_get_first_file_matching_pattern_error(tmp_path, pattern, msg):
-    from clinica.iotools.converters.aibl_to_bids.utils.bids import (
+    from clinica.converters.aibl_to_bids.utils.bids import (
         _get_first_file_matching_pattern,
     )
 
@@ -354,9 +342,7 @@ def test_get_first_file_matching_pattern_error(tmp_path, pattern, msg):
 
 
 def test_extract_metadata_df(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _format_metadata_for_rid,
-    )
+    from clinica.converters.aibl_to_bids.utils.clinical import _format_metadata_for_rid
 
     clinical_dir = build_clinical_data(tmp_path)
     expected = pd.DataFrame(
@@ -385,7 +371,7 @@ def test_extract_metadata_df(tmp_path):
     ],
 )
 def test_find_exam_date_in_other_csv_files(tmp_path, source_id, session_id, expected):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+    from clinica.converters.aibl_to_bids.utils.clinical import (
         _find_exam_date_in_other_csv_files,
     )
 
@@ -397,7 +383,7 @@ def test_find_exam_date_in_other_csv_files(tmp_path, source_id, session_id, expe
 
 
 def test_get_csv_files_for_alternative_exam_date(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+    from clinica.converters.aibl_to_bids.utils.clinical import (
         _get_csv_files_for_alternative_exam_date,
     )
 
@@ -434,7 +420,7 @@ def test_get_csv_files_for_alternative_exam_date(tmp_path):
     ],
 )
 def test_complete_examination_dates(tmp_path, rid, session_id, exam_date, expected):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+    from clinica.converters.aibl_to_bids.utils.clinical import (
         _complete_examination_dates,
     )
 
@@ -484,9 +470,7 @@ def test_complete_examination_dates(tmp_path, rid, session_id, exam_date, expect
     ],
 )
 def test_set_age_from_birth_success(input_df, expected_df):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _set_age_from_birth,
-    )
+    from clinica.converters.aibl_to_bids.utils.clinical import _set_age_from_birth
 
     assert_frame_equal(_set_age_from_birth(input_df), expected_df, check_like=True)
 
@@ -500,9 +484,7 @@ def test_set_age_from_birth_success(input_df, expected_df):
     ],
 )
 def test_set_age_from_birth_raise(input_df):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _set_age_from_birth,
-    )
+    from clinica.converters.aibl_to_bids.utils.clinical import _set_age_from_birth
 
     with pytest.raises(
         ValueError,
@@ -513,9 +495,7 @@ def test_set_age_from_birth_raise(input_df):
 
 
 def test_create_sessions_tsv(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        create_sessions_tsv_file,
-    )
+    from clinica.converters.aibl_to_bids.utils.clinical import create_sessions_tsv_file
 
     bids_path = build_bids_dir(tmp_path)
 
@@ -575,7 +555,7 @@ def test_create_sessions_tsv(tmp_path):
 
 
 def test_load_metadata_from_pattern_success(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+    from clinica.converters.aibl_to_bids.utils.clinical import (
         _load_metadata_from_pattern,
     )
 
@@ -603,7 +583,7 @@ def test_load_metadata_from_pattern_success(tmp_path):
 
 
 def test_load_metadata_from_pattern_not_found(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+    from clinica.converters.aibl_to_bids.utils.clinical import (
         _load_metadata_from_pattern,
     )
 
@@ -621,9 +601,7 @@ def test_load_metadata_from_pattern_not_found(tmp_path):
 
 
 def test_load_metadata_from_pattern_optional(tmp_path):
-    from io import StringIO
-
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+    from clinica.converters.aibl_to_bids.utils.clinical import (
         _handle_flutemeta_badline,
         _load_metadata_from_pattern,
     )
@@ -655,9 +633,7 @@ def test_load_metadata_from_pattern_optional(tmp_path):
 
 
 def test_create_scans_dict(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
-        _create_scans_dict,
-    )
+    from clinica.converters.aibl_to_bids.utils.clinical import _create_scans_dict
     from clinica.utils.pet import Tracer
 
     result = _create_scans_dict(
@@ -709,7 +685,7 @@ def test_create_scans_dict(tmp_path):
 
 
 def test_write_scans_tsv(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import _write_scans_tsv
+    from clinica.converters.aibl_to_bids.utils.clinical import _write_scans_tsv
     from clinica.utils.pet import Tracer
 
     scans_dict = {
@@ -744,7 +720,7 @@ def test_write_scans_tsv(tmp_path):
 
 
 def test_create_participants_tsv(tmp_path):
-    from clinica.iotools.converters.aibl_to_bids.utils.clinical import (
+    from clinica.converters.aibl_to_bids.utils.clinical import (
         create_participants_tsv_file,
     )
 

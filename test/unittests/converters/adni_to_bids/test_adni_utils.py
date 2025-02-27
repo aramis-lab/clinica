@@ -1,9 +1,9 @@
 from pathlib import Path
-from typing import Iterable, List
+from typing import Iterable
 
 import pandas as pd
 import pytest
-from pandas.testing import assert_frame_equal, assert_series_equal
+from pandas.testing import assert_frame_equal
 
 
 @pytest.fixture
@@ -49,7 +49,7 @@ def get_expected_path(tmp_path: Path, expected: Iterable[str]) -> set[Path]:
     ],
 )
 def test_get_images_with_suffix(tmp_path, suffix_directory_builder, suffixes, expected):
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+    from clinica.converters.adni_to_bids._utils import (
         _get_images_with_suffix,
     )
 
@@ -70,7 +70,7 @@ def test_get_images_with_suffix(tmp_path, suffix_directory_builder, suffixes, ex
 def test_remove_existing_images_if_necessary(
     tmp_path, suffix_directory_builder, suffixes, update, expected
 ):
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+    from clinica.converters.adni_to_bids._utils import (
         _remove_existing_images_if_necessary,
     )
 
@@ -101,7 +101,7 @@ def test_remove_existing_images_if_necessary(
 def test_remove_files_with_unsupported_suffixes(
     tmp_path, suffix_directory_builder, suffixes, expected
 ):
-    from clinica.iotools.converters.adni_to_bids.adni_utils import (
+    from clinica.converters.adni_to_bids._utils import (
         _remove_files_with_unsupported_suffixes,
     )
 
@@ -120,8 +120,8 @@ def test_remove_files_with_unsupported_suffixes(
         ({"001_S_0001", "001_S_00014", ".001_S_0001", "001S0001"}, {"001_S_0001"}),
     ],
 )
-def test_define_subjects_list_directory(tmp_path, input, expected):
-    from clinica.iotools.converters.adni_to_bids.adni_utils import _define_subjects_list
+def test_define_subjects_list_directory(tmp_path, input: set[str], expected: set[str]):
+    from clinica.converters.adni_to_bids._utils import _define_subjects_list
 
     source_dir = tmp_path / "source_dir"
     source_dir.mkdir()
@@ -133,7 +133,7 @@ def test_define_subjects_list_directory(tmp_path, input, expected):
 
 
 def test_define_subjects_list_txt(tmp_path):
-    from clinica.iotools.converters.adni_to_bids.adni_utils import _define_subjects_list
+    from clinica.converters.adni_to_bids._utils import _define_subjects_list
 
     source_dir = tmp_path / "source_dir"
     subjs_list_path = tmp_path / "subjects_list.txt"
@@ -151,8 +151,10 @@ def test_define_subjects_list_txt(tmp_path):
         (False, ["001_S_0001", "001_S_0002"], {"001_S_0001"}),
     ],
 )
-def test_check_subjects_list(tmp_path, write_all, input, expected):
-    from clinica.iotools.converters.adni_to_bids.adni_utils import _check_subjects_list
+def test_check_subjects_list(
+    tmp_path, write_all: bool, input: list[str], expected: set[str]
+):
+    from clinica.converters.adni_to_bids._utils import _check_subjects_list
 
     clinical_dir = tmp_path / "clinical_dir"
     clinical_dir.mkdir()
@@ -167,7 +169,7 @@ def test_check_subjects_list(tmp_path, write_all, input, expected):
 
 
 def test_adni_study_error():
-    from clinica.iotools.converters.adni_to_bids.adni_utils import ADNIStudy  # noqa
+    from clinica.converters.adni_to_bids._utils import ADNIStudy
 
     with pytest.raises(
         ValueError,
@@ -187,8 +189,10 @@ def test_adni_study_error():
         ("BHR_LONGITUDINAL_QUESTIONNAIRE.csv", "Timepoint"),
     ],
 )
-def test_compute_session_id_visit_code_column_error(csv_filename, expected_visit_code):
-    from clinica.iotools.converters.adni_to_bids.adni_utils import _compute_session_id  # noqa
+def test_compute_session_id_visit_code_column_error(
+    csv_filename: str, expected_visit_code: str
+):
+    from clinica.converters.adni_to_bids._utils import _compute_session_id
 
     with pytest.raises(
         ValueError,
@@ -201,7 +205,7 @@ def test_compute_session_id_visit_code_column_error(csv_filename, expected_visit
 
 
 def test_compute_session_id_visit_code_wrong_format_error():
-    from clinica.iotools.converters.adni_to_bids.adni_utils import _compute_session_id  # noqa
+    from clinica.converters.adni_to_bids._utils import _compute_session_id
 
     df = pd.DataFrame({"VISCODE": ["foo", "bar", "baz", "bar", "foo", "foo"]})
 
@@ -220,8 +224,8 @@ def test_compute_session_id_visit_code_wrong_format_error():
         ("BHR_LONGITUDINAL_QUESTIONNAIRE.csv", "Timepoint"),
     ],
 )
-def test_compute_session_id(csv_filename, visit_code_column_name):
-    from clinica.iotools.converters.adni_to_bids.adni_utils import _compute_session_id  # noqa
+def test_compute_session_id(csv_filename: str, visit_code_column_name: str):
+    from clinica.converters.adni_to_bids._utils import _compute_session_id
 
     input_data = {visit_code_column_name: ["f", "M00", "uns1", "sc", "M012", "M2368"]}
     expected_data = {
@@ -251,20 +255,21 @@ def input_df() -> pd.DataFrame:
     "csv_name,csv_to_look_for",
     [("adnimerge.csv", "adnimerge"), ("adnimerge_20Oct2023.csv", "adnimerge")],
 )
-def test_load_clinical_csv(tmp_path, input_df, csv_name, csv_to_look_for):
-    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
+def test_load_clinical_csv(
+    tmp_path, input_df: pd.DataFrame, csv_name: str, csv_to_look_for: str
+):
+    from clinica.converters._utils import load_clinical_csv  # TODO: move this test
 
     input_df.to_csv(tmp_path / csv_name, index=False)
     pd.DataFrame().to_csv(tmp_path / f".{csv_name}")
+
     assert_frame_equal(load_clinical_csv(tmp_path, csv_to_look_for), input_df)
 
 
-def test_load_clinical_csv_error(
-    tmp_path,
-):
+def test_load_clinical_csv_error(tmp_path):
     import re
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
+    from clinica.converters._utils import load_clinical_csv  # TODO: move this test
 
     pattern = r"(_\d{1,2}[A-Za-z]{3}\d{4})?.csv"
     with pytest.raises(
@@ -279,7 +284,7 @@ def test_load_clinical_csv_error(
 
 
 def test_load_clinical_csv_value_error(tmp_path):
-    from clinica.iotools.converters.adni_to_bids.adni_utils import load_clinical_csv
+    from clinica.converters._utils import load_clinical_csv  # TODO: move this test
 
     with open(tmp_path / "adnimerge.csv", "w") as fp:
         fp.write("col1,col2,col3\n1,2,3\n1,2,3,4")
@@ -290,3 +295,19 @@ def test_load_clinical_csv_value_error(tmp_path):
         "be loaded as a DataFrame. Please check your data.",
     ):
         load_clinical_csv(tmp_path, "adnimerge")
+
+
+@pytest.mark.parametrize(
+    "input_string,expected",
+    [
+        ("foo", "foo"),
+        ("foo_bar", "foobar"),
+        ("foo bar", "foobar"),
+        ("foo bar_baz", "foobarbaz"),
+        ("foo-ba_r baz", "foobarbaz"),
+    ],
+)
+def test_remove_space_and_symbols(input_string, expected):
+    from clinica.converters.adni_to_bids._utils import _remove_space_and_symbols
+
+    assert _remove_space_and_symbols(input_string) == expected

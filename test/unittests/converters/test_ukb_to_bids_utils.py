@@ -4,7 +4,7 @@ import pytest
 def test_read_imaging_data(tmp_path):
     import shutil
 
-    from clinica.iotools.converters.ukb_to_bids.ukb_utils import read_imaging_data
+    from clinica.converters.ukb_to_bids._utils import read_imaging_data
 
     path_to_zip = tmp_path / "alt"
     shutil.make_archive(path_to_zip, "zip", tmp_path)

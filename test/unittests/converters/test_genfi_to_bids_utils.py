@@ -1,16 +1,8 @@
 import math
-from typing import List
 
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
-
-from clinica.iotools.bids_utils import identify_modality
-from clinica.iotools.converters.genfi_to_bids.genfi_to_bids_utils import (
-    _compute_philips_parts,
-    _compute_run_numbers_from_parts,
-    _compute_scan_sequence_numbers,
-)
 
 
 @pytest.mark.parametrize(
@@ -23,16 +15,20 @@ from clinica.iotools.converters.genfi_to_bids.genfi_to_bids_utils import (
         ("fmri", "rsfmri"),
     ],
 )
-def test_identify_modality(input, expected):
+def test_identify_modality(input: str, expected: str):
+    from clinica.converters._utils import identify_modality
+
     assert identify_modality(input) == expected
 
 
 def test_identify_modality_is_nan():
+    from clinica.converters._utils import identify_modality
+
     assert math.isnan(identify_modality("blzflbzv"))
 
 
 @pytest.fixture
-def input_df_compute_runs():
+def input_df_compute_runs() -> pd.DataFrame:
     return pd.DataFrame(
         {
             "source_id": ["GRN001", "GRN001", "GRN001", "C9ORF001", "C9ORF001"],
@@ -44,7 +40,9 @@ def input_df_compute_runs():
     )
 
 
-def test_compute_runs(input_df_compute_runs):
+def test_compute_runs(input_df_compute_runs: pd.DataFrame):
+    from clinica.converters.genfi_to_bids._utils import _compute_run_numbers_from_parts
+
     expected = pd.DataFrame(
         {
             "source_id": ["C9ORF001", "C9ORF001", "GRN001", "GRN001", "GRN001"],
@@ -62,7 +60,7 @@ def test_compute_runs(input_df_compute_runs):
 
 
 @pytest.fixture
-def input_df_compute_philips_parts():
+def input_df_compute_philips_parts() -> pd.DataFrame:
     return pd.DataFrame(
         {
             "source_id": ["sub-01"] * 5 + ["sub-02"] * 3,
@@ -73,7 +71,9 @@ def input_df_compute_philips_parts():
     )
 
 
-def test_compute_philips_parts(input_df_compute_philips_parts):
+def test_compute_philips_parts(input_df_compute_philips_parts: pd.DataFrame):
+    from clinica.converters.genfi_to_bids._utils import _compute_philips_parts
+
     expected = pd.DataFrame(
         {
             "source_id": ["sub-01"] * 5 + ["sub-02"] * 3,
@@ -100,10 +100,14 @@ def test_compute_philips_parts(input_df_compute_philips_parts):
         ([False, False, False], [1, 1, 1]),
     ],
 )
-def test_compute_scan_sequence_numbers(input: List[bool], expected):
+def test_compute_scan_sequence_numbers(input: list[bool], expected: list[int]):
+    from clinica.converters.genfi_to_bids._utils import _compute_scan_sequence_numbers
+
     assert _compute_scan_sequence_numbers(input) == expected
 
 
 def test_compute_scan_sequence_numbers_error():
+    from clinica.converters.genfi_to_bids._utils import _compute_scan_sequence_numbers
+
     with pytest.raises(ValueError):
         _compute_scan_sequence_numbers([])

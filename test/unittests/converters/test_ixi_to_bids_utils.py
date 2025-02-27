@@ -8,50 +8,33 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
 
-from clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils import (
-    ClinicalDataMapping,
-    _define_magnetic_field,
-    _find_subject_dti_data,
-    _get_bids_filename_from_image_data,
-    _get_img_data,
-    _get_mapping,
-    _get_subjects_list_from_data,
-    _get_subjects_list_from_file,
-    _identify_expected_modalities,
-    _merge_dti,
-    _padding_source_id,
-    _rename_clinical_data_to_bids,
-    _rename_modalities,
-    _write_json_image,
-    _write_subject_dti_if_exists,
-    _write_subject_no_dti,
-    check_modalities,
-    define_participants,
-    read_clinical_data,
-    write_dwi_b_values,
-    write_participants,
-    write_scans,
-    write_sessions,
-)
-
 
 def test_write_dwi_b_values(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import write_dwi_b_values
+
     write_dwi_b_values(tmp_path)
     bvec_files = list(tmp_path.rglob("*.bvec"))
     bval_files = list(tmp_path.rglob("*.bval"))
+
     assert len(bvec_files) == 1 and bvec_files[0].name == "dwi.bvec"
     assert len(bval_files) == 1 and bval_files[0].name == "dwi.bval"
 
 
 def test_get_subjects_list_from_data(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import _get_subjects_list_from_data
+
     for filename in ("IXI1", "IXI123", "IXIaaa", "foo"):
         (tmp_path / f"{filename}_T1w.nii.gz").touch()
+
     assert _get_subjects_list_from_data(tmp_path) == ["IXI123"]
 
 
 def test_get_subjects_list_from_file(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import _get_subjects_list_from_file
+
     with open(tmp_path / "subjects.txt", "w") as f:
         f.write("IXI123\nIXI001")
+
     assert _get_subjects_list_from_file(tmp_path / "subjects.txt") == [
         "IXI123",
         "IXI001",
@@ -59,18 +42,24 @@ def test_get_subjects_list_from_file(tmp_path):
 
 
 def test_define_participants_filter(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import define_participants
+
     for filename in ("IXI001", "IXI002", "IXI003", "IXI004"):
         (tmp_path / f"{filename}_T1w.nii.gz").touch()
     with open(tmp_path / "subjects.txt", "w") as f:
         f.write("IXI001\nIXI006")
+
     assert define_participants(
         data_directory=tmp_path, subjs_list_path=tmp_path / "subjects.txt"
     ) == ["IXI001"]
 
 
 def test_define_participants_optional(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import define_participants
+
     for filename in ("IXI001", "IXI002"):
         (tmp_path / f"{filename}_T1w.nii.gz").touch()
+
     assert define_participants(data_directory=tmp_path) == ["IXI001", "IXI002"]
 
 
@@ -84,12 +73,16 @@ def test_define_participants_optional(tmp_path):
         ("DTI", "dti"),
     ],
 )
-def test_rename_ixi_modalities_success(input_str, expected):
+def test_rename_ixi_modalities_success(input_str: str, expected: str):
+    from clinica.converters.ixi_to_bids._utils import _rename_modalities
+
     assert _rename_modalities(input_str) == expected
 
 
 @pytest.mark.parametrize("input_str", ["t1", "foo", "T1w"])
-def test_rename_ixi_modalities_error(input_str):
+def test_rename_ixi_modalities_error(input_str: str):
+    from clinica.converters.ixi_to_bids._utils import _rename_modalities
+
     with pytest.raises(
         ValueError,
         match=f"The modality {input_str} is not recognized in the IXI dataset.",
@@ -111,7 +104,9 @@ def test_rename_ixi_modalities_error(input_str):
         ("FOO", "foo"),
     ],
 )
-def test_rename_clinical_data_to_bids(input_str, expected):
+def test_rename_clinical_data_to_bids(input_str: str, expected: str):
+    from clinica.converters.ixi_to_bids._utils import _rename_clinical_data_to_bids
+
     assert _rename_clinical_data_to_bids(input_str) == expected
 
 
@@ -124,26 +119,36 @@ def test_rename_clinical_data_to_bids(input_str, expected):
         (1, "IXI001"),
     ],
 )
-def test_padding_source_id_success(input, expected):
+def test_padding_source_id_success(input: str, expected: str):
+    from clinica.converters.ixi_to_bids._utils import _padding_source_id
+
     assert _padding_source_id(input) == expected
 
 
 def test_padding_source_id_error():
+    from clinica.converters.ixi_to_bids._utils import _padding_source_id
+
     with pytest.raises(
         ValueError,
-        match=f"The source id 1234 has more than 3 digits while IXI"
-        f"source ids are expected to be between 1 and 3 digits.",
+        match=(
+            f"The source id 1234 has more than 3 digits while IXI"
+            f"source ids are expected to be between 1 and 3 digits."
+        ),
     ):
         _padding_source_id("1234")
 
 
 @pytest.mark.parametrize("input", ["IXI_name.xls", "IXI_format.csv"])
-def test_read_clinical_data_error(tmp_path, input):
+def test_read_clinical_data_error(tmp_path, input: str):
+    from clinica.converters.ixi_to_bids._utils import read_clinical_data
+
     (tmp_path / input).touch()
     with pytest.raises(
         FileNotFoundError,
-        match=f"Clinical data stored in the folder {tmp_path} is expected to be an excel file named 'IXI.xls'. "
-        f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
+        match=(
+            f"Clinical data stored in the folder {tmp_path} is expected to be an excel file named 'IXI.xls'. "
+            f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !"
+        ),
     ):
         read_clinical_data(tmp_path)
 
@@ -161,7 +166,6 @@ def clinical_data_builder(tmp_path: Path) -> None:
             ],
         }
     )
-
     ethnic = pd.DataFrame(
         {
             "ID": [1, 4, 3, 5, 6],
@@ -174,7 +178,6 @@ def clinical_data_builder(tmp_path: Path) -> None:
             ],
         }
     )
-
     occup = pd.DataFrame(
         {
             "ID": [1, 2, 3, 4, 5, 6, 7, 8],
@@ -190,7 +193,6 @@ def clinical_data_builder(tmp_path: Path) -> None:
             ],
         }
     )
-
     qualif = pd.DataFrame(
         {
             "ID": [1, 2, 3, 4, 5],
@@ -203,7 +205,6 @@ def clinical_data_builder(tmp_path: Path) -> None:
             ],
         }
     )
-
     subject = pd.DataFrame(
         {
             "IXI_ID": ["1"],
@@ -226,7 +227,10 @@ def clinical_data_builder(tmp_path: Path) -> None:
 
 
 def test_read_clinical_data_success(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import read_clinical_data
+
     clinical_data_builder(tmp_path)
+
     assert (
         read_clinical_data(tmp_path)
         .eq(formatted_clinical_data_builder().drop("participant_id", axis=1))
@@ -236,6 +240,8 @@ def test_read_clinical_data_success(tmp_path):
 
 
 def test_merge_dti(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import _merge_dti
+
     im1 = nibabel.Nifti1Image(
         np.empty(shape=(256, 156, 256), dtype=np.float64), np.eye(4)
     )
@@ -245,11 +251,14 @@ def test_merge_dti(tmp_path):
     )
     im2.to_filename(tmp_path / "im2.nii.gz")
     merged = _merge_dti([tmp_path / "im1.nii.gz", tmp_path / "im2.nii.gz"])
+
     assert type(merged) == nibabel.Nifti1Image
     assert merged.shape[-1] == 2
 
 
 def test_write_dti_success(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import _write_subject_dti_if_exists
+
     im1 = nibabel.Nifti1Image(
         np.empty(shape=(256, 156, 256), dtype=np.float64), np.eye(4)
     )
@@ -282,10 +291,13 @@ def test_write_dti_success(tmp_path):
 
 
 def test_write_dti_empty(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import _write_subject_dti_if_exists
+
     _write_subject_dti_if_exists(
         bids_path=tmp_path, subject="IXI001", data_directory=tmp_path
     )
     dti_files = list(tmp_path.rglob(pattern="*dwi.nii.gz"))
+
     assert not dti_files
 
 
@@ -297,11 +309,15 @@ def test_write_dti_empty(tmp_path):
         ("HH", "3"),
     ],
 )
-def test_define_magnetic_field_success(input_str, expected):
+def test_define_magnetic_field_success(input_str: str, expected: str):
+    from clinica.converters.ixi_to_bids._utils import _define_magnetic_field
+
     assert _define_magnetic_field(input_str) == expected
 
 
 def test_define_magnetic_field_error():
+    from clinica.converters.ixi_to_bids._utils import _define_magnetic_field
+
     with pytest.raises(
         ValueError,
         match=f"The hospital foo was not recognized.",
@@ -332,16 +348,24 @@ def image_dataframe_builder(tmp_path: Path) -> pd.DataFrame:
 
 
 def test_get_image_data(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import _get_img_data
+
     input = image_dataframe_builder(tmp_path)
+
     assert assert_frame_equal(_get_img_data(tmp_path), input) is None
 
 
 def test_get_bids_filename_from_image_data(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import _get_bids_filename_from_image_data
+
     input = image_dataframe_builder(tmp_path)
+
     assert _get_bids_filename_from_image_data(input.loc[0]) == "sub-IXI001_ses-M000_T1w"
 
 
 def test_get_marital_mapping_success(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import ClinicalDataMapping, _get_mapping
+
     marital = pd.DataFrame(
         {
             "ID": [1, 2, 4, 3, 5],
@@ -355,6 +379,7 @@ def test_get_marital_mapping_success(tmp_path):
         }
     )
     marital.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Marital Status")
+
     assert (
         assert_series_equal(
             _get_mapping(tmp_path, ClinicalDataMapping.MARITAL),
@@ -365,6 +390,8 @@ def test_get_marital_mapping_success(tmp_path):
 
 
 def test_get_ethnic_mapping_success(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import ClinicalDataMapping, _get_mapping
+
     ethnic = pd.DataFrame(
         {
             "ID": [1, 4, 3, 5, 6],
@@ -378,6 +405,7 @@ def test_get_ethnic_mapping_success(tmp_path):
         }
     )
     ethnic.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Ethnicity")
+
     assert (
         assert_series_equal(
             _get_mapping(tmp_path, ClinicalDataMapping.ETHNIC),
@@ -388,6 +416,8 @@ def test_get_ethnic_mapping_success(tmp_path):
 
 
 def test_get_occupation_mapping_success(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import ClinicalDataMapping, _get_mapping
+
     occup = pd.DataFrame(
         {
             "ID": [1, 2, 3, 4, 5, 6, 7, 8],
@@ -404,6 +434,7 @@ def test_get_occupation_mapping_success(tmp_path):
         }
     )
     occup.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Occupation")
+
     assert (
         assert_series_equal(
             _get_mapping(tmp_path, ClinicalDataMapping.OCCUPATION),
@@ -414,6 +445,8 @@ def test_get_occupation_mapping_success(tmp_path):
 
 
 def test_get_qualification_mapping_success(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import ClinicalDataMapping, _get_mapping
+
     qualif = pd.DataFrame(
         {
             "ID": [1, 2, 3, 4, 5],
@@ -427,6 +460,7 @@ def test_get_qualification_mapping_success(tmp_path):
         }
     )
     qualif.to_excel(excel_writer=tmp_path / "IXI.xls", sheet_name="Qualification")
+
     assert (
         assert_series_equal(
             _get_mapping(tmp_path, ClinicalDataMapping.QUALIFICATION),
@@ -437,6 +471,8 @@ def test_get_qualification_mapping_success(tmp_path):
 
 
 def test_get_mapping_fileerror(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import ClinicalDataMapping, _get_mapping
+
     qualif = pd.DataFrame(
         {
             "ID": [1, 2, 3, 4, 5],
@@ -453,13 +489,17 @@ def test_get_mapping_fileerror(tmp_path):
 
     with pytest.raises(
         FileNotFoundError,
-        match=f"Clinical data stored in the folder {tmp_path} is expected to be an excel file named 'IXI.xls'. "
-        f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
+        match=(
+            f"Clinical data stored in the folder {tmp_path} is expected to be an excel file named 'IXI.xls'. "
+            f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !"
+        ),
     ):
         _get_mapping(tmp_path, ClinicalDataMapping.QUALIFICATION)
 
 
 def test_get_mapping_keyerror(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import ClinicalDataMapping, _get_mapping
+
     qualif = pd.DataFrame(
         {
             "ID": [1, 2, 3, 4, 5],
@@ -476,14 +516,18 @@ def test_get_mapping_keyerror(tmp_path):
 
     with pytest.raises(
         ValueError,
-        match=f"Qualification mapping is expected to be contained in a sheet called Qualification coming from the clinical data excel. "
-        f"Possibilities are supposed to be described in a QUALIFICATION column associated to keys from the 'ID' column. "
-        f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
+        match=(
+            f"Qualification mapping is expected to be contained in a sheet called Qualification coming from the clinical data excel. "
+            f"Possibilities are supposed to be described in a QUALIFICATION column associated to keys from the 'ID' column. "
+            f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !"
+        ),
     ):
         _get_mapping(tmp_path, ClinicalDataMapping.QUALIFICATION)
 
 
 def test_get_mapping_valueerror(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import ClinicalDataMapping, _get_mapping
+
     qualif = pd.DataFrame(
         {
             "ID": [1, 2, 3, 4, 5],
@@ -500,22 +544,29 @@ def test_get_mapping_valueerror(tmp_path):
 
     with pytest.raises(
         ValueError,
-        match=f"Qualification mapping is expected to be contained in a sheet called Qualification coming from the clinical data excel. "
-        f"Possibilities are supposed to be described in a QUALIFICATION column associated to keys from the 'ID' column. "
-        f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !",
+        match=(
+            f"Qualification mapping is expected to be contained in a sheet called Qualification coming from the clinical data excel. "
+            f"Possibilities are supposed to be described in a QUALIFICATION column associated to keys from the 'ID' column. "
+            f"In case the file downloaded from the IXI website changed format, please do not hesitate to report to us !"
+        ),
     ):
         _get_mapping(tmp_path, ClinicalDataMapping.QUALIFICATION)
 
 
 def test_write_json_image(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import _write_json_image
+
     _write_json_image(tmp_path / "test.json", hospital="Guys", field="1.5")
     with open(tmp_path / "test.json", "r") as f:
         data = json.load(f)
+
     assert data["InstitutionName"] == "Guys"
     assert data["MagneticFieldStrength (T)"] == "1.5"
 
 
 def test_write_subject_no_dti(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import _write_subject_no_dti
+
     df = image_dataframe_builder(tmp_path)
     bids_dir = tmp_path / "BIDS"
     file_path = (
@@ -528,40 +579,53 @@ def test_write_subject_no_dti(tmp_path):
     _write_subject_no_dti(df, bids_dir)
     json_files = list(bids_dir.rglob(f"sub-{df['subject'][0]}*.json"))
     nii_files = list(bids_dir.rglob(f"sub-{df['subject'][0]}*.nii.gz"))
+
     assert len(json_files) == 1 and json_files[0] == Path(f"{file_path}.json")
     assert len(nii_files) == 1 and nii_files[0] == Path(f"{file_path}.nii.gz")
 
 
 def test_write_subject_no_dti_empty(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import _write_subject_no_dti
+
     bids_dir = tmp_path / "BIDS"
     bids_dir.mkdir()
     _write_subject_no_dti(pd.DataFrame(), bids_dir)
+
     assert not list(bids_dir.iterdir())
 
 
 def test_find_subject_dti_data(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import _find_subject_dti_data
+
     (tmp_path / "IXI001-Guys-1234-T1.nii.gz").touch()
     (tmp_path / "IXI001-Guys-1234-DTI").touch()
     (tmp_path / "IXI001-Guys-DTI.nii.gz").touch()
     tmp_image = tmp_path / "IXI001-Guys-1234-DTI-01.nii.gz"
     tmp_image.touch()
     list_dti = _find_subject_dti_data(data_directory=tmp_path, subject="IXI001")
+
     assert len(list_dti) == 1 and list_dti[0] == tmp_image
 
 
 def test_identify_expected_modalities(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import _identify_expected_modalities
+
     (tmp_path / "IXI-DTI").mkdir()
     (tmp_path / "IXIdti").mkdir()
     (tmp_path / "foo-bar").mkdir()
+
     assert _identify_expected_modalities(tmp_path) == ["DTI"]
 
 
 def test_write_scans_not_empty(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import write_scans
+
     (tmp_path / "sub-IXI001" / "ses-M000" / "anat").mkdir(parents=True)
     (tmp_path / "sub-IXI001" / "ses-M000" / "anat" / "sub-IXI001_T1w.nii.gz").touch()
     write_scans(tmp_path, participant="IXI001")
     tsv_files = list(tmp_path.rglob("*.tsv"))
     file_path = tmp_path / "sub-IXI001" / "ses-M000" / "sub-IXI001_ses-M000_scans.tsv"
+
     assert len(tsv_files) == 1 and tsv_files[0] == file_path
     assert (
         assert_frame_equal(
@@ -591,11 +655,14 @@ def formatted_clinical_data_builder() -> pd.DataFrame:
 
 
 def test_write_sessions(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import write_sessions
+
     clinical = formatted_clinical_data_builder()
     (tmp_path / "sub-IXI001").mkdir()
     write_sessions(tmp_path, clinical, "IXI001")
     tsv_files = list(tmp_path.rglob("*.tsv"))
     file_path = tmp_path / "sub-IXI001" / "sub-IXI001_sessions.tsv"
+
     assert len(tsv_files) == 1 and tsv_files[0] == file_path
     assert (
         assert_frame_equal(
@@ -607,6 +674,8 @@ def test_write_sessions(tmp_path):
 
 
 def test_write_participants(tmp_path):
+    from clinica.converters.ixi_to_bids._utils import write_participants
+
     clinical = formatted_clinical_data_builder()
     expected = clinical.copy()
     write_participants(tmp_path, clinical, ["IXI001", "IXI002"])
@@ -617,6 +686,7 @@ def test_write_participants(tmp_path):
     expected.loc[1, "source_id"] = "IXI002"
     expected.loc[0, "weight"] = str(expected.loc[0, "weight"])
     tsv_files = list(tmp_path.rglob("*.tsv"))
+
     assert len(tsv_files) == 1 and tsv_files[0] == tmp_path / "participants.tsv"
     assert (
         assert_frame_equal(
@@ -627,8 +697,10 @@ def test_write_participants(tmp_path):
     )
 
 
-@patch("clinica.iotools.converters.ixi_to_bids.ixi_to_bids_utils.cprint")
+@patch("clinica.converters.ixi_to_bids._utils.cprint")
 def test_check_modalities(mock_cprint, tmp_path):
+    from clinica.converters.ixi_to_bids._utils import check_modalities
+
     (tmp_path / "IXI-DTI").mkdir()
     (tmp_path / "IXI-DTI" / "IXI001-DTI-00.nii.gz").touch()
     (tmp_path / "IXI-T1").mkdir()

@@ -4,7 +4,7 @@ from typing import Callable, Iterator, Optional, Union
 import numpy as np
 import pandas as pd
 
-from clinica.converters.bids_utils import StudyName, bids_id_factory
+from clinica.converters.study_models import StudyName, bids_id_factory
 
 __all__ = [
     "create_participants_tsv_file",
@@ -201,7 +201,7 @@ def create_sessions_tsv_file(
     clinical_specifications_folder : Path
         The path to the folder containing the clinical specification files.
     """
-    from clinica.converters.bids_utils import (
+    from clinica.converters._utils import (
         get_sessions_from_bids_dataset,
         get_subjects_from_bids_dataset,
     )

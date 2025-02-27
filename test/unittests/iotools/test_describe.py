@@ -3,8 +3,8 @@ from pathlib import Path
 
 
 def test_build_dataset_table():
-    from clinica.iotools.utils.describe import _build_dataset_table  # noqa
-    from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
+    from clinica.converters.bids_dataset_description import BIDSDatasetDescription
+    from clinica.iotools.describe import _build_dataset_table
 
     table = _build_dataset_table(BIDSDatasetDescription("Test dataset BIDS"))
 
@@ -19,8 +19,8 @@ def test_build_dataset_table():
 
 
 def test_build_processing_table_bids():
-    from clinica.iotools.utils.describe import _build_processing_table  # noqa
-    from clinica.iotools.bids_dataset_description import BIDSDatasetDescription
+    from clinica.converters.bids_dataset_description import BIDSDatasetDescription
+    from clinica.iotools.describe import _build_processing_table
 
     assert _build_processing_table(BIDSDatasetDescription("Test dataset BIDS")) is None
 
@@ -74,7 +74,7 @@ def build_test_dataset_caps(folder: Path):
 
 
 def test_build_processing_table_caps(tmp_path):
-    from clinica.iotools.utils.describe import _build_processing_table  # noqa
+    from clinica.iotools.describe import _build_processing_table
     from clinica.utils.caps import CAPSDatasetDescription
 
     (tmp_path / "bids").mkdir()

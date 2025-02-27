@@ -4,8 +4,8 @@ from typing import Set
 
 import pytest
 
-from clinica.iotools.converters.adni_to_bids.modality_converters._fmap import (  # noqa
-    BIDSFMAPCase,  # noqa
+from clinica.converters.adni_to_bids.modality_converters._fmap import (
+    BIDSFMAPCase,
 )
 
 
@@ -19,8 +19,8 @@ from clinica.iotools.converters.adni_to_bids.modality_converters._fmap import ( 
     ],
 )
 def test_phase_magnitude_renamer_success(case, input_value, expected):
-    from clinica.iotools.converters.adni_to_bids.modality_converters._fmap import (
-        phase_magnitude_renamer,  # noqa
+    from clinica.converters.adni_to_bids.modality_converters._fmap import (
+        phase_magnitude_renamer,
     )
 
     assert phase_magnitude_renamer(input_value, case) == expected
@@ -39,8 +39,8 @@ def test_phase_magnitude_renamer_success(case, input_value, expected):
     ],
 )
 def test_phase_magnitude_renamer_value_error(case, input_value):
-    from clinica.iotools.converters.adni_to_bids.modality_converters._fmap import (
-        phase_magnitude_renamer,  # noqa
+    from clinica.converters.adni_to_bids.modality_converters._fmap import (
+        phase_magnitude_renamer,
     )
 
     with pytest.raises(
@@ -59,8 +59,8 @@ def test_phase_magnitude_renamer_value_error(case, input_value):
     ],
 )
 def test_phase_magnitude_renamer_implemented_error(case, input_value):
-    from clinica.iotools.converters.adni_to_bids.modality_converters._fmap import (
-        phase_magnitude_renamer,  # noqa
+    from clinica.converters.adni_to_bids.modality_converters._fmap import (
+        phase_magnitude_renamer,
     )
 
     with pytest.raises(
@@ -127,8 +127,8 @@ def expected(tmp_path: Path, case: BIDSFMAPCase) -> Set[Path]:
     [BIDSFMAPCase.ONE_PHASE_TWO_MAGNITUDES, BIDSFMAPCase.TWO_PHASES_TWO_MAGNITUDES],
 )
 def test_rename_files_success(tmp_path, case, fmap_case_builder, expected):
-    from clinica.iotools.converters.adni_to_bids.modality_converters._fmap import (
-        rename_files,  # noqa
+    from clinica.converters.adni_to_bids.modality_converters._fmap import (
+        rename_files,
     )
 
     rename_files(tmp_path / "fmap", case)
@@ -146,8 +146,8 @@ def test_rename_files_success(tmp_path, case, fmap_case_builder, expected):
     ],
 )
 def test_rename_files_error(tmp_path, invalid_filename):
-    from clinica.iotools.converters.adni_to_bids.modality_converters._fmap import (
-        rename_files,  # noqa
+    from clinica.converters.adni_to_bids.modality_converters._fmap import (
+        rename_files,
     )
 
     fmap = tmp_path / "fmap"
@@ -159,8 +159,8 @@ def test_rename_files_error(tmp_path, invalid_filename):
 
 
 def test_get_json_file_matching_pattern_success(tmp_path):
-    from clinica.iotools.converters.adni_to_bids.modality_converters._fmap import (
-        get_json_file_matching_pattern,  # noqa
+    from clinica.converters.adni_to_bids.modality_converters._fmap import (
+        get_json_file_matching_pattern,
     )
 
     fmap = tmp_path / "fmap"
@@ -188,8 +188,8 @@ def test_get_json_file_matching_pattern_success(tmp_path):
     ],
 )
 def test_get_json_file_matching_pattern_error(tmp_path, filenames, pattern):
-    from clinica.iotools.converters.adni_to_bids.modality_converters._fmap import (
-        get_json_file_matching_pattern,  # noqa
+    from clinica.converters.adni_to_bids.modality_converters._fmap import (
+        get_json_file_matching_pattern,
     )
 
     fmap = tmp_path / "fmap"
@@ -209,8 +209,8 @@ def test_get_json_file_matching_pattern_error(tmp_path, filenames, pattern):
     ],
 )
 def test_check_json_contains_keys(tmp_path, keys):
-    from clinica.iotools.converters.adni_to_bids.modality_converters._fmap import (
-        check_json_contains_keys,  # noqa
+    from clinica.converters.adni_to_bids.modality_converters._fmap import (
+        check_json_contains_keys,
     )
 
     fmap = tmp_path / "fmap"
@@ -313,8 +313,8 @@ def test_check_json_contains_keys(tmp_path, keys):
     ],
 )
 def test_infer_case_fmap(tmp_path, filenames, expected):
-    from clinica.iotools.converters.adni_to_bids.modality_converters._fmap import (
-        infer_case_fmap,  # noqa
+    from clinica.converters.adni_to_bids.modality_converters._fmap import (
+        infer_case_fmap,
     )
 
     fmap = tmp_path / "fmap"

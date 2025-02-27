@@ -2,8 +2,9 @@ from typing import Optional
 
 import pandas as pd
 
-from clinica.converters.adni_to_bids.adni_utils import ADNIStudy
 from clinica.utils.stream import cprint
+
+from .._utils import ADNIStudy
 
 __all__ = ["visits_to_timepoints"]
 
