@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from nipype import config
 
@@ -82,7 +82,7 @@ class PETVolume(GroupPipeline, PETPipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.iotools.utils.data_handling import (
+        from clinica.iotools.data_handling import (
             check_relative_volume_location_in_world_coordinate_system,
         )
         from clinica.pipelines.pet.utils import get_suvr_mask, read_psf_information

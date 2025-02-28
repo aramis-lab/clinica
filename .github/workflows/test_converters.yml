@@ -55,4 +55,4 @@ jobs:
           --basetemp=/mnt/data/ci/tmp \
           --junitxml=./test-reports/run_converters_linux.xml \
           --disable-warnings \
-          ./nonregression/iotools/test_run_converters.py
+          ./nonregression/test_run_converters.py

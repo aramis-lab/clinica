@@ -88,7 +88,7 @@ class T1FreeSurfer(Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.iotools.utils.data_handling import (
+        from clinica.iotools.data_handling import (
             are_images_centered_around_origin_of_world_coordinate_system,
         )
         from clinica.utils.exceptions import ClinicaException

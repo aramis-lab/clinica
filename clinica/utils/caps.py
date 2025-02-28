@@ -10,13 +10,13 @@ from cattr.preconf.json import make_converter
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
-from clinica.iotools.bids_dataset_description import get_bids_version
-from clinica.utils.bids import BIDS_VERSION
-from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
-from clinica.utils.inputs import DatasetType
-from clinica.utils.stream import cprint, log_and_raise, log_and_warn
+from clinica.converters.bids_dataset_description import get_bids_version
 
+from .bids import BIDS_VERSION
 from .check_dependency import SoftwareDependency
+from .exceptions import ClinicaBIDSError, ClinicaCAPSError
+from .inputs import DatasetType
+from .stream import cprint, log_and_raise, log_and_warn
 
 __all__ = [
     "CAPS_VERSION",

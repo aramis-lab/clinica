@@ -9,9 +9,9 @@ import sys
 import click
 
 import clinica
+from clinica.converters.cli import cli as convert_cli
 from clinica.engine.template import cli as generate_cli
-from clinica.iotools.converters.cli import cli as convert_cli
-from clinica.iotools.utils.cli import cli as iotools_cli
+from clinica.iotools.cli import cli as iotools_cli
 from clinica.pipelines.cli import cli as run_cli
 from clinica.utils.exceptions import ClinicaException
 from clinica.utils.stream import cprint
