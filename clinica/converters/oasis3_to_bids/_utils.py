@@ -48,7 +48,7 @@ def _get_df_based_on_index_name(
 
 
 def read_imaging_data(imaging_data_directory: Path) -> pd.DataFrame:
-    from clinica.converters.bids_utils import StudyName, bids_id_factory
+    from clinica.converters.study_models import StudyName, bids_id_factory
 
     source_path_series = pd.Series(
         _find_imaging_data(imaging_data_directory), name="source_path"
@@ -314,8 +314,9 @@ def write_bids(
 ) -> list[str]:
     from fsspec.implementations.local import LocalFileSystem
 
+    from clinica.converters._utils import write_to_tsv
     from clinica.converters.bids_dataset_description import BIDSDatasetDescription
-    from clinica.converters.bids_utils import StudyName, write_to_tsv
+    from clinica.converters.study_models import StudyName
 
     fs = LocalFileSystem(auto_mkdir=True)
 

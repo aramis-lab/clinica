@@ -24,7 +24,7 @@ def _find_clinical_data(clinical_data_directory: Path) -> Optional[pd.DataFrame]
 
 
 def read_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
-    from clinica.converters.bids_utils import StudyName, bids_id_factory
+    from clinica.converters.study_models import StudyName, bids_id_factory
 
     if (dataframe := _find_clinical_data(clinical_data_directory)) is None:
         raise FileNotFoundError("Clinical data not found")
@@ -173,7 +173,7 @@ def dataset_to_bids(
     imaging_data: pd.DataFrame,
     clinical_data: Optional[pd.DataFrame] = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    from clinica.converters.bids_utils import StudyName, bids_id_factory
+    from clinica.converters.study_models import StudyName, bids_id_factory
 
     # Parse preprocessing information from scan descriptions.
     preprocessing = imaging_data.description.apply(_parse_preprocessing).apply(
@@ -261,7 +261,7 @@ def dataset_to_bids(
 def _convert_dicom(sourcedata_dir: Path, bids_filename: Path) -> None:
     from fsspec.implementations.local import LocalFileSystem
 
-    from clinica.converters.bids_utils import run_dcm2niix
+    from clinica.converters._utils import run_dcm2niix
 
     output_fmt = str(bids_filename.name).replace(".nii.gz", "")
     output_dir = bids_filename.parent
@@ -301,8 +301,9 @@ def write_bids(
 ) -> list[Path]:
     from fsspec.implementations.local import LocalFileSystem
 
+    from clinica.converters._utils import write_to_tsv
     from clinica.converters.bids_dataset_description import BIDSDatasetDescription
-    from clinica.converters.bids_utils import StudyName, write_to_tsv
+    from clinica.converters.study_models import StudyName
 
     fs = LocalFileSystem(auto_mkdir=True)
 

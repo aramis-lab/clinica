@@ -45,11 +45,9 @@ def convert_pib_pet(
         If specified, it should be between 1 and the number of available CPUs.
         Default=1.
     """
-    from clinica.converters.adni_to_bids.adni_utils import (
-        ADNIModalityConverter,
-        paths_to_bids,
-    )
     from clinica.utils.stream import cprint
+
+    from .._utils import ADNIModalityConverter, paths_to_bids
 
     cprint(
         (
@@ -100,7 +98,7 @@ def _compute_pib_pet_paths(
     images : pd.DataFrame
         A dataframe with all the paths to the PET images that will be converted into BIDS.
     """
-    from clinica.converters.adni_to_bids.adni_utils import load_clinical_csv
+    from clinica.converters._utils import load_clinical_csv
     from clinica.utils.pet import Tracer
 
     from ._image_path_utils import find_image_path

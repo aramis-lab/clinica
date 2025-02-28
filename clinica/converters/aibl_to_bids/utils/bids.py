@@ -631,11 +631,11 @@ def _create_file(
         Path to file
     """
     from clinica.cmdline import setup_clinica_logging
-    from clinica.converters.bids_utils import StudyName, bids_id_factory, json_from_dcm
-    from clinica.iotools.utils.data_handling import center_nifti_origin
+    from clinica.converters.study_models import StudyName, bids_id_factory
+    from clinica.iotools.data_handling import center_nifti_origin
     from clinica.utils.stream import cprint
 
-    from ..._utils import viscode_to_session
+    from ..._utils import json_from_dcm, viscode_to_session
 
     # This function is executed in a multiprocessing context
     # such that we need to re-configure the clinica logger in the child processes.
@@ -707,7 +707,7 @@ def _dicom_to_nii(output_path: Path, image_path: Path) -> Path:
     Path :
         Path to the image in NIfTI format.
     """
-    from clinica.converters.bids_utils import run_dcm2niix
+    from clinica.converters._utils import run_dcm2niix
     from clinica.utils.stream import cprint
 
     try:

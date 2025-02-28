@@ -455,7 +455,7 @@ def _compute_session_numbers(df: DataFrame) -> DataFrame:
 
 def _compute_participant_id(df: DataFrame) -> DataFrame:
     """Compute the 'participant_id' column from the 'source_id' column."""
-    from clinica.converters.bids_utils import StudyName, bids_id_factory
+    from clinica.converters.study_models import StudyName, bids_id_factory
 
     return df.assign(
         participant_id=df.source_id.apply(
@@ -479,7 +479,7 @@ def _compute_modality(df: DataFrame) -> DataFrame:
         Contains the datatype, suffix, sidecars and task that may be
         needed to form the complete file name.
     """
-    from clinica.converters.bids_utils import identify_modality
+    from clinica.converters._utils import identify_modality
 
     modality_mapping = {
         "T2w": {
@@ -806,8 +806,8 @@ def write_bids(
 
     from fsspec.implementations.local import LocalFileSystem
 
+    from clinica.converters._utils import run_dcm2niix, write_to_tsv
     from clinica.converters.bids_dataset_description import BIDSDatasetDescription
-    from clinica.converters.bids_utils import run_dcm2niix, write_to_tsv
     from clinica.utils.stream import cprint
 
     cprint("Starting to write the BIDS.", lvl="info")

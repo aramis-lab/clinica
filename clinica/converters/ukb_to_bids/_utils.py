@@ -145,7 +145,7 @@ def merge_imaging_and_clinical_data(
 def _complete_clinical(df_clinical: pd.DataFrame) -> pd.DataFrame:
     """This function uses the existing data to create the columns needed for
     the bids hierarchy (subject_id, ses, age_at _sessions, etc.)"""
-    from clinica.converters.bids_utils import StudyName, bids_id_factory
+    from clinica.converters.study_models import StudyName, bids_id_factory
 
     df_clinical = df_clinical.assign(
         participant_id=lambda df: df.source_id.astype("str").apply(
@@ -302,8 +302,9 @@ def write_bids(
 ) -> None:
     from fsspec.implementations.local import LocalFileSystem
 
+    from clinica.converters._utils import write_to_tsv
     from clinica.converters.bids_dataset_description import BIDSDatasetDescription
-    from clinica.converters.bids_utils import StudyName, write_to_tsv
+    from clinica.converters.study_models import StudyName
 
     fs = LocalFileSystem(auto_mkdir=True)
 
