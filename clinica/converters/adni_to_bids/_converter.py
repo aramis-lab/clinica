@@ -78,15 +78,15 @@ class AdniToBids(Converter):
             subjects: restrict processing to this manifest of subjects
             xml_path: path to the XML metadata files
         """
-        from clinica.converters.bids_utils import (
-            StudyName,
+        from clinica.converters.study_models import StudyName
+        from clinica.utils.stream import cprint
+
+        from .._utils import (
             create_participants_df,
             get_paths_to_subjects_in_bids_dataset,
             get_subjects_from_bids_dataset,
             write_modality_agnostic_files,
         )
-        from clinica.utils.stream import cprint
-
         from ._json import create_json_metadata
         from ._utils import (
             correct_diagnosis_sc_adni3,
@@ -235,9 +235,9 @@ def _get_bids_subjects_info(
     out_path: Path,
     subjects: Optional[Path] = None,
 ) -> tuple[list[str], list[Path]]:
-    from clinica.converters.bids_utils import StudyName, bids_id_factory
+    from clinica.converters.study_models import StudyName, bids_id_factory
 
-    from ._utils import load_clinical_csv
+    from .._utils import load_clinical_csv
 
     # Read optional list of participants.
     if subjects:
