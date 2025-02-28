@@ -459,7 +459,7 @@ def _import_event_tsv(bids_path: Path) -> None:
 
     fs = LocalFileSystem(auto_mkdir=True)
     event_tsv = (
-        Path(__file__).parents[3]
+        Path(__file__).parents[2]
         / "resources"
         / "fmri"
         / "task-facesshapesemotion_events.tsv"

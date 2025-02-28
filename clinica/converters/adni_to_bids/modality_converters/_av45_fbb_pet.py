@@ -45,11 +45,9 @@ def convert_av45_fbb_pet(
         If specified, it should be between 1 and the number of available CPUs.
         Default=1.
     """
-    from clinica.converters.adni_to_bids.adni_utils import (
-        ADNIModalityConverter,
-        paths_to_bids,
-    )
     from clinica.utils.stream import cprint
+
+    from .._utils import ADNIModalityConverter, paths_to_bids
 
     cprint(
         f"Calculating paths of AV45 and Florbetaben PET images. Output will be stored in {conversion_dir}."
@@ -95,7 +93,7 @@ def _compute_av45_fbb_pet_paths(
     images : pd.DataFrame
         Dataframe with all the paths to the PET images that will be converted into BIDS.
     """
-    from clinica.converters.adni_to_bids.adni_utils import load_clinical_csv
+    from clinica.converters._utils import load_clinical_csv
 
     from ._image_path_utils import find_image_path
     from ._pet_utils import get_images_pet
