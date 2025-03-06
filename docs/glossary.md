@@ -73,6 +73,16 @@ It is a commonly used data format with diverse uses in electronic data interchan
 
 - [wikipedia](https://en.wikipedia.org/wiki/JSON)
 
+#### MNI
+
+***MNI*** stands for *Montreal Neurological Institute*.
+
+The MNI coordinate system, also referred to as MNI space, are multiple stereotaxic brain coordinate systems created by the Montreal Neurological Institute and Hospital. 
+MNI coordinates can be used to describe the location of particular brain structures, without having to take into account any individual brain differences.
+
+##### References
+
+- [wikipedia](https://en.wikipedia.org/wiki/Talairach_coordinates#Montreal_Neurological_Institute_(MNI)_templates)
 
 #### MRI 
 
