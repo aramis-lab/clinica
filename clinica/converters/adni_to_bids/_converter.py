@@ -79,14 +79,13 @@ class AdniToBids(Converter):
             xml_path: path to the XML metadata files
         """
         from clinica.converters.study_models import StudyName
-        from clinica.utils.stream import cprint
-
-        from .._utils import (
-            create_participants_df,
+        from clinica.dataset import (
             get_paths_to_subjects_in_bids_dataset,
             get_subjects_from_bids_dataset,
-            write_modality_agnostic_files,
         )
+        from clinica.utils.stream import cprint
+
+        from .._utils import create_participants_df, write_modality_agnostic_files
         from ._json import create_json_metadata
         from ._utils import (
             correct_diagnosis_sc_adni3,

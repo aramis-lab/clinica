@@ -1,3 +1,5 @@
+"""This submodule contains logic specific to handling CAPS datasets."""
+
 from ._dataset_description import (
     CAPS_VERSION,
     CAPSDatasetDescription,

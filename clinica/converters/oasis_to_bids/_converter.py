@@ -63,7 +63,7 @@ class OasisToBids(Converter):
             clinical_data_dir: path to the folder with the original clinical data
             bids_dir: path to the BIDS directory
         """
-        from clinica.converters._utils import get_subjects_from_bids_dataset
+        from clinica.dataset import get_subjects_from_bids_dataset
         from clinica.utils.stream import cprint
 
         cprint("Converting clinical data...", lvl="info")

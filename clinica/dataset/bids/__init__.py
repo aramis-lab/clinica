@@ -1,3 +1,5 @@
+"""This submodule contains logic specific to handling BIDS datasets."""
+
 from ._dataset_description import BIDS_VERSION, BIDSDatasetDescription, get_bids_version
 from ._filename import BIDSFileName, BIDSLabel
 from ._queries import (

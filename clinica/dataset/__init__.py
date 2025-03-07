@@ -1,3 +1,8 @@
+"""This module is responsible for handling BIDS and CAPS datasets.
+
+It provides models and utilities to interact with these datasets.
+"""
+
 from ._dataset_type import DatasetType, check_dataset, get_dataset_type
 from ._visit import Visit
 from .bids import (

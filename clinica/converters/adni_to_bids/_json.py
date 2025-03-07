@@ -565,12 +565,16 @@ def _add_json_scan_metadata(
 
 def _add_metadata_to_scans(df_meta: pd.DataFrame, bids_subjects_paths: Iterable[Path]):
     """Add the metadata to the appropriate tsv and json files."""
-    from clinica.converters._utils import get_sessions_from_bids_dataset
+    from clinica.dataset import get_sessions_for_subject_in_bids_dataset
 
     merge_strategy = {"how": "left", "left_on": "scan_id", "right_on": "T1w_scan_id"}
 
     for subject_path in bids_subjects_paths:
-        if (sess_list := get_sessions_from_bids_dataset(subject_path)) is not None:
+        if (
+            sess_list := get_sessions_for_subject_in_bids_dataset(
+                subject_path.parent, subject_path.name
+            )
+        ) is not None:
             for sess in sess_list:
                 df_scans, scans_tsv_path = _get_existing_scan_dataframe(
                     subject_path, sess
