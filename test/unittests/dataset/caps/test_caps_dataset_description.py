@@ -16,17 +16,23 @@ def mock_processing_metadata(mocker):
         - version of clinica to be 0.9.0
     """
     mocker.patch(
-        "clinica.utils.caps._get_current_timestamp",
+        "clinica.dataset.caps._dataset_description._get_current_timestamp",
         return_value=datetime.datetime(2024, 8, 6, 16, 30, 0),
     )
-    mocker.patch("clinica.utils.caps._get_username", return_value="John Doe")
-    mocker.patch("clinica.utils.caps._get_machine_name", return_value="my machine")
+    mocker.patch(
+        "clinica.dataset.caps._dataset_description._get_username",
+        return_value="John Doe",
+    )
+    mocker.patch(
+        "clinica.dataset.caps._dataset_description._get_machine_name",
+        return_value="my machine",
+    )
     mocker.patch("clinica.get_version", return_value=Version("0.9.0"))
     return mocker
 
 
 def test_caps_processing_description(tmp_path, mocker):
-    from clinica.utils.caps import CAPSProcessingDescription  # noqa
+    from clinica.dataset.caps._dataset_description import CAPSProcessingDescription
 
     mocker = mock_processing_metadata(mocker)
     desc = CAPSProcessingDescription.from_values("foo", str(tmp_path / "input"))
@@ -52,11 +58,12 @@ def test_caps_processing_description(tmp_path, mocker):
 
 
 def test_caps_dataset_description(tmp_path, mocker):
-    from clinica.utils.caps import CAPSDatasetDescription
+    from clinica.dataset import CAPSDatasetDescription
 
     mocker = mock_processing_metadata(mocker)
     mocker.patch(
-        "clinica.utils.caps._generate_random_name", return_value="my caps dataset"
+        "clinica.dataset.caps._dataset_description._generate_random_name",
+        return_value="my caps dataset",
     )
 
     desc = CAPSDatasetDescription.from_values()
@@ -139,7 +146,7 @@ def initialize_input_dir(folder: Path):
 
 
 def test_write_caps_dataset_description(tmp_path, mocker):
-    from clinica.utils.caps import write_caps_dataset_description
+    from clinica.dataset import write_caps_dataset_description
 
     mocker = mock_processing_metadata(mocker)
     (tmp_path / "caps").mkdir()
@@ -174,7 +181,7 @@ def test_write_caps_dataset_description(tmp_path, mocker):
 
 
 def test_write_caps_dataset_description_specify_bids_and_caps_versions(tmp_path):
-    from clinica.utils.caps import write_caps_dataset_description
+    from clinica.dataset import write_caps_dataset_description
     from clinica.utils.exceptions import ClinicaBIDSError
 
     (tmp_path / "caps").mkdir()
@@ -198,9 +205,9 @@ def test_write_caps_dataset_description_specify_bids_and_caps_versions(tmp_path)
 
 
 def test_read_caps_dataset_description(tmp_path, mocker):
-    from clinica.dataset import DatasetType
-    from clinica.utils.caps import (
+    from clinica.dataset import (
         CAPSDatasetDescription,
+        DatasetType,
         write_caps_dataset_description,
     )
 
@@ -232,7 +239,7 @@ def test_read_caps_dataset_description(tmp_path, mocker):
 
 
 def test_write_caps_dataset_description_renaming_gives_warning(tmp_path):
-    from clinica.utils.caps import write_caps_dataset_description
+    from clinica.dataset import write_caps_dataset_description
 
     caps_dir = tmp_path / "caps"
     caps_dir.mkdir()
@@ -260,7 +267,7 @@ def test_write_caps_dataset_description_renaming_gives_warning(tmp_path):
 
 
 def test_write_caps_dataset_description_version_mismatch_error(tmp_path):
-    from clinica.utils.caps import write_caps_dataset_description
+    from clinica.dataset import write_caps_dataset_description
     from clinica.utils.exceptions import ClinicaCAPSError
 
     caps_dir = tmp_path / "caps"
@@ -293,7 +300,7 @@ def test_write_caps_dataset_description_version_mismatch_error(tmp_path):
 
 
 def test_write_caps_dataset_description_multiple_processing(tmp_path, mocker):
-    from clinica.utils.caps import write_caps_dataset_description
+    from clinica.dataset import write_caps_dataset_description
 
     mocker = mock_processing_metadata(mocker)
     caps_dir = tmp_path / "caps"
@@ -407,6 +414,6 @@ def test_write_caps_dataset_description_multiple_processing(tmp_path, mocker):
     ],
 )
 def test_are_versions_compatible(version1, version2, policy, expected):
-    from clinica.utils.caps import are_versions_compatible
+    from clinica.dataset._versioning import are_versions_compatible
 
     assert are_versions_compatible(version1, version2, policy=policy) is expected

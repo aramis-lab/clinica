@@ -280,59 +280,6 @@ def test_insensitive_glob(tmp_path):
     }
 
 
-def test_check_bids_folder_no_subject_folder_error(tmp_path):
-    from clinica.utils.inputs import check_bids_folder
-
-    bids = tmp_path / "bids"
-    bids.mkdir()
-    (bids / "dataset_description.json").touch()
-    (bids / "foo").mkdir()
-
-    with pytest.raises(
-        ClinicaBIDSError,
-        match="Your BIDS directory does not contains a single folder whose name",
-    ):
-        check_bids_folder(bids)
-
-
-def test_check_bids_folder(tmp_path):
-    from clinica.utils.inputs import check_bids_folder
-
-    bids = tmp_path / "bids"
-    bids.mkdir()
-    (bids / "dataset_description.json").touch()
-    (bids / "sub-01").mkdir()
-
-    assert check_bids_folder(bids) is None
-
-
-def test_check_caps_folder(tmp_path):
-    """Test function `check_caps_folder`."""
-    from clinica.utils.inputs import check_caps_folder
-
-    (tmp_path / "subjects").mkdir()
-    (tmp_path / "subjects" / "foo.txt").mkdir()
-    with pytest.raises(
-        ClinicaCAPSError,
-        match=re.escape(
-            f"The derivative directory ({tmp_path}) you provided is missing a dataset_description.json file."
-        ),
-    ):
-        check_caps_folder(tmp_path)
-    with open(tmp_path / "dataset_description.json", "w") as fp:
-        json.dump(
-            {"Name": "Example dataset", "BIDSVersion": "1.0.2", "CAPSVersion": "1.0.0"},
-            fp,
-        )
-    assert check_caps_folder(tmp_path) is None
-    (tmp_path / "sub-01").mkdir()
-    with pytest.raises(
-        ClinicaCAPSError,
-        match="Your CAPS directory contains at least one folder whose name starts with 'sub-'.",
-    ):
-        check_caps_folder(tmp_path)
-
-
 def test_find_images_path_error_no_file(tmp_path):
     """Test function `find_images_path`."""
     from clinica.utils.inputs import find_images_path
@@ -614,17 +561,8 @@ def test_clinica_file_reader_caps_directory(tmp_path):
     assert errors == [InvalidSubjectSession("sub-01", "ses-M00")]
 
 
-def test_clinica_file_reader_dwi_dti_error(tmp_path):
-    from clinica.utils.input_files import dwi_dti
-    from clinica.utils.inputs import clinica_file_reader
-    # todo : should be tested by check_caps_folder instead ?
-
-    query = dwi_dti("FA", space="T1w")
-    with pytest.raises(ClinicaCAPSError):
-        clinica_file_reader(["sub-01"], ["ses-M000"], tmp_path, query)
-
-
 def test_clinica_file_reader_dwi_dti(tmp_path):
+    from clinica.dataset import DatasetType
     from clinica.utils.dwi import DTIBasedMeasure
     from clinica.utils.input_files import dwi_dti
     from clinica.utils.inputs import clinica_file_reader, clinica_list_of_files_reader
@@ -641,7 +579,12 @@ def test_clinica_file_reader_dwi_dti(tmp_path):
     dti_folder.mkdir(parents=True)
     with open(tmp_path / "dataset_description.json", "w") as fp:
         json.dump(
-            {"Name": "Example dataset", "BIDSVersion": "1.0.2", "CAPSVersion": "1.0.0"},
+            {
+                "Name": "Example dataset",
+                "BIDSVersion": "1.0.2",
+                "CAPSVersion": "1.0.0",
+                "DatasetType": DatasetType.DERIVATIVE.value,
+            },
             fp,
         )
     for measure in DTIBasedMeasure:

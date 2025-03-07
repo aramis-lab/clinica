@@ -82,20 +82,24 @@ def _list_subjects_sub_folders(root_dir: Path, groups_dir: Path) -> list[Path]:
     return subjects_sub_folders
 
 
-def check_dataset(directory: Union[str, Path]) -> None:
+def check_dataset(directory: Union[str, Path]) -> Path:
     """Check that the provided directory hosts a valid BIDS or CAPS dataset.
 
     Parameters
     ----------
     directory : str or Path
         The path to the dataset to be checked.
+
+    Returns
+    -------
+    Path :
+        The path to the validated dataset.
     """
-    dataset_type = get_dataset_type(directory)
-    if dataset_type == DatasetType.RAW:
-        from .bids import check_bids_dataset
+    from .bids import check_bids_dataset
+    from .caps import check_caps_dataset
 
-        check_bids_dataset(directory)
-    if dataset_type == DatasetType.DERIVATIVE:
-        from .caps import check_caps_dataset
-
-        check_caps_dataset(directory)
+    return (
+        check_bids_dataset
+        if get_dataset_type(directory) == DatasetType.RAW
+        else check_caps_dataset
+    )(directory)

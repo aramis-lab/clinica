@@ -102,14 +102,21 @@ def build_bids_directory(
     This function is a simple prototype for creating fake datasets for testing.
     It only adds (for now...) T1W nifti images for all subjects and sessions.
     """
-    from clinica.dataset import BIDS_VERSION
+    from clinica.dataset import BIDS_VERSION, DatasetType
 
     random.seed(random_seed)
     directory.mkdir(exist_ok=True, parents=True)
     modalities = modalities or {"anat": ("T1w", "flair")}
     extensions = ("nii.gz", "json")
     with open(directory / "dataset_description.json", "w") as fp:
-        json.dump({"Name": "Example dataset", "BIDSVersion": str(BIDS_VERSION)}, fp)
+        json.dump(
+            {
+                "Name": "Example dataset",
+                "BIDSVersion": str(BIDS_VERSION),
+                "DatasetType": DatasetType.RAW.value,
+            },
+            fp,
+        )
     for sub, sessions in subjects_sessions.items():
         (directory / sub).mkdir()
         if write_tsv_files:
@@ -163,7 +170,7 @@ def build_caps_directory(directory: Path, configuration: dict) -> Path:
     -----
     This function is a simple prototype for creating fake datasets for testing.
     """
-    from clinica.dataset import BIDS_VERSION, CAPS_VERSION
+    from clinica.dataset import BIDS_VERSION, CAPS_VERSION, DatasetType
 
     directory.mkdir(exist_ok=True, parents=True)
     with open(directory / "dataset_description.json", "w") as fp:
@@ -172,6 +179,7 @@ def build_caps_directory(directory: Path, configuration: dict) -> Path:
                 "Name": "Example dataset",
                 "BIDSVersion": str(BIDS_VERSION),
                 "CAPSVersion": str(CAPS_VERSION),
+                "DatasetType": DatasetType.DERIVATIVE.value,
             },
             fp,
         )

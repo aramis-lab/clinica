@@ -10,13 +10,18 @@ __all__ = [
 ]
 
 
-def check_caps_dataset(directory: Union[str, Path]) -> None:
+def check_caps_dataset(directory: Union[str, Path]) -> Path:
     """Check if provided `caps_directory`is a CAPS folder.
 
     Parameters
     ----------
     directory : str or Path
         The path to the CAPS dataset to check.
+
+    Returns
+    -------
+    Path :
+        The path to the validated CAPS dataset.
 
     Raises
     ------
@@ -52,6 +57,7 @@ def check_caps_dataset(directory: Union[str, Path]) -> None:
             "are stored the output of the pipeline for each subject."
         )
         raise ClinicaCAPSError(error_string)
+    return directory
 
 
 def _check_dataset_description_exists_in_caps(directory: Path):

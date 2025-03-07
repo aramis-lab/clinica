@@ -62,3 +62,15 @@ def test_check_bids_dataset_no_subject_error(tmp_path):
         ),
     ):
         check_bids_dataset(tmp_path)
+
+
+def test_check_bids_dataset(tmp_path):
+    from clinica.dataset import check_bids_dataset
+
+    bids = tmp_path / "bids"
+    bids.mkdir()
+    with open(bids / "dataset_description.json", "w") as fp:
+        json.dump({"Name": "Test", "DatasetType": "raw", "BIDSVersion": "1.7.0"}, fp)
+    (bids / "sub-01").mkdir()
+
+    assert check_bids_dataset(bids) == bids
