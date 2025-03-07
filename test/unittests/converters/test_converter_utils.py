@@ -211,6 +211,23 @@ def test_get_subjects_from_bids_dataset(tmp_path):
     }
 
 
+def test_get_sessions_from_bids_dataset(tmp_path):
+    from clinica.converters._utils import get_sessions_from_bids_dataset
+
+    (tmp_path / "file").touch()
+    (tmp_path / "ses-03").touch()
+    (tmp_path / "folder").mkdir()
+
+    for ses in ("ses-01", "ses-02", "ses-15"):
+        (tmp_path / ses).mkdir()
+
+    assert set(get_sessions_from_bids_dataset(tmp_path)) == {
+        "ses-01",
+        "ses-02",
+        "ses-15",
+    }
+
+
 @pytest.mark.parametrize("compress", [True, False])
 @pytest.mark.parametrize("sidecar", [True, False])
 def test_build_dcm2niix_command(tmp_path, compress: bool, sidecar: bool):
