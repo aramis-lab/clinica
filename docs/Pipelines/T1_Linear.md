@@ -1,11 +1,11 @@
 # `t1-linear` - Affine registration of T1w images to the MNI standard space
 
-This pipeline performs a set of steps in order to affinely align T1-weighted MR images to the MNI space using the [ANTs](http://stnava.github.io/ANTs/) software package [[Avants et al., 2014](https://doi.org/10.3389/fninf.2014.00044)].
+This pipeline performs a set of steps in order to affinely align T1-weighted MR images to the [MNI](../glossary.md#mni) space using the [ANTs](http://stnava.github.io/ANTs/) software package [[Avants et al., 2014](https://doi.org/10.3389/fninf.2014.00044)].
 
 These steps include:
 
 - bias field correction using N4ITK [[Tustison et al., 2010](https://doi.org/10.1109/TMI.2010.2046908)]
-- affine registration to the [MNI152NLin2009cSym](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html#template-based-coordinate-systems) template [Fonov et al., [2011](https://doi.org/10.1016/j.neuroimage.2010.07.033), [2009](https://doi.org/10.1016/S1053-8119(09)70884-5)] in MNI space with the SyN algorithm [[Avants et al., 2008](https://doi.org/10.1016/j.media.2007.06.004)]
+- affine registration to the [MNI152NLin2009cSym](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html#template-based-coordinate-systems) template [Fonov et al., [2011](https://doi.org/10.1016/j.neuroimage.2010.07.033), [2009](https://doi.org/10.1016/S1053-8119(09)70884-5)] in [MNI](../glossary.md#mni) space with the SyN algorithm [[Avants et al., 2008](https://doi.org/10.1016/j.media.2007.06.004)]
 - cropping of the registered images to remove the background
 
 This pipeline was designed as a prerequisite for the [`extract](https://clinicadl.readthedocs.io/en/stable/Preprocessing/Extract/) and deep learning classification algorithms presented in [[Wen et al., 2020](https://arxiv.org/abs/1904.07773)].
