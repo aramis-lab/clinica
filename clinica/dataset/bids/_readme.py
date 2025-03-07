@@ -2,14 +2,14 @@ from typing import IO
 
 from attrs import define
 
-from .study_models import StudyName
+__all__ = ["BIDSReadme"]
 
 
 @define
 class BIDSReadme:
     """Model representing the content for a BIDS Readme."""
 
-    name: StudyName
+    name: str
     link: str
     description: str
 
@@ -20,7 +20,7 @@ class BIDSReadme:
             f"This BIDS directory was generated with Clinica v{version('clinica')}.\n"
             f"More information on https://www.clinica.run\n"
             f"\n"
-            f"Study: {self.name.value}\n"
+            f"Study: {self.name}\n"
             f"\n"
             f"{self.description}\n\n"
             f"Find more about it and about the data user agreement: {self.link}"

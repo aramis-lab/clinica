@@ -102,7 +102,7 @@ def build_bids_directory(
     This function is a simple prototype for creating fake datasets for testing.
     It only adds (for now...) T1W nifti images for all subjects and sessions.
     """
-    from clinica.utils.bids import BIDS_VERSION
+    from clinica.dataset import BIDS_VERSION
 
     random.seed(random_seed)
     directory.mkdir(exist_ok=True, parents=True)
@@ -163,8 +163,7 @@ def build_caps_directory(directory: Path, configuration: dict) -> Path:
     -----
     This function is a simple prototype for creating fake datasets for testing.
     """
-    from clinica.utils.bids import BIDS_VERSION
-    from clinica.utils.caps import CAPS_VERSION
+    from clinica.dataset import BIDS_VERSION, CAPS_VERSION
 
     directory.mkdir(exist_ok=True, parents=True)
     with open(directory / "dataset_description.json", "w") as fp:

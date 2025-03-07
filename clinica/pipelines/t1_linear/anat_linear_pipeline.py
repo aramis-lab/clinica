@@ -1,12 +1,11 @@
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
-from pathlib import Path
 from typing import List, Optional
 
 from nipype import config
 
+from clinica.dataset import Visit
 from clinica.pipelines.engine import Pipeline
-from clinica.utils.bids import Visit
 from clinica.utils.check_dependency import ThirdPartySoftware
 from clinica.utils.stream import log_and_warn
 

@@ -1,12 +1,11 @@
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
-from pathlib import Path
 from typing import List
 
 from nipype import config
 
+from clinica.dataset import Visit
 from clinica.pipelines.pet.engine import PETPipeline
-from clinica.utils.bids import Visit
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
@@ -109,11 +108,7 @@ class PETLinear(PETPipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.pipelines.pet.utils import get_suvr_mask
-        from clinica.utils.exceptions import (
-            ClinicaBIDSError,
-            ClinicaCAPSError,
-            ClinicaException,
-        )
+        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
         from clinica.utils.image import get_mni_template
         from clinica.utils.input_files import (
             T1W_LINEAR,

@@ -3,7 +3,7 @@ import re
 import pytest
 from packaging.version import Version
 
-from clinica.utils.bids import Visit
+from clinica.dataset import Visit
 from clinica.utils.testing_utils import build_bids_directory, build_caps_directory
 
 
@@ -27,8 +27,7 @@ def test_anat_linear_pipeline_single_bids_input_error(tmp_path):
     with pytest.raises(
         ClinicaBIDSError,
         match=re.escape(
-            f"The raw directory ({tmp_path}) you provided "
-            "is missing a dataset_description.json file."
+            f"The directory ({tmp_path}) you provided is not a valid BIDS directory."
         ),
     ):
         AnatLinear(bids_directory=str(tmp_path))
@@ -41,7 +40,7 @@ def test_anat_linear_pipeline_single_caps_input_error(tmp_path):
     with pytest.raises(
         ClinicaCAPSError,
         match=re.escape(
-            f"The derivative directory ({tmp_path}) you provided "
+            f"The CAPS directory ({tmp_path}) you provided "
             "is missing a dataset_description.json file."
         ),
     ):

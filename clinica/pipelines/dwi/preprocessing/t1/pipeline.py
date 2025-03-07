@@ -87,9 +87,9 @@ class DwiPreprocessingUsingT1(DWIPreprocessingPipeline):
         return ["preproc_dwi", "preproc_bvec", "preproc_bval", "b0_mask"]
 
     def filter_qc(self) -> tuple[list[str], list[str]]:
+        from clinica.bids import BIDSFileName
         from clinica.pipelines.dwi.preprocessing.utils import check_dwi_volume
         from clinica.pipelines.dwi.utils import DWIDataset
-        from clinica.utils.bids import BIDSFileName
         from clinica.utils.input_files import (
             DWI_BVAL,
             DWI_BVEC,

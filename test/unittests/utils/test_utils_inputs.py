@@ -6,11 +6,10 @@ from pathlib import Path
 import pytest
 
 from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
-from clinica.utils.inputs import DatasetType, InvalidSubjectSession
+from clinica.utils.inputs import InvalidSubjectSession
 from clinica.utils.testing_utils import (
     build_bids_directory,
     build_caps_directory,
-    rmtree,
 )
 
 
@@ -279,83 +278,6 @@ def test_insensitive_glob(tmp_path):
         "foo1.py",
         "BaR2.PY",
     }
-
-
-def test_determine_caps_or_bids(tmp_path):
-    from clinica.utils.inputs import determine_caps_or_bids
-
-    assert not determine_caps_or_bids(tmp_path)
-    (tmp_path / "subjects").mkdir()
-    (tmp_path / "subjects" / "foo.txt").mkdir()
-    assert not determine_caps_or_bids(tmp_path)
-    (tmp_path / "subjects" / "sub-01").mkdir()
-    assert not determine_caps_or_bids(tmp_path)
-    (tmp_path / "groups").mkdir()
-    (tmp_path / "groups" / "foo.txt").mkdir()
-    assert not determine_caps_or_bids(tmp_path)
-    rmtree(tmp_path / "subjects")
-    (tmp_path / "sub-01").mkdir()
-    (tmp_path / "sub-01" / "foo.txt").mkdir()
-    assert determine_caps_or_bids(tmp_path)
-
-
-@pytest.mark.parametrize("folder_type", DatasetType)
-def test_validate_folder_existence(folder_type):
-    from clinica.utils.inputs import _validate_folder_existence
-
-    with pytest.raises(
-        TypeError,
-        match="Argument you provided to ",
-    ):
-        _validate_folder_existence(1, folder_type)  # noqa
-
-    with pytest.raises(
-        ClinicaBIDSError if folder_type == DatasetType.RAW else ClinicaCAPSError,
-        match=f"The {folder_type.value} directory you gave is not a folder.",
-    ):
-        _validate_folder_existence(Path("fooooo"), folder_type)
-
-
-def test_check_bids_folder_missing_dataset_description_error(tmp_path):
-    from clinica.utils.inputs import check_bids_folder
-
-    with pytest.raises(
-        ClinicaBIDSError,
-        match=re.escape(
-            f"The raw directory ({tmp_path}) you provided is missing a dataset_description.json file."
-        ),
-    ):
-        check_bids_folder(tmp_path)
-
-
-def test_check_bids_folder_mismatch_with_caps_error(tmp_path):
-    from clinica.utils.inputs import check_bids_folder
-
-    (tmp_path / "dataset_description.json").touch()
-    (tmp_path / "subjects").mkdir()
-
-    with pytest.raises(
-        ClinicaBIDSError,
-        match=re.escape(
-            f"The BIDS directory ({tmp_path}) you provided seems to be a CAPS "
-            "directory due to the presence of a 'subjects' folder."
-        ),
-    ):
-        check_bids_folder(tmp_path)
-
-
-def test_check_bids_folder_empty_error(tmp_path):
-    from clinica.utils.inputs import check_bids_folder
-
-    bids = tmp_path / "bids"
-    bids.mkdir()
-    (bids / "dataset_description.json").touch()
-
-    with pytest.raises(
-        ClinicaBIDSError,
-        match="The BIDS directory you provided is empty.",
-    ):
-        check_bids_folder(bids)
 
 
 def test_check_bids_folder_no_subject_folder_error(tmp_path):

@@ -129,16 +129,19 @@ def create_subjects_visits(input_directory: str, output_tsv: str) -> None:
     from os import makedirs
     from os.path import basename, dirname
 
-    from clinica.utils.inputs import determine_caps_or_bids
+    from clinica.dataset import DatasetType, get_dataset_type
     from clinica.utils.stream import cprint
 
     from .data_handling import create_subs_sess_list
 
-    is_bids = determine_caps_or_bids(input_directory)
+    dataset_type = get_dataset_type(input_directory)
     output_directory = dirname(output_tsv)
     makedirs(output_directory, exist_ok=True)
     create_subs_sess_list(
-        input_directory, output_directory, basename(output_tsv), is_bids_dir=is_bids
+        input_directory,
+        output_directory,
+        basename(output_tsv),
+        is_bids_dir=(dataset_type == DatasetType.RAW),
     )
     cprint(f"The TSV file was saved to {output_tsv}.")
 

@@ -806,8 +806,8 @@ def write_bids(
 
     from fsspec.implementations.local import LocalFileSystem
 
+    from clinica.bids import BIDSDatasetDescription
     from clinica.converters._utils import run_dcm2niix, write_to_tsv
-    from clinica.converters.bids_dataset_description import BIDSDatasetDescription
     from clinica.utils.stream import cprint
 
     cprint("Starting to write the BIDS.", lvl="info")

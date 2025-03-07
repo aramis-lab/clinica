@@ -11,7 +11,7 @@ import click
 from nipype.interfaces.utility import IdentityInterface
 from nipype.pipeline.engine import Node, Workflow
 
-from clinica.utils.bids import Visit
+from clinica.dataset import Visit
 from clinica.utils.check_dependency import SoftwareDependency, ThirdPartySoftware
 from clinica.utils.group import GroupID, GroupLabel
 from clinica.utils.stream import log_and_warn
@@ -427,12 +427,13 @@ class Pipeline(Workflow):
         from pathlib import Path
         from tempfile import mkdtemp
 
-        from clinica.utils.caps import (
+        from clinica.dataset import (
             build_caps_dataset_description,
+            check_bids_dataset,
+            check_caps_dataset,
             write_caps_dataset_description,
         )
         from clinica.utils.exceptions import ClinicaCAPSError
-        from clinica.utils.inputs import check_bids_folder, check_caps_folder
 
         self._is_built: bool = False
         self._overwrite_caps: bool = overwrite_caps
@@ -477,7 +478,7 @@ class Pipeline(Workflow):
                     "BIDS nor CAPS directory at the initialization."
                 )
             try:
-                check_caps_folder(self._caps_directory)
+                check_caps_dataset(self._caps_directory)
             except ClinicaCAPSError as e:
                 desc = build_caps_dataset_description(
                     input_dir=self._caps_directory,
@@ -492,7 +493,7 @@ class Pipeline(Workflow):
                 )
             self.is_bids_dir = False
         else:
-            check_bids_folder(self._bids_directory)
+            check_bids_dataset(self._bids_directory)
             self.is_bids_dir = True
             if self._caps_directory is not None:
                 if (
@@ -508,7 +509,7 @@ class Pipeline(Workflow):
                 dataset_name=self.caps_name,
                 dependencies=self.dependencies,
             )
-            check_caps_folder(self._caps_directory)
+            check_caps_dataset(self._caps_directory)
         self._compute_subjects_and_sessions()
         self._init_nodes()
 

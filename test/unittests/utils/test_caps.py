@@ -198,11 +198,11 @@ def test_write_caps_dataset_description_specify_bids_and_caps_versions(tmp_path)
 
 
 def test_read_caps_dataset_description(tmp_path, mocker):
+    from clinica.dataset import DatasetType
     from clinica.utils.caps import (
         CAPSDatasetDescription,
         write_caps_dataset_description,
     )
-    from clinica.utils.inputs import DatasetType
 
     mocker = mock_processing_metadata(mocker)
     initialize_input_dir(tmp_path / "bids")

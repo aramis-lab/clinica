@@ -314,8 +314,8 @@ def write_bids(
 ) -> list[str]:
     from fsspec.implementations.local import LocalFileSystem
 
+    from clinica.bids import BIDSDatasetDescription
     from clinica.converters._utils import write_to_tsv
-    from clinica.converters.bids_dataset_description import BIDSDatasetDescription
     from clinica.converters.study_models import StudyName
 
     fs = LocalFileSystem(auto_mkdir=True)

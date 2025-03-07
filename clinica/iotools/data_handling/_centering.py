@@ -280,8 +280,8 @@ def _find_files_with_modality(
 def _validate_bids_and_output_dir(
     bids_dir: PathLike, output_dir: PathLike
 ) -> tuple[Path, Path]:
+    from clinica.dataset import check_bids_dataset
     from clinica.utils.exceptions import ClinicaBIDSError
-    from clinica.utils.inputs import check_bids_folder
 
     bids_dir = Path(bids_dir)
     output_dir = Path(output_dir)
@@ -289,7 +289,7 @@ def _validate_bids_and_output_dir(
         raise ClinicaBIDSError(
             f"Input BIDS ({bids_dir}) and output ({output_dir}) directories must be different."
         )
-    check_bids_folder(bids_dir)
+    check_bids_dataset(bids_dir)
 
     return bids_dir, output_dir
 

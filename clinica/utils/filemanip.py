@@ -2,7 +2,7 @@ from os import PathLike
 from pathlib import Path
 from typing import Callable, List, Optional, Union
 
-from .bids import Visit
+from clinica.dataset import Visit
 
 __all__ = [
     "UserProvidedPath",

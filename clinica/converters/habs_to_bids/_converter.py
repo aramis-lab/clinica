@@ -214,11 +214,11 @@ def _write_bids(
     import fsspec
     from pandas import notna
 
+    from clinica.bids import BIDSDatasetDescription
     from clinica.converters._utils import (
         write_modality_agnostic_files,
         write_to_tsv,
     )
-    from clinica.converters.bids_dataset_description import BIDSDatasetDescription
     from clinica.converters.study_models import StudyName
 
     participants = (

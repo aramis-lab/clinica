@@ -201,8 +201,8 @@ def create_sessions_tsv_file(
     clinical_specifications_folder : Path
         The path to the folder containing the clinical specification files.
     """
-    from clinica.converters._utils import (
-        get_sessions_from_bids_dataset,
+    from clinica.dataset import (
+        get_sessions_for_subject_in_bids_dataset,
         get_subjects_from_bids_dataset,
     )
 
@@ -214,7 +214,7 @@ def create_sessions_tsv_file(
     for bids_id in get_subjects_from_bids_dataset(bids_dir):
         rid = int(bids_id_factory(study)(bids_id).to_original_study_id())
         sessions = pd.DataFrame(
-            {"session_id": get_sessions_from_bids_dataset(bids_dir / bids_id)}
+            {"session_id": get_sessions_for_subject_in_bids_dataset(bids_dir, bids_id)}
         ).set_index("session_id", drop=False)
 
         for _, row in specifications.iterrows():

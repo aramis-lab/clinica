@@ -1,3 +1,4 @@
+import json
 from os import PathLike
 from pathlib import Path
 from typing import Iterable, Optional, Union
@@ -11,9 +12,8 @@ from clinica.utils.exceptions import ClinicaBIDSError, ClinicaExistingDatasetErr
 def build_bids_folder(tmp_path: Path) -> Path:
     bids_path = tmp_path / "BIDS"
     bids_path.mkdir()
-
-    (bids_path / "dataset_description.json").touch()
-
+    with open(bids_path / "dataset_description.json", "w") as fp:
+        json.dump({"Name": "Test", "DatasetType": "raw", "BIDSVersion": "1.7.0"}, fp)
     (bids_path / "sub-1" / "ses-1").mkdir(parents=True)
     (bids_path / "sub-1" / "ses-1" / "sub-1_ses-1_T1w.nii.gz").touch()
     (bids_path / "sub-2" / "ses-1").mkdir(parents=True)
@@ -39,37 +39,6 @@ def test_handle_output_existing_files(tmp_path):
 
     _handle_output_existing_files(output_path, overwrite_existing_files=True)
     assert not output_path.exists()
-
-
-def test_validate_bids_and_output_dir_equal_error(tmp_path):
-    from clinica.iotools.data_handling._centering import (
-        _validate_bids_and_output_dir,
-    )
-
-    with pytest.raises(ClinicaBIDSError):
-        _validate_bids_and_output_dir(tmp_path / "BIDS", tmp_path / "BIDS")
-
-
-def test_validate_bids_and_output_dir_not_bids_error(tmp_path):
-    from clinica.iotools.data_handling._centering import (
-        _validate_bids_and_output_dir,
-    )
-
-    (tmp_path / "BIDS").mkdir()
-    with pytest.raises(ClinicaBIDSError):
-        _validate_bids_and_output_dir(tmp_path / "BIDS", tmp_path / "COPY")
-
-
-def test_validate_bids_and_output_dir_not_bids_success(tmp_path):
-    from clinica.iotools.data_handling._centering import (
-        _validate_bids_and_output_dir,
-    )
-
-    bids_path = build_bids_folder(tmp_path)
-    output_path = tmp_path / "COPY"
-    assert bids_path, output_path == _validate_bids_and_output_dir(
-        bids_path, output_path
-    )
 
 
 @pytest.mark.parametrize(

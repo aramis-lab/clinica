@@ -39,8 +39,8 @@ def compute_statistics_on_atlases(
     """
     from pathlib import Path
 
+    from clinica.bids import BIDSFileName
     from clinica.utils.atlas import atlas_factory
-    from clinica.utils.bids import BIDSFileName
     from clinica.utils.statistics import statistics_on_atlas
 
     atlas_statistics_list = []
