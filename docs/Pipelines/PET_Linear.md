@@ -42,10 +42,9 @@ where:
 
 with specific options :
 
-- `-ui`/`--uncropped_image` : By default, output images are cropped to a **fixed** matrix size of 169×208×179, 1 mm isotropic voxels. This allows reducing the computing power required when training deep learning models afterwards.
-Use this option if you do not want to get cropped images.
-- `--save_pet_in_t1w_space`: Use this option to save the [PET](../glossary.md#pet) image in the T1w space after rigid transformation.
+--8<-- "snippets/pipelines_options.md:linear"
 --8<-- "snippets/pipelines_options.md:pet_recon"
+- `--save_pet_in_t1w_space`: Use this option to save the [PET](../glossary.md#pet) image in the T1w space after rigid transformation.
 
 ??? info "Optional parameters common to all pipelines"
     --8<-- "snippets/pipelines_options.md:all"

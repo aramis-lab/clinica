@@ -36,6 +36,7 @@ where:
 with specific options : 
 
 --8<-- "snippets/pipelines_options.md:linear"
+--8<-- "snippets/pipelines_options.md:antspy"
 
 ??? info "Optional parameters common to all pipelines"
     --8<-- "snippets/pipelines_options.md:all"

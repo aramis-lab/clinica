@@ -50,7 +50,7 @@ where:
         Additionally, the SUVR reference region is now a compulsory argument: it will be easier for you to modify Clinica if you want to add a custom reference region ([PET Introduction](../PET_Introduction) page).
         Choose `cerebellumPons` for amyloid tracers or `pons` for FDG to have the previous behavior.
 
-Pipeline options:
+with specific options : 
 
 - `-rec/--reconstruction_method`: Select only images based on a [specific reconstruction method](./PET_Introduction.md#reconstruction-methods).
 

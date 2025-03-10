@@ -58,7 +58,7 @@ More explanation is given in [PET Introduction](../PET_Introduction) page.
         `EffectiveResolutionAxial` is replaced by `psf_z` and the `acq_label` column has been added. Additionally, the SUVR reference region is now a compulsory argument:
         it will be easier for you to modify Clinica if you want to add a custom reference region ([PET Introduction](../PET_Introduction) page). Choose `cerebellumPons` for amyloid tracers or `pons` for FDG to have the previous behavior.
 
-Pipeline options:
+with specific options : 
 
 - `-np`: This parameter specifies the number of threads to run in parallel.
 We recommend using `your_number_of_cpu - 1`.

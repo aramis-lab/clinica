@@ -42,7 +42,7 @@ where:
 - The reference region is used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio ([SUVR](../glossary.md#suvr)) map.
 It can be `cerebellumPons` or `cerebellumPons2` (used for amyloid tracers) or `pons` or `pons2` (used for FDG).
 
-Pipeline options:
+with specific options : 
 
 - `--pvc_psf_tsv`: TSV file containing the `psf_x`, `psf_y` and `psf_z` of the PSF for each PET image. More explanation is given in [PET Introduction](./PET_Introduction.md#partial-volume-correction-pvc) page.
     
