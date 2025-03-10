@@ -34,10 +34,8 @@ clinica run pet-linear [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY ACQ_LABEL
 where:
 
 --8<-- "snippets/cmd_inputs.md:bids_caps"
-- `ACQ_LABEL` is the label given to the PET acquisition, specifying the tracer used (`trc-<acq_label>`). It can be for instance '18FFDG' for <sup>18</sup>F-fluorodeoxyglucose or '18FAV45' for <sup>18</sup>F-florbetapir
-- The reference region is used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio ([SUVR](../glossary.md#suvr)) map.
-  It can be `cerebellumPons` or `cerebellumPons2` (used for amyloid tracers) and `pons` or `pons2` (used for FDG).
-  See [PET introduction](./PET_Introduction.md) for more details about masks versions.
+--8<-- "snippets/cmd_inputs.md:acq"
+--8<-- "snippets/cmd_inputs.md:region"
 
 with specific options :
 

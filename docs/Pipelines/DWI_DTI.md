@@ -24,7 +24,7 @@ clinica run dwi-dti CAPS_DIRECTORY
 
 where:
 
-- `CAPS_DIRECTORY` is the input/output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
+--8<-- "snippets/cmd_inputs.md:caps"
 
 ??? info "Optional parameters common to all pipelines"
     --8<-- "snippets/pipelines_options.md:all"
