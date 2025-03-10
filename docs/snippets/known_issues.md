@@ -40,7 +40,7 @@ Those events are unpredictable. In case it occurs to you, please do the followin
 
 
 --8<-- [start:several_pet]
-!!! warning
+!!! warning "Several PET scans"
     It can happen that a [BIDS](../BIDS.md) dataset contains several [PET](../glossary.md#pet) scans for a given subject and session.
     In this situation, these images will differ through at least one [BIDS](../BIDS.md) entity like the tracer or the reconstruction method.
     When running the PET pipeline, clinica will raise an error if more than one image matches the criteria provided through the command line.

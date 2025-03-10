@@ -39,6 +39,7 @@ where:
 If you want to run the pipeline on a subset of your dataset, you can use the `-tsv` flag to specify in a TSV file the participants and the corresponding sessions of interest.
 
 with specific options :
+
 --8<-- "snippets/pipelines_options.md:freesurfer"
 
 ??? info "Optional parameters common to all pipelines"

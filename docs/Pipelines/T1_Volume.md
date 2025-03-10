@@ -51,8 +51,8 @@ Pipeline options:
 
 --8<-- "snippets/known_issues.md:center-nifti"
 
-!!! note "Dartel Template"
-    The creation of a new Dartel template, performed in the `t1-volume` pipeline, requires at least two images.
+!!! warning "Dartel Template"
+    The creation of a new Dartel template performed in the `t1-volume` pipeline requires at least two images.
 
 !!! tip
     Do not hesitate to type `t1-volume --help` to see the full list of parameters.

@@ -47,10 +47,10 @@ Use this option if you do not want to get cropped images.
 - `--save_pet_in_t1w_space`: Use this option to save the [PET](../glossary.md#pet) image in the T1w space after rigid transformation.
 --8<-- "snippets/pipelines_options.md:pet_recon"
 
---8<-- "snippets/known_issues.md:several_pet"
-
 ??? info "Optional parameters common to all pipelines"
     --8<-- "snippets/pipelines_options.md:all"
+
+--8<-- "snippets/known_issues.md:several_pet"
 
 !!! tip
     Do not hesitate to type `clinica run pet-linear --help` to see the full list of parameters.
