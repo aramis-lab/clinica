@@ -49,7 +49,7 @@ Those events are unpredictable. In case it occurs to you, please do the followin
 
 
 --8<-- [start:petpvc]
-Please note that PETPVC is extremely demanding in terms of resources and
+:warning: Please note that PETPVC is extremely demanding in terms of resources and
 may cause the pipeline to crash if many subjects happen to be partial volume corrected at the same time
 (`Error : Failed to allocate memory for image`).
 
