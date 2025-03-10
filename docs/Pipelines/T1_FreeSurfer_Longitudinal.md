@@ -49,7 +49,7 @@ with specific options :
     The code execution speed depends on your CPU and the quality of your input T1 volumes.
     Please be aware that even though the pipeline runs in parallel, processing many subjects and sessions (e.g. ADNI dataset) is time consuming.
 
-
+## Known issues with FreeSurfer and paths length
 ??? warning "Case when longitudinal correction is performed on macOS"
     If your run the `t1-freesurfer-longitudinal` pipeline on macOS, you will see warning messages when longitudinal correction is performed e.g.:
 
@@ -101,6 +101,20 @@ with specific options :
     When one session is used for template creation, FreeSurfer (`recon-all -base`) may crash if it has to handle a very long path.
     The workaround we are currently using is that when one time point is detected for a given participant, FreeSurfer will be run in a temporary folder (e.g. `/tmp/tmp<hash>`) instead of `<path_to_wd>/t1-freesurfer-template/ReconAll`.
     Then, the results will be copied to the working directory before the temporary folder is deleted.
+
+??? failure "Known error with FreeSurfer on Linux : buffer overflow"
+    If you are running the `t1-freesurfer-longitudinal` pipeline on Linux, it might crash with this error message : 
+
+    ```console
+    *** buffer overflow detected ***: terminated
+    Abort (core dumped)
+    Wed Feb 26 11:43:21 CET 2025
+    ERROR: vertexvol
+    mris_convert --volume sub-MIRIAD215_ses-1a. long.sub-MIRIAD215_long-lalb lh /localdrive10TB/users/matthieu.joulot/data/miriad/processings/freesurfer/wd_trt_m/t1-freesurfer-longitud
+    sub-MIRIAD215_ses-1a_long-1alb/sub-MIRIAD215_ses-1a. long. sub-MIRIAD215_long-lalb/surf/h. volume
+    Command exited with non-zero status 1
+    ```
+    This is due to FreeSurfer way of handling long paths. A workaround is to place the working directory in a folder with the shortest absolute path possible.
 
 ## Outputs
 
