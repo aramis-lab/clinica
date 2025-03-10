@@ -52,12 +52,11 @@ It can be `cerebellumPons` or `cerebellumPons2 (used for amyloid tracers) or `po
 - `PVC_PSF_TSV` is the TSV file containing the `psf_x`, `psf_y` and `psf_z` of the PSF for each PET image.
 More explanation is given in [PET Introduction](../PET_Introduction) page.
 
-!!! info
-    Since the release of Clinica v0.3.8, the handling of PSF information has changed.
-    In previous versions of Clinica, each BIDS-PET image had to contain a JSON file with the `EffectiveResolutionInPlane` and `EffectiveResolutionAxial` fields corresponding to the PSF in mm.
-    `EffectiveResolutionInPlane` is replaced by both `psf_x` and `psf_y`, `EffectiveResolutionAxial` is replaced by `psf_z` and the `acq_label` column has been added.
-    Additionally, the SUVR reference region is now a compulsory argument: it will be easier for you to modify Clinica if you want to add a custom reference region ([PET Introduction](../PET_Introduction) page).
-    Choose `cerebellumPons` for amyloid tracers or `pons` for FDG to have the previous behavior.
+??? info "Clinica v0.3.8+"
+    Since the release of Clinica v0.3.8, the handling of PSF information has changed. In previous versions of Clinica, each BIDS-PET image had to contain a JSON file with the 
+    `EffectiveResolutionInPlane` and `EffectiveResolutionAxial` fields corresponding to the PSF in mm. `EffectiveResolutionInPlane` is replaced by both `psf_x` and `psf_y`,
+    `EffectiveResolutionAxial` is replaced by `psf_z` and the `acq_label` column has been added. Additionally, the SUVR reference region is now a compulsory argument:
+    it will be easier for you to modify Clinica if you want to add a custom reference region ([PET Introduction](../PET_Introduction) page). Choose `cerebellumPons` for amyloid tracers or `pons` for FDG to have the previous behavior.
 
 Pipeline options:
 
