@@ -39,8 +39,9 @@ where:
 If you want to run the pipeline on a subset of your dataset, you can use the `-tsv` flag to specify in a TSV file the participants and the corresponding sessions of interest.
 
 with specific options :
-- -ap/--atlas_path : In case you wish to use another atlas, specify its folder path with this option. Your atlas will need to be in FreeSurfer `gcs` format (e.g `hemisphere.atlasname_6p0.gcs`). The results will be stored in the same folder as the original results with additional files in `labels`, `stats` and `regional measures`.
-- -overwrite/--overwrite_outputs : Force the overwrite of output files in the CAPS folder with this option.
+
+- `-ap/--atlas_path` : In case you wish to use another atlas, specify its folder path with this option. Your atlas will need to be in FreeSurfer `gcs` format (e.g `hemisphere.atlasname_6p0.gcs`). The results will be stored in the same folder as the original results with additional files in `labels`, `stats` and `regional measures`.
+- `-overwrite/--overwrite_outputs : Force the overwrite of output files in the CAPS folder with this option.
 
 ??? info "Optional parameters common to all pipelines"
     --8<-- "snippets/pipelines_options.md"

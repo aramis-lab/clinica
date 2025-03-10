@@ -1,3 +1,4 @@
+--8<-- [start:all]
 - `-tsv` / `--subjects_sessions_tsv`
 
 This flag allows you to specify in a TSV file the participants belonging to your subset.
@@ -38,3 +39,10 @@ If you do not specify `-np` / `--n_procs` flag, Clinica will detect the number o
 - `-cn` / `--caps-name`
 
 Use this option if you want to specify the name of the CAPS dataset that will be used inside the `dataset_description.json` file, at the root of the CAPS folder (see [CAPS Specifications](../CAPS/Specifications.md#the-dataset_descriptionjson-file) for more details). This works if this CAPS dataset does not exist yet, otherwise the existing name will be kept. 
+--8<-- [end:all]
+
+
+--8<-- [start:freesurfer]
+- `-ap/--atlas_path` : In case you wish to use another atlas, specify its folder path with this option. Your atlas will need to be in FreeSurfer `gcs` format (e.g `hemisphere.atlasname_6p0.gcs`). The results will be stored in the same folder as the original results with additional files in `labels`, `stats` and `regional measures`.
+- `-overwrite/--overwrite_outputs` : Force the overwrite of output files in the CAPS folder with this option.
+--8<-- [end:freesurfer]

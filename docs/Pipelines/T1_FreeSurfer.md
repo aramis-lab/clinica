@@ -23,17 +23,16 @@ where:
 
 with specific options : 
 
-- -raa/--recon_all_args : For people familiar with FreeSurfer, we compute the normalized data on the FreeSurfer atlas (FsAverage) with the `-qcache` option from `recon-all`.
+- `-raa/--recon_all_args` : For people familiar with FreeSurfer, we compute the normalized data on the FreeSurfer atlas (FsAverage) with the `-qcache` option from `recon-all`.
     If you want to add some custom flags, you can do it in Clinica with this option. For example : `--recon_all_args="-bigventricles -qcache"`.
     **Please note that `=` is compulsory.**
-- -ap/--atlas_path : In case you wish to use another atlas, specify its folder path with this option. Your atlas will need to be in FreeSurfer `gcs` format (e.g `hemisphere.atlasname_6p0.gcs`). The results will be stored in the same folder as the original results with additional files in `labels`, `stats` and `regional measures`.
-- -overwrite/--overwrite_outputs : Force the overwrite of output files in the CAPS folder with this option.
-
+--8<-- "snippets/pipelines_options.md:freesurfer"
+- 
 ??? info "Optional parameters common to all pipelines"
-    --8<-- "snippets/pipelines_options.md"
+    --8<-- "snippets/pipelines_options.md:all"
 
 !!! note "Computational time"
-    The computational time for one subject is around 10–15 hours depending on your CPU and the quality of your input T1.
+    The computational time for one subject is around **10–15 hours** depending on your CPU and the quality of your input T1.
     Please be aware that even though the pipeline runs in parallel, processing many subjects (e.g. ADNI dataset) is time consuming.
 
 --8<-- "snippets/known_issues.md:center-nifti"
