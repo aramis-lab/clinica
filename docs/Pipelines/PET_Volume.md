@@ -48,25 +48,20 @@ Pipeline options:
 - `--smooth`: a list of integers specifying the different isotropic full width at half maximum ([FWHM](../glossary.md#fwhm)) in millimeters to smooth the image. Default value is: 0, 8 (both without smoothing and with an isotropic smoothing of 8 mm)
 - `--reconstruction_method`: Select only images based on a [specific reconstruction method](./PET_Introduction.md#reconstruction-methods).
 
-!!! warning
+??? info "Optional parameters common to all pipelines"
+    --8<-- "snippets/pipelines_options.md"
+
+
+!!! warning "Several PET"
     It can happen that a [BIDS](../BIDS.md) dataset contains several [PET](../glossary.md#pet) scans for a given subject and session.
     In this situation, these images will differ through at least one [BIDS](../BIDS.md) entity like the tracer or the reconstruction method.
     When running the `pet-volume` pipeline, clinica will raise an error if more than one image matches the criteria provided through the command line.
     To avoid that, it is important to specify values for these options such that a single image is selected per subject and session.
 
-!!! warning "Centering BIDS nifti"
-    The intra-subject registration of the PET image into the space of the subject’s T1-weighted MR image is very likely to fail if the images have important relative offsets.
-    In this situation, Clinica will give a warning displaying a command that should be run in order to generate a new BIDS directory with all images centered.
-    This relies on the IOTool [center-nifti](../IOTools/center_nifti.md).
-    It is highly recommended to follow this recommendation but Clinica won't force you to do so.
-
 !!! info
     Since the release of Clinica v0.3.8, the handling of PSF information in the TSV file has changed: `fwhm_x`, `fwhm_y`, `fwhm_z` columns have been replaced by `psf_x`, `psf_y`, `psf_z` and the `acq_label` column has been added.
     Additionally, the [SUVR](../glossary.md#suvr) reference region is now a compulsory argument: it will be easier for you to modify Clinica if you want to add a custom reference region ([PET Introduction](../PET_Introduction) page).
     Choose `cerebellumPons` for amyloid tracers or `pons` for FDG to have the previous behavior.
-
-!!! note
-    The arguments common to all Clinica pipelines are described in [Interacting with clinica](../../InteractingWithClinica).
 
 !!! tip
     Do not hesitate to type `clinica run pet-volume --help` to see the full list of parameters.
