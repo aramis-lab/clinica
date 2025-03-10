@@ -15,3 +15,25 @@ Those events are unpredictable. In case it occurs to you, please do the followin
     The warning message will contain a suggestion of a command to be run on your `BIDS_DIRECTORY` in order to generate a new BIDS dataset with images centered. This relies on the IOTool [center-nifti](../IOTools/center_nifti.md).
     It is highly recommended to follow this recommendation but Clinica won't force you to do so.
 --8<-- [end:center-nifti]
+
+
+--8<-- [start:gtmseg]
+!!! failure "Known error on macOS with gtmseg"
+     If you are running `pet-surface` or `pet-surface-longitudinal` on macOS, we noticed that if the path to the CAPS is too long, the pipeline fails when the `gtmseg` command from FreeSurfer is executed.
+    This generates crash files with `gtmseg` in the filename, for instance:
+
+    ```console
+    $ nipypecli crash crash-20210404-115414-sheldon.cooper-gtmseg-278e3a57-294f-4121-8a46-9975801f24aa.pklz
+    [...]
+    Abort
+    ERROR: mri_gtmseg --s sub-ADNI011S4105_ses-M000 --usf 2 --o gtmseg.mgz --apas apas+head.mgz --no-subseg-wm --no-keep-cc --no-keep-hypo
+    gtmseg exited with errors
+    Standard error:
+    Saving result to '<caps>/subjects/sub-ADNI011S4105/ses-M000/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M000/tmp/tmpdir.xcerebralseg.50819/tmpdir.fscalc.53505/tmp.mgh' (type = MGH )                       [ ok ]
+    Saving result to '<caps>/subjects/sub-ADNI011S4105/ses-M000/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M00/tmp/tmpdir.xcerebralseg.50819/tmpdir.fscalc.53727/tmp.mgh' (type = MGH )                       [ ok ]
+    Saving result to '<caps>/subjects/sub-ADNI011S4105/ses-M000/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M000/tmp/tmpdir.xcerebralseg.50819/tmpdir.fscalc.53946/tmp.mgh' (type = MGH )                       [ ok ]
+    Return code: 1
+    ```
+
+    This is under investigation (see [Issue #119](https://github.com/aramis-lab/clinica/issues/119) for details) and will be solved as soon as possible.
+--8<-- [end:gtmseg]
