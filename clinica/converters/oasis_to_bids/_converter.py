@@ -130,6 +130,8 @@ class OasisToBids(Converter):
         from clinica.converters._utils import write_modality_agnostic_files
         from clinica.converters.study_models import StudyName
 
+        if not bids_dir.exists():
+            bids_dir.mkdir(parents=True)
         readme_data = {
             "link": "https://sites.wustl.edu/oasisbrains/#access",
             "desc": (
