@@ -43,8 +43,7 @@ clinica run pet-surface-longitudinal [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY ACQ
 
 where:
 
-- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
-- `CAPS_DIRECTORY` acts both as an input folder (where the results of the `t1-freesurfer-longitudinal` pipeline are stored) and
+--8<-- "snippets/cmd_inputs.md:bids_caps"
 as the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
 - `ACQ_LABEL` is the label given to the PET acquisition, specifying the tracer used (`trc-<acq_label>`).
 - The reference region is used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map.

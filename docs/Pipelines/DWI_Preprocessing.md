@@ -40,8 +40,7 @@ clinica run dwi-preprocessing-using-phasediff-fmap [OPTIONS] BIDS_DIRECTORY CAPS
 
 where:
 
-- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
-- `CAPS_DIRECTORY` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
+--8<-- "snippets/cmd_inputs.md:bids_caps"
 
 Please note that you will need the `PhaseEncodingDirection` and `TotalReadoutTime` metadata fields in the JSON file associated to your DWI images
 (see [BIDS specifications](https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/01-magnetic-resonance-imaging-data.html#diffusion-imaging-data) for more details).

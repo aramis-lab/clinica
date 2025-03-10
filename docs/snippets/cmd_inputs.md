@@ -1,0 +1,4 @@
+--8<-- [start:bids_caps]
+- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../BIDS.md) hierarchy
+- `CAPS_DIRECTORY` is the output folder containing the results in a [CAPS](../CAPS/Introduction.md) hierarchy
+--8<-- [end:bids_caps]

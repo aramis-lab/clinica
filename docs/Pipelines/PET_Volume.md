@@ -35,8 +35,7 @@ clinica run pet-volume [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY GROUP_LABEL ACQ_L
 
 where:
 
-- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../BIDS.md) hierarchy.
-- `CAPS_DIRECTORY` acts both as an input folder (where the results of the `t1-volume-*` pipeline are stored) and as the output folder containing the results in a [CAPS](../CAPS/Introduction.md) hierarchy.
+--8<-- "snippets/cmd_inputs.md:bids_caps"
 - `GROUP_LABEL` is the label of the group that is associated to the DARTEL template that you had created when running the [`t1-volume`](./T1_Volume.md) pipeline.
 - `ACQ_LABEL` is the label given to the PET acquisition, specifying the tracer used (`trc-<acq_label>`).
 - The reference region is used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio ([SUVR](../glossary.md#suvr)) map.

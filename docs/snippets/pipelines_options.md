@@ -43,8 +43,8 @@ Use this option if you want to specify the name of the CAPS dataset that will be
 
 
 --8<-- [start:freesurfer]
-- `-ap/--atlas_path` : In case you wish to use another atlas, specify its folder path with this option. Your atlas will need to be in FreeSurfer `gcs` format (e.g `hemisphere.atlasname_6p0.gcs`). The results will be stored in the same folder as the original results with additional files in `labels`, `stats` and `regional measures`.
-- `-overwrite/--overwrite_outputs` : Force the overwrite of output files in the CAPS folder with this option.
+- `-ap`/`--atlas_path` : In case you wish to use another atlas, specify its folder path with this option. Your atlas will need to be in FreeSurfer `gcs` format (e.g `hemisphere.atlasname_6p0.gcs`). The results will be stored in the same folder as the original results with additional files in `labels`, `stats` and `regional measures`.
+- `-overwrite`/`--overwrite_outputs` : Force the overwrite of output files in the CAPS folder with this option.
 --8<-- [end:freesurfer]
 
 --8<-- [start:linear]
@@ -58,5 +58,5 @@ Use this option if you do not want to get cropped images.
 --8<-- [end:antspy]
 
 --8<-- [start:pet_recon]
-- `-rec/--reconstruction_method`: Select only images based on a [specific reconstruction method](/Pipelines/PET_Introduction.md#reconstruction-methods).
+- `-rec`/`--reconstruction_method`: Select only images based on a [specific reconstruction method](/Pipelines/PET_Introduction.md#reconstruction-methods).
 --8<-- [end:pet_recon]

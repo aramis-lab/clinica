@@ -32,8 +32,7 @@ clinica run t1-linear [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY
 
 where :
 
-- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../BIDS.md) hierarchy.
-- `CAPS_DIRECTORY` is the output folder containing the results in a [CAPS](../CAPS/Introduction.md) hierarchy.
+--8<-- "snippets/cmd_inputs.md:bids_caps"
 
 with specific options : 
 
