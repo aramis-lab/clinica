@@ -57,7 +57,7 @@ Pipeline options:
 - `-rec/--reconstruction_method`: Select only images based on a [specific reconstruction method](./PET_Introduction.md#reconstruction-methods).
 
 ??? info "Optional parameters common to all pipelines"
-    --8<-- "snippets/pipelines_options.md"
+    --8<-- "snippets/pipelines_options.md:all"
 
 Please note that PETPVC is extremely demanding in terms of resources and may cause the pipeline to crash if many subjects happen to be partial volume corrected at the same time (Error : `Failed to allocate memory for image`).
 To mitigate this issue, you can do the following:

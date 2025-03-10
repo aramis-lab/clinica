@@ -27,7 +27,7 @@ with specific options :
     If you want to add some custom flags, you can do it in Clinica with this option. For example : `--recon_all_args="-bigventricles -qcache"`.
     **Please note that `=` is compulsory.**
 --8<-- "snippets/pipelines_options.md:freesurfer"
-- 
+
 ??? info "Optional parameters common to all pipelines"
     --8<-- "snippets/pipelines_options.md:all"
 

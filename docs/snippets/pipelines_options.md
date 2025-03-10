@@ -46,3 +46,14 @@ Use this option if you want to specify the name of the CAPS dataset that will be
 - `-ap/--atlas_path` : In case you wish to use another atlas, specify its folder path with this option. Your atlas will need to be in FreeSurfer `gcs` format (e.g `hemisphere.atlasname_6p0.gcs`). The results will be stored in the same folder as the original results with additional files in `labels`, `stats` and `regional measures`.
 - `-overwrite/--overwrite_outputs` : Force the overwrite of output files in the CAPS folder with this option.
 --8<-- [end:freesurfer]
+
+--8<-- [start:linear]
+- `-ui`/`--uncropped_image` : By default, output images are cropped to a **fixed** matrix size of 169×208×179, 1 mm isotropic voxels. This allows reducing the computing power required when training deep learning models afterwards.
+Use this option if you do not want to get cropped images.
+- `--random_seed` : By default, results are not deterministic. Use this option if you want to obtain a deterministic output. The value you set corresponds to the random seed used by ANTs. This option requires [ANTs](../Software/Third-party.md#ants) version `2.3.0` onwards and is also compatible with [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html).
+- `--use-antspy` : By default, the pipeline is running with [ANTs](../Software/Third-party.md#ants). Use this flag option if you want to use [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html) instead.
+--8<-- [end:linear]
+
+--8<-- [start:pet_recon]
+- `-rec/--reconstruction_method`: Select only images based on a [specific reconstruction method](/Pipelines/PET_Introduction.md#reconstruction-methods).
+--8<-- [end:pet_recon]

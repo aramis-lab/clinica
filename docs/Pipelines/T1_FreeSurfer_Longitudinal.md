@@ -39,15 +39,13 @@ where:
 If you want to run the pipeline on a subset of your dataset, you can use the `-tsv` flag to specify in a TSV file the participants and the corresponding sessions of interest.
 
 with specific options :
-
-- `-ap/--atlas_path` : In case you wish to use another atlas, specify its folder path with this option. Your atlas will need to be in FreeSurfer `gcs` format (e.g `hemisphere.atlasname_6p0.gcs`). The results will be stored in the same folder as the original results with additional files in `labels`, `stats` and `regional measures`.
-- `-overwrite/--overwrite_outputs : Force the overwrite of output files in the CAPS folder with this option.
+--8<-- "snippets/pipelines_options.md:freesurfer"
 
 ??? info "Optional parameters common to all pipelines"
-    --8<-- "snippets/pipelines_options.md"
+    --8<-- "snippets/pipelines_options.md:all"
 
 !!! note "Computational time"
-    The computational time for one subject is around 6-8 hours (creation of the unbiased template) + 2-5 hours per corresponding session.
+    The computational time for one subject is around **6-8 hours** (creation of the unbiased template) + **2-5 hours** per corresponding session.
     The code execution speed depends on your CPU and the quality of your input T1 volumes.
     Please be aware that even though the pipeline runs in parallel, processing many subjects and sessions (e.g. ADNI dataset) is time consuming.
 
@@ -185,15 +183,11 @@ The two main processing steps of the `t1-freesurfer-longitudinal` pipeline can b
 
 - **Template creation**
 
-    Command line:
-
     ```Text
     clinica run t1-freesurfer-template [OPTIONS] CAPS_DIRECTORY
     ```
 
 - **Longitudinal correction**
-
-    Command line:
 
     ```Text
     clinica run t1-freesurfer-longitudinal-correction CAPS_DIRECTORY

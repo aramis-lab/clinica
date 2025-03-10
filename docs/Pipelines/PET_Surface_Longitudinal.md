@@ -68,13 +68,13 @@ may cause the pipeline to crash if many subjects happen to be partial volume cor
 (Error : `Failed to allocate memory for image`).
 To mitigate this issue, you can do the following:
 
-    **1)** Use a working directory when you launch Clinica.
+    1) Use a working directory when you launch Clinica.
 
-    **2)** If the pipeline crashed, just launch again the command (while giving the same working directory).
+    2) If the pipeline crashed, just launch again the command (while giving the same working directory).
     The whole processing will continue where it left (you can reduce the number of threads to run in parallel the second time).
 
 ??? info "Optional parameters common to all pipelines"
-    --8<-- "snippets/pipelines_options.md"
+    --8<-- "snippets/pipelines_options.md:all"
 
 !!! tip
     Do not hesitate to type `clinica run pet-surface-longitudinal --help` to see the full list of parameters.

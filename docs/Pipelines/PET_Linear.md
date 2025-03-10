@@ -40,21 +40,17 @@ where:
   It can be `cerebellumPons` or `cerebellumPons2` (used for amyloid tracers) and `pons` or `pons2` (used for FDG).
   See [PET introduction](./PET_Introduction.md) for more details about masks versions.
 
-By default, cropped images (matrix size 169×208×179, 1 mm isotropic voxels) are generated to reduce the computing power required when training deep learning models.
-Use the `--uncropped_image` option if you do not want to crop the image.
+with specific options :
 
-It is possible to select only images based on a [specific reconstruction method](./PET_Introduction.md#reconstruction-methods) with the `--reconstruction_method` option.
+- `-ui`/`--uncropped_image` : By default, output images are cropped to a **fixed** matrix size of 169×208×179, 1 mm isotropic voxels. This allows reducing the computing power required when training deep learning models afterwards.
+Use this option if you do not want to get cropped images.
+- `--save_pet_in_t1w_space`: Use this option to save the [PET](../glossary.md#pet) image in the T1w space after rigid transformation.
+--8<-- "snippets/pipelines_options.md:pet_recon"
 
-!!! warning
-    It can happen that a [BIDS](../BIDS.md) dataset contains several [PET](../glossary.md#pet) scans for a given subject and session.
-    In this situation, these images will differ through at least one [BIDS](../BIDS.md) entity like the tracer or the reconstruction method.
-    When running the `pet-linear` pipeline, clinica will raise an error if more than one image matches the criteria provided through the command line.
-    To avoid that, it is important to specify values for these options such that a single image is selected per subject and session.
+--8<-- "snippets/known_issues.md:several_pet"
 
-The pipeline also offers the possibility to save the [PET](../glossary.md#pet) image in the T1w space after rigid transformation using the `--save_pet_in_t1w_space` option.
-
-!!! note
-    The arguments common to all Clinica pipelines are described in [Interacting with Clinica](../Software/InteractingWithClinica.md).
+??? info "Optional parameters common to all pipelines"
+    --8<-- "snippets/pipelines_options.md:all"
 
 !!! tip
     Do not hesitate to type `clinica run pet-linear --help` to see the full list of parameters.

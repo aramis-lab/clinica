@@ -49,14 +49,9 @@ Pipeline options:
 - `--reconstruction_method`: Select only images based on a [specific reconstruction method](./PET_Introduction.md#reconstruction-methods).
 
 ??? info "Optional parameters common to all pipelines"
-    --8<-- "snippets/pipelines_options.md"
+    --8<-- "snippets/pipelines_options.md:all"
 
-
-!!! warning "Several PET"
-    It can happen that a [BIDS](../BIDS.md) dataset contains several [PET](../glossary.md#pet) scans for a given subject and session.
-    In this situation, these images will differ through at least one [BIDS](../BIDS.md) entity like the tracer or the reconstruction method.
-    When running the `pet-volume` pipeline, clinica will raise an error if more than one image matches the criteria provided through the command line.
-    To avoid that, it is important to specify values for these options such that a single image is selected per subject and session.
+--8<-- "snippets/known_issues.md:several_pet"
 
 !!! info
     Since the release of Clinica v0.3.8, the handling of PSF information in the TSV file has changed: `fwhm_x`, `fwhm_y`, `fwhm_z` columns have been replaced by `psf_x`, `psf_y`, `psf_z` and the `acq_label` column has been added.

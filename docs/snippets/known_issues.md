@@ -37,3 +37,12 @@ Those events are unpredictable. In case it occurs to you, please do the followin
 
     This is under investigation (see [Issue #119](https://github.com/aramis-lab/clinica/issues/119) for details) and will be solved as soon as possible.
 --8<-- [end:gtmseg]
+
+
+--8<-- [start:several_pet]
+!!! warning
+    It can happen that a [BIDS](../BIDS.md) dataset contains several [PET](../glossary.md#pet) scans for a given subject and session.
+    In this situation, these images will differ through at least one [BIDS](../BIDS.md) entity like the tracer or the reconstruction method.
+    When running the PET pipeline, clinica will raise an error if more than one image matches the criteria provided through the command line.
+    To avoid that, it is important to specify values for these options such that a single image is selected per subject and session.
+--8<-- [end:several_pet]
