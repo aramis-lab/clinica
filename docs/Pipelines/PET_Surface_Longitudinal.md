@@ -43,60 +43,28 @@ clinica run pet-surface-longitudinal [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY ACQ
 
 where:
 
-- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
-- `CAPS_DIRECTORY` acts both as an input folder (where the results of the `t1-freesurfer-longitudinal` pipeline are stored) and
-as the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
-- `ACQ_LABEL` is the label given to the PET acquisition, specifying the tracer used (`trc-<acq_label>`).
-- The reference region is used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map.
-It can be `cerebellumPons` or `cerebellumPons2 (used for amyloid tracers) or `pons` or `pons2` (used for FDG).
+--8<-- "snippets/cmd_inputs.md:bids_caps"
+--8<-- "snippets/cmd_inputs.md:acq"
+--8<-- "snippets/cmd_inputs.md:region"
 - `PVC_PSF_TSV` is the TSV file containing the `psf_x`, `psf_y` and `psf_z` of the PSF for each PET image.
 More explanation is given in [PET Introduction](../PET_Introduction) page.
 
-!!! info
-    Since the release of Clinica v0.3.8, the handling of PSF information has changed.
-    In previous versions of Clinica, each BIDS-PET image had to contain a JSON file with the `EffectiveResolutionInPlane` and `EffectiveResolutionAxial` fields corresponding to the PSF in mm.
-    `EffectiveResolutionInPlane` is replaced by both `psf_x` and `psf_y`, `EffectiveResolutionAxial` is replaced by `psf_z` and the `acq_label` column has been added.
-    Additionally, the SUVR reference region is now a compulsory argument: it will be easier for you to modify Clinica if you want to add a custom reference region ([PET Introduction](../PET_Introduction) page).
-    Choose `cerebellumPons` for amyloid tracers or `pons` for FDG to have the previous behavior.
+    ??? info "Clinica v0.3.8+"
+        Since the release of Clinica v0.3.8, the handling of PSF information has changed. In previous versions of Clinica, each BIDS-PET image had to contain a JSON file with the 
+        `EffectiveResolutionInPlane` and `EffectiveResolutionAxial` fields corresponding to the PSF in mm. `EffectiveResolutionInPlane` is replaced by both `psf_x` and `psf_y`,
+        `EffectiveResolutionAxial` is replaced by `psf_z` and the `acq_label` column has been added. Additionally, the SUVR reference region is now a compulsory argument:
+        it will be easier for you to modify Clinica if you want to add a custom reference region ([PET Introduction](../PET_Introduction) page). Choose `cerebellumPons` for amyloid tracers or `pons` for FDG to have the previous behavior.
 
-Pipeline options:
+  
+??? info "Optional parameters common to all pipelines"
+    --8<-- "snippets/pipelines_options.md:all"
 
-- `-np`: This parameter specifies the number of threads to run in parallel.
-We recommend using `your_number_of_cpu - 1`.
-Please note that PETPVC is extremely demanding in terms of resources and
-may cause the pipeline to crash if many subjects happen to be partial volume corrected at the same time
-(Error : `Failed to allocate memory for image`).
-To mitigate this issue, you can do the following:
-
-    **1)** Use a working directory when you launch Clinica.
-
-    **2)** If the pipeline crashed, just launch again the command (while giving the same working directory).
-    The whole processing will continue where it left (you can reduce the number of threads to run in parallel the second time).
-
-!!! note
-    The arguments common to all Clinica pipelines are described in [Interacting with Clinica](../../InteractingWithClinica).
+--8<-- "snippets/known_issues.md:petpvc"
 
 !!! tip
     Do not hesitate to type `clinica run pet-surface-longitudinal --help` to see the full list of parameters.
 
-!!! failure "Known error on macOS"
-    If you are running `pet-surface-longitudinal` on macOS, we noticed that if the path to the CAPS is too long, the pipeline fails when the `gtmseg` command from FreeSurfer is executed.
-    This generates crash files with `gtmseg` in the filename, for instance:
-
-    ```console
-    $ nipypecli crash crash-20210404-115414-sheldon.cooper-gtmseg-278e3a57-294f-4121-8a46-9975801f24aa.pklz
-    [...]
-    Abort
-    ERROR: mri_gtmseg --s sub-ADNI011S4105_ses-M000 --usf 2 --o gtmseg.mgz --apas apas+head.mgz --no-subseg-wm --no-keep-cc --no-keep-hypo
-    gtmseg exited with errors
-    Standard error:
-    Saving result to '<caps>/subjects/sub-ADNI011S4105/ses-M000/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M000/tmp/tmpdir.xcerebralseg.50819/tmpdir.fscalc.53505/tmp.mgh' (type = MGH )                       [ ok ]
-    Saving result to '<caps>/subjects/sub-ADNI011S4105/ses-M000/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M00/tmp/tmpdir.xcerebralseg.50819/tmpdir.fscalc.53727/tmp.mgh' (type = MGH )                       [ ok ]
-    Saving result to '<caps>/subjects/sub-ADNI011S4105/ses-M000/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M000/tmp/tmpdir.xcerebralseg.50819/tmpdir.fscalc.53946/tmp.mgh' (type = MGH )                       [ ok ]
-    Return code: 1
-    ```
-
-    This is under investigation (see [Issue #119](https://github.com/aramis-lab/clinica/issues/119) for details) and will be solved as soon as possible.
+--8<-- "snippets/known_issues.md:gtmseg"
 
 !!! warning "Case where several longitudinal IDs are present"
     If a subject has more than two longitudinal IDs (e.g. `long-M000M018` and `long-M000M018M036`),

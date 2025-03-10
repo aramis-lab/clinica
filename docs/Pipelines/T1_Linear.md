@@ -32,18 +32,15 @@ clinica run t1-linear [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY
 
 where :
 
-- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../BIDS.md) hierarchy.
-- `CAPS_DIRECTORY` is the output folder containing the results in a [CAPS](../CAPS/Introduction.md) hierarchy.
+--8<-- "snippets/cmd_inputs.md:bids_caps"
 
 with specific options : 
 
-- `-ui`/`--uncropped_image` : By default, output images are cropped to a **fixed** matrix size of 169×208×179, 1 mm isotropic voxels. This allows reducing the computing power required when training deep learning models afterwards.
-Use this option if you do not want to get cropped images.
-- `--random_seed` : By default, results are not deterministic. Use this option if you want to obtain a deterministic output. The value you set corresponds to the random seed used by ANTs. This option requires [ANTs](../Software/Third-party.md#ants) version `2.3.0` onwards and is also compatible with [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html).
-- `--use-antspy` : By default, the pipeline is running with [ANTs](../Software/Third-party.md#ants). Use this flag option if you want to use [ANTsPy](https://antspyx.readthedocs.io/en/latest/index.html) instead.
+--8<-- "snippets/pipelines_options.md:linear"
+--8<-- "snippets/pipelines_options.md:antspy"
 
 ??? info "Optional parameters common to all pipelines"
-    --8<-- "snippets/pipelines_options.md"
+    --8<-- "snippets/pipelines_options.md:all"
 
 !!! tip
     Do not hesitate to type `clinica run t1-linear --help` to see the full list of parameters.

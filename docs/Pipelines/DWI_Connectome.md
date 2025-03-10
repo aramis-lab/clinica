@@ -22,9 +22,10 @@ clinica run dwi-connectome [OPTIONS] CAPS_DIRECTORY
 
 where:
 
-- `CAPS_DIRECTORY` is the input/output folder containing the results in a [CAPS](../CAPS/Introduction.md) hierarchy.
+--8<-- "snippets/cmd_inputs.md:caps"
 
-If you want to run the pipeline on a subset of your [CAPS](../CAPS/Introduction.md) dataset, you can use the `-tsv` flag to specify in a [TSV](../glossary.md#tsv) file the participants belonging to your subset.
+??? info "Optional parameters common to all pipelines"
+    --8<-- "snippets/pipelines_options.md:all"
 
 !!! note "Number of streamlines (`--n_tracks` option)"
     The quality of the tractography and, as a result, the connectome mainly depends on the number of streamlines you can generate (the more the better).

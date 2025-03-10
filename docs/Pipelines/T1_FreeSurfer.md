@@ -18,31 +18,24 @@ clinica run t1-freesurfer [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY
 
 where:
 
-- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../BIDS.md) hierarchy.
-- `CAPS_DIRECTORY` is the output folder containing the results in a [CAPS](../CAPS/Introduction.md) hierarchy.
+--8<-- "snippets/cmd_inputs.md:bids_caps"
 
-If you want to run the pipeline on a subset of your BIDS dataset, you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
+with specific options : 
 
-It is possible to specify the name of the CAPS dataset that will be created to store the outputs of the pipeline. This works if this CAPS dataset does not exist yet, otherwise the existing name will be kept.
-This can be achieved with the `--caps-name` option. The provided name will appear in the `dataset_description.json` file, at the root of the CAPS folder (see [CAPS Specifications](../CAPS/Specifications.md#the-dataset_descriptionjson-file) for more details).
+- `-raa/--recon_all_args` : For people familiar with FreeSurfer, we compute the normalized data on the FreeSurfer atlas (FsAverage) with the `-qcache` option from `recon-all`.
+    If you want to add some custom flags, you can do it in Clinica with this option. For example : `--recon_all_args="-bigventricles -qcache"`.
+    **Please note that `=` is compulsory.**
+--8<-- "snippets/pipelines_options.md:freesurfer"
 
+??? info "Optional parameters common to all pipelines"
+    --8<-- "snippets/pipelines_options.md:all"
 
-!!! note
-    The computational time for one subject is around 10–15 hours depending on your CPU and the quality of your input T1.
+!!! note "Computational time"
+    The computational time for one subject is around **10–15 hours** depending on your CPU and the quality of your input T1.
     Please be aware that even though the pipeline runs in parallel, processing many subjects (e.g. ADNI dataset) is time consuming.
 
-!!! note
-    For people familiar with FreeSurfer, we compute the normalized data on the FreeSurfer atlas (FsAverage) with the `-qcache` option from `recon-all`.
-    If you want to add some custom flags, you can do it in Clinica with the `--recon_all_args` flag (e.g. `--recon_all_args="-bigventricles -qcache"`).
-    Please note that `=` is compulsory (this is not the case for other flags).
-
-!!! note
-    If you wish to obtain your results with another atlas, you can specify the option -ap/--atlas_path with the path to the atlas folder. Your atlas will need to be in FreeSurfer `gcs` format (e.g `hemisphere.atlasname_6p0.gcs`). The results will be stored in the same folder as the original results (additional files in `labels`, `stats` and `regional measures`).
-
-!!! warning "Centering BIDS nifti"
-    If the images from the `BIDS_DIRECTORY` are not centered, Clinica will give a warning because this can be an issue **if** later processing steps involve SPM (for instance if you are planning to run [pet-surface](./PET_Surface.md) afterwards).
-    The warning message will contain a suggestion of a command to be run on your `BIDS_DIRECTORY` in order to generate a new BIDS dataset with images centered. This relies on the IOTool [center-nifti](../IOTools/center_nifti.md).
-    It is highly recommended to follow this recommendation but Clinica won't force you to do so.
+--8<-- "snippets/known_issues.md:center-nifti"
+    
 
 ## Outputs
 

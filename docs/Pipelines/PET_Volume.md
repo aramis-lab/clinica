@@ -35,38 +35,27 @@ clinica run pet-volume [OPTIONS] BIDS_DIRECTORY CAPS_DIRECTORY GROUP_LABEL ACQ_L
 
 where:
 
-- `BIDS_DIRECTORY` is the input folder containing the dataset in a [BIDS](../BIDS.md) hierarchy.
-- `CAPS_DIRECTORY` acts both as an input folder (where the results of the `t1-volume-*` pipeline are stored) and as the output folder containing the results in a [CAPS](../CAPS/Introduction.md) hierarchy.
-- `GROUP_LABEL` is the label of the group that is associated to the DARTEL template that you had created when running the [`t1-volume`](./T1_Volume.md) pipeline.
-- `ACQ_LABEL` is the label given to the PET acquisition, specifying the tracer used (`trc-<acq_label>`).
-- The reference region is used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio ([SUVR](../glossary.md#suvr)) map.
-It can be `cerebellumPons` or `cerebellumPons2` (used for amyloid tracers) or `pons` or `pons2` (used for FDG).
+--8<-- "snippets/cmd_inputs.md:bids_caps"
+--8<-- "snippets/cmd_inputs.md:group"
+--8<-- "snippets/cmd_inputs.md:acq"
+--8<-- "snippets/cmd_inputs.md:region"
 
-Pipeline options:
+with specific options : 
 
 - `--pvc_psf_tsv`: TSV file containing the `psf_x`, `psf_y` and `psf_z` of the PSF for each PET image. More explanation is given in [PET Introduction](./PET_Introduction.md#partial-volume-correction-pvc) page.
+    
+    ??? info "Clinica v0.3.8+"
+        Since the release of Clinica v0.3.8, the handling of PSF information in the TSV file has changed: `fwhm_x`, `fwhm_y`, `fwhm_z` columns have been replaced by `psf_x`, `psf_y`, `psf_z` and the `acq_label` column has been added.
+        Additionally, the [SUVR](../glossary.md#suvr) reference region is now a compulsory argument: it will be easier for you to modify Clinica if you want to add a custom reference region ([PET Introduction](../PET_Introduction) page).
+        Choose `cerebellumPons` for amyloid tracers or `pons` for FDG to have the previous behavior.
+
 - `--smooth`: a list of integers specifying the different isotropic full width at half maximum ([FWHM](../glossary.md#fwhm)) in millimeters to smooth the image. Default value is: 0, 8 (both without smoothing and with an isotropic smoothing of 8 mm)
 - `--reconstruction_method`: Select only images based on a [specific reconstruction method](./PET_Introduction.md#reconstruction-methods).
 
-!!! warning
-    It can happen that a [BIDS](../BIDS.md) dataset contains several [PET](../glossary.md#pet) scans for a given subject and session.
-    In this situation, these images will differ through at least one [BIDS](../BIDS.md) entity like the tracer or the reconstruction method.
-    When running the `pet-volume` pipeline, clinica will raise an error if more than one image matches the criteria provided through the command line.
-    To avoid that, it is important to specify values for these options such that a single image is selected per subject and session.
+??? info "Optional parameters common to all pipelines"
+    --8<-- "snippets/pipelines_options.md:all"
 
-!!! warning "Centering BIDS nifti"
-    The intra-subject registration of the PET image into the space of the subject’s T1-weighted MR image is very likely to fail if the images have important relative offsets.
-    In this situation, Clinica will give a warning displaying a command that should be run in order to generate a new BIDS directory with all images centered.
-    This relies on the IOTool [center-nifti](../IOTools/center_nifti.md).
-    It is highly recommended to follow this recommendation but Clinica won't force you to do so.
-
-!!! info
-    Since the release of Clinica v0.3.8, the handling of PSF information in the TSV file has changed: `fwhm_x`, `fwhm_y`, `fwhm_z` columns have been replaced by `psf_x`, `psf_y`, `psf_z` and the `acq_label` column has been added.
-    Additionally, the [SUVR](../glossary.md#suvr) reference region is now a compulsory argument: it will be easier for you to modify Clinica if you want to add a custom reference region ([PET Introduction](../PET_Introduction) page).
-    Choose `cerebellumPons` for amyloid tracers or `pons` for FDG to have the previous behavior.
-
-!!! note
-    The arguments common to all Clinica pipelines are described in [Interacting with clinica](../../InteractingWithClinica).
+--8<-- "snippets/known_issues.md:several_pet"
 
 !!! tip
     Do not hesitate to type `clinica run pet-volume --help` to see the full list of parameters.

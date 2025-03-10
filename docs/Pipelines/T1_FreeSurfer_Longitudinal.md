@@ -36,16 +36,20 @@ clinica run t1-freesurfer-longitudinal [OPTIONS] CAPS_DIRECTORY
 where:
 
 - `CAPS_DIRECTORY` is the input/output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
-If you want to run the pipeline on a subset of your dataset, you can use the `-tsv` flag to specify in a TSV file the participants and the corresponding sessions of interest.
 
-!!! note
-    The computational time for one subject is around 6-8 hours (creation of the unbiased template) + 2-5 hours per corresponding session.
+with specific options :
+
+--8<-- "snippets/pipelines_options.md:freesurfer"
+
+??? info "Optional parameters common to all pipelines"
+    --8<-- "snippets/pipelines_options.md:all"
+
+!!! note "Computational time"
+    The computational time for one subject is around **6-8 hours** (creation of the unbiased template) + **2-5 hours** per corresponding session.
     The code execution speed depends on your CPU and the quality of your input T1 volumes.
     Please be aware that even though the pipeline runs in parallel, processing many subjects and sessions (e.g. ADNI dataset) is time consuming.
 
-!!! note
-    If you wish to obtain your results with another atlas, you can specify the option -ap/--atlas_path with the path to the atlas folder. Your atlas will need to be in FreeSurfer `gcs` format (e.g `hemisphere.atlasname_6p0.gcs`). The results will be stored in the same folder as the original results (additional files in `labels`, `stats` and `regional measures`).
-
+## Known issues with FreeSurfer and paths length
 ??? warning "Case when longitudinal correction is performed on macOS"
     If your run the `t1-freesurfer-longitudinal` pipeline on macOS, you will see warning messages when longitudinal correction is performed e.g.:
 
@@ -97,6 +101,20 @@ If you want to run the pipeline on a subset of your dataset, you can use the `-t
     When one session is used for template creation, FreeSurfer (`recon-all -base`) may crash if it has to handle a very long path.
     The workaround we are currently using is that when one time point is detected for a given participant, FreeSurfer will be run in a temporary folder (e.g. `/tmp/tmp<hash>`) instead of `<path_to_wd>/t1-freesurfer-template/ReconAll`.
     Then, the results will be copied to the working directory before the temporary folder is deleted.
+
+??? failure "Known error with FreeSurfer on Linux : buffer overflow"
+    If you are running the `t1-freesurfer-longitudinal` pipeline on Linux, it might crash with this error message : 
+
+    ```console
+    *** buffer overflow detected ***: terminated
+    Abort (core dumped)
+    Wed Feb 26 11:43:21 CET 2025
+    ERROR: vertexvol
+    mris_convert --volume sub-MIRIAD215_ses-1a. long.sub-MIRIAD215_long-lalb lh /localdrive10TB/users/matthieu.joulot/data/miriad/processings/freesurfer/wd_trt_m/t1-freesurfer-longitud
+    sub-MIRIAD215_ses-1a_long-1alb/sub-MIRIAD215_ses-1a. long. sub-MIRIAD215_long-lalb/surf/h. volume
+    Command exited with non-zero status 1
+    ```
+    This is due to FreeSurfer way of handling long paths. A workaround is to place the working directory in a folder with the shortest absolute path possible.
 
 ## Outputs
 
@@ -179,15 +197,11 @@ The two main processing steps of the `t1-freesurfer-longitudinal` pipeline can b
 
 - **Template creation**
 
-    Command line:
-
     ```Text
     clinica run t1-freesurfer-template [OPTIONS] CAPS_DIRECTORY
     ```
 
 - **Longitudinal correction**
-
-    Command line:
 
     ```Text
     clinica run t1-freesurfer-longitudinal-correction CAPS_DIRECTORY
