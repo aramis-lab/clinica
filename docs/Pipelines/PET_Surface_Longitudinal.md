@@ -55,22 +55,11 @@ More explanation is given in [PET Introduction](../PET_Introduction) page.
         `EffectiveResolutionAxial` is replaced by `psf_z` and the `acq_label` column has been added. Additionally, the SUVR reference region is now a compulsory argument:
         it will be easier for you to modify Clinica if you want to add a custom reference region ([PET Introduction](../PET_Introduction) page). Choose `cerebellumPons` for amyloid tracers or `pons` for FDG to have the previous behavior.
 
-with specific options : 
-
-- `-np`: This parameter specifies the number of threads to run in parallel.
-We recommend using `your_number_of_cpu - 1`.
-Please note that PETPVC is extremely demanding in terms of resources and
-may cause the pipeline to crash if many subjects happen to be partial volume corrected at the same time
-(Error : `Failed to allocate memory for image`).
-To mitigate this issue, you can do the following:
-
-    1) Use a working directory when you launch Clinica.
-
-    2) If the pipeline crashed, just launch again the command (while giving the same working directory).
-    The whole processing will continue where it left (you can reduce the number of threads to run in parallel the second time).
-
+  
 ??? info "Optional parameters common to all pipelines"
     --8<-- "snippets/pipelines_options.md:all"
+
+--8<-- "snippets/known_issues.md:petpvc"
 
 !!! tip
     Do not hesitate to type `clinica run pet-surface-longitudinal --help` to see the full list of parameters.

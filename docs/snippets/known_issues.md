@@ -46,3 +46,15 @@ Those events are unpredictable. In case it occurs to you, please do the followin
     When running the PET pipeline, clinica will raise an error if more than one image matches the criteria provided through the command line.
     To avoid that, it is important to specify values for these options such that a single image is selected per subject and session.
 --8<-- [end:several_pet]
+
+
+--8<-- [start:petpvc]
+Please note that PETPVC is extremely demanding in terms of resources and
+may cause the pipeline to crash if many subjects happen to be partial volume corrected at the same time
+(`Error : Failed to allocate memory for image`).
+
+To mitigate this issue, you can do the following:
+
+- Use a working directory when you launch Clinica (see option `--working-directory`)
+- If the pipeline crashes, just re-launch the command with the same working directory. The whole processing will continue where it left. You can reduce the number of threads to run in parallel the second time.
+--8<-- [end:petpvc]

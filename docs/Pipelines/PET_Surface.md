@@ -56,13 +56,7 @@ with specific options :
 ??? info "Optional parameters common to all pipelines"
     --8<-- "snippets/pipelines_options.md:all"
 
-Please note that PETPVC is extremely demanding in terms of resources and may cause the pipeline to crash if many subjects happen to be partial volume corrected at the same time (Error : `Failed to allocate memory for image`).
-To mitigate this issue, you can do the following:
-
-    1) Use a working directory when you launch Clinica.
-
-    2) If the pipeline crashed, just launch again the command (while giving the same working directory).
-    The whole processing will continue where it left (you can reduce the number of threads to run in parallel the second time).
+--8<-- "snippets/known_issues.md:petpvc"
 
 !!! tip
     Do not hesitate to type `clinica run pet-surface --help` to see the full list of parameters.

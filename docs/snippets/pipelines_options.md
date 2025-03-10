@@ -32,7 +32,7 @@ For the pipelines that generate many files, such as `dwi-preprocessing` (especia
 - `-np` / `--n_procs`
 
 This flag allows you to exploit several cores of your machine to run pipelines in parallel, which is very useful when dealing with numerous subjects and multiple sessions.
-Thanks to [Nipype](https://nipype.readthedocs.io/en/latest/), even for a single subject, a pipeline can be run in parallel by exploiting the cores available to process simultaneously independent sub-parts.
+Thanks to [Nipype](https://nipype.readthedocs.io/en/latest/), even for a single subject, a pipeline can be run in parallel by exploiting the cores available to process simultaneously independent sub-parts. We recommend using `your_number_of_cpu - 1` for costly pipelines such as `pet-surface-longitudinal`. 
 
 If you do not specify `-np` / `--n_procs` flag, Clinica will detect the number of threads to run in parallel and propose the adequate number of threads to the user.
 
