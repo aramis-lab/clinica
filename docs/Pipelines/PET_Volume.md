@@ -46,10 +46,10 @@ Pipeline options:
 
 - `--pvc_psf_tsv`: TSV file containing the `psf_x`, `psf_y` and `psf_z` of the PSF for each PET image. More explanation is given in [PET Introduction](./PET_Introduction.md#partial-volume-correction-pvc) page.
     
-??? info "Clinica v0.3.8+"
-    Since the release of Clinica v0.3.8, the handling of PSF information in the TSV file has changed: `fwhm_x`, `fwhm_y`, `fwhm_z` columns have been replaced by `psf_x`, `psf_y`, `psf_z` and the `acq_label` column has been added.
-    Additionally, the [SUVR](../glossary.md#suvr) reference region is now a compulsory argument: it will be easier for you to modify Clinica if you want to add a custom reference region ([PET Introduction](../PET_Introduction) page).
-    Choose `cerebellumPons` for amyloid tracers or `pons` for FDG to have the previous behavior.
+    ??? info "Clinica v0.3.8+"
+        Since the release of Clinica v0.3.8, the handling of PSF information in the TSV file has changed: `fwhm_x`, `fwhm_y`, `fwhm_z` columns have been replaced by `psf_x`, `psf_y`, `psf_z` and the `acq_label` column has been added.
+        Additionally, the [SUVR](../glossary.md#suvr) reference region is now a compulsory argument: it will be easier for you to modify Clinica if you want to add a custom reference region ([PET Introduction](../PET_Introduction) page).
+        Choose `cerebellumPons` for amyloid tracers or `pons` for FDG to have the previous behavior.
 
 - `--smooth`: a list of integers specifying the different isotropic full width at half maximum ([FWHM](../glossary.md#fwhm)) in millimeters to smooth the image. Default value is: 0, 8 (both without smoothing and with an isotropic smoothing of 8 mm)
 - `--reconstruction_method`: Select only images based on a [specific reconstruction method](./PET_Introduction.md#reconstruction-methods).
