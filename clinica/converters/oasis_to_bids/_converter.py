@@ -53,6 +53,7 @@ class OasisToBids(Converter):
         clinical_data_dir: Path,
         n_procs: Optional[int] = 1,
     ):
+        self._create_modality_agnostic_files(destination_dir)
         self.convert_images(source_dir, destination_dir, n_procs=n_procs)
         self.convert_clinical_data(clinical_data_dir, destination_dir)
 
@@ -71,7 +72,6 @@ class OasisToBids(Converter):
         self._create_participants_tsv(clinical_data_dir, bids_dir, bids_ids)
         self._create_sessions_tsv(clinical_data_dir, bids_dir, bids_ids)
         self._create_scans_tsv(bids_dir)
-        self._create_modality_agnostic_files(bids_dir)
 
     def _create_participants_tsv(
         self,
@@ -125,7 +125,8 @@ class OasisToBids(Converter):
 
         write_scans_tsv(bids_dir)
 
-    def _create_modality_agnostic_files(self, bids_dir: Path):
+    @staticmethod
+    def _create_modality_agnostic_files(bids_dir: Path):
         from clinica.converters._utils import write_modality_agnostic_files
         from clinica.converters.study_models import StudyName
 

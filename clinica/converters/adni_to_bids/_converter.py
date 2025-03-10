@@ -61,6 +61,31 @@ class AdniToBids(Converter):
 
         check_software(ThirdPartySoftware.DCM2NIIX)
 
+    @staticmethod
+    def _create_modality_agnostic_files(bids_dir: Path):
+        from clinica.converters.study_models import StudyName
+        from clinica.utils.stream import cprint
+
+        from .._utils import write_modality_agnostic_files
+
+        cprint("Creating modality agnostic files...", lvl="info")
+        readme_data = {
+            "link": "http://adni.loni.usc.edu",
+            "desc": (
+                "ADNI is a global research effort that actively supports the investigation and development of "
+                "treatments that slow or stop the progression of Alzheimer's disease (AD).This multisite, longitudinal "
+                "study assesses clinical, imaging, genetic and biospecimen biomarkers through the process of normal "
+                "aging to mild cognitive impairment (MCI) and AD dementia.With established, standardized methods for "
+                "imaging and biomarker collection and analysis, ADNI facilitates a way for scientists to conduct "
+                "cohesive research and share compatible data with other researchers around the world."
+            ),
+        }
+        write_modality_agnostic_files(
+            study_name=StudyName.ADNI,
+            readme_data=readme_data,
+            bids_dir=bids_dir,
+        )
+
     def convert_clinical_data(
         self,
         clinical_data_dir: Path,
@@ -85,7 +110,7 @@ class AdniToBids(Converter):
         )
         from clinica.utils.stream import cprint
 
-        from .._utils import create_participants_df, write_modality_agnostic_files
+        from .._utils import create_participants_df
         from ._json import create_json_metadata
         from ._utils import (
             correct_diagnosis_sc_adni3,
@@ -99,6 +124,7 @@ class AdniToBids(Converter):
             cprint(msg, lvl="error")
             raise FileNotFoundError(msg)
         conversion_path = out_path / "conversion_info"
+        self._create_modality_agnostic_files(out_path)
 
         if clinical_data_only:
             bids_ids, bids_subjects_paths = _get_bids_subjects_info(
@@ -110,24 +136,6 @@ class AdniToBids(Converter):
             bids_ids = get_subjects_from_bids_dataset(out_path)
             bids_subjects_paths = get_paths_to_subjects_in_bids_dataset(out_path)
 
-        # -- Creation of modality agnostic files --
-        cprint("Creating modality agnostic files...", lvl="info")
-        readme_data = {
-            "link": "http://adni.loni.usc.edu",
-            "desc": (
-                "ADNI is a global research effort that actively supports the investigation and development of "
-                "treatments that slow or stop the progression of Alzheimer's disease (AD).This multisite, longitudinal "
-                "study assesses clinical, imaging, genetic and biospecimen biomarkers through the process of normal "
-                "aging to mild cognitive impairment (MCI) and AD dementia.With established, standardized methods for "
-                "imaging and biomarker collection and analysis, ADNI facilitates a way for scientists to conduct "
-                "cohesive research and share compatible data with other researchers around the world."
-            ),
-        }
-        write_modality_agnostic_files(
-            study_name=StudyName.ADNI,
-            readme_data=readme_data,
-            bids_dir=out_path,
-        )
         # -- Creation of participant.tsv --
         cprint("Creating participants.tsv...", lvl="info")
         participants_df = create_participants_df(
