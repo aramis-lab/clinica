@@ -250,11 +250,11 @@ def test_get_first_img(tmp_path: Path) -> None:
     folder_2_path = tmp_path / "folder_2"
 
     (folder_1_path).mkdir()
-    (folder_1_path / "file_1.img").touch()
+    (folder_1_path / "file_1.txt").touch()
     (folder_1_path / "file_2.img").touch()
     (folder_2_path).mkdir()
 
-    assert get_first_img(folder_1_path) == (folder_1_path / "file_1.img")
+    assert get_first_img(folder_1_path) == (folder_1_path / "file_2.img")
 
     with pytest.raises(FileNotFoundError):
         get_first_img(folder_2_path)
