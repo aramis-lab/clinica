@@ -365,9 +365,14 @@ def write_sessions(
     clinical_data : Dataframe containing the formatted clinical data of the IXI study.
     participant : Current converted subject study id (str).
     """
-    line = clinical_data[clinical_data["source_id"] == participant]
+    to_write = clinical_data[clinical_data["source_id"] == participant][
+        ["source_id", "session_id", "acq_time"]
+    ]
+    if to_write.empty:
+        to_write.loc[0, "source_id"] = participant
+        to_write.fillna("n/a", inplace=True)
     bids_id = bids_id_factory(StudyName.IXI).from_original_study_id(participant)
-    line[["source_id", "session_id", "acq_time"]].to_csv(
+    to_write.to_csv(
         bids_dir / bids_id / f"{bids_id}_sessions.tsv", sep="\t", index=False
     )
 

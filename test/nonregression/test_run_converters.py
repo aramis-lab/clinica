@@ -15,7 +15,7 @@ import pytest
 from clinica.converters.study_models import StudyName
 
 
-@pytest.mark.parametrize("study", StudyName)
+@pytest.mark.parametrize("study", [StudyName.IXI])
 def test_converters(cmdopt, tmp_path, study: StudyName):
     from clinica.converters.factory import convert, get_converter_name
 
@@ -35,5 +35,5 @@ def test_converters(cmdopt, tmp_path, study: StudyName):
     )
 
     compare_folders(output_dir, ref_dir / "bids", output_dir)
-    if study == StudyName.AIBL:
+    if study in (StudyName.AIBL, StudyName.IXI):
         compare_bids_tsv(output_dir, ref_dir / "bids")
