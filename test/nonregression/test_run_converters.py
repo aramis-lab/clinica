@@ -35,5 +35,5 @@ def test_converters(cmdopt, tmp_path, study: StudyName):
     )
 
     compare_folders(output_dir, ref_dir / "bids", output_dir)
-    if study in (StudyName.AIBL, StudyName.IXI):
+    if study in (StudyName.AIBL, StudyName.IXI, StudyName.OASIS):
         compare_bids_tsv(output_dir, ref_dir / "bids")
