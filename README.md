@@ -2,8 +2,8 @@
 <!-- markdownlint-disable MD033 -->
 
 <h1 align="center">
-  <a href="http://www.clinica.run">
-    <img src="http://www.clinica.run/assets/images/clinica-icon-257x257.png" alt="Logo" width="120" height="120">
+  <a href="https://www.clinica.run">
+    <img src="https://www.clinica.run/assets/images/clinica-icon-257x257.png" alt="Logo" width="120" height="120">
   </a>
   <br/>
   Clinica
@@ -35,7 +35,7 @@
 </p>
 
 <p align="center">
-  <a href="http://www.clinica.run">Homepage</a> |
+  <a href="https://www.clinica.run">Homepage</a> |
   <a href="https://aramislab.paris.inria.fr/clinica/docs/public/latest/">Documentation</a> |
   <a href="https://doi.org/10.3389/fninf.2021.689675">Paper</a> |
   <a href="https://github.com/aramis-lab/clinica/discussions">Forum</a> |
@@ -55,14 +55,14 @@ most often with longitudinal follow-up.
 Clinica is command-line driven and written in Python.
 It uses the [Nipype](https://nipype.readthedocs.io/) system for pipelining and combines
 widely-used software packages for neuroimaging data analysis
-([ANTs](http://stnava.github.io/ANTs/),
+([ANTs](https://stnava.github.io/ANTs/),
 [FreeSurfer](https://surfer.nmr.mgh.harvard.edu/),
 [FSL](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki),
 [MRtrix](https://www.mrtrix.org/),
 [PETPVC](https://github.com/UCL/PETPVC),
 [SPM](https://www.fil.ion.ucl.ac.uk/spm/)), machine learning
 ([Scikit-learn](https://scikit-learn.org/stable/)) and the [BIDS
-standard](http://bids-specification.readthedocs.io/) for data organization.
+standard](https://bids-specification.readthedocs.io/) for data organization.
 
 Clinica provides tools to convert publicly available neuroimaging datasets into
 BIDS, namely:
@@ -80,7 +80,7 @@ neuroimaging data (T1-weighted MRI, diffusion MRI and PET data).
 It also provides integration between feature extraction and statistics, machine
 learning or deep learning.
 
-![ClinicaPipelines](http://www.clinica.run/img/Clinica_Pipelines_A4_2021-04-02_75dpi.jpg)
+![ClinicaPipelines](https://www.clinica.run/img/Clinica_Pipelines_A4_2021-04-02_75dpi.jpg)
 
 Clinica is also showcased as a framework for the reproducible classification of
 Alzheimer's disease using
@@ -135,7 +135,7 @@ Diagram illustrating the Clinica pipelines involved when performing a group
 comparison of FDG PET data projected on the cortical surface between patients
 with Alzheimer's disease and healthy controls from the ADNI database:
 
-![ClinicaExample](http://www.clinica.run/img/Clinica_Example_2021-04-02_75dpi.jpg)
+![ClinicaExample](https://www.clinica.run/img/Clinica_Example_2021-04-02_75dpi.jpg)
 
 1. Clinical and neuroimaging data are downloaded from the ADNI website and data
    are converted into BIDS with the [`adni-to-bids`
