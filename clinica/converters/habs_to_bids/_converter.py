@@ -218,8 +218,8 @@ def _write_bids(
         write_modality_agnostic_files,
         write_to_tsv,
     )
-    from clinica.converters.bids_dataset_description import BIDSDatasetDescription
     from clinica.converters.study_models import StudyName
+    from clinica.dataset import BIDSDatasetDescription
 
     participants = (
         clinical_data["Demographics"]

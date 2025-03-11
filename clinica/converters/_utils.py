@@ -4,7 +4,7 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import BinaryIO, List, Optional, Union
+from typing import BinaryIO, Optional, Union
 
 import pandas as pd
 
@@ -14,9 +14,6 @@ from .study_models import StudyName
 
 __all__ = [
     "create_participants_df",
-    "get_subjects_from_bids_dataset",
-    "get_sessions_from_bids_dataset",
-    "get_paths_to_subjects_in_bids_dataset",
     "json_from_dcm",
     "run_dcm2niix",
     "write_to_tsv",
@@ -219,12 +216,16 @@ def _write_bids_dataset_description(
     bids_version: Optional[str] = None,
 ) -> None:
     """Write `dataset_description.json` at the root of the BIDS directory."""
-    from .bids_dataset_description import BIDSDatasetDescription
+    from packaging.version import Version
+
+    from clinica.dataset import BIDSDatasetDescription
 
     if bids_version:
-        bids_desc = BIDSDatasetDescription(name=study_name, bids_version=bids_version)
+        bids_desc = BIDSDatasetDescription(
+            name=study_name.value, bids_version=Version(bids_version)
+        )
     else:
-        bids_desc = BIDSDatasetDescription(name=study_name)
+        bids_desc = BIDSDatasetDescription(name=study_name.value)
     with open(bids_dir / "dataset_description.json", "w") as f:
         bids_desc.write(to=f)
 
@@ -235,10 +236,10 @@ def _write_readme(
     bids_dir: Path,
 ) -> None:
     """Write `README` at the root of the BIDS directory."""
-    from .bids_readme import BIDSReadme
+    from clinica.dataset import BIDSReadme
 
     bids_readme = BIDSReadme(
-        name=study_name,
+        name=study_name.value,
         link=data_dict["link"],
         description=data_dict["desc"],
     )
@@ -288,73 +289,6 @@ def write_modality_agnostic_files(
     _write_readme(study_name, readme_data, bids_dir)
     _write_bids_validator_config(bids_dir)
     _write_bidsignore(bids_dir)
-
-
-def get_subjects_from_bids_dataset(bids_path: Path) -> List[str]:
-    """Given a BIDS compliant dataset, return the list of all the subjects available.
-
-    Parameters
-    ----------
-    bids_path : Path
-        The path to the BIDS directory.
-
-    Returns
-    -------
-    List[str] :
-        List of subject IDs available in this BIDS dataset.
-
-    See also
-    --------
-    get_bids_sess_list
-    get_bids_subjs_paths
-    """
-    return _filter_folder_names(bids_path, "sub-*")
-
-
-def _filter_folder_names(folder: Path, pattern: str) -> List[str]:
-    return [d.name for d in folder.glob(pattern) if d.is_dir()]
-
-
-def get_sessions_from_bids_dataset(subj_path: Path) -> List[str]:
-    """Given a path to a subject's folder, this function returns the list of sessions available.
-
-    Parameters
-    ----------
-    subj_path : Path
-        The path to the subject folder for which to list the sessions.
-
-    Returns
-    -------
-    List[str] :
-        The list of session names for this subject.
-
-    See also
-    --------
-    get_subjects_from_bids_dataset
-    get_paths_to_subjects_in_bids_dataset
-    """
-    return _filter_folder_names(subj_path, "ses-*")
-
-
-def get_paths_to_subjects_in_bids_dataset(bids_path: Path) -> List[Path]:
-    """Given a BIDS compliant dataset, returns the list of all paths to the subjects folders.
-
-    Parameters
-    ----------
-    bids_path : str
-        Path to the BIDS directory.
-
-    Returns
-    -------
-    List[Path] :
-        List of paths to the subjects folders.
-
-    See also
-    --------
-    get_subjects_from_bids_dataset
-    get_sessions_from_bids_dataset
-    """
-    return [d for d in bids_path.glob("sub-*") if d.is_dir()]
 
 
 def json_from_dcm(dcm_dir: Path, json_path: Path) -> None:

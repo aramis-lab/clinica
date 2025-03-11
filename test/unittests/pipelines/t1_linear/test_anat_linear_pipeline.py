@@ -3,7 +3,7 @@ import re
 import pytest
 from packaging.version import Version
 
-from clinica.utils.bids import Visit
+from clinica.dataset import Visit
 from clinica.utils.testing_utils import build_bids_directory, build_caps_directory
 
 
@@ -22,13 +22,12 @@ def test_anat_linear_pipeline_no_input_error(tmp_path):
 
 def test_anat_linear_pipeline_single_bids_input_error(tmp_path):
     from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
-    from clinica.utils.exceptions import ClinicaBIDSError
+    from clinica.utils.exceptions import ClinicaDatasetError
 
     with pytest.raises(
-        ClinicaBIDSError,
+        ClinicaDatasetError,
         match=re.escape(
-            f"The raw directory ({tmp_path}) you provided "
-            "is missing a dataset_description.json file."
+            f"The directory ({tmp_path}) you provided is missing a dataset_description.json file."
         ),
     ):
         AnatLinear(bids_directory=str(tmp_path))
@@ -36,21 +35,20 @@ def test_anat_linear_pipeline_single_bids_input_error(tmp_path):
 
 def test_anat_linear_pipeline_single_caps_input_error(tmp_path):
     from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
-    from clinica.utils.exceptions import ClinicaCAPSError
+    from clinica.utils.exceptions import ClinicaDatasetError
 
     with pytest.raises(
-        ClinicaCAPSError,
+        ClinicaDatasetError,
         match=re.escape(
-            f"The derivative directory ({tmp_path}) you provided "
-            "is missing a dataset_description.json file."
+            f"The directory ({tmp_path}) you provided is missing a dataset_description.json file."
         ),
     ):
         AnatLinear(caps_directory=str(tmp_path))
 
 
 def test_anat_linear_pipeline_write_caps_dataset_description(tmp_path):
+    from clinica.dataset import CAPSDatasetDescription, DatasetType
     from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
-    from clinica.utils.caps import CAPSDatasetDescription, DatasetType
 
     bids = build_bids_directory(tmp_path / "bids", {"sub-01": ["ses-M00"]})
     caps = build_caps_directory(tmp_path / "caps", {})

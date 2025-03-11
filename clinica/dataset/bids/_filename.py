@@ -2,39 +2,14 @@ from dataclasses import dataclass
 from enum import Enum
 from os import PathLike
 from pathlib import Path
-from typing import Dict, Tuple, Union
-
-from packaging.version import Version
+from typing import Union
 
 __all__ = [
-    "BIDSLabel",
     "BIDSFileName",
-    "BIDS_VERSION",
+    "BIDSLabel",
     "Extension",
     "Suffix",
-    "Visit",
 ]
-
-BIDS_VERSION = Version("1.7.0")
-
-
-@dataclass(frozen=True)
-class Visit:
-    subject: str
-    session: str
-
-    def __lt__(self, obj):
-        return (self.subject < obj.subject) or (
-            self.subject == obj.subject and self.session < obj.session
-        )
-
-    def __gt__(self, obj):
-        return (self.subject > obj.subject) or (
-            self.subject == obj.subject and self.session > obj.session
-        )
-
-    def __str__(self) -> str:
-        return f"{self.subject} {self.session}"
 
 
 class Extension(str, Enum):
@@ -69,9 +44,7 @@ class Suffix(str, Enum):
 
 
 class BIDSLabel(str):
-    """A BIDS label is a short string which does not contain symbols
-    used for separating entities in BIDS terminology.
-    """
+    """A BIDS label is a short string which does not contain symbols used for separating entities in BIDS terminology."""
 
     _min_size = 1
     _max_size = 100
@@ -99,7 +72,7 @@ class BIDSFileName:
     _session: BIDSLabel
     _suffix: Suffix
     _extension: Extension
-    entities: Dict[BIDSLabel, BIDSLabel]
+    entities: dict[BIDSLabel, BIDSLabel]
 
     @property
     def subject(self) -> str:
@@ -169,7 +142,7 @@ class BIDSFileName:
 
 def _tokenize_filename_no_ext(
     filename_without_extension: str,
-) -> Tuple[Dict[str, str], str]:
+) -> tuple[dict[str, str], str]:
     if "_" not in filename_without_extension:
         raise ValueError(
             f"BIDS file names have entities separated by '_'. "
@@ -196,7 +169,7 @@ def _tokenize_filename_no_ext(
     return entities, suffix
 
 
-def _split_name_from_extension(filename: Union[str, PathLike]) -> Tuple[str, str]:
+def _split_name_from_extension(filename: Union[str, PathLike]) -> tuple[str, str]:
     extension = ""
     filename = Path(filename)
     while "." in filename.name:

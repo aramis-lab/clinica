@@ -1,6 +1,5 @@
 import json
 from datetime import datetime
-from enum import Enum
 from pathlib import Path
 from typing import IO, List, MutableSequence, NewType, Optional, Union
 
@@ -10,19 +9,17 @@ from cattr.preconf.json import make_converter
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
-from clinica.converters.bids_dataset_description import get_bids_version
+from clinica.utils.check_dependency import SoftwareDependency
+from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
+from clinica.utils.stream import cprint, log_and_raise, log_and_warn
 
-from .bids import BIDS_VERSION
-from .check_dependency import SoftwareDependency
-from .exceptions import ClinicaBIDSError, ClinicaCAPSError
-from .inputs import DatasetType
-from .stream import cprint, log_and_raise, log_and_warn
+from .._dataset_type import DatasetType
+from .._versioning import VersionComparisonPolicy, are_versions_compatible
+from ..bids import BIDS_VERSION, get_bids_version
 
 __all__ = [
     "CAPS_VERSION",
     "CAPSDatasetDescription",
-    "VersionComparisonPolicy",
-    "are_versions_compatible",
     "write_caps_dataset_description",
     "build_caps_dataset_description",
 ]
@@ -31,60 +28,6 @@ __all__ = [
 CAPS_VERSION = Version("1.0.0")
 
 IsoDate = NewType("IsoDate", datetime)
-
-
-class VersionComparisonPolicy(str, Enum):
-    """Defines the different ways we can compare version numbers in Clinica.
-
-    STRICT: version numbers have to match exactly.
-    MINOR : version numbers have to have the same major and minor numbers.
-    MAJOR: version numbers only need to share the same major number.
-    """
-
-    STRICT = "strict"
-    MINOR = "minor"
-    MAJOR = "major"
-
-
-def are_versions_compatible(
-    version1: Union[str, Version],
-    version2: Union[str, Version],
-    policy: Optional[Union[str, VersionComparisonPolicy]] = None,
-) -> bool:
-    """Returns whether the two provided versions are compatible or not depending on the policy.
-
-    Parameters
-    ----------
-    version1 : str or Version
-        The first version number to compare.
-
-    version2 : str or Version
-        The second version number to compare.
-
-    policy : str or VersionComparisonPolicy, optional
-        The policy under which to compare version1 with version2.
-        By default, a strict policy is used, meaning that version
-        numbers have to match exactly.
-
-    Returns
-    -------
-    bool :
-        True if version1 is 'compatible' with version2, False otherwise.
-    """
-    if isinstance(version1, str):
-        version1 = Version(version1)
-    if isinstance(version2, str):
-        version2 = Version(version2)
-    if policy is None:
-        policy = VersionComparisonPolicy.STRICT
-    else:
-        policy = VersionComparisonPolicy(policy)
-    if policy == VersionComparisonPolicy.STRICT:
-        return version1 == version2
-    if policy == VersionComparisonPolicy.MINOR:
-        return version1.major == version2.major and version1.minor == version2.minor
-    if policy == VersionComparisonPolicy.MAJOR:
-        return version1.major == version2.major
 
 
 @define

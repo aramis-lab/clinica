@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -8,6 +9,8 @@ from pandas.testing import assert_frame_equal
 def build_bids_dir(tmp_path: Path) -> Path:
     bids_dir = tmp_path / "BIDS"
     bids_dir.mkdir()
+    with open(bids_dir / "dataset_description.json", "w") as fp:
+        json.dump({"Name": "Test", "DatasetType": "raw", "BIDSVersion": "1.7.0"}, fp)
     (bids_dir / "sub-AIBL1" / "ses-M000" / "anat").mkdir(parents=True)
     (
         bids_dir / "sub-AIBL1" / "ses-M000" / "anat" / "sub-AIBL1_ses-M000_T1w.nii.gz"

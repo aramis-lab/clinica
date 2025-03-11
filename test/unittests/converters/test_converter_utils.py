@@ -194,40 +194,6 @@ def test_create_participants_df(
     )
 
 
-def test_get_subjects_from_bids_dataset(tmp_path):
-    from clinica.converters._utils import get_subjects_from_bids_dataset
-
-    (tmp_path / "file").touch()
-    (tmp_path / "sub-03").touch()
-    (tmp_path / "folder").mkdir()
-
-    for sub in ("sub-01", "sub-02", "sub-16"):
-        (tmp_path / sub).mkdir()
-
-    assert set(get_subjects_from_bids_dataset(tmp_path)) == {
-        "sub-01",
-        "sub-02",
-        "sub-16",
-    }
-
-
-def test_get_sessions_from_bids_dataset(tmp_path):
-    from clinica.converters._utils import get_sessions_from_bids_dataset
-
-    (tmp_path / "file").touch()
-    (tmp_path / "ses-03").touch()
-    (tmp_path / "folder").mkdir()
-
-    for ses in ("ses-01", "ses-02", "ses-15"):
-        (tmp_path / ses).mkdir()
-
-    assert set(get_sessions_from_bids_dataset(tmp_path)) == {
-        "ses-01",
-        "ses-02",
-        "ses-15",
-    }
-
-
 @pytest.mark.parametrize("compress", [True, False])
 @pytest.mark.parametrize("sidecar", [True, False])
 def test_build_dcm2niix_command(tmp_path, compress: bool, sidecar: bool):
@@ -292,7 +258,7 @@ def expected_description_content(
 ) -> str:
     import json
 
-    from clinica.utils.bids import BIDS_VERSION
+    from clinica.dataset import BIDS_VERSION
 
     expected_version = BIDS_VERSION if bids_version is None else bids_version
     desc_dict = {

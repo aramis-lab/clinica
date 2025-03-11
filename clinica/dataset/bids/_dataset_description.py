@@ -7,15 +7,19 @@ from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 from cattr.preconf.json import make_converter
 from packaging.version import InvalidVersion, Version
 
-from clinica.utils.bids import BIDS_VERSION
 from clinica.utils.exceptions import ClinicaBIDSError
-from clinica.utils.inputs import DatasetType
 from clinica.utils.stream import log_and_raise
+
+from .._dataset_type import DatasetType
 
 __all__ = [
     "BIDSDatasetDescription",
     "get_bids_version",
+    "BIDS_VERSION",
 ]
+
+
+BIDS_VERSION = Version("1.7.0")
 
 
 @define

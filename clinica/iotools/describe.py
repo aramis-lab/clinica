@@ -5,11 +5,7 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
-from clinica.converters.bids_dataset_description import (
-    BIDSDatasetDescription,  # TODO: move that
-)
-from clinica.utils.caps import CAPSDatasetDescription
-from clinica.utils.inputs import DatasetType
+from clinica.dataset import BIDSDatasetDescription, CAPSDatasetDescription, DatasetType
 
 __all__ = ["describe"]
 
@@ -34,7 +30,7 @@ def describe(dataset: Union[str, Path]) -> None:
 def _is_caps(dataset: Union[str, Path]) -> bool:
     import json
 
-    from clinica.utils.inputs import DatasetType
+    from clinica.dataset import DatasetType
 
     dataset_description = Path(dataset) / "dataset_description.json"
     with open(dataset_description, "r") as fp:
