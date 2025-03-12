@@ -9,7 +9,7 @@ __all__ = [
     "create_sessions_df",
     "write_sessions_tsv",
     "write_scans_tsv",
-    "get_first_img",
+    "get_first_image",
 ]
 
 
@@ -140,7 +140,7 @@ def write_scans_tsv(bids_dir: Path) -> None:
             )
 
 
-def get_first_img(input_folder) -> str:
+def get_first_image(input_folder: Path) -> Path:
     """Get the first .img file in the folder given as parameter.
     Throw an exception if no file is found.
 
@@ -151,16 +151,17 @@ def get_first_img(input_folder) -> str:
 
     Returns
     -------
-    str :
-        img_file_path.
+    Path :
+        The path to the first image found in the provided folder.
     """
-    from clinica.utils.stream import cprint
+    from clinica.utils.stream import log_and_raise
 
     try:
         img_file_path = next(input_folder.glob("*.img"))
         return img_file_path
 
     except StopIteration:
-        msg = f"No file ending in .img found in {input_folder}."
-        cprint(msg, lvl="error")
-        raise FileNotFoundError(msg)
+        log_and_raise(
+            f"No file ending in .img found in {input_folder}.",
+            FileNotFoundError,
+        )

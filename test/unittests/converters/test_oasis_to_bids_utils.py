@@ -243,21 +243,28 @@ def test_write_scans_tsv(tmp_path, bids_dir: Path) -> None:
                 assert file.empty
 
 
-def test_get_first_img(tmp_path: Path) -> None:
-    from clinica.converters.oasis_to_bids._utils import get_first_img
+def test_get_first_image(tmp_path: Path) -> None:
+    from clinica.converters.oasis_to_bids._utils import get_first_image
 
-    folder_1_path = tmp_path / "folder_1"
-    folder_2_path = tmp_path / "folder_2"
+    folder_path = tmp_path / "folder"
 
-    (folder_1_path).mkdir()
-    (folder_1_path / "file_1.txt").touch()
-    (folder_1_path / "file_2.img").touch()
-    (folder_2_path).mkdir()
+    (folder_path).mkdir()
+    (folder_path / "file_1.txt").touch()
+    (folder_path / "file_2.img").touch()
 
-    assert get_first_img(folder_1_path) == (folder_1_path / "file_2.img")
+    assert get_first_image(folder_path) == (folder_path / "file_2.img")
 
-    with pytest.raises(FileNotFoundError):
-        get_first_img(folder_2_path)
+
+def test_image_not_found(tmp_path: Path) -> None:
+    from clinica.converters.oasis_to_bids._utils import get_first_image
+
+    folder_path = tmp_path / "folder"
+    (folder_path).mkdir()
+
+    with pytest.raises(
+        FileNotFoundError, match=f"No file ending in .img found in {folder_path}."
+    ):
+        get_first_image(folder_path)
 
 
 @pytest.mark.parametrize(

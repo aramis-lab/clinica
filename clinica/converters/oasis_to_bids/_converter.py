@@ -148,11 +148,11 @@ class OasisToBids(Converter):
 
     @staticmethod
     def convert_single_subject(subj_folder: Path, dest_dir: Path):
-        from _utils import get_first_img
-
         from clinica.cmdline import setup_clinica_logging
         from clinica.converters.study_models import StudyName, bids_id_factory
         from clinica.utils.stream import cprint
+
+        from ._utils import get_first_image
 
         # This function is executed in a multiprocessing context
         # such that we need to re-configure the clinica logger in the child processes.
@@ -174,7 +174,7 @@ class OasisToBids(Converter):
             (session_folder / "anat").mkdir(parents=True, exist_ok=True)
 
         # In order do convert the Analyze format to Nifti the path to the .img file is required
-        img_file_path = get_first_img(t1_folder)
+        img_file_path = get_first_image(t1_folder)
 
         nb.save(
             _get_image_with_good_orientation(img_file_path),
