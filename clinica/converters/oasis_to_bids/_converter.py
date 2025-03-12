@@ -174,11 +174,11 @@ class OasisToBids(Converter):
             (session_folder / "anat").mkdir(parents=True, exist_ok=True)
 
         # In order do convert the Analyze format to Nifti the path to the .img file is required
-        img_file_path = get_first_image(t1_folder)
-
         nb.save(
-            _get_image_with_good_orientation(img_file_path),
-            session_folder / "anat" / f"{participant_id}_ses-M000_T1w.nii.gz",
+            _get_image_with_good_orientation(
+                get_first_image(t1_folder),
+                session_folder / "anat" / f"{participant_id}_ses-M000_T1w.nii.gz",
+            )
         )
 
     def convert_images(
