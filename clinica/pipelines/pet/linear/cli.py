@@ -9,6 +9,7 @@ from clinica.pipelines.engine import clinica_pipeline
 pipeline_name = "pet-linear"
 
 
+# todo : no caps name ?
 @clinica_pipeline
 @click.command(name=pipeline_name)
 @cli_param.argument.bids_directory
@@ -17,12 +18,7 @@ pipeline_name = "pet-linear"
 @cli_param.argument.suvr_reference_region
 @cli_param.option_group.pipeline_specific_options
 @cli_param.option.reconstruction_method
-@cli_param.option.option(
-    "-ui",
-    "--uncropped_image",
-    is_flag=True,
-    help="Do not crop the image with template (cropped image are suggested for using with DL models)",
-)
+@cli_param.option.uncropped
 @cli_param.option.option(
     "--save_pet_in_t1w_space",
     is_flag=True,

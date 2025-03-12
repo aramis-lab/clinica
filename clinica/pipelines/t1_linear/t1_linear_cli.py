@@ -14,24 +14,15 @@ pipeline_name = "t1-linear"
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
 @cli_param.option_group.pipeline_specific_options
-@cli_param.option.option(
-    "-ui",
-    "--uncropped_image",
-    is_flag=True,
-    help="Do not crop the image with template (cropped image are suggested for using with DL models)",
-)
+@cli_param.option.uncropped
 @cli_param.option.random_seed
+@cli_param.option.antspy
 @cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
+@cli_param.option.caps_name
 @option.global_option_group
 @option.n_procs
-@cli_param.option.option(
-    "--use-antspy",
-    is_flag=True,
-    help="Use ANTsPy instead of ANTs.",
-)
-@cli_param.option.caps_name
 def cli(
     bids_directory: str,
     caps_directory: str,
