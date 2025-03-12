@@ -155,6 +155,8 @@ class OasisToBids(Converter):
         from clinica.converters.study_models import StudyName, bids_id_factory
         from clinica.utils.stream import cprint
 
+        from ._utils import get_first_image
+
         # This function is executed in a multiprocessing context
         # such that we need to re-configure the clinica logger in the child processes.
         # Note that logging messages could easily be lost (for example when logging
@@ -173,15 +175,10 @@ class OasisToBids(Converter):
         session_folder = bids_subj_folder / "ses-M000"
         if not session_folder.is_dir():
             (session_folder / "anat").mkdir(parents=True, exist_ok=True)
+
         # In order do convert the Analyze format to Nifti the path to the .img file is required
-        try:
-            img_file_path = next(t1_folder.glob("*.img"))
-        except StopIteration:
-            msg = f"No file ending in .img found in {t1_folder}."
-            cprint(msg, lvl="error")
-            raise FileNotFoundError(msg)
         nb.save(
-            _get_image_with_good_orientation(img_file_path),
+            _get_image_with_good_orientation(get_first_image(t1_folder)),
             session_folder / "anat" / f"{participant_id}_ses-M000_T1w.nii.gz",
         )
 

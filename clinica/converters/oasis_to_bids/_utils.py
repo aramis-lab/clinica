@@ -5,7 +5,12 @@ import pandas as pd
 
 from clinica.converters.study_models import StudyName, bids_id_factory
 
-__all__ = ["create_sessions_df", "write_sessions_tsv", "write_scans_tsv"]
+__all__ = [
+    "create_sessions_df",
+    "write_sessions_tsv",
+    "write_scans_tsv",
+    "get_first_image",
+]
 
 
 def _convert_cdr_to_diagnosis(cdr: Union[int, str]) -> str:
@@ -133,3 +138,30 @@ def write_scans_tsv(bids_dir: Path) -> None:
                 sep="\t",
                 index=False,
             )
+
+
+def get_first_image(input_folder: Path) -> Path:
+    """Get the first .img file in the folder given as parameter.
+    Throw an exception if no file is found.
+
+    Parameters
+    ----------
+    input_folder : Path
+        The path to the input folder.
+
+    Returns
+    -------
+    Path :
+        The path to the first image found in the provided folder.
+    """
+    from clinica.utils.stream import log_and_raise
+
+    try:
+        img_file_path = next(input_folder.glob("*.img"))
+        return img_file_path
+
+    except StopIteration:
+        log_and_raise(
+            f"No file ending in .img found in {input_folder}.",
+            FileNotFoundError,
+        )
