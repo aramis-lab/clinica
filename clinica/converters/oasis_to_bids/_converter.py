@@ -148,11 +148,11 @@ class OasisToBids(Converter):
 
     @staticmethod
     def convert_single_subject(subj_folder: Path, dest_dir: Path):
+        from _utils import get_first_img
+
         from clinica.cmdline import setup_clinica_logging
         from clinica.converters.study_models import StudyName, bids_id_factory
         from clinica.utils.stream import cprint
-
-        from .._utils import get_first_img
 
         # This function is executed in a multiprocessing context
         # such that we need to re-configure the clinica logger in the child processes.
