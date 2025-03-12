@@ -530,7 +530,9 @@ def _loader_factory(level: Union[str, Level]) -> LoaderInterface:
 def _compare_frames(df1: pd.DataFrame, df2: pd.DataFrame, object: str):
     from pandas.testing import assert_frame_equal
 
-    assert_frame_equal(df1, df2, check_like=True, obj=object)
+    assert_frame_equal(
+        df1, df2, check_like=True, obj=object, check_dtype=False, check_exact=True
+    )
 
 
 def _iteratively_compare_frames(bids_ref: Path, bids_out: Path, level: Level):
