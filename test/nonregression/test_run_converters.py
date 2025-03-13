@@ -41,5 +41,7 @@ def test_converters(cmdopt, tmp_path, study: StudyName):
         StudyName.HABS,
         StudyName.NIFD,
         StudyName.OASIS3,
+        StudyName.GENFI,
+        StudyName.OASIS3,
     ):
         compare_bids_tsv(output_dir, ref_dir / "bids")
