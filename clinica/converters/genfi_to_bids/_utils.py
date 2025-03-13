@@ -818,8 +818,20 @@ def write_bids(
         participants.reset_index()
         .drop(["session_id", "modality", "run_num", "bids_filename", "source"], axis=1)
         .drop_duplicates()
-        .set_index("participant_id")
     )
+
+    for participant, size in participants.groupby(["participant_id"]).size().items():
+        if size > 1:
+            participants.drop(
+                participants[
+                    (participants["participant_id"] == participant)
+                    * (participants.isna().any(axis=1))
+                ].index,
+                inplace=True,
+            )
+
+    participants.set_index("participant_id", inplace=True)
+
     with fs.transaction:
         with fs.open(to / "dataset_description.json", "w") as dataset_description_file:
             BIDSDatasetDescription(name="GENFI").write(to=dataset_description_file)
@@ -835,7 +847,9 @@ def write_bids(
         with fs.open(sessions_filepath, "w") as sessions_file:
             write_to_tsv(sessions, sessions_file)
     scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
+
     for bids_full_path, metadata in scans.iterrows():
+        metadata.rename({"bids_filename": "filename"}, inplace=True)
         bids_full_path = Path(bids_full_path)
         try:
             os.makedirs(to / bids_full_path.parent)
@@ -844,7 +858,7 @@ def write_bids(
         dcm2niix_success = run_dcm2niix(
             Path(metadata["source_path"]).parent,
             to / Path(bids_full_path).parent,
-            metadata["bids_filename"],
+            metadata["filename"],
             True,
         )
         if dcm2niix_success:
@@ -852,7 +866,7 @@ def write_bids(
                 to
                 / str(metadata.participant_id)
                 / str(metadata.session_id)
-                / f"{metadata.participant_id}_{metadata.session_id}_scan.tsv"
+                / f"{metadata.participant_id}_{metadata.session_id}_scans.tsv"
             )
             row_to_write = _serialize_row(
                 metadata.drop(["participant_id", "session_id"]),
@@ -860,10 +874,7 @@ def write_bids(
             )
             with open(scans_filepath, "a") as scans_file:
                 scans_file.write(f"{row_to_write}\n")
-            if (
-                "dwi" in metadata["bids_filename"]
-                and "Philips" in metadata.manufacturer
-            ):
+            if "dwi" in metadata["filename"] and "Philips" in metadata.manufacturer:
                 _merge_philips_diffusion(
                     to / bids_full_path.with_suffix(".json"),
                     metadata.number_of_parts,
