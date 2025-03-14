@@ -611,15 +611,17 @@ def bids_pet_nii(
 
     description = f"PET data"
     trc = ""
+    rec = ""
+
     if tracer is not None:
         tracer = Tracer(tracer)
         trc = f"_trc-{tracer.value}"
         description += f" with {tracer.value} tracer"
-    rec = ""
+        rec = "*"
     if reconstruction is not None:
         reconstruction = ReconstructionMethod(reconstruction)
         rec = f"_rec-{reconstruction.value}"
-        description += f" and reconstruction method {reconstruction.value}"
+        description += f" with reconstruction method {reconstruction.value}"
 
     return {
         "pattern": Path("pet") / f"*{trc}{rec}_pet.nii*",
