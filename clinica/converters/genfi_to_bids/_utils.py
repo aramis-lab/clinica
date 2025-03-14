@@ -780,6 +780,28 @@ def _compute_bids_full_path(df: DataFrame) -> DataFrame:
     )
 
 
+def _drop_duplicate_line_with_nans(participants: pd.DataFrame) -> pd.DataFrame:
+    # Specific to participants metadata file in GENFI :
+    # There can subsist two lines per participant in case one holds the information and one holds some nans ;
+    # It is not recommended to just use dropna() since it is possible there is no information for one subject, which would be lost
+    # The proposed solution here drops the line with nans if there is another line for the participant.
+    if "participant_id" not in participants.columns:
+        raise ValueError(
+            "Column participant_id was not found in the participants tsv while it is required by BIDS specifications."
+        )
+
+    for participant, size in participants.groupby(["participant_id"]).size().items():
+        if size > 1:
+            participants.drop(
+                participants[
+                    (participants["participant_id"] == participant)
+                    * (participants.isna().any(axis=1))
+                ].index,
+                inplace=True,
+            )
+    return participants
+
+
 def write_bids(
     to: Path,
     participants: DataFrame,
@@ -823,18 +845,9 @@ def write_bids(
         .drop(["session_id", "modality", "run_num", "bids_filename", "source"], axis=1)
         .drop_duplicates()
     )
-
-    for participant, size in participants.groupby(["participant_id"]).size().items():
-        if size > 1:
-            participants.drop(
-                participants[
-                    (participants["participant_id"] == participant)
-                    * (participants.isna().any(axis=1))
-                ].index,
-                inplace=True,
-            )
-
-    participants.set_index("participant_id", inplace=True)
+    participants = _drop_duplicate_line_with_nans(participants).set_index(
+        "participant_id"
+    )
 
     with fs.transaction:
         with fs.open(to / "dataset_description.json", "w") as dataset_description_file:
