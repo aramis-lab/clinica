@@ -40,30 +40,40 @@ def test_aggregator():
         toy_func_3((1, 2, 3), z=(4, 5))
 
 
-def test_bids_pet_nii_empty():
+@pytest.mark.parametrize(
+    "tracer, reconstruction, expected",
+    [
+        (None, None, {"pattern": Path("pet/*_pet.nii*"), "description": "PET data"}),
+        (
+            Tracer.FDG,
+            None,
+            {
+                "pattern": Path("pet/*_trc-18FFDG*_pet.nii*"),
+                "description": "PET data with 18FFDG tracer",
+            },
+        ),
+        (
+            None,
+            ReconstructionMethod.STATIC,
+            {
+                "pattern": Path("pet/*_rec-nacstat_pet.nii*"),
+                "description": "PET data with reconstruction method nacstat",
+            },
+        ),
+        (
+            "11CPIB",
+            "coregavg",
+            {
+                "pattern": Path("pet/*_trc-11CPIB_rec-coregavg_pet.nii*"),
+                "description": "PET data with 11CPIB tracer with reconstruction method coregavg",
+            },
+        ),
+    ],
+)
+def test_bids_pet_nii(tracer, reconstruction, expected):
     from clinica.utils.input_files import bids_pet_nii
 
-    assert bids_pet_nii() == {
-        "pattern": Path("pet") / "*_pet.nii*",
-        "description": "PET data",
-    }
-
-
-@pytest.fixture
-def expected_bids_pet_query(tracer, reconstruction):
-    return {
-        "pattern": Path("pet")
-        / f"*_trc-{tracer.value}_rec-{reconstruction.value}_pet.nii*",
-        "description": f"PET data with {tracer.value} tracer and reconstruction method {reconstruction.value}",
-    }
-
-
-@pytest.mark.parametrize("tracer", Tracer)
-@pytest.mark.parametrize("reconstruction", ReconstructionMethod)
-def test_bids_pet_nii(tracer, reconstruction, expected_bids_pet_query):
-    from clinica.utils.input_files import bids_pet_nii
-
-    assert bids_pet_nii(tracer, reconstruction) == expected_bids_pet_query
+    assert bids_pet_nii(tracer, reconstruction) == expected
 
 
 @pytest.mark.parametrize("dti_measure", DTIBasedMeasure)
