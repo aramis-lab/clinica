@@ -30,15 +30,6 @@ def convert(
     bids_dir = validate_input_path(bids_dir, check_exist=False)
     path_to_clinical = validate_input_path(path_to_clinical)
     if subjects:
-        """
-        cprint(
-            (
-                f"Subject filtering is not yet implemented in {get_converter_name(StudyName.OASIS)} converter. "
-                "All subjects available will be converted."
-            ),
-            lvl="warning",
-        )
-        """
         subjects = validate_input_path(subjects)
 
     OasisToBids().convert(
