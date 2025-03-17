@@ -10,12 +10,14 @@ from clinica.converters import cli_param
 @cli_param.dataset_directory
 @cli_param.clinical_data_directory
 @cli_param.bids_directory
+@cli_param.subjects_list
 @option.global_option_group
 @option.n_procs
 def cli(
     dataset_directory: str,
     clinical_data_directory: str,
     bids_directory: str,
+    subjects_list: Optional[str] = None,
     n_procs: Optional[int] = None,
 ) -> None:
     """OASIS to BIDS converter.
@@ -30,6 +32,7 @@ def cli(
         dataset_directory,
         bids_directory,
         clinical_data_directory,
+        subjects=subjects_list,
         n_procs=n_procs,
     )
 

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterable, Union
+from typing import Iterable, List, Optional, Union
 
 import nibabel as nb
 import numpy as np
@@ -8,12 +8,74 @@ import pandas as pd
 from clinica.converters.study_models import StudyName, bids_id_factory
 
 __all__ = [
+    "get_subjects_list",
     "create_sessions_df",
     "write_sessions_tsv",
     "write_scans_tsv",
     "get_first_image",
     "get_image_with_good_orientation",
 ]
+
+
+def _define_subjects_list(
+    source_dir: Path,
+    subjs_list_path: Optional[Path] = None,
+) -> List[Path]:
+    import re
+
+    from clinica.utils.stream import cprint
+
+    rgx = re.compile(r"OAS1_\d{4}_MR1")
+
+    if subjs_list_path:
+        cprint("Loading a subjects lists provided by the user...")
+        return list(
+            filter(
+                lambda path: path.is_dir(),
+                list(
+                    map(
+                        Path,
+                        [
+                            source_dir / subj
+                            for subj in list(
+                                filter(
+                                    rgx.fullmatch,
+                                    subjs_list_path.read_text().splitlines(),
+                                )
+                            )
+                        ],
+                    )
+                ),
+            )
+        )
+
+    cprint(f"Using the subjects contained in the OASIS dataset at {source_dir}")
+    return list(
+        filter(
+            lambda path: path.is_dir(),
+            list(
+                map(
+                    Path,
+                    [
+                        source_dir / subj
+                        for subj in list(
+                            filter(
+                                rgx.fullmatch,
+                                [folder.name for folder in source_dir.iterdir()],
+                            )
+                        )
+                    ],
+                )
+            ),
+        )
+    )
+
+
+def get_subjects_list(
+    source_dir: Path,
+    subjs_list_path: Optional[Path] = None,
+) -> List[Path]:
+    return _define_subjects_list(source_dir, subjs_list_path)
 
 
 def _convert_cdr_to_diagnosis(cdr: Union[int, str]) -> str:
