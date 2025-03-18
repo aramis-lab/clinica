@@ -274,7 +274,7 @@ def test_get_image_with_good_orientation(tmp_path: Path) -> None:
     from clinica.converters.oasis_to_bids._utils import get_image_with_good_orientation
 
     folder_path = tmp_path / "folder"
-    (folder_path).mkdir()
+    folder_path.mkdir()
 
     # Define an empty array saved as a Nifti image
     image_path = str(folder_path / "image.nii.gz")

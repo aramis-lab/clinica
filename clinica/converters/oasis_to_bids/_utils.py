@@ -12,6 +12,7 @@ __all__ = [
     "write_sessions_tsv",
     "write_scans_tsv",
     "get_first_image",
+    "get_image_with_good_orientation",
 ]
 
 
@@ -175,7 +176,7 @@ def get_image_with_good_orientation(image_path: Path) -> nb.Nifti1Image:
     Parameters
     ----------
     input_path : Path
-        The path to the input image.
+        The path to the input image path.
 
     Returns
     -------
