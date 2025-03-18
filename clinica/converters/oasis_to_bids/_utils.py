@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Iterable, Union
 
+import nibabel as nb
+import numpy as np
 import pandas as pd
 
 from clinica.converters.study_models import StudyName, bids_id_factory
@@ -10,6 +12,7 @@ __all__ = [
     "write_sessions_tsv",
     "write_scans_tsv",
     "get_first_image",
+    "get_image_with_good_orientation",
 ]
 
 
@@ -165,3 +168,60 @@ def get_first_image(input_folder: Path) -> Path:
             f"No file ending in .img found in {input_folder}.",
             FileNotFoundError,
         )
+
+
+def get_image_with_good_orientation(image_path: Path) -> nb.Nifti1Image:
+    """Convert an image from its path to Nifti with the correct orientation.
+
+    Parameters
+    ----------
+    image_path : Path
+        The path to the input image.
+
+    Returns
+    -------
+    nb.Nifti1Image :
+        The converted Nifti image with the correct orientation.
+    """
+    # First, convert to Nifti so that we can extract the s_form with NiBabel
+    # (NiBabel creates an 'Spm2AnalyzeImage' object that does not contain 'get_sform' method
+    img_with_wrong_orientation_analyze = nb.load(image_path)
+
+    # OASIS-1 images have the same header but sform is incorrect
+    # To solve this issue, we use header from images converted with FreeSurfer
+    # to generate a 'clean hard-coded' header
+    # affine:
+    # [[   0.    0.   -1.   80.]
+    #  [   1.    0.    0. -128.]
+    #  [   0.    1.    0. -128.]
+    #  [   0.    0.    0.    1.]]
+    # fmt: off
+    affine = np.array(
+        [
+            0, 0, -1, 80,
+            1, 0, 0, -128,
+            0, 1, 0, -128,
+            0, 0, 0, 1
+        ]
+    ).reshape(4, 4)
+    # fmt: on
+    s_form = affine.astype(np.int16)
+
+    hdr = nb.Nifti1Header()
+    hdr.set_data_shape((256, 256, 160))
+    hdr.set_data_dtype(np.int16)
+    hdr["bitpix"] = 16
+    hdr.set_sform(s_form, code="scanner")
+    hdr.set_qform(s_form, code="scanner")
+    hdr["extents"] = 16384
+    hdr["xyzt_units"] = 10
+
+    img_with_good_orientation_nifti = nb.Nifti1Image(
+        np.round(img_with_wrong_orientation_analyze.get_fdata(dtype="float32")).astype(
+            np.int16
+        ),
+        s_form,
+        header=hdr,
+    )
+    # Header correction to obtain dim0 = 3
+    return nb.funcs.four_to_three(img_with_good_orientation_nifti)[0]
