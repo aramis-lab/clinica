@@ -47,7 +47,7 @@ class OasisToBids(Converter):
         source_dir: Path,
         destination_dir: Path,
         clinical_data_dir: Path,
-        subjects: Optional[UserProvidedPath] = None,
+        subjects: Optional[Path] = None,
         n_procs: Optional[int] = 1,
     ):
         self._create_modality_agnostic_files(destination_dir)

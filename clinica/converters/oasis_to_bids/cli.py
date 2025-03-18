@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 
 import click
@@ -17,7 +18,7 @@ def cli(
     dataset_directory: str,
     clinical_data_directory: str,
     bids_directory: str,
-    subjects_list: Optional[str] = None,
+    subjects_list: Optional[Path] = None,
     n_procs: Optional[int] = None,
 ) -> None:
     """OASIS to BIDS converter.
