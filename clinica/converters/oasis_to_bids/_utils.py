@@ -175,8 +175,8 @@ def get_image_with_good_orientation(image_path: Path) -> nb.Nifti1Image:
 
     Parameters
     ----------
-    input_path : Path
-        The path to the input image path.
+    image_path : Path
+        The path to the input image.
 
     Returns
     -------

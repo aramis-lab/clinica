@@ -277,10 +277,10 @@ def test_get_image_with_good_orientation(tmp_path: Path) -> None:
     folder_path.mkdir()
 
     # Define an empty array saved as a Nifti image
-    image_path = str(folder_path / "image.nii.gz")
+    image_path = folder_path / "image.nii.gz"
     zero_array = np.zeros((256, 256, 160, 1), dtype=np.float32)
     nifti_img = nb.Nifti1Image(zero_array, np.eye(4))
-    nb.save(nifti_img, image_path)
+    nb.save(nifti_img, str(image_path))
 
     # Load the corrected Nifti image
     image = get_image_with_good_orientation(image_path)
