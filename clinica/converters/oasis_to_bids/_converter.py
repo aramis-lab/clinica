@@ -211,8 +211,6 @@ class OasisToBids(Converter):
         from functools import partial
         from multiprocessing import Pool
 
-        from clinica.utils.stream import cprint
-
         from ._utils import get_subjects_list
 
         if not dest_dir.exists():

@@ -17,65 +17,61 @@ __all__ = [
 ]
 
 
-def _define_subjects_list(
-    source_dir: Path,
-    subjs_list_path: Optional[Path] = None,
-) -> List[Path]:
-    import re
+def _get_subjects_from_data(source_dir: Path) -> list[str]:
+    return [
+        folder.name
+        for folder in source_dir.iterdir()
+        if not folder.name.startswith(".")
+    ]
 
-    from clinica.utils.stream import cprint
+
+def _get_subjects_from_list(subjects_list_path: Path) -> list[str]:
+    return subjects_list_path.read_text().splitlines()
+
+
+def _filter_oasis_subjects(source_dir: Path, subjects_list: list[str]) -> list[Path]:
+    import re
 
     rgx = re.compile(r"OAS1_\d{4}_MR1")
 
-    if subjs_list_path:
-        cprint("Loading a subjects lists provided by the user...")
-        return list(
-            filter(
-                lambda path: path.is_dir(),
-                list(
-                    map(
-                        Path,
-                        [
-                            source_dir / subj
-                            for subj in list(
-                                filter(
-                                    rgx.fullmatch,
-                                    subjs_list_path.read_text().splitlines(),
-                                )
-                            )
-                        ],
-                    )
-                ),
-            )
-        )
-
-    cprint(f"Using the subjects contained in the OASIS dataset at {source_dir}")
     return list(
         filter(
             lambda path: path.is_dir(),
-            list(
-                map(
-                    Path,
-                    [
-                        source_dir / subj
-                        for subj in list(
-                            filter(
-                                rgx.fullmatch,
-                                [folder.name for folder in source_dir.iterdir()],
-                            )
-                        )
-                    ],
+            [
+                source_dir / subj
+                for subj in filter(
+                    rgx.fullmatch,
+                    subjects_list,
                 )
-            ),
+            ],
         )
     )
 
 
 def get_subjects_list(
-    source_dir: Path,
-    subjs_list_path: Optional[Path] = None,
-) -> List[Path]:
-    return _define_subjects_list(source_dir, subjs_list_path)
+    source_dir: Path, subjs_list_path: Optional[Path] = None
+) -> list[Path]:
+    """Gets the list of paths to the subjects folders.
+
+    Parameters
+    ----------
+    source_dir : Path
+        The path to the input dataset folder.
+
+    subjs_list_path : Optional[Path]
+        The path to the subjects list file.
+
+    Returns
+    -------
+    list[Path] :
+        List of paths to the subjects folders.
+    """
+    if subjs_list_path:
+        return _filter_oasis_subjects(
+            source_dir, _get_subjects_from_list(subjs_list_path)
+        )
+
+    return _filter_oasis_subjects(source_dir, _get_subjects_from_data(source_dir))
 
 
 def _convert_cdr_to_diagnosis(cdr: Union[int, str]) -> str:
