@@ -334,13 +334,15 @@ def test_get_subjects_list_from_file(tmp_path: Path) -> None:
     source_dir = tmp_path / "dataset"
     source_dir.mkdir()
 
-    for filename in [
-        "OAS1_0001_MR1",
-        "OAS2_0002_MR1",
-        "OAS1_0003_MR2",
-        "OAS1_004_MR1",
-        "foo",
-    ]:
+    lines = [
+        "OAS1_0001_MR1\n",
+        "OAS2_0002_MR1\n",
+        "OAS1_0003_MR2\n",
+        "OAS1_004_MR1\n",
+        "foo\n",
+    ]
+
+    for filename in lines:
         (source_dir / filename).mkdir()
 
     subjects_list_dir = tmp_path / "subjects_list_dir"
@@ -349,13 +351,6 @@ def test_get_subjects_list_from_file(tmp_path: Path) -> None:
     subjects_list = subjects_list_dir / "subjects_list.txt"
     subjects_list.touch()
 
-    lines = [
-        "OAS1_0001_MR1\n",
-        "OAS2_0002_MR1\n",
-        "OAS1_0003_MR2\n",
-        "OAS1_004_MR1\n",
-        "foo\n",
-    ]
     with open(str(subjects_list), "a") as file:
         file.writelines(lines)
 
