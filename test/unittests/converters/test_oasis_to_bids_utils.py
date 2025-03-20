@@ -343,7 +343,7 @@ def test_get_subjects_list_from_file(tmp_path: Path) -> None:
     ]
 
     for filename in lines:
-        (source_dir / filename).mkdir()
+        (source_dir / filename[:-1]).mkdir()
 
     subjects_list_dir = tmp_path / "subjects_list_dir"
     subjects_list_dir.mkdir()
