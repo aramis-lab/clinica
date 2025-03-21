@@ -22,6 +22,7 @@ __all__ = [
     "validate_input_path",
     "viscode_to_session",
     "load_clinical_csv",
+    "get_subjects_list_from_file",
 ]
 
 
@@ -571,3 +572,19 @@ def load_clinical_csv(clinical_dir: Path, filename: str) -> pd.DataFrame:
             f"File {str(files_matching_pattern[0])} was found but could not "
             "be loaded as a DataFrame. Please check your data."
         )
+
+
+def get_subjects_list_from_file(subjects_list_path: Path) -> list[str]:
+    """Gets the list of subjects from a subjects list file.
+
+    Parameters
+    ----------
+    subjects_list_path : Path
+        The path to the subjects list file.
+
+    Returns
+    -------
+    list[str] :
+        List of subjects.
+    """
+    return subjects_list_path.read_text().splitlines()

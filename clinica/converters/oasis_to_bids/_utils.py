@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterable, List, Optional, Union
+from typing import Iterable, Optional, Union
 
 import nibabel as nb
 import numpy as np
@@ -17,16 +17,12 @@ __all__ = [
 ]
 
 
-def _get_subjects_from_data(source_dir: Path) -> list[str]:
+def _get_subjects_list_from_data(source_dir: Path) -> list[str]:
     return [
         folder.name
         for folder in source_dir.iterdir()
         if not folder.name.startswith(".")
     ]
-
-
-def _get_subjects_from_list(subjects_list_path: Path) -> list[str]:
-    return subjects_list_path.read_text().splitlines()
 
 
 def _filter_oasis_subjects(source_dir: Path, subjects_list: list[str]) -> list[Path]:
@@ -66,12 +62,14 @@ def get_subjects_list(
     list[Path] :
         List of paths to the subjects folders.
     """
+    from .._utils import get_subjects_list_from_file
+
     if subjs_list_path:
         return _filter_oasis_subjects(
-            source_dir, _get_subjects_from_list(subjs_list_path)
+            source_dir, get_subjects_list_from_file(subjs_list_path)
         )
 
-    return _filter_oasis_subjects(source_dir, _get_subjects_from_data(source_dir))
+    return _filter_oasis_subjects(source_dir, _get_subjects_list_from_data(source_dir))
 
 
 def _convert_cdr_to_diagnosis(cdr: Union[int, str]) -> str:

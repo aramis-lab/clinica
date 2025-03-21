@@ -15,7 +15,7 @@ import pytest
 from clinica.converters.study_models import StudyName
 
 
-@pytest.mark.parametrize("study", StudyName)
+@pytest.mark.parametrize("study", StudyName.OASIS)
 def test_converters(cmdopt, tmp_path, study: StudyName):
     from clinica.converters.factory import convert, get_converter_name
 

@@ -30,12 +30,12 @@ def test_get_subjects_list_from_data(tmp_path):
 
 
 def test_get_subjects_list_from_file(tmp_path):
-    from clinica.converters.ixi_to_bids._utils import _get_subjects_list_from_file
+    from clinica.converters._utils import get_subjects_list_from_file
 
     with open(tmp_path / "subjects.txt", "w") as f:
         f.write("IXI123\nIXI001")
 
-    assert _get_subjects_list_from_file(tmp_path / "subjects.txt") == [
+    assert get_subjects_list_from_file(tmp_path / "subjects.txt") == [
         "IXI123",
         "IXI001",
     ]
