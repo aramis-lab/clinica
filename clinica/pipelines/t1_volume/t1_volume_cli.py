@@ -19,6 +19,7 @@ pipeline_name = "t1-volume"
 @cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
+@cli_param.option.caps_name
 @cli_param.option.yes
 @cli_param.option_group.advanced_pipeline_options
 @cli_param.option.tissue_classes
@@ -32,7 +33,6 @@ pipeline_name = "t1-volume"
 @option.global_option_group
 @option.n_procs
 @click.pass_context
-@cli_param.option.caps_name
 def cli(
     ctx: click.Context,
     bids_directory: str,

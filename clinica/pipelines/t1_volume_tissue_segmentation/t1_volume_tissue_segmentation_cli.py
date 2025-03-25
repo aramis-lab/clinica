@@ -16,6 +16,7 @@ pipeline_name = "t1-volume-tissue-segmentation"
 @cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
+@cli_param.option.caps_name
 @option.global_option_group
 @option.n_procs
 @cli_param.option_group.advanced_pipeline_options
@@ -24,7 +25,6 @@ pipeline_name = "t1-volume-tissue-segmentation"
 @cli_param.option.tissue_probability_maps
 @cli_param.option.dont_save_warped_unmodulated
 @cli_param.option.save_warped_modulated
-@cli_param.option.caps_name
 def cli(
     bids_directory: str,
     caps_directory: str,

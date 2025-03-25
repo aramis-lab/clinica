@@ -15,6 +15,7 @@ pipeline_name = "dwi-preprocessing-using-phasediff-fmap"
 @cli_param.argument.caps_directory
 @cli_param.option_group.pipeline_specific_options
 @cli_param.option.low_bval
+@cli_param.option.caps_name
 @cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
@@ -23,7 +24,6 @@ pipeline_name = "dwi-preprocessing-using-phasediff-fmap"
 @cli_param.option_group.advanced_pipeline_options
 @cli_param.option.use_cuda
 @cli_param.option.initrand
-@cli_param.option.caps_name
 def cli(
     bids_directory: str,
     caps_directory: str,

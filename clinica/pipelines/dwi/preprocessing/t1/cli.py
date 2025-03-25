@@ -9,23 +9,24 @@ from clinica.pipelines.engine import clinica_pipeline
 pipeline_name = "dwi-preprocessing-using-t1"
 
 
+# todo :rq random seed and initrand same principle ??
 @clinica_pipeline
 @click.command(name=pipeline_name)
 @cli_param.argument.bids_directory
 @cli_param.argument.caps_directory
 @cli_param.option_group.pipeline_specific_options
+@cli_param.option.delete_cache
 @cli_param.option.low_bval
+@cli_param.option.initrand
+@cli_param.option.random_seed
 @cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
+@cli_param.option.caps_name
 @option.global_option_group
 @option.n_procs
 @cli_param.option_group.advanced_pipeline_options
 @cli_param.option.use_cuda
-@cli_param.option.initrand
-@cli_param.option.delete_cache
-@cli_param.option.random_seed
-@cli_param.option.caps_name
 def cli(
     bids_directory: str,
     caps_directory: str,

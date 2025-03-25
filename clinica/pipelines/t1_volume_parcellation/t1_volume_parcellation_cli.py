@@ -16,11 +16,11 @@ pipeline_name = "t1-volume-parcellation"
 @cli_param.option_group.common_pipelines_options
 @cli_param.option.subjects_sessions_tsv
 @cli_param.option.working_directory
+@cli_param.option.caps_name
 @option.global_option_group
 @option.n_procs
 @cli_param.option_group.advanced_pipeline_options
 @cli_param.option.modulate
-@cli_param.option.caps_name
 def cli(
     caps_directory: str,
     group_label: str,

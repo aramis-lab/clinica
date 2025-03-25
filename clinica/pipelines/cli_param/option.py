@@ -220,3 +220,16 @@ delete_cache = option(
     is_flag=True,
     help="If True, large intermediary files will be deleted before the end of the pipeline.",
 )
+
+antspy = option(
+    "--use-antspy",
+    is_flag=True,
+    help="Use ANTsPy instead of ANTs.",
+)
+
+uncropped = option(
+    "-ui",
+    "--uncropped_image",
+    is_flag=True,
+    help="Do not crop the image with template (cropped image are suggested for using with DL models)",
+)
