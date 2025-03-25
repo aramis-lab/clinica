@@ -29,18 +29,6 @@ def test_get_subjects_list_from_data(tmp_path):
     assert _get_subjects_list_from_data(tmp_path) == ["IXI123"]
 
 
-def test_get_subjects_list_from_file(tmp_path):
-    from clinica.converters._utils import get_subjects_list_from_file
-
-    with open(tmp_path / "subjects.txt", "w") as f:
-        f.write("IXI123\nIXI001")
-
-    assert get_subjects_list_from_file(tmp_path / "subjects.txt") == [
-        "IXI123",
-        "IXI001",
-    ]
-
-
 def test_define_participants_filter(tmp_path):
     from clinica.converters.ixi_to_bids._utils import define_participants
 

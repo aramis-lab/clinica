@@ -413,3 +413,15 @@ def test_viscode_to_session_with_custom_baseline_identifiers():
     assert viscode_to_session("foo", baseline_identifiers={"base", "foo"}) == "ses-M000"
     with pytest.raises(ValueError, match="The viscode bl is not correctly formatted."):
         viscode_to_session("bl", baseline_identifiers={"base", "foo"})
+
+
+def test_get_subjects_list_from_file(tmp_path):
+    from clinica.converters._utils import get_subjects_list_from_file
+
+    with open(tmp_path / "subjects.txt", "w") as f:
+        f.write("IXI123\nIXI001")
+
+    assert get_subjects_list_from_file(tmp_path / "subjects.txt") == [
+        "IXI123",
+        "IXI001",
+    ]
