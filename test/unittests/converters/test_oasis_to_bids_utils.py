@@ -244,7 +244,7 @@ def test_write_scans_tsv(tmp_path, bids_dir: Path) -> None:
                 assert file.empty
 
 
-def test_get_first_image(tmp_path: Path) -> None:
+def test_get_first_image(tmp_path) -> None:
     from clinica.converters.oasis_to_bids._utils import get_first_image
 
     folder_path = tmp_path / "folder"
@@ -256,7 +256,7 @@ def test_get_first_image(tmp_path: Path) -> None:
     assert get_first_image(folder_path) == (folder_path / "file_2.img")
 
 
-def test_get_first_image_not_found_error(tmp_path: Path) -> None:
+def test_get_first_image_not_found_error(tmp_path) -> None:
     from clinica.converters.oasis_to_bids._utils import get_first_image
 
     folder_path = tmp_path / "folder"
@@ -270,7 +270,7 @@ def test_get_first_image_not_found_error(tmp_path: Path) -> None:
         get_first_image(folder_path)
 
 
-def test_get_image_with_good_orientation(tmp_path: Path) -> None:
+def test_get_image_with_good_orientation(tmp_path) -> None:
     from clinica.converters.oasis_to_bids._utils import get_image_with_good_orientation
 
     folder_path = tmp_path / "folder"
@@ -308,6 +308,61 @@ def test_get_image_with_good_orientation(tmp_path: Path) -> None:
     assert hdr["xyzt_units"] == 10
 
     assert len(image.shape) == 3  # the image dimension should be 3D
+
+
+def test_get_subjects_list_from_data(tmp_path) -> None:
+    from clinica.converters.oasis_to_bids._utils import get_subjects_list
+
+    source_dir = tmp_path / "dataset"
+    source_dir.mkdir()
+
+    for filename in (
+        "OAS1_0001_MR1",
+        "OAS2_0002_MR1",
+        "OAS1_0003_MR2",
+        "OAS1_004_MR1",
+        "foo",
+    ):
+        (source_dir / filename).mkdir()
+
+    (source_dir / "OAS1_0005_MR1").touch()
+
+    assert get_subjects_list(source_dir) == [source_dir / "OAS1_0001_MR1"]
+
+
+def test_get_subjects_list_from_file(tmp_path) -> None:
+    from clinica.converters.oasis_to_bids._utils import get_subjects_list
+
+    source_dir = tmp_path / "dataset"
+    source_dir.mkdir()
+
+    lines = [
+        "OAS1_0001_MR1\n",
+        "OAS2_0002_MR1\n",
+        "OAS1_0003_MR2\n",
+        "OAS1_004_MR1\n",
+        "foo\n",
+    ]
+
+    for filename in lines:
+        (source_dir / filename[:-1]).mkdir()
+
+    (source_dir / "OAS1_0005_MR1").touch()
+
+    lines.append("OAS1_0005_MR1\n")
+
+    subjects_list_dir = tmp_path / "subjects_list_dir"
+    subjects_list_dir.mkdir()
+
+    subjects_list = subjects_list_dir / "subjects_list.txt"
+    subjects_list.touch()
+
+    with open(str(subjects_list), "a") as file:
+        file.writelines(lines)
+
+    assert get_subjects_list(source_dir, subjects_list) == [
+        source_dir / "OAS1_0001_MR1"
+    ]
 
 
 @pytest.mark.parametrize(

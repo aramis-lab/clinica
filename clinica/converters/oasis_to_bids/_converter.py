@@ -30,17 +30,13 @@ def convert(
     bids_dir = validate_input_path(bids_dir, check_exist=False)
     path_to_clinical = validate_input_path(path_to_clinical)
     if subjects:
-        cprint(
-            (
-                f"Subject filtering is not yet implemented in {get_converter_name(StudyName.OASIS)} converter. "
-                "All subjects available will be converted."
-            ),
-            lvl="warning",
-        )
+        subjects = validate_input_path(subjects)
+
     OasisToBids().convert(
         path_to_dataset,
         bids_dir,
         path_to_clinical,
+        subjects=subjects,
         n_procs=n_procs,
     )
 
@@ -51,10 +47,13 @@ class OasisToBids(Converter):
         source_dir: Path,
         destination_dir: Path,
         clinical_data_dir: Path,
+        subjects: Optional[Path] = None,
         n_procs: Optional[int] = 1,
     ):
         self._create_modality_agnostic_files(destination_dir)
-        self.convert_images(source_dir, destination_dir, n_procs=n_procs)
+        self.convert_images(
+            source_dir, destination_dir, subjects=subjects, n_procs=n_procs
+        )
         self.convert_clinical_data(clinical_data_dir, destination_dir)
 
     def convert_clinical_data(self, clinical_data_dir: Path, bids_dir: Path):
@@ -183,7 +182,11 @@ class OasisToBids(Converter):
         )
 
     def convert_images(
-        self, source_dir: Path, dest_dir: Path, n_procs: Optional[int] = 1
+        self,
+        source_dir: Path,
+        dest_dir: Path,
+        subjects: Optional[Path] = None,
+        n_procs: Optional[int] = 1,
     ):
         """Convert T1w images to BIDS.
 
@@ -192,6 +195,8 @@ class OasisToBids(Converter):
         source_dir: path to the OASIS dataset
 
         dest_dir: path to the BIDS directory
+
+        subjects: path to list of subjects to process
 
         n_procs : int, optional
             The requested number of processes.
@@ -206,14 +211,13 @@ class OasisToBids(Converter):
         from functools import partial
         from multiprocessing import Pool
 
+        from ._utils import get_subjects_list
+
         if not dest_dir.exists():
             dest_dir.mkdir(parents=True)
 
-        subjects_folders = [
-            path
-            for path in source_dir.rglob("OAS1_*")
-            if path.is_dir() and path.name.endswith("_MR1")
-        ]
+        subjects_folders = get_subjects_list(source_dir, subjects)
+
         func = partial(self.convert_single_subject, dest_dir=dest_dir)
         # If n_procs==1 do not rely on a Process Pool to enable classical debugging
         if n_procs == 1:

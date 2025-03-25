@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterable, Union
+from typing import Iterable, Optional, Union
 
 import nibabel as nb
 import numpy as np
@@ -8,12 +8,68 @@ import pandas as pd
 from clinica.converters.study_models import StudyName, bids_id_factory
 
 __all__ = [
+    "get_subjects_list",
     "create_sessions_df",
     "write_sessions_tsv",
     "write_scans_tsv",
     "get_first_image",
     "get_image_with_good_orientation",
 ]
+
+
+def _get_subjects_list_from_data(source_dir: Path) -> list[str]:
+    return [
+        folder.name
+        for folder in source_dir.iterdir()
+        if not folder.name.startswith(".")
+    ]
+
+
+def _filter_oasis_subjects(source_dir: Path, subjects_list: list[str]) -> list[Path]:
+    import re
+
+    rgx = re.compile(r"OAS1_\d{4}_MR1")
+
+    return list(
+        filter(
+            lambda path: path.is_dir(),
+            [
+                source_dir / subj
+                for subj in filter(
+                    rgx.fullmatch,
+                    subjects_list,
+                )
+            ],
+        )
+    )
+
+
+def get_subjects_list(
+    source_dir: Path, subjs_list_path: Optional[Path] = None
+) -> list[Path]:
+    """Gets the list of paths to the subjects folders.
+
+    Parameters
+    ----------
+    source_dir : Path
+        The path to the input dataset folder.
+
+    subjs_list_path : Optional[Path]
+        The path to the subjects list file.
+
+    Returns
+    -------
+    list[Path] :
+        List of paths to the subjects folders.
+    """
+    from .._utils import get_subjects_list_from_file
+
+    if subjs_list_path:
+        return _filter_oasis_subjects(
+            source_dir, get_subjects_list_from_file(subjs_list_path)
+        )
+
+    return _filter_oasis_subjects(source_dir, _get_subjects_list_from_data(source_dir))
 
 
 def _convert_cdr_to_diagnosis(cdr: Union[int, str]) -> str:
