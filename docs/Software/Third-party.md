@@ -291,6 +291,7 @@ In addition, you need to define the following environment variables:
 
 ```bash
 export MCR_HOME="/path/to/your/MCR/"
+export SPM_HOME="/path/to/your/spmstandalone/home/"
 export SPMSTANDALONE_HOME="/path/to/your/spmstandalone/home/"
 ```
 

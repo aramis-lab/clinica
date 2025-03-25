@@ -434,6 +434,7 @@ class Pipeline(Workflow):
             write_caps_dataset_description,
         )
         from clinica.utils.exceptions import ClinicaCAPSError
+        from clinica.utils.stream import cprint
 
         self._is_built: bool = False
         self._overwrite_caps: bool = overwrite_caps
@@ -502,6 +503,7 @@ class Pipeline(Workflow):
                 ):
                     self._caps_directory.mkdir(parents=True, exist_ok=True)
         if self._caps_directory:
+            # todo : why self.dependencies declaration activates class ?
             write_caps_dataset_description(
                 input_dir=self.input_dir,
                 output_dir=self._caps_directory,
@@ -509,6 +511,7 @@ class Pipeline(Workflow):
                 dataset_name=self.caps_name,
                 dependencies=self.dependencies,
             )
+            cprint("END WRITE")
             check_caps_dataset(self._caps_directory)
         self._compute_subjects_and_sessions()
         self._init_nodes()
@@ -818,6 +821,7 @@ class Pipeline(Workflow):
     def _check_dependencies(self):
         """Checks if listed dependencies are correctly installed."""
         for dependency in self.dependencies:
+            breakpoint()
             dependency.check()
         self._check_custom_dependencies()
 
