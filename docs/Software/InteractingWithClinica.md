@@ -131,7 +131,7 @@ Any time you would like to use this `AD` template you will need to provide the g
 You might also use `CNvsAD`, for instance, as group ID for a statistical group comparison between patients with Alzheimer's disease (`AD`) and cognitively normal (`CN`) subjects.
 
 ## Common options for pipelines
---8<-- "snippets/pipelines_options.md"
+--8<-- "snippets/pipelines_options.md:all"
 
 --8<-- "snippets/converters_options.md"
 
