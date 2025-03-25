@@ -1,7 +1,7 @@
-from cmath import nan
 from pathlib import Path
 from typing import Iterable, List, Optional
 
+import numpy as np
 import pandas as pd
 
 __all__ = [
@@ -412,45 +412,32 @@ def _convert_dicom_to_nifti(zipfiles: Path, bids_path: Path) -> None:
         json.dump(json_file, f, indent=4)
 
 
-def _select_sessions(x: pd.DataFrame) -> Optional[pd.Series]:
+def _select_sessions(x: pd.Series) -> Optional[pd.Series]:
     from clinica.utils.stream import cprint
 
-    if (
-        x["source_sessions_number"] == "2"
-        and x.age_when_attended_assessment_centre_f21003_2_0 != nan
-    ):
-        return x.age_when_attended_assessment_centre_f21003_2_0
-    elif (
-        x["source_sessions_number"] == "2"
-        and x.age_when_attended_assessment_centre_f21003_2_0 == nan
-    ):
-        cprint(
-            msg=(
-                f"The subject {x.eid} doesn't have the age for the imaging session "
-                "number one (age_when_attended_assessment_centre_f21003_2_0)."
-                f"It will not be converted. To have it converted, please update your clinical data."
-            ),
-            lvl="warning",
-        )
-        return None
-    elif (
-        x["source_sessions_number"] == "3"
-        and x.age_when_attended_assessment_centre_f21003_3_0 != nan
-    ):
-        return x.age_when_attended_assessment_centre_f21003_3_0
-    elif (
-        x["source_sessions_number"] == "3"
-        and x.age_when_attended_assessment_centre_f21003_3_0 == nan
-    ):
-        cprint(
-            msg=(
-                f"The subject {x.eid} doesn't have the age for the imaging session "
-                "number two (age_when_attended_assessment_centre_f21003_3_0)."
-                f"It will not be converted. To have it converted, please update your clinical data."
-            ),
-            lvl="warning",
-        )
-        return None
+    session = x["source_sessions_number"]
+    if session == "2" or session == "3":
+        age = x[f"age_when_attended_assessment_centre_f21003_{session}_0"]
+        if not np.isnan(age):
+            return age
+        else:
+            cprint(
+                msg=(
+                    f"The subject {x.eid} doesn't have information about the age for the first imaging session "
+                    f"(age_when_attended_assessment_centre_f21003_{session}_0)."
+                    f"It will not be converted. To have it converted, please update your clinical data."
+                ),
+                lvl="warning",
+            )
+            return None
+    cprint(
+        msg=(
+            f"The source_sessions_number for subject {x.eid} was not recognized."
+            f"It will not be converted. To have it converted, please update your clinical data."
+        ),
+        lvl="warning",
+    )
+    return None
 
 
 def _import_event_tsv(bids_path: Path) -> None:
