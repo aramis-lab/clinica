@@ -152,9 +152,6 @@ def _complete_clinical(df_clinical: pd.DataFrame) -> pd.DataFrame:
             lambda x: bids_id_factory(StudyName.UKB).from_original_study_id(x)
         )
     )
-    df_clinical = df_clinical.assign(
-        sessions=lambda df: "ses-" + df.source_sessions_number.astype("str")
-    )
     df_clinical = df_clinical.join(
         df_clinical.filename.map(
             {
@@ -226,6 +223,12 @@ def _complete_clinical(df_clinical: pd.DataFrame) -> pd.DataFrame:
         ).apply(pd.Series)
     )
     df_clinical = df_clinical.assign(year_of_birth=lambda df: df.year_of_birth_f34_0_0)
+
+    # Age handling :
+    #   - Session "0" : first session, only a questionnaire
+    #   - Session "2" : first imaging session (assumed to be ses-M000)
+    #   - Session "3" : second imaging session
+    # If there is no information about the age the image is deemed useless so not converted (see _select_sessions outputs)
 
     df_clinical = df_clinical.assign(age=lambda df: df.age_at_recruitment_f21022_0_0)
     df_clinical = df_clinical.assign(
