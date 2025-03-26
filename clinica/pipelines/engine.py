@@ -818,6 +818,8 @@ class Pipeline(Workflow):
 
     def _check_dependencies(self):
         """Checks if listed dependencies are correctly installed."""
+        from clinica.utils.stream import cprint
+
         for dependency in self.dependencies:
             dependency.check()
         self._check_custom_dependencies()

@@ -537,6 +537,8 @@ def _get_spm_version() -> Version:
 
     configure_nipype_interface_to_work_with_spm()
 
+    # todo : how does it work when paths were set in matlab command ?
+
     return Version(spm.SPMCommand().version)
 
 
@@ -686,6 +688,7 @@ def _check_software_version(
     log_level = log_level or LoggingLevel.WARNING
     if specifier is None:
         specifier = SpecifierSet(f">={get_software_min_version_supported(software)}")
+    # todo : issue : installed version can be nothing if does not work as expected
     if (installed_version := get_software_version(software)) not in specifier:
         (log_and_raise if log_level >= LoggingLevel.ERROR else log_and_warn)(
             f"{software.value} version is {installed_version}. We strongly recommend to have {software.value} {specifier}.",
@@ -771,7 +774,7 @@ def check_software(
         or software == ThirdPartySoftware.SPMSTANDALONE
         or software == ThirdPartySoftware.MCR
     ):
-        _check_spm()
+        _check_spm()  # todo : is it to be expected that the software version to be checked is SPM not SPMSTDAL ? actually it is never ThirdPartySoftware.SPMSTANDALONE here or .MCR
         log_level = LoggingLevel.ERROR
     if software == ThirdPartySoftware.MATLAB:
         _check_matlab()
@@ -783,4 +786,5 @@ def check_software(
         _check_mrtrix()
     if software == ThirdPartySoftware.CONVERT3D:
         _check_convert3d()
+    cprint(f"NOW CHECKING VERSION FOR software : {software}")
     _check_software_version(software, log_level=log_level, specifier=specifier)
