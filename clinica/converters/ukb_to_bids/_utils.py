@@ -415,7 +415,7 @@ def _convert_dicom_to_nifti(zipfiles: Path, bids_path: Path) -> None:
         json.dump(json_file, f, indent=4)
 
 
-def _select_sessions(x: pd.Series) -> Optional[pd.Series]:
+def _select_sessions(x: pd.Series) -> Optional[float]:
     from clinica.utils.stream import cprint
 
     session = x["source_sessions_number"]
