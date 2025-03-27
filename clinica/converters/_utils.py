@@ -57,6 +57,7 @@ def create_participants_df(
     clinical_data_dir: Path,
     bids_ids: list[str],
     delete_non_bids_info: bool = True,
+    subjects: Optional[Path] = None,
 ) -> pd.DataFrame:
     """Create the file participants.tsv.
 
@@ -94,6 +95,7 @@ def create_participants_df(
     prev_sheet = 0
     index_to_drop = []
     subjects_to_drop = []
+    subjects_list = []
     study_name = StudyName(study_name)
     location_name = f"{study_name.value} location"
 
@@ -182,6 +184,13 @@ def create_participants_df(
         ]
     participant_df.reset_index(inplace=True, drop=True)
 
+    # Extracting subjects list from the input subj list file
+    if subjects:
+        import re
+
+        rgx = re.compile(r"OAS1_\d{4}_MR1")
+        subjects_list = filter(rgx.fullmatch, get_subjects_list_from_file(subjects))
+
     # Adding participant_id column with BIDS ids
     for i in range(0, len(participant_df)):
         value = bids_id_factory(study_name).from_original_study_id(
@@ -190,7 +199,11 @@ def create_participants_df(
         bids_id = [s for s in bids_ids if value in s]
         if len(bids_id) == 0:
             index_to_drop.append(i)
-            subjects_to_drop.append(value)
+
+            if (
+                subjects and any(value[-4:] == subj[5:9] for subj in subjects_list)
+            ) or (not subjects):
+                subjects_to_drop.append(value)
         else:
             participant_df.at[i, "participant_id"] = bids_id[0]
 
@@ -200,6 +213,11 @@ def create_participants_df(
                 "The following subjects of dataset directory were not found in your BIDS folder :\n"
                 + ", ".join(subjects_to_drop)
             ),
+            lvl="info",
+        )
+    else:
+        cprint(
+            msg=("All subjects of dataset directory were found in your BIDS folder."),
             lvl="info",
         )
     # Delete all the rows of the subjects that are not available in the BIDS dataset
