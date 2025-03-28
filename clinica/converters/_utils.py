@@ -210,14 +210,14 @@ def create_participants_df(
     if len(subjects_to_drop) > 0:
         cprint(
             msg=(
-                "The following subjects of dataset directory were not found in your BIDS folder :\n"
+                "The following subjects were not found in your BIDS folder :\n"
                 + ", ".join(subjects_to_drop)
             ),
             lvl="info",
         )
     else:
         cprint(
-            msg=("All subjects of dataset directory were found in your BIDS folder."),
+            msg=("All selected subjects were found in your BIDS folder."),
             lvl="info",
         )
     # Delete all the rows of the subjects that are not available in the BIDS dataset
