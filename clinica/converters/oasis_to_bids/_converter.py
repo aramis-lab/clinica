@@ -55,7 +55,7 @@ class OasisToBids(Converter):
             source_dir, destination_dir, subjects=subjects, n_procs=n_procs
         )
         self.convert_clinical_data(
-            clinical_data_dir, destination_dir, source_dir, subjects=subjects
+            clinical_data_dir, destination_dir, subjects=subjects
         )
 
     def convert_clinical_data(
