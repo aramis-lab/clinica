@@ -376,13 +376,14 @@ _check_petpvc = functools.partial(
 )
 
 
-def _check_spm():
+def _check_spm() -> ThirdPartySoftware:
     """Check that SPM is installed, either regular with Matlab or as a standalone."""
     try:
         _check_spm_standalone()
     except ClinicaMissingDependencyError as e1:
         try:
             _check_spm_alone()
+            return ThirdPartySoftware.SPM
         except ClinicaMissingDependencyError as e2:
             raise ClinicaMissingDependencyError(
                 "Clinica could not find the SPM software (regular or standalone).\n"
@@ -390,6 +391,7 @@ def _check_spm():
                 "and have set the required environment variables.\n"
                 f"Full list of errors: \n- {e1}\n- {e2}"
             )
+    return ThirdPartySoftware.SPMSTANDALONE
 
 
 _check_spm_standalone = functools.partial(
@@ -771,7 +773,7 @@ def check_software(
         or software == ThirdPartySoftware.SPMSTANDALONE
         or software == ThirdPartySoftware.MCR
     ):
-        _check_spm()
+        software = _check_spm()
         log_level = LoggingLevel.ERROR
     if software == ThirdPartySoftware.MATLAB:
         _check_matlab()
