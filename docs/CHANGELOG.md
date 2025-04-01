@@ -6,6 +6,13 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.9.4
+
+### Fixed
+
+- [PET] Fix query pattern when a tracer is specified but not the reconstruction method (see PR [#1470](https://github.com/aramis-lab/clinica/pull/1470))
+- [Converters] Fix type mismatch in `clinica.iotools.bids_utils` (see PR [#1376](https://github.com/aramis-lab/clinica/pull/1376))
+
 ## Clinica 0.9.3
 
 ### Fixed
