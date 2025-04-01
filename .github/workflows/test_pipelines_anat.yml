@@ -2,7 +2,8 @@ name: Anat Pipelines Tests
 
 on:
   schedule:
-    - cron: 0 13 * * 2 # every thursday at 8pm
+    - cron: 0 20 * * 4 # every thursday at 8pm
+  workflow_dispatch:
 
 permissions:
   contents: read
