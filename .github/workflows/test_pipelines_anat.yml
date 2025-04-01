@@ -2,7 +2,7 @@ name: Anat Pipelines Tests
 
 on:
   schedule:
-    - cron: 0 20 * * 4 # every thursday at 8pm
+    - cron: 0 13 * * 2 # every thursday at 8pm
 
 permissions:
   contents: read
@@ -96,8 +96,7 @@ jobs:
           source /builds/miniconda/etc/profile.d/conda.sh
           conda activate "${{ github.workspace }}"/env
           source /usr/local/Modules/init/profile.sh
-          module load clinica/matlab/2017a
-          module load clinica/spm12/r7771
+          module load clinica_standalone.all
           make install
           cd test
           poetry run pytest --verbose \
