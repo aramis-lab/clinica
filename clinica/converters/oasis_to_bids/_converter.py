@@ -81,20 +81,17 @@ class OasisToBids(Converter):
         from clinica.converters._utils import create_participants_df
         from clinica.converters.study_models import StudyName
 
+        from ._utils import initialize_participants_df
+
         participants_df = create_participants_df(
             study_name=StudyName.OASIS,
             clinical_specifications_folder=Path(__file__).parents[1] / "specifications",
             clinical_data_dir=clinical_data_dir,
             bids_ids=bids_ids,
         )
-        # Replace the values of the diagnosis_bl column
-        participants_df["diagnosis_bl"].replace([0.0, np.nan], "CN", inplace=True)
-        participants_df["diagnosis_bl"].replace(
-            [0.5, 1.0, 1.5, 2.0], "AD", inplace=True
-        )
-        # Following line has no sense
-        # participants_df['diagnosis_bl'].replace(participants_df['diagnosis_bl']>0.0, 'AD', inplace=True)
-        participants_df = participants_df.fillna("n/a")
+
+        participants_df = initialize_participants_df(participants_df)
+
         participants_df.to_csv(
             bids_dir / "participants.tsv",
             sep="\t",
