@@ -114,6 +114,15 @@ def configure_nipype_interface_to_work_with_spm() -> None:
     mlab.MatlabCommand.set_default_paths(f"{get_spm_home()}")
 
 
+def _get_real_spm_standalone_file(spm_standalone_home: Path) -> str:
+    try:
+        return next(spm_standalone_home.rglob("run_spm*.sh")).name
+    except StopIteration:
+        raise FileNotFoundError(
+            f"Expected file 'run_spm[version].sh' was not found in your SPMSTANDALONE_HOME : {spm_standalone_home}"
+        )
+
+
 def _get_platform_dependant_matlab_command_for_spm_standalone(
     spm_standalone_home: Path, mcr_home: Path
 ) -> str:

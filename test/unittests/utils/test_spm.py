@@ -144,3 +144,13 @@ def test_get_platform_dependant_matlab_command_for_spm_standalone_error(mocker):
         _get_platform_dependant_matlab_command_for_spm_standalone(
             Path("/foo/bar"), Path("/foo/bar/baz")
         )
+
+
+def test_get_real_spm_standalone_file_error(tmp_path):
+    from clinica.utils.spm import _get_real_spm_standalone_file
+
+    with pytest.raises(
+        FileNotFoundError,
+        match=f"Expected file 'run_spm[version].sh' was not found in your SPMSTANDALONE_HOME : {tmp_path}",
+    ):
+        _get_real_spm_standalone_file(tmp_path)
