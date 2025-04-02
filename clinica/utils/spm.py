@@ -119,7 +119,7 @@ def _get_real_spm_standalone_file(spm_standalone_home: Path) -> str:
         return next(spm_standalone_home.rglob("run_spm*.sh")).name
     except StopIteration:
         raise FileNotFoundError(
-            f"Expected file 'run_spm[version].sh' was not found in your SPMSTANDALONE_HOME : {spm_standalone_home}"
+            f"Expected file 'run_spmXX.sh' was not found in your SPMSTANDALONE_HOME : {spm_standalone_home}"
         )
 
 

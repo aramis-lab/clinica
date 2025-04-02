@@ -151,6 +151,6 @@ def test_get_real_spm_standalone_file_error(tmp_path):
 
     with pytest.raises(
         FileNotFoundError,
-        match=f"Expected file 'run_spm[version].sh' was not found in your SPMSTANDALONE_HOME : {tmp_path}",
+        match=f"Expected file 'run_spmXX.sh' was not found in your SPMSTANDALONE_HOME : {tmp_path}",
     ):
         _get_real_spm_standalone_file(tmp_path)
