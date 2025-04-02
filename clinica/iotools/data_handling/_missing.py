@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from os import PathLike
 from pathlib import Path
-from typing import List
+from typing import Union
 
 import pandas as pd
 
@@ -23,17 +23,17 @@ class SubjectSession:
 
 
 def compute_missing_mods(
-    bids_dir: PathLike, out_dir: PathLike, output_prefix: str = ""
+    bids_dir: Union[str, Path], out_dir: Union[str, Path], output_prefix: str = ""
 ) -> None:
     """Compute the list of missing modalities for each subject in a BIDS compliant dataset.
 
     Parameters
     ----------
-    bids_dir : PathLike
-        Path to the BIDS directory.
+    bids_dir : str or Path
+        The path to the BIDS directory.
 
-    out_dir : PathLike
-        Path to the output folder.
+    out_dir : str or Path
+        The path to the output folder.
 
     output_prefix : str, optional
         String that replaces the default prefix ('missing_mods_')
@@ -47,6 +47,8 @@ def compute_missing_mods(
 
     import pandas as pd
 
+    from clinica.dataset import check_bids_dataset
+
     from ._missing_modality_tracker import (
         MissingModsTracker,
         write_longitudinal_analysis,
@@ -54,7 +56,7 @@ def compute_missing_mods(
     )
 
     out_dir = Path(out_dir)
-    bids_dir = Path(bids_dir)
+    bids_dir = check_bids_dataset(bids_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Find all the modalities and sessions available for the input dataset
@@ -192,7 +194,7 @@ def compute_missing_mods(
 
 
 def compute_missing_processing(
-    bids_dir: PathLike, caps_dir: PathLike, out_file: PathLike
+    bids_dir: Union[str, Path], caps_dir: Union[str, Path], out_file: PathLike
 ):
     """Compute the list of missing processing for each subject in a CAPS compliant dataset.
 
@@ -207,8 +209,10 @@ def compute_missing_processing(
     out_file : PathLike
         Path to the output file (filename included).
     """
-    bids_dir = Path(bids_dir)
-    caps_dir = Path(caps_dir)
+    from clinica.dataset import check_bids_dataset, check_caps_dataset
+
+    bids_dir = check_bids_dataset(bids_dir)
+    caps_dir = check_caps_dataset(caps_dir)
     output_df = pd.DataFrame()
     groups = _get_groups(caps_dir)
     tracers = _get_pet_tracers(bids_dir)
@@ -224,13 +228,13 @@ def compute_missing_processing(
     output_df.to_csv(out_file, sep="\t", index=False)
 
 
-def _get_groups(caps_dir: Path) -> List[str]:
+def _get_groups(caps_dir: Path) -> list[str]:
     if (caps_dir / "groups").exists():
         return [f.name for f in (caps_dir / "groups").iterdir()]
     return []
 
 
-def _get_pet_tracers(bids_dir: Path) -> List[str]:
+def _get_pet_tracers(bids_dir: Path) -> list[str]:
     """Retrieve pet tracers available."""
     from clinica.utils.stream import cprint
 
@@ -249,8 +253,8 @@ def _get_pet_tracers(bids_dir: Path) -> List[str]:
 
 def _compute_missing_processing_single_row(
     subject: SubjectSession,
-    groups: List[str],
-    tracers: List[str],
+    groups: list[str],
+    tracers: list[str],
 ) -> pd.DataFrame:
     """Compute a single row of the missing processing dataframe."""
     row = pd.DataFrame(
@@ -299,7 +303,7 @@ def _compute_missing_processing_single_row(
 
 def _compute_missing_processing_t1_volume(
     df: pd.DataFrame,
-    groups: List[str],
+    groups: list[str],
     subject: SubjectSession,
 ) -> pd.DataFrame:
     if (subject.session_path / "t1" / "spm" / "segmentation").exists():
@@ -349,8 +353,8 @@ def _compute_missing_processing_t1_volume(
 
 def _compute_missing_processing_pet_volume(
     df: pd.DataFrame,
-    groups: List[str],
-    tracers: List[str],
+    groups: list[str],
+    tracers: list[str],
     session_path: Path,
 ) -> pd.DataFrame:
     for group in groups:
