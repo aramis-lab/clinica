@@ -365,6 +365,24 @@ def test_get_subjects_list_from_file(tmp_path) -> None:
     ]
 
 
+def test_initialize_participants_df(tmp_path) -> None:
+    from clinica.converters.oasis_to_bids._utils import initialize_participants_df
+
+    # Create the original output
+    participants_df = pd.DataFrame(
+        {"diagnosis_bl": [0.0, 0.5, 1.0, np.nan, 2.0, 1.5, np.nan]}
+    )
+    participants_df = initialize_participants_df(participants_df)
+
+    # Create the expected output
+    expected = pd.DataFrame(
+        {"diagnosis_bl": ["CN", "AD", "AD", "CN", "AD", "AD", "CN"]}
+    )
+
+    # Compare the original and expected output
+    pd.testing.assert_frame_equal(participants_df, expected)
+
+
 @pytest.mark.parametrize(
     "cdr,diagnosis",
     [

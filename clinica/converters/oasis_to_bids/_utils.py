@@ -13,6 +13,7 @@ __all__ = [
     "write_sessions_tsv",
     "write_scans_tsv",
     "get_first_image",
+    "initialize_participants_df",
     "get_image_with_good_orientation",
 ]
 
@@ -224,6 +225,29 @@ def get_first_image(input_folder: Path) -> Path:
             f"No file ending in .img found in {input_folder}.",
             FileNotFoundError,
         )
+
+
+def initialize_participants_df(participants_df: pd.DataFrame) -> None:
+    """Initialize participants metadata in the corresponding dataframe.
+
+    Parameters
+    ----------
+    participants_df : pd.DataFrame
+        Dataframe containing participants metadata.
+
+    Returns
+    -------
+    pd.DataFrame :
+        participants_df.
+    """
+
+    # Replace the values of the diagnosis_bl column
+    participants_df["diagnosis_bl"].replace([0.0, np.nan], "CN", inplace=True)
+    participants_df["diagnosis_bl"].replace([0.5, 1.0, 1.5, 2.0], "AD", inplace=True)
+
+    participants_df = participants_df.fillna("n/a")
+
+    return participants_df
 
 
 def get_image_with_good_orientation(image_path: Path) -> nb.Nifti1Image:
