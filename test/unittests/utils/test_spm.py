@@ -154,3 +154,20 @@ def test_get_real_spm_standalone_file_error(tmp_path):
         match=f"Expected file 'run_spmXX.sh' was not found in your SPMSTANDALONE_HOME : {tmp_path}",
     ):
         _get_real_spm_standalone_file(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "spm_file",
+    [
+        "run_spm12.sh",
+        "run_spm24.sh",
+        "run_spm25.01.sh",
+        "run_spmrc24.sh",
+        "run_spm_25.sh",
+    ],
+)
+def test_get_real_spm_standalone_file_error(tmp_path, spm_file):
+    from clinica.utils.spm import _get_real_spm_standalone_file
+
+    (tmp_path / spm_file).touch()
+    assert spm_file == _get_real_spm_standalone_file(tmp_path)
