@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "clinica"
-version = "0.9.3"
+version = "0.9.4"
 description = "Software platform for clinical neuroimaging studies"
 license = "MIT"
 authors = [

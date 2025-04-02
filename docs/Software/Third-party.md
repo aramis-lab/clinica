@@ -285,7 +285,7 @@ If you want to install `SPM12` without installing [Matlab](#matlab), you will ne
 You can find details on how to install these on [this page](https://www.fil.ion.ucl.ac.uk/spm/docs/installation/standalone/).
 
 !!! tip "Verify your environment variables"
-    If you followed the installation instructions, you should have set the environment variable `$LD_LIBRARY_PATH`.
+    If you followed the installation instructions, you should have set the environment variable `$LD_LIBRARY_PATH` on Linux, or `$DYLD_LIBRARY_PATH` on MacOS.
 
 In addition, you need to define the following environment variables:
 
@@ -293,6 +293,9 @@ In addition, you need to define the following environment variables:
 export MCR_HOME="/path/to/your/MCR/"
 export SPMSTANDALONE_HOME="/path/to/your/spmstandalone/home/"
 ```
+
+!!! tip "Which paths to use ?"
+    `SPMSTANDALONE_HOME` should indicate the directory containing the `run_spmxx.sh` file. `MCR_HOME` should indicate the directory containing the `bin`, `runtime`... folders
 
 ___
 

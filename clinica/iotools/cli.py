@@ -95,11 +95,8 @@ def check_missing_modalities(
     output_prefix: str = "missing_mods",
 ) -> None:
     """Check missing modalities in a BIDS dataset."""
-    from clinica.utils.inputs import check_bids_folder
-
     from .data_handling import compute_missing_mods
 
-    check_bids_folder(bids_directory)
     compute_missing_mods(bids_directory, output_directory, output_prefix)
 
 
@@ -113,11 +110,8 @@ def check_missing_processing(
     output_file: str,
 ) -> None:
     """Check missing processing in a CAPS dataset."""
-    from clinica.utils.inputs import check_caps_folder
-
     from .data_handling import compute_missing_processing
 
-    check_caps_folder(caps_directory)
     compute_missing_processing(bids_directory, caps_directory, output_file)
 
 
