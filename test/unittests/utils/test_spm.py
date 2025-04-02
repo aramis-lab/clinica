@@ -121,6 +121,9 @@ def test_get_platform_dependant_matlab_command_for_spm_standalone(
     )
 
     mocker.patch("platform.system", return_value=platform)
+    mocker.patch(
+        "clinica.utils.spm._get_real_spm_standalone_file", return_value="run_spm12.sh"
+    )
 
     assert (
         _get_platform_dependant_matlab_command_for_spm_standalone(
@@ -136,6 +139,9 @@ def test_get_platform_dependant_matlab_command_for_spm_standalone_error(mocker):
     )
 
     mocker.patch("platform.system", return_value="foo")
+    mocker.patch(
+        "clinica.utils.spm._get_real_spm_standalone_file", return_value="run_spm12.sh"
+    )
 
     with pytest.raises(
         SystemError,
@@ -159,6 +165,7 @@ def test_get_real_spm_standalone_file_error(tmp_path):
 @pytest.mark.parametrize(
     "spm_file",
     [
+        "run_spm.sh",
         "run_spm12.sh",
         "run_spm24.sh",
         "run_spm25.01.sh",

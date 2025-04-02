@@ -128,11 +128,13 @@ def _get_platform_dependant_matlab_command_for_spm_standalone(
 ) -> str:
     import platform
 
+    spm_file = _get_real_spm_standalone_file(spm_standalone_home)
+
     user_system = platform.system().lower()
     if user_system.startswith("darwin"):
-        return f"cd {spm_standalone_home} && ./run_spm12.sh {mcr_home} script"
+        return f"cd {spm_standalone_home} && ./{spm_file} {mcr_home} script"
     if user_system.startswith("linux"):
-        return f"{spm_standalone_home / 'run_spm12.sh'} {mcr_home} script"
+        return f"{spm_standalone_home / spm_file} {mcr_home} script"
     raise SystemError(
         f"Clinica only support macOS and Linux. Your system is {user_system}."
     )
