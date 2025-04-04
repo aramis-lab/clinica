@@ -291,6 +291,8 @@ def test_get_spm_standalone_version(tmp_path, mocker, platform):
         def set_mlab_paths(self, matlab_cmd: str, use_mcr: bool):
             pass
 
+    spm_filename = f"run_spm{SPMStandaloneVersionMock.version}.sh"
+
     spm_standalone_home_mock = tmp_path / "spm_standalone_home"
     spm_standalone_home_mock.mkdir()
     mcr_home_mock = tmp_path / "mcr_home"
@@ -310,16 +312,20 @@ def test_get_spm_standalone_version(tmp_path, mocker, platform):
             with mock.patch.object(
                 SPMStandaloneVersionMock, "set_mlab_paths", return_value=None
             ) as mock_method:
-                assert get_software_version("spm standalone") == Version("13.234")
-                spm_mock.set_mlab_paths.assert_called()
-                mock_method.assert_called_once_with(
-                    matlab_cmd=(
-                        f"cd {tmp_path / 'spm_standalone_home'} && ./run_spm12.sh {tmp_path / 'mcr_home'} script"
-                        if platform == "darwin"
-                        else f"{tmp_path / 'spm_standalone_home' / 'run_spm12.sh'} {tmp_path / 'mcr_home'} script"
-                    ),
-                    use_mcr=True,
-                )
+                with mock.patch(
+                    "clinica.utils.spm._get_real_spm_standalone_file",
+                    return_value=spm_filename,
+                ):
+                    assert get_software_version("spm standalone") == Version("13.234")
+                    spm_mock.set_mlab_paths.assert_called()
+                    mock_method.assert_called_once_with(
+                        matlab_cmd=(
+                            f"cd {tmp_path / 'spm_standalone_home'} && ./{spm_filename} {tmp_path / 'mcr_home'} script"
+                            if platform == "darwin"
+                            else f"{tmp_path / 'spm_standalone_home' / spm_filename} {tmp_path / 'mcr_home'} script"
+                        ),
+                        use_mcr=True,
+                    )
 
 
 def test_get_fsl_version(mocker):
