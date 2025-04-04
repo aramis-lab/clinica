@@ -97,7 +97,7 @@ jobs:
           source /builds/miniconda/etc/profile.d/conda.sh
           conda activate "${{ github.workspace }}"/env
           source /usr/local/Modules/init/profile.sh
-          module load clinica_standalone.all
+          module load clinica.all
           make install
           cd test
           poetry run pytest --verbose \
