@@ -796,8 +796,10 @@ def _drop_duplicate_line_with_nans(participants: pd.DataFrame) -> pd.DataFrame:
         The same frame with dropped duplicate lines with nan values
 
     """
+    from clinica.utils.exceptions import ClinicaBIDSError
+
     if "participant_id" not in participants.columns:
-        raise ValueError(
+        raise ClinicaBIDSError(
             "Column participant_id was not found in the participants tsv while it is required by BIDS specifications."
         )
 

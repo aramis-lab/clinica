@@ -116,9 +116,10 @@ def test_compute_scan_sequence_numbers_error():
 
 def test_drop_duplicate_line_with_nans_error():
     from clinica.converters.genfi_to_bids._utils import _drop_duplicate_line_with_nans
+    from clinica.utils.exceptions import ClinicaBIDSError
 
     with pytest.raises(
-        ValueError,
+        ClinicaBIDSError,
         match="Column participant_id was not found in the participants tsv while it is required by BIDS specifications.",
     ):
         _drop_duplicate_line_with_nans(pd.DataFrame())
