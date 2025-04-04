@@ -115,12 +115,12 @@ def configure_nipype_interface_to_work_with_spm() -> None:
 
 
 def _get_real_spm_standalone_file(spm_standalone_home: Path) -> str:
-    try:
-        return next(spm_standalone_home.rglob("run_spm*.sh")).name
-    except StopIteration:
+    spm_files = list(spm_standalone_home.rglob("run_spm*.sh"))
+    if len(spm_files) != 1:
         raise FileNotFoundError(
-            f"Expected file 'run_spmXX.sh' was not found in your SPMSTANDALONE_HOME : {spm_standalone_home}"
+            f"There is no or several 'run_spmXX.sh' in your SPMSTANDALONE_HOME : {spm_standalone_home}"
         )
+    return spm_files[0].name
 
 
 def _get_platform_dependant_matlab_command_for_spm_standalone(
@@ -128,8 +128,13 @@ def _get_platform_dependant_matlab_command_for_spm_standalone(
 ) -> str:
     import platform
 
-    spm_file = _get_real_spm_standalone_file(spm_standalone_home)
+    from clinica.utils.stream import cprint
 
+    spm_file = _get_real_spm_standalone_file(spm_standalone_home)
+    cprint(
+        f"Using the following spm file to build the matlab dependent command : {spm_file}",
+        lvl="debug",
+    )
     user_system = platform.system().lower()
     if user_system.startswith("darwin"):
         return f"cd {spm_standalone_home} && ./{spm_file} {mcr_home} script"
