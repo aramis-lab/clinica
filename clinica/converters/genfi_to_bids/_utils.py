@@ -7,6 +7,8 @@ import pandas as pd
 import pydicom as pdcm
 from pandas import DataFrame
 
+from clinica.utils.stream import cprint
+
 __all__ = [
     "merge_imaging_and_clinical_data",
     "parse_clinical_data",
@@ -29,8 +31,6 @@ def _find_dicoms(path_to_source_data: Path) -> Iterable[Tuple[Path, Path]]:
     Iterable[Tuple[Path, Path]]
         Path to found files and parent directory
     """
-    from clinica.utils.stream import cprint
-
     cprint("Looking for imaging data.", lvl="info")
     for z in path_to_source_data.rglob("*.dcm"):
         yield z, z.parent
@@ -153,8 +153,6 @@ def _find_clinical_data(
     List[DataFrame]
         Dataframes containing the clinical data
     """
-    from clinica.utils.stream import cprint
-
     cprint("Looking for clinical data.", lvl="info")
 
     return tuple(
@@ -803,15 +801,26 @@ def _drop_duplicate_line_with_nans(participants: pd.DataFrame) -> pd.DataFrame:
             "Column participant_id was not found in the participants tsv while it is required by BIDS specifications."
         )
 
+    to_drop = pd.DataFrame()
     for participant, size in participants.groupby(["participant_id"]).size().items():
         if size > 1:
-            participants.drop(
-                participants[
-                    (participants["participant_id"] == participant)
-                    * (participants.isna().any(axis=1))
-                ].index,
-                inplace=True,
+            to_drop = pd.concat(
+                [
+                    to_drop,
+                    participants[
+                        (participants["participant_id"] == participant)
+                        * (participants.isna().any(axis=1))
+                    ],
+                ]
             )
+    cprint(
+        f"Dropping the following lines from the participants.tsv : \n{to_drop}",
+        lvl="debug",
+    )
+    participants.drop(
+        to_drop.index,
+        inplace=True,
+    )
     return participants
 
 
@@ -847,7 +856,6 @@ def write_bids(
 
     from clinica.converters._utils import run_dcm2niix, write_to_tsv
     from clinica.dataset import BIDSDatasetDescription
-    from clinica.utils.stream import cprint
 
     cprint("Starting to write the BIDS.", lvl="info")
     fs = LocalFileSystem(auto_mkdir=True)
@@ -997,8 +1005,6 @@ def _merge_philips_diffusion(
     """
     import json
 
-    from clinica.utils.stream import cprint
-
     multipart_id = _get_multipart_id(
         PhilipsNumberOfParts.from_int(int(number_of_parts)), run_num
     )
@@ -1063,8 +1069,6 @@ def _delete_real_and_imaginary_files(bids_folder: Path) -> None:
     bids_folder : PathLike
         Path to the BIDS folder.
     """
-    from clinica.utils.stream import cprint
-
     for file_type in ("real", "imaginary"):
         for f in bids_folder.rglob(f"*_{file_type}.*"):
             f.unlink()
