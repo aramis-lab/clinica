@@ -68,7 +68,8 @@ def convert(
 
     path_to_dataset = validate_input_path(path_to_dataset)
     bids_dir = validate_input_path(bids_dir, check_exist=False)
-    path_to_clinical = validate_input_path(path_to_clinical)
+    if path_to_clinical:
+        path_to_clinical = validate_input_path(path_to_clinical)
     if path_to_clinical_tsv:
         path_to_clinical_tsv = validate_input_path(path_to_clinical_tsv)
     check_software(ThirdPartySoftware.DCM2NIIX)
