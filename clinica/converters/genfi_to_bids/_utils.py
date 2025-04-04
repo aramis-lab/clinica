@@ -781,10 +781,21 @@ def _compute_bids_full_path(df: DataFrame) -> DataFrame:
 
 
 def _drop_duplicate_line_with_nans(participants: pd.DataFrame) -> pd.DataFrame:
-    # Specific to participants metadata file in GENFI :
-    # There can subsist two lines per participant in case one holds the information and one holds some nans ;
-    # It is not recommended to just use dropna() since it is possible there is no information for one subject, which would be lost
-    # The proposed solution here drops the line with nans if there is another line for the participant.
+    """Performs an operation specific to participants metadata file in GENFI :
+    There can subsist two lines per participant in case one holds the information and one holds some nans.
+    It is not recommended to just use dropna() since it is possible there is no information for one subject, which would be lost
+    The proposed solution here drops the line with nans if there is another line for the participant.
+
+    Parameters
+    ----------
+    participants :
+        The participants metadata frame
+
+    Returns
+    -------
+        The same frame with dropped duplicate lines with nan values
+
+    """
     if "participant_id" not in participants.columns:
         raise ValueError(
             "Column participant_id was not found in the participants tsv while it is required by BIDS specifications."
