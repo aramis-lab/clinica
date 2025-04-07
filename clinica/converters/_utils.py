@@ -23,6 +23,7 @@ __all__ = [
     "viscode_to_session",
     "load_clinical_csv",
     "get_subjects_list_from_file",
+    "get_subject_id_pattern",
 ]
 
 
@@ -79,6 +80,10 @@ def create_participants_df(
         If True delete all the rows of the subjects that are not available in the BIDS dataset.
         Default=True.
 
+    subjects : Path, optional
+        Path to the input subjects list provided by the user.
+        Default=None.
+
     Returns
     -------
     pd.DataFrame :
@@ -97,6 +102,7 @@ def create_participants_df(
     subjects_to_drop = []
     subjects_list = []
     study_name = StudyName(study_name)
+    subjects_pattern = get_subject_id_pattern(study_name)
     location_name = f"{study_name.value} location"
 
     participants_specs = pd.read_csv(
@@ -177,18 +183,20 @@ def create_participants_df(
         participant_df = participant_df.drop_duplicates(
             subset=["alternative_id_1"], keep="first"
         )
+
     elif study_name == StudyName.OASIS:
         # OASIS provides several MRI for the same session
         participant_df = participant_df[
             ~participant_df.alternative_id_1.str.endswith("_MR2")
         ]
+
     participant_df.reset_index(inplace=True, drop=True)
 
-    # Extracting subjects list from the input subj list file
-    if subjects:
+    # Extracting subjects list from the input subjects list file
+    if subjects and subjects_pattern:
         import re
 
-        rgx = re.compile(r"OAS1_\d{4}_MR1")
+        rgx = re.compile(subjects_pattern)
         subjects_list = filter(rgx.fullmatch, get_subjects_list_from_file(subjects))
 
     # Adding participant_id column with BIDS ids
@@ -197,13 +205,29 @@ def create_participants_df(
             participant_df["alternative_id_1"][i]
         )
         bids_id = [s for s in bids_ids if value in s]
-        if len(bids_id) == 0:
-            index_to_drop.append(i)
 
-            if (
-                subjects and any(value[-4:] == subj[5:9] for subj in subjects_list)
-            ) or (not subjects):
+        # If the conversion to BIDS has failed for the processed subject
+        if len(bids_id) == 0:
+            # If a subjects list is provided by the user
+            if subjects:
+                # If the subject is from the OASIS dataset
+                if study_name == StudyName.OASIS:
+                    # The 4 ID digits from the subject name converted to BIDS
+                    bids_subj_digits = value[-4:]
+
+                    # List of 4 ID digits from the subject names in the subjects list
+                    raw_subj_digits_list = [subj[5:9] for subj in subjects_list]
+
+                    # If one matching groups of digits is found, indicate that the conversion has failed
+                    if bids_subj_digits in raw_subj_digits_list:
+                        index_to_drop.append(i)
+                        subjects_to_drop.append(value)
+
+            # If a subjects list is not provided, indicate that the conversion has failed
+            else:
+                index_to_drop.append(i)
                 subjects_to_drop.append(value)
+
         else:
             participant_df.at[i, "participant_id"] = bids_id[0]
 
@@ -606,3 +630,48 @@ def get_subjects_list_from_file(subjects_list_path: Path) -> list[str]:
         List of subjects.
     """
     return subjects_list_path.read_text().splitlines()
+
+
+def get_subject_id_pattern(study_name: StudyName) -> str:
+    """Gets subjects pattern for each variant of StudyName enumeration.
+
+    Parameters
+    ----------
+    study_name : StudyName
+        StudyName enumeration.
+
+    Returns
+    -------
+    str :
+        Subjects pattern.
+    """
+
+    if study_name == StudyName.ADNI:
+        return r"\d{3}_S_\d{4}"
+
+    elif study_name == StudyName.AIBL:
+        return r"\d+"
+
+    # elif study_name == StudyName.GENFI :
+    #   TO COMPLETE
+
+    # elif study_name == StudyName.HABS :
+    #   TO COMPLETE
+
+    elif study_name == StudyName.IXI:
+        return r"IXI\d+-[a-zA-Z]+-\d{4}-(DTI|MRA|PD|T1|T2)"
+
+    elif study_name == StudyName.NIFD:
+        return r"\d{1}_S_\d{4}"
+
+    elif study_name == StudyName.OASIS:
+        return r"OAS1_\d{4}_MR1"
+
+    elif study_name == StudyName.OASIS3:
+        return r"OAS3\d{4}_(CT|MR|PIB|AV45|FDG)_d\d{4}"
+
+    # elif study_name == StudyName.UKB :
+    #   TO COMPLETE
+
+    else:
+        return None
