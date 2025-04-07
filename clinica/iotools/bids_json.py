@@ -5,6 +5,7 @@ from typing import Tuple, Union
 import numpy as np
 import pandas as pd
 from pydicom.dataset import FileDataset
+from pydicom.multival import MultiValue
 from pydicom.tag import Tag
 
 from clinica.utils.stream import cprint
@@ -136,19 +137,21 @@ class BidsCompliantJson:
         dict_json = {key: None for key in self.meta_collection.index}
 
         try:
-            dcm_path = [f for f in dcm_dir.glob("*.dcm")][0]
+            dcm_path = next(dcm_dir.rglob("*.dcm"))
             dicom_header = dcmread(dcm_path)
         except IndexError:
             cprint(
                 msg=f"No DICOM found at {dcm_dir}, the image json will be filled with default values",
                 lvl="warning",
             )
-            # todo : kinda weird to be here and have no dicom though, does it ever happen ?
         else:
             # todo : use exception ?
             for index, metadata in self.meta_collection.iterrows():
                 if dcm_value := self._get_dcm_tag(metadata.DCMtag, dicom_header):
-                    dict_json.update({index: dcm_value})
+                    if type(dcm_value) == MultiValue:
+                        dict_json.update({index: list(dcm_value)})
+                    else:
+                        dict_json.update({index: dcm_value})
         return dict_json
 
     @staticmethod
@@ -229,8 +232,6 @@ class BidsCompliantJson:
         dict_json = self._set_decay_time(dict_json)
         dict_json = self._set_scan_start(dict_json)
         dict_json = self._set_injection_start(dict_json)
-
-        breakpoint()
 
         dict_json = self._get_default_bids(dict_json)
         return dict_json
