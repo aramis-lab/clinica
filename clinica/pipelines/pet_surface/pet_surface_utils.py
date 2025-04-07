@@ -933,12 +933,11 @@ def get_wf(
     from nipype.interfaces.spm import Coregister, Normalize12
 
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
+    from clinica.pipelines.pet.utils import get_suvr_mask, read_psf_information
     from clinica.utils.filemanip import get_subject_id, load_volume, unzip_nii
     from clinica.utils.pet import (
         SUVRReferenceRegion,
         Tracer,
-        get_suvr_mask,
-        read_psf_information,
     )
     from clinica.utils.spm import get_tpm, use_spm_standalone_if_available
     from clinica.utils.ux import print_begin_image
