@@ -365,22 +365,16 @@ def test_get_subjects_list_from_file(tmp_path) -> None:
     ]
 
 
-def test_initialize_participants_df(tmp_path) -> None:
-    from clinica.converters.oasis_to_bids._utils import initialize_participants_df
+def test_mapping_diagnosis(tmp_path) -> None:
+    from clinica.converters.oasis_to_bids._utils import mapping_diagnosis
 
-    # Create the original output
-    participants_df = pd.DataFrame(
-        {"diagnosis_bl": [0.0, 0.5, 1.0, np.nan, 2.0, 1.5, np.nan]}
-    )
-    participants_df = initialize_participants_df(participants_df)
+    values = [0.0, 0.5, 1.0, np.nan, 2.0, 1.5, np.nan]
 
-    # Create the expected output
-    expected = pd.DataFrame(
-        {"diagnosis_bl": ["CN", "AD", "AD", "CN", "AD", "AD", "CN"]}
-    )
+    mapped_values = [mapping_diagnosis(val) for val in values]
 
-    # Compare the original and expected output
-    pd.testing.assert_frame_equal(participants_df, expected)
+    expected_mapped_values = ["CN", "AD", "AD", "n/a", "AD", "AD", "n/a"]
+
+    assert mapped_values == expected_mapped_values
 
 
 @pytest.mark.parametrize(

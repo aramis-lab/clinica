@@ -13,7 +13,7 @@ __all__ = [
     "write_sessions_tsv",
     "write_scans_tsv",
     "get_first_image",
-    "initialize_participants_df",
+    "mapping_diagnosis",
     "get_image_with_good_orientation",
 ]
 
@@ -227,27 +227,27 @@ def get_first_image(input_folder: Path) -> Path:
         )
 
 
-def initialize_participants_df(participants_df: pd.DataFrame) -> None:
-    """Initialize participants metadata in the corresponding dataframe.
+def mapping_diagnosis(diagnosis_bl: float) -> str:
+    """Mapping diagnosis label to corresponding number.
 
     Parameters
     ----------
-    participants_df : pd.DataFrame
-        Dataframe containing participants metadata.
+    diagnosis_bl : float
+        Diagnosis number.
 
     Returns
     -------
-    pd.DataFrame :
-        participants_df.
+    str :
+        Diagnosis label if matching a number, Not Available (n/a) otherwise.
     """
 
-    # Replace the values of the diagnosis_bl column
-    participants_df["diagnosis_bl"].replace([0.0, np.nan], "CN", inplace=True)
-    participants_df["diagnosis_bl"].replace([0.5, 1.0, 1.5, 2.0], "AD", inplace=True)
+    if diagnosis_bl == 0.0:
+        return "CN"
 
-    participants_df = participants_df.fillna("n/a")
+    elif diagnosis_bl in (0.5, 1.0, 1.5, 2.0):
+        return "AD"
 
-    return participants_df
+    return "n/a"
 
 
 def get_image_with_good_orientation(image_path: Path) -> nb.Nifti1Image:

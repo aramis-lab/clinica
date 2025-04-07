@@ -81,7 +81,7 @@ class OasisToBids(Converter):
         from clinica.converters._utils import create_participants_df
         from clinica.converters.study_models import StudyName
 
-        from ._utils import initialize_participants_df
+        from ._utils import mapping_diagnosis
 
         participants_df = create_participants_df(
             study_name=StudyName.OASIS,
@@ -90,7 +90,9 @@ class OasisToBids(Converter):
             bids_ids=bids_ids,
         )
 
-        participants_df = initialize_participants_df(participants_df)
+        participants_df["diagnosis_bl"] = participants_df["diagnosis_bl"].apply(
+            lambda x: mapping_diagnosis(x)
+        )
 
         participants_df.to_csv(
             bids_dir / "participants.tsv",
