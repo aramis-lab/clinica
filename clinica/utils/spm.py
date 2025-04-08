@@ -118,7 +118,7 @@ def _get_real_spm_standalone_file(spm_standalone_home: Path) -> str:
     spm_files = list(spm_standalone_home.rglob("run_spm*.sh"))
     if len(spm_files) != 1:
         raise FileNotFoundError(
-            f"There is no or several 'run_spmXX.sh' in your SPMSTANDALONE_HOME {spm_standalone_home} : {(' ; ').join([str(path) for path in sorted(spm_files)])}."
+            f"There is no or several 'run_spmXX.sh' in your SPMSTANDALONE_HOME {spm_standalone_home} : {" ; ".join([str(path) for path in sorted(spm_files)])}."
         )
     return spm_files[0].name
 
