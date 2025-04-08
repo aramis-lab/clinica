@@ -1,0 +1,256 @@
+"""
+This module handles json writing from DICOM for PET modality in AIBL for BIDS 1.10 compliance
+"""
+
+import json
+from pathlib import Path
+from typing import Tuple, Union
+
+import numpy as np
+import pandas as pd
+from pydicom.dataset import FileDataset
+from pydicom.multival import MultiValue
+from pydicom.tag import Tag
+
+from clinica.utils.stream import cprint
+
+# todo : can this be used for other than AIBL ?
+# todo : test
+
+
+def write_json(json_path: Path, json_dict: dict):
+    # todo : date format ?
+    with open(json_path, "w") as f:
+        f.write(json.dumps(json_dict, indent=4))
+
+
+def _get_dicom_tags_and_defaults() -> pd.DataFrame:
+    return pd.DataFrame(
+        columns=["BIDSname", "DCMtag", "Default"],
+        data=[
+            # Hardware
+            ["DeviceSerialNumber", ("DeviceSerialNumber",), "n/a"],
+            ["ManufacturersModelName", ("ManufacturerModelName",), "n/a"],
+            ["SoftwareVersions", ("SoftwareVersions",), "n/a"],
+            ["BodyPart", ("BodyPartExamined",), "n/a"],
+            ["MagneticFieldStrength", ("MagneticFieldStrength",), "n/a"],
+            ["Units", ("Units",), "n/a"],
+            # Institution
+            ["InstitutionName", ("InstitutionName",), "n/a"],
+            ["InstitutionAddress", ("InstitutionAddress",), "n/a"],
+            [
+                "InstitutionalDepartmentName",
+                ("InstitutionalDepartmentName",),
+                "n/a",
+            ],
+            # Time
+            # todo : definitions ??
+            ["TimeZero", ("AcquisitionTime",), "n/a"],
+            ["ScanStart", (), "n/a"],  # same as acquisition time
+            [
+                "InjectionStart",
+                ("RadiopharmaceuticalStartTime",),
+                np.nan,
+            ],  # diff between "RadiopharmaceuticalStartTime" and acquisition time
+            ["FrameTimesStart", ("FrameReferenceTime",), []],
+            ["FrameDuration", ("ActualFrameDuration",), []],
+            # Radiochemistry
+            [
+                "TracerName",
+                (
+                    "RadiopharmaceuticalInformationSequence",
+                    "RadionuclideCodeSequence",
+                    "MappingResourceName",
+                ),
+                "n/a",
+            ],
+            [
+                "TracerRadionuclide",
+                (
+                    "RadiopharmaceuticalInformationSequence",
+                    "RadionuclideCodeSequence",
+                    "CodeMeaning",
+                ),
+                "n/a",
+            ],
+            ["InjectedRadioactivity", ("RadionuclideTotalDose",), np.nan],
+            ["InjectedRadioactivityUnits", (), "n/a"],
+            ["InjectedMass", (), "n/a"],
+            ["InjectedMassUnits", (), "n/a"],
+            [
+                "SpecificRadioactivity",
+                ("RadiopharmaceuticalSpecificActivity",),
+                "n/a",
+            ],
+            ["SpecificRadioactivityUnits", (), "n/a"],
+            [
+                "ModeOfAdministration",
+                ("RadiopharmaceuticalStartTime",),
+                "n/a",
+            ],  # uses "RadiopharmaceuticalStartTime" to decide on admin mode
+            ["InfusionRadioactivity", (), np.nan],  # todo : corresp ?
+            ["InfusionStart", ("RadiopharmaceuticalStartTime",), np.nan],
+            ["InfusionSpeed", (), np.nan],  # todo : corresp ?
+            ["InfusionSpeedUnits", (), "n/a"],  # todo : corresp ?
+            ["InjectedVolume", ("RadiopharmaceuticalVolume",), np.nan],
+            # Reconstruction
+            ["AcquisitionMode", (), "n/a"],
+            ["ImageDecayCorrected", ("DecayCorrection",), "n/a"],
+            ["ImageDecayCorrectionTime", ("DecayCorrection",), np.nan],
+            ["ReconMethodName", ("ReconstructionMethod",), "n/a"],
+            # todo : may use .VM on element to check for length
+            ["ReconMethodParameterLabels", ("ReconstructionMethod",), [""]],
+            ["ReconMethodParameterUnits", ("ReconstructionMethod",), [""]],
+            ["ReconMethodParameterValues", ("ReconstructionMethod",), [""]],
+            ["ReconFilterType", ("ConvolutionKernel",), "n/a"],
+            ["ReconFilterSize", ("ConvolutionKernel",), np.nan],
+            ["AttenuationCorrection", ("AttenuationCorrectionMethod",), "n/a"],
+        ],
+    ).set_index(keys="BIDSname", drop=False)
+
+
+def _get_dcm_value_from_header(
+    keys_list: Tuple[str], dicom_header: FileDataset
+) -> Union[str, int, list, None]:
+    """
+    Get the value from the dicom header corresponding to a dicom Tag/key list
+
+    Parameters
+    ----------
+    keys_list :
+        Tuple representing where to get the expected information in the dicom header
+
+    dicom_header :
+        Dicom header to parse
+
+    Returns
+    -------
+        The value of the tag obtained from the header
+
+    """
+    # todo : test
+    # todo : for now don't call with exception to see how it works
+    if not keys_list:
+        return None
+    if len(keys_list) == 1:
+        get_result = dicom_header.get(Tag(keys_list[0]))
+    else:
+        # Handles nested tags
+        dh = dicom_header.copy()
+        try:
+            for key in keys_list[:-1]:
+                dh = dh.get(Tag(key))[0]
+            get_result = dh.get(Tag(keys_list[-1]))
+        except TypeError:
+            return None
+    if get_result:
+        if type(get_result.value) == MultiValue:
+            # Handles case where result is MultiValue, which is not JSON serializable
+            return list(get_result.value)
+        return get_result.value
+    return None
+
+
+def _update_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) -> dict:
+    from pydicom import dcmread
+
+    dict_json = {key: None for key in metadata.index}
+
+    try:
+        dcm_path = next(dcm_dir.rglob("*.dcm"))
+        dicom_header = dcmread(dcm_path)
+    except IndexError:
+        cprint(
+            msg=f"No DICOM found at {dcm_dir}, the image json will be filled with default values",
+            lvl="warning",
+        )
+    else:
+        # todo : use exception ? prints debug ?
+        for index, metadata in metadata.iterrows():
+            if dcm_value := _get_dcm_value_from_header(metadata.DCMtag, dicom_header):
+                dict_json.update({index: dcm_value})
+    return dict_json
+
+
+def _set_scan_start(dcm_result: dict) -> dict:
+    dcm_result["ScanStart"] = "0"
+    return dcm_result
+
+
+def _set_injection_start(dcm_result: dict) -> dict:
+    if (injection := dcm_result["InjectionStart"]) and (
+        acquisition := dcm_result["TimeZero"]
+    ):
+        dcm_result["InjectionStart"] = injection - float(acquisition)
+    return dcm_result
+
+
+def _get_admin_mode_from_start_time(dcm_result: dict) -> dict:
+    # todo : test
+    if (injection := dcm_result["ModeOfAdministration"]) and (
+        acquisition := dcm_result["TimeZero"]
+    ):
+        if injection - float(acquisition):
+            dcm_result["ModeOfAdministration"] = "bolus-infusion"
+        dcm_result["ModeOfAdministration"] = "bolus"
+    return dcm_result
+
+
+def _check_decay_correction(dcm_result: dict) -> dict:
+    # todo : test
+    corrected = dcm_result["ImageDecayCorrected"]
+    if corrected == "NONE":
+        dcm_result["ImageDecayCorrected"] = False
+    elif corrected:
+        dcm_result["ImageDecayCorrected"] = True
+    return dcm_result
+
+
+def _set_decay_time(dcm_result: dict) -> dict:
+    correction = dcm_result["ImageDecayCorrectionTime"]
+
+    if correction == "START":
+        dcm_result["ImageDecayCorrectionTime"] = dcm_result["ScanStart"]
+    elif correction == "ADMIN":
+        dcm_result["ImageDecayCorrectionTime"] = dcm_result["InjectionStart"]
+    else:
+        dcm_result["ImageDecayCorrectionTime"] = None
+    return dcm_result
+
+
+def _update_default_units(dcm_result: dict) -> dict:
+    dcm_result["InjectedRadioactivityUnits"] = "MBq"
+    dcm_result["SpecificRadioactivityUnits"] = "Bq/micromole"
+    return dcm_result
+
+
+def _update_injected_mass(dcm_result: dict) -> dict:
+    # todo :test
+    injected = dcm_result["InjectedRadioactivity"]
+    specific = dcm_result["SpecificRadioactivity"]
+    if injected and specific:
+        dcm_result["InjectedMass"] = injected / float(specific)
+        dcm_result["InjectedMassUnits"] = "mole"
+    return dcm_result
+
+
+def _get_default_bids(metadata: pd.DataFrame, dcm_result: dict) -> dict:
+    for key in dcm_result:
+        if not dcm_result[key]:
+            dcm_result[key] = metadata.loc[key, "Default"]
+    return dcm_result
+
+
+def build_dict(self, dcm_dir: Path) -> dict:
+    dict_json = _from_image_dicoms(dcm_dir)
+
+    dict_json = _get_admin_mode_from_start_time(dict_json)
+    dict_json = _update_default_units(dict_json)
+    dict_json = _update_injected_mass(dict_json)
+    dict_json = _check_decay_correction(dict_json)
+    dict_json = _set_decay_time(dict_json)
+    dict_json = _set_scan_start(dict_json)
+    dict_json = _set_injection_start(dict_json)
+
+    dict_json = _get_default_bids(dict_json)
+    return dict_json
