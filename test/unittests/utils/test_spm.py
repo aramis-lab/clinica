@@ -170,7 +170,7 @@ def test_get_real_spm_standalone_file_several_files_error(tmp_path):
 
     with pytest.raises(
         FileNotFoundError,
-        match=f"There is no or several 'run_spmXX.sh' in your SPMSTANDALONE_HOME {tmp_path} : {tmp_path/"run_spm1.sh"} ; {tmp_path/"run_spm2.sh"}",
+        match=f"There is no or several 'run_spmXX.sh' in your SPMSTANDALONE_HOME {tmp_path} : {tmp_path / 'run_spm1.sh'} ; {tmp_path / 'run_spm2.sh'}",
     ):
         _get_real_spm_standalone_file(tmp_path)
 
