@@ -365,12 +365,21 @@ def test_get_subjects_list_from_file(tmp_path) -> None:
     ]
 
 
-@pytest.mark.parametrize("input, expected", [(0, "CN"), (0.5, "AD"), (1, "AD"), (1.5, "AD"), (2, "AD"), (np.nan, "n/a"), (4, "n/a")])
-
-def test_mapping_diagnosis(input, expected) -> None :
-    
+@pytest.mark.parametrize(
+    "input, expected",
+    [
+        (0, "CN"),
+        (0.5, "AD"),
+        (1, "AD"),
+        (1.5, "AD"),
+        (2, "AD"),
+        (np.nan, "n/a"),
+        (4, "n/a"),
+    ],
+)
+def test_mapping_diagnosis(input, expected) -> None:
     from clinica.converters.oasis_to_bids._utils import mapping_diagnosis
-    
+
     assert expected == mapping_diagnosis(input)
 
 
