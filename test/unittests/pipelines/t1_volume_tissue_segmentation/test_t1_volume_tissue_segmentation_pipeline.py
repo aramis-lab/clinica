@@ -2,7 +2,7 @@ import shutil
 
 from packaging.version import Version
 
-from clinica.utils.bids import Visit
+from clinica.dataset import Visit
 from clinica.utils.testing_utils import build_bids_directory, build_caps_directory
 
 

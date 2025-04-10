@@ -3,9 +3,8 @@ from typing import List
 
 from nipype import config
 
+from clinica.dataset import Visit
 from clinica.pipelines.engine import Pipeline
-from clinica.utils.bids import Visit
-from clinica.utils.filemanip import extract_visits
 
 cfg = dict(execution={"parameterize_dirs": False})
 config.update_config(cfg)
