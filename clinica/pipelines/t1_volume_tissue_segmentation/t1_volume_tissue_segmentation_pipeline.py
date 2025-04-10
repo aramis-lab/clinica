@@ -135,8 +135,6 @@ class T1VolumeTissueSegmentation(Pipeline):
             zip_list_files,
         )
 
-        use_spm_standalone_if_available()
-
         # Get <subject_id> (e.g. sub-CLNC01_ses-M000) from input_node
         # and print begin message
         # =======================

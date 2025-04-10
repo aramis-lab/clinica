@@ -121,6 +121,9 @@ def test_get_platform_dependant_matlab_command_for_spm_standalone(
     )
 
     mocker.patch("platform.system", return_value=platform)
+    mocker.patch(
+        "clinica.utils.spm._get_real_spm_standalone_file", return_value="run_spm12.sh"
+    )
 
     assert (
         _get_platform_dependant_matlab_command_for_spm_standalone(
@@ -136,6 +139,9 @@ def test_get_platform_dependant_matlab_command_for_spm_standalone_error(mocker):
     )
 
     mocker.patch("platform.system", return_value="foo")
+    mocker.patch(
+        "clinica.utils.spm._get_real_spm_standalone_file", return_value="run_spm12.sh"
+    )
 
     with pytest.raises(
         SystemError,
@@ -144,3 +150,44 @@ def test_get_platform_dependant_matlab_command_for_spm_standalone_error(mocker):
         _get_platform_dependant_matlab_command_for_spm_standalone(
             Path("/foo/bar"), Path("/foo/bar/baz")
         )
+
+
+def test_get_real_spm_standalone_file_no_file_error(tmp_path):
+    from clinica.utils.spm import _get_real_spm_standalone_file
+
+    with pytest.raises(
+        FileNotFoundError,
+        match=f"There is no or several 'run_spmXX.sh' in your SPMSTANDALONE_HOME {tmp_path} : ",
+    ):
+        _get_real_spm_standalone_file(tmp_path)
+
+
+def test_get_real_spm_standalone_file_several_files_error(tmp_path):
+    from clinica.utils.spm import _get_real_spm_standalone_file
+
+    (tmp_path / "run_spm1.sh").touch()
+    (tmp_path / "run_spm2.sh").touch()
+
+    with pytest.raises(
+        FileNotFoundError,
+        match=f"There is no or several 'run_spmXX.sh' in your SPMSTANDALONE_HOME {tmp_path} : {tmp_path/"run_spm1.sh"} ; {tmp_path/"run_spm2.sh"}",
+    ):
+        _get_real_spm_standalone_file(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "spm_file",
+    [
+        "run_spm.sh",
+        "run_spm12.sh",
+        "run_spm24.sh",
+        "run_spm25.01.sh",
+        "run_spmrc24.sh",
+        "run_spm_25.sh",
+    ],
+)
+def test_get_real_spm_standalone_file_error(tmp_path, spm_file):
+    from clinica.utils.spm import _get_real_spm_standalone_file
+
+    (tmp_path / spm_file).touch()
+    assert spm_file == _get_real_spm_standalone_file(tmp_path)

@@ -114,16 +114,32 @@ def configure_nipype_interface_to_work_with_spm() -> None:
     mlab.MatlabCommand.set_default_paths(f"{get_spm_home()}")
 
 
+def _get_real_spm_standalone_file(spm_standalone_home: Path) -> str:
+    spm_files = list(spm_standalone_home.rglob("run_spm*.sh"))
+    if len(spm_files) != 1:
+        raise FileNotFoundError(
+            f"There is no or several 'run_spmXX.sh' in your SPMSTANDALONE_HOME {spm_standalone_home} : {" ; ".join([str(path) for path in sorted(spm_files)])}."
+        )
+    return spm_files[0].name
+
+
 def _get_platform_dependant_matlab_command_for_spm_standalone(
     spm_standalone_home: Path, mcr_home: Path
 ) -> str:
     import platform
 
+    from clinica.utils.stream import cprint
+
+    spm_file = _get_real_spm_standalone_file(spm_standalone_home)
+    cprint(
+        f"Using the following spm file to build the matlab dependent command : {spm_standalone_home/spm_file}",
+        lvl="debug",
+    )
     user_system = platform.system().lower()
     if user_system.startswith("darwin"):
-        return f"cd {spm_standalone_home} && ./run_spm12.sh {mcr_home} script"
+        return f"cd {spm_standalone_home} && ./{spm_file} {mcr_home} script"
     if user_system.startswith("linux"):
-        return f"{spm_standalone_home / 'run_spm12.sh'} {mcr_home} script"
+        return f"{spm_standalone_home / spm_file} {mcr_home} script"
     raise SystemError(
         f"Clinica only support macOS and Linux. Your system is {user_system}."
     )
