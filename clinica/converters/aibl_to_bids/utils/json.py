@@ -20,6 +20,7 @@ from clinica.utils.stream import cprint
 
 def write_json(json_path: Path, json_dict: dict):
     # todo : date format ?
+    # todo : change for dataframe
     with open(json_path, "w") as f:
         f.write(json.dumps(json_dict, indent=4))
 
@@ -44,7 +45,7 @@ def _get_dicom_tags_and_defaults() -> pd.DataFrame:
                 "n/a",
             ],
             # Time
-            # todo : definitions ??
+            # todo : definitions ?? Study Time != Series time != Content Time != Acquisition Time (but dates same)
             ["TimeZero", ("AcquisitionTime",), "n/a"],
             ["ScanStart", (), "n/a"],  # same as acquisition time
             [
@@ -88,22 +89,29 @@ def _get_dicom_tags_and_defaults() -> pd.DataFrame:
                 ("RadiopharmaceuticalStartTime",),
                 "n/a",
             ],  # uses "RadiopharmaceuticalStartTime" to decide on admin mode
+            # todo :  and (0054, 1002) Counts Source
             ["InfusionRadioactivity", (), np.nan],  # todo : corresp ?
             ["InfusionStart", ("RadiopharmaceuticalStartTime",), np.nan],
             ["InfusionSpeed", (), np.nan],  # todo : corresp ?
             ["InfusionSpeedUnits", (), "n/a"],  # todo : corresp ?
             ["InjectedVolume", ("RadiopharmaceuticalVolume",), np.nan],
             # Reconstruction
+            # todo : see(0054, 1000) Series Type ; (0054, 1001) Units ; (0028, 0051) Corrected Image
+            # see (0028, 1052) Rescale Intercept ; (0028, 1053) Rescale Slope
+            # (0018, 1100) Reconstruction Diameter ; (0018, 1149) Field of View Dimension(s) ; (0018, 1147) Field of View Shape
             ["AcquisitionMode", (), "n/a"],
             ["ImageDecayCorrected", ("DecayCorrection",), "n/a"],
             ["ImageDecayCorrectionTime", ("DecayCorrection",), np.nan],
             ["ReconMethodName", ("ReconstructionMethod",), "n/a"],
-            # todo : may use .VM on element to check for length
-            ["ReconMethodParameterLabels", ("ReconstructionMethod",), [""]],
+            [
+                "ReconMethodParameterLabels",
+                ("ReconstructionMethod",),
+                [""],
+            ],  # todo : corresp more precise ?
             ["ReconMethodParameterUnits", ("ReconstructionMethod",), [""]],
             ["ReconMethodParameterValues", ("ReconstructionMethod",), [""]],
             ["ReconFilterType", ("ConvolutionKernel",), "n/a"],
-            ["ReconFilterSize", ("ConvolutionKernel",), np.nan],
+            ["ReconFilterSize", ("ConvolutionKernel",), np.nan],  # todo : corresp ?
             ["AttenuationCorrection", ("AttenuationCorrectionMethod",), "n/a"],
         ],
     ).set_index(keys="BIDSname", drop=False)
@@ -128,8 +136,9 @@ def _get_dcm_value_from_header(
         The value of the tag obtained from the header
 
     """
-    # todo : test
+    # todo : how do I test this ? mock a header ?
     # todo : for now don't call with exception to see how it works
+
     if not keys_list:
         return None
     if len(keys_list) == 1:
@@ -139,6 +148,7 @@ def _get_dcm_value_from_header(
         dh = dicom_header.copy()
         try:
             for key in keys_list[:-1]:
+                # todo : maybe there is a more intelligent way to code it iteratively
                 dh = dh.get(Tag(key))[0]
             get_result = dh.get(Tag(keys_list[-1]))
         except TypeError:
