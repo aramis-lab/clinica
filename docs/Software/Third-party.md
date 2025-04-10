@@ -284,7 +284,7 @@ If you want to install `SPM12` without installing [Matlab](#matlab), you will ne
 
 !!! danger "Which version to use ?"
     SPM has recently released a version `SPM25` on Github for which the installation is described [here](https://www.fil.ion.ucl.ac.uk/spm/docs/installation/standalone/).
-    Clinica does not support this version yet. If you want to use pipelines relying on SPM please use your existing installation of SPM12.
+    Clinica does not support this version yet. If you want to use pipelines relying on SPM please use SPM12.
 
 !!! tip "Verify your environment variables"
     If you followed the installation instructions, you should have set the environment variable `$LD_LIBRARY_PATH` on Linux, or `$DYLD_LIBRARY_PATH` on MacOS.
@@ -299,7 +299,7 @@ export SPM_HOME="/path/to/your/spmstandalone/home/"
 
 !!! tip "Which paths to use ?"
     - `SPM_HOME` is not actually used with this set-up but it still needs to be defined
-    - `SPMSTANDALONE_HOME` should indicate the directory containing the `run_spmxx.sh` file. `MCR_HOME` should indicate the directory containing the `bin`, `runtime`... folders
+    - `SPMSTANDALONE_HOME` should indicate the directory containing the `run_spmxx.sh` file.
 
 ___
 
