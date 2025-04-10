@@ -300,6 +300,7 @@ export SPM_HOME="/path/to/your/spmstandalone/home/"
 !!! tip "Which paths to use ?"
     - `SPM_HOME` is not actually used with this set-up but it still needs to be defined
     - `SPMSTANDALONE_HOME` should indicate the directory containing the `run_spmxx.sh` file.
+    - `MCR_HOME` should indicate the directory containing the `bin`, `runtime`... folders
 
 ___
 
