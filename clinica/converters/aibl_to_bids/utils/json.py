@@ -26,7 +26,7 @@ def write_json(json_path: Path, json_dict: dict):
 
 def _get_dicom_tags_and_defaults() -> pd.DataFrame:
     return pd.DataFrame(
-        columns=["BIDSname", "DCMtag", "Default"],
+        columns=["BIDSname", "DCMtag", "Value"],
         data=[
             # Hardware
             ["DeviceSerialNumber", ("DeviceSerialNumber",), "n/a"],
@@ -151,10 +151,8 @@ def _get_dcm_value_from_header(
     return None
 
 
-def _update_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) -> dict:
+def _update_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) -> None:
     from pydicom import dcmread
-
-    dict_json = {key: None for key in metadata.index}
 
     try:
         dcm_path = next(dcm_dir.rglob("*.dcm"))
@@ -166,91 +164,78 @@ def _update_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) -> dict:
         )
     else:
         # todo : use exception ? prints debug ?
-        for index, metadata in metadata.iterrows():
-            if dcm_value := _get_dcm_value_from_header(metadata.DCMtag, dicom_header):
-                dict_json.update({index: dcm_value})
-    return dict_json
+        for index, data in metadata.iterrows():
+            if dcm_value := _get_dcm_value_from_header(data.DCMtag, dicom_header):
+                metadata.loc[index, "Value"] = dcm_value
 
 
-def _set_scan_start(dcm_result: dict) -> dict:
-    dcm_result["ScanStart"] = "0"
-    return dcm_result
+def _set_scan_start(dcm_result: pd.DataFrame) -> None:
+    dcm_result.loc["ScanStart", "Value"] = "0"
 
 
-def _set_injection_start(dcm_result: dict) -> dict:
-    if (injection := dcm_result["InjectionStart"]) and (
-        acquisition := dcm_result["TimeZero"]
+def _set_injection_start(dcm_result: pd.DataFrame) -> None:
+    if (injection := dcm_result.loc["InjectionStart", "Value"]) and (
+        acquisition := dcm_result.loc["TimeZero", "Value"]
     ):
-        dcm_result["InjectionStart"] = injection - float(acquisition)
-    return dcm_result
+        dcm_result.loc["InjectionStart", "Value"] = injection - float(acquisition)
 
 
-def _get_admin_mode_from_start_time(dcm_result: dict) -> dict:
+def _get_admin_mode_from_start_time(dcm_result: pd.DataFrame) -> None:
     # todo : test
-    if (injection := dcm_result["ModeOfAdministration"]) and (
-        acquisition := dcm_result["TimeZero"]
+    if (injection := dcm_result.loc["ModeOfAdministration", "Value"]) and (
+        acquisition := dcm_result.loc["TimeZero", "Value"]
     ):
         if injection - float(acquisition):
-            dcm_result["ModeOfAdministration"] = "bolus-infusion"
-        dcm_result["ModeOfAdministration"] = "bolus"
-    return dcm_result
+            dcm_result.loc["ModeOfAdministration", "Value"] = "bolus-infusion"
+        dcm_result.loc["ModeOfAdministration", "Value"] = "bolus"
 
 
-def _check_decay_correction(dcm_result: dict) -> dict:
+def _check_decay_correction(dcm_result: pd.DataFrame) -> None:
     # todo : test
-    corrected = dcm_result["ImageDecayCorrected"]
+    corrected = dcm_result.loc["ImageDecayCorrected", "Value"]
     if corrected == "NONE":
-        dcm_result["ImageDecayCorrected"] = False
+        dcm_result.loc["ImageDecayCorrected", "Value"] = False
     elif corrected:
-        dcm_result["ImageDecayCorrected"] = True
-    return dcm_result
+        dcm_result.loc["ImageDecayCorrected", "Value"] = True
 
 
-def _set_decay_time(dcm_result: dict) -> dict:
-    correction = dcm_result["ImageDecayCorrectionTime"]
+def _set_decay_time(dcm_result: pd.DataFrame) -> None:
+    correction = dcm_result.loc["ImageDecayCorrectionTime", "Value"]
 
     if correction == "START":
-        dcm_result["ImageDecayCorrectionTime"] = dcm_result["ScanStart"]
+        dcm_result.loc["ImageDecayCorrectionTime", "Value"] = dcm_result.loc[
+            "ScanStart", "Value"
+        ]
     elif correction == "ADMIN":
-        dcm_result["ImageDecayCorrectionTime"] = dcm_result["InjectionStart"]
+        dcm_result.loc["ImageDecayCorrectionTime", "Value"] = dcm_result.loc[
+            "InjectionStart", "Value"
+        ]
     else:
-        dcm_result["ImageDecayCorrectionTime"] = None
-    return dcm_result
+        dcm_result.loc["ImageDecayCorrectionTime", "Value"] = None
 
 
-def _update_default_units(dcm_result: dict) -> dict:
-    dcm_result["InjectedRadioactivityUnits"] = "MBq"
-    dcm_result["SpecificRadioactivityUnits"] = "Bq/micromole"
-    return dcm_result
+def _update_default_units(dcm_result: pd.DataFrame) -> None:
+    dcm_result.loc["InjectedRadioactivityUnits", "Value"] = "MBq"
+    dcm_result.loc["SpecificRadioactivityUnits", "Value"] = "Bq/micromole"
 
 
-def _update_injected_mass(dcm_result: dict) -> dict:
+def _update_injected_mass(dcm_result: pd.DataFrame) -> None:
     # todo :test
-    injected = dcm_result["InjectedRadioactivity"]
-    specific = dcm_result["SpecificRadioactivity"]
+    injected = dcm_result.loc["InjectedRadioactivity", "Value"]
+    specific = dcm_result.loc["SpecificRadioactivity", "Value"]
     if injected and specific:
-        dcm_result["InjectedMass"] = injected / float(specific)
-        dcm_result["InjectedMassUnits"] = "mole"
-    return dcm_result
+        dcm_result.loc["InjectedMass", "Value"] = injected / float(specific)
+        dcm_result.loc["InjectedMassUnits", "Value"] = "mole"
 
 
-def _get_default_bids(metadata: pd.DataFrame, dcm_result: dict) -> dict:
-    for key in dcm_result:
-        if not dcm_result[key]:
-            dcm_result[key] = metadata.loc[key, "Default"]
-    return dcm_result
-
-
-def build_dict(self, dcm_dir: Path) -> dict:
-    dict_json = _from_image_dicoms(dcm_dir)
-
-    dict_json = _get_admin_mode_from_start_time(dict_json)
-    dict_json = _update_default_units(dict_json)
-    dict_json = _update_injected_mass(dict_json)
-    dict_json = _check_decay_correction(dict_json)
-    dict_json = _set_decay_time(dict_json)
-    dict_json = _set_scan_start(dict_json)
-    dict_json = _set_injection_start(dict_json)
-
-    dict_json = _get_default_bids(dict_json)
-    return dict_json
+def build_dict(dcm_dir: Path) -> pd.DataFrame:
+    df = _get_dicom_tags_and_defaults()
+    _update_from_image_dicoms(df, dcm_dir)
+    _get_admin_mode_from_start_time(df)
+    _update_default_units(df)
+    _update_injected_mass(df)
+    _check_decay_correction(df)
+    _set_decay_time(df)
+    _set_scan_start(df)
+    _set_injection_start(df)
+    return df
