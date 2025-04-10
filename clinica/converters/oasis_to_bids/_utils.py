@@ -13,6 +13,7 @@ __all__ = [
     "write_sessions_tsv",
     "write_scans_tsv",
     "get_first_image",
+    "mapping_diagnosis",
     "get_image_with_good_orientation",
 ]
 
@@ -224,6 +225,29 @@ def get_first_image(input_folder: Path) -> Path:
             f"No file ending in .img found in {input_folder}.",
             FileNotFoundError,
         )
+
+
+def mapping_diagnosis(diagnosis_bl: float) -> str:
+    """Mapping diagnosis label to corresponding number.
+
+    Parameters
+    ----------
+    diagnosis_bl : float
+        Diagnosis number.
+
+    Returns
+    -------
+    str :
+        Diagnosis label if matching a number, Not Available (n/a) otherwise.
+    """
+
+    if diagnosis_bl == 0.0:
+        return "CN"
+
+    elif diagnosis_bl in (0.5, 1.0, 1.5, 2.0):
+        return "AD"
+
+    return "n/a"
 
 
 def get_image_with_good_orientation(image_path: Path) -> nb.Nifti1Image:
