@@ -14,7 +14,7 @@ maintainers = [
     { name = "Clinica developers", email = "clinica.run@gmail.com>" },
 ]
 readme = "README.md"
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.10,<3.14"
 keywords = [
     "bids",
     "image processing",
