@@ -15,7 +15,7 @@ from pydicom.tag import Tag
 from clinica.utils.stream import cprint
 
 # todo : can this be used for other than AIBL ?
-# todo : adapt to modality
+# todo : adapt to modality, rn computed for all though tags are for PET
 
 
 def write_json(json_path: Path, json_dict: dict):
@@ -164,15 +164,14 @@ def _update_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) -> None:
     from pydicom import dcmread
 
     try:
-        dcm_path = next(dcm_dir.rglob("*.dcm"))
-        dicom_header = dcmread(dcm_path)
+        dicom_header = dcmread(next(dcm_dir.rglob("*.dcm")))
     except IndexError:
         cprint(
             msg=f"No DICOM found at {dcm_dir}, the image json will be filled with default values",
             lvl="warning",
         )
     else:
-        # todo : use exception ? prints debug ?
+        # todo : prints in debug ?
         for index, data in metadata.iterrows():
             if dcm_value := _get_dcm_value_from_header(data.DCMtag, dicom_header):
                 metadata.loc[index, "Value"] = dcm_value
@@ -190,7 +189,6 @@ def _set_injection_start(dcm_result: pd.DataFrame) -> None:
 
 
 def _get_admin_mode_from_start_time(dcm_result: pd.DataFrame) -> None:
-    # todo : test
     if (injection := dcm_result.loc["ModeOfAdministration", "Value"]) and (
         acquisition := dcm_result.loc["TimeZero", "Value"]
     ):
@@ -200,7 +198,6 @@ def _get_admin_mode_from_start_time(dcm_result: pd.DataFrame) -> None:
 
 
 def _check_decay_correction(dcm_result: pd.DataFrame) -> None:
-    # todo : test
     corrected = dcm_result.loc["ImageDecayCorrected", "Value"]
     if corrected == "NONE":
         dcm_result.loc["ImageDecayCorrected", "Value"] = False
@@ -240,12 +237,12 @@ def _update_injected_mass(dcm_result: pd.DataFrame) -> None:
 def build_dict(dcm_dir: Path) -> pd.DataFrame:
     df = _get_dicom_tags_and_defaults()
     _update_from_image_dicoms(df, dcm_dir)
-    breakpoint()
-    # _get_admin_mode_from_start_time(df)
+    _get_admin_mode_from_start_time(df)
+    # todo :
     # _update_default_units(df)
     # _update_injected_mass(df)
     # _check_decay_correction(df)
     # _set_decay_time(df)
     # _set_scan_start(df)
     # _set_injection_start(df)
-    # return df
+    return df
