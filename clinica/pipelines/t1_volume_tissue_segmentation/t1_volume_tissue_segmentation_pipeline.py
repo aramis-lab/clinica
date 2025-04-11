@@ -3,6 +3,7 @@ from typing import List
 
 from nipype import config
 
+from clinica.dataset import Visit
 from clinica.pipelines.engine import Pipeline
 
 cfg = dict(execution={"parameterize_dirs": False})
@@ -63,6 +64,78 @@ class T1VolumeTissueSegmentation(Pipeline):
             "transformation_mat",
             "t1_mni",
         ]
+
+    def get_processed_visits(self) -> list[Visit]:
+        """Return a list of visits for which the pipeline is assumed to have run already.
+
+        Before running the pipeline, for a given visit, if both the PET SUVR registered image
+        and the rigid transformation files already exist, then the visit is added to this list.
+        The pipeline will further skip these visits and run processing only for the remaining
+        visits.
+        """
+        from functools import reduce
+
+        from clinica.utils.filemanip import extract_visits
+        from clinica.utils.input_files import (
+            t1_volume_dartel_input_tissue,
+            t1_volume_native_tpm,
+            t1_volume_native_tpm_in_mni,
+        )
+        from clinica.utils.inputs import clinica_file_reader
+
+        if not self.caps_directory.is_dir():
+            return []
+        visits = [
+            set(extract_visits(x[0]))
+            for x in [
+                clinica_file_reader(
+                    self.subjects,
+                    self.sessions,
+                    self.caps_directory,
+                    pattern,
+                )
+                for pattern in [
+                    t1_volume_dartel_input_tissue(tissue_number=i)
+                    for i in self.parameters["dartel_tissues"]
+                ]
+            ]
+        ]
+        visits.extend(
+            [
+                set(extract_visits(x[0]))
+                for x in [
+                    clinica_file_reader(
+                        self.subjects,
+                        self.sessions,
+                        self.caps_directory,
+                        pattern,
+                    )
+                    for pattern in [
+                        t1_volume_native_tpm(tissue_number=i)
+                        for i in self.parameters["tissue_classes"]
+                    ]
+                ]
+            ]
+        )
+        visits.extend(
+            [
+                set(extract_visits(x[0]))
+                for x in [
+                    clinica_file_reader(
+                        self.subjects,
+                        self.sessions,
+                        self.caps_directory,
+                        pattern,
+                    )
+                    for pattern in [
+                        t1_volume_native_tpm_in_mni(tissue_number=i, modulation=False)
+                        for i in self.parameters["tissue_classes"]
+                    ]
+                ]
+            ]
+        )
+
+        return sorted(list(reduce(lambda x, y: x.intersection(y), visits)))
 
     def _build_input_node(self):
         """Build and connect an input node to the pipeline.
