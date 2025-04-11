@@ -8,14 +8,14 @@ from typing import Tuple, Union
 
 import numpy as np
 import pandas as pd
-from pydicom.dataset import FileDataset
+from pydicom.dataset import DataElement, FileDataset
 from pydicom.multival import MultiValue
 from pydicom.tag import Tag
 
 from clinica.utils.stream import cprint
 
 # todo : can this be used for other than AIBL ?
-# todo : test
+# todo : adapt to modality
 
 
 def write_json(json_path: Path, json_dict: dict):
@@ -118,7 +118,7 @@ def _get_dicom_tags_and_defaults() -> pd.DataFrame:
 
 
 def _get_dcm_value_from_header(
-    keys_list: Tuple[str], dicom_header: FileDataset
+    keys_list: Tuple[str], dicom_header: Union[FileDataset, DataElement]
 ) -> Union[str, int, list, None]:
     """
     Get the value from the dicom header corresponding to a dicom Tag/key list
@@ -136,28 +136,27 @@ def _get_dcm_value_from_header(
         The value of the tag obtained from the header
 
     """
-    # todo : how do I test this ? mock a header ?
-    # todo : for now don't call with exception to see how it works
-
+    # todo : how do i test this with sequences ?
     if not keys_list:
+        # Handles case where is ()
         return None
+
+    result = None
     if len(keys_list) == 1:
-        get_result = dicom_header.get(Tag(keys_list[0]))
-    else:
+        result = dicom_header.get(Tag(keys_list[0]))
+    elif header := dicom_header.get(Tag(keys_list[0])):
         # Handles nested tags
-        dh = dicom_header.copy()
-        try:
-            for key in keys_list[:-1]:
-                # todo : maybe there is a more intelligent way to code it iteratively
-                dh = dh.get(Tag(key))[0]
-            get_result = dh.get(Tag(keys_list[-1]))
-        except TypeError:
-            return None
-    if get_result:
-        if type(get_result.value) == MultiValue:
-            # Handles case where result is MultiValue, which is not JSON serializable
-            return list(get_result.value)
-        return get_result.value
+        _get_dcm_value_from_header(keys_list[1:], header[0])
+    if result:
+        return result.value
+
+    # todo
+    # if result:
+    #     if type(result.value) == MultiValue:
+    #         # Handles case where result is MultiValue, which is not JSON serializable
+    #         return list(result.value)
+    #     return result.value
+
     return None
 
 
@@ -241,11 +240,12 @@ def _update_injected_mass(dcm_result: pd.DataFrame) -> None:
 def build_dict(dcm_dir: Path) -> pd.DataFrame:
     df = _get_dicom_tags_and_defaults()
     _update_from_image_dicoms(df, dcm_dir)
-    _get_admin_mode_from_start_time(df)
-    _update_default_units(df)
-    _update_injected_mass(df)
-    _check_decay_correction(df)
-    _set_decay_time(df)
-    _set_scan_start(df)
-    _set_injection_start(df)
-    return df
+    breakpoint()
+    # _get_admin_mode_from_start_time(df)
+    # _update_default_units(df)
+    # _update_injected_mass(df)
+    # _check_decay_correction(df)
+    # _set_decay_time(df)
+    # _set_scan_start(df)
+    # _set_injection_start(df)
+    # return df
