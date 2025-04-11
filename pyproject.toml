@@ -33,7 +33,7 @@ classifiers = [
 ]
 dependencies = [
     "nibabel (>=5)",
-    "nipype (>=1.8.6)",
+    "nipype (>=1.10)",
     "argcomplete (>=1.9.4,<2)",
     "pandas (>=2,<3)",
     "jinja2 (>=3,<4)",
@@ -63,7 +63,7 @@ dependencies = [
     "pydra-freesurfer (>=0.0.9)",
     "pydra-petpvc (>=0.0.4)",
     "pydra-fsl (>=0.0.22)",
-    "antspyx (>=0.4.2)",
+    "antspyx (>=0.5.4)",
     "rich (>=13.8.0)",
 ]
 
