@@ -14,15 +14,15 @@ from pydicom.tag import Tag
 
 from clinica.utils.stream import cprint
 
+# todo : __all__
+
 # todo : can this be used for other than AIBL ?
 # todo : adapt to modality, rn computed for all though tags are for PET
 
 
-def write_json(json_path: Path, json_dict: dict):
+def write_json(json_path: Path, json_data: pd.DataFrame):
     # todo : date format ?
-    # todo : change for dataframe
-    with open(json_path, "w") as f:
-        f.write(json.dumps(json_dict, indent=4))
+    json_data["Value"].to_json(json_path, indent=4)
 
 
 def _get_dicom_tags_and_defaults() -> pd.DataFrame:
@@ -234,15 +234,17 @@ def _update_injected_mass(dcm_result: pd.DataFrame) -> None:
         dcm_result.loc["InjectedMassUnits", "Value"] = "mole"
 
 
-def build_dict(dcm_dir: Path) -> pd.DataFrame:
+def get_json_data(dcm_dir: Path) -> pd.DataFrame:
     df = _get_dicom_tags_and_defaults()
     _update_from_image_dicoms(df, dcm_dir)
-    _get_admin_mode_from_start_time(df)
+
+    _set_decay_time(df)
+    _set_scan_start(df)
+
     # todo :
+    # _get_admin_mode_from_start_time(df)
     # _update_default_units(df)
     # _update_injected_mass(df)
     # _check_decay_correction(df)
-    # _set_decay_time(df)
-    # _set_scan_start(df)
     # _set_injection_start(df)
     return df
