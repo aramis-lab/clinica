@@ -2,9 +2,8 @@
 This module handles json writing from DICOM for PET modality in AIBL for BIDS 1.10 compliance
 """
 
-import json
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -18,10 +17,12 @@ from clinica.utils.stream import cprint
 
 # todo : can this be used for other than AIBL ?
 # todo : adapt to modality, rn computed for all though tags are for PET
+# todo : write docstrings
 
 
 def write_json(json_path: Path, json_data: pd.DataFrame):
     # todo : date format ?
+    # todo : why n/a written as n><a ? or np.nan as null ?
     json_data["Value"].to_json(json_path, indent=4)
 
 
@@ -117,9 +118,20 @@ def _get_dicom_tags_and_defaults() -> pd.DataFrame:
     ).set_index(keys="BIDSname", drop=False)
 
 
-def _get_dcm_value_from_header(
-    keys_list: Tuple[str], dicom_header: Union[FileDataset, DataElement]
-) -> Union[str, int, list, None]:
+def _check_dcm_value(
+    dicom_data: Union[None, DataElement],
+) -> Union[None, str, list, float]:
+    # Handles case where result is MultiValue, which is not JSON serializable
+    if dicom_data:
+        if type(dicom_data.value) == MultiValue:
+            return list(dicom_data.value)
+        return dicom_data.value
+    return None
+
+
+def _fetch_dcm_data_from_header(
+    keys_list: tuple[str], dicom_header: Union[FileDataset, DataElement]
+) -> Union[None, DataElement]:
     """
     Get the value from the dicom header corresponding to a dicom Tag/key list
 
@@ -138,29 +150,22 @@ def _get_dcm_value_from_header(
     """
     # todo : how do i test this with sequences ?
     if not keys_list:
-        # Handles case where is ()
         return None
-
-    result = None
+    header = dicom_header.get(Tag(keys_list[0]))
     if len(keys_list) == 1:
-        result = dicom_header.get(Tag(keys_list[0]))
-    elif header := dicom_header.get(Tag(keys_list[0])):
-        # Handles nested tags
+        return header
+    if header:
         _get_dcm_value_from_header(keys_list[1:], header[0])
-    if result:
-        return result.value
-
-    # todo
-    # if result:
-    #     if type(result.value) == MultiValue:
-    #         # Handles case where result is MultiValue, which is not JSON serializable
-    #         return list(result.value)
-    #     return result.value
-
     return None
 
 
-def _update_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) -> None:
+def _get_dcm_value_from_header(
+    keys_list: tuple[str], dicom_header: Union[FileDataset, DataElement]
+) -> Union[None, str, list, float]:
+    return _check_dcm_value(_fetch_dcm_data_from_header(keys_list, dicom_header))
+
+
+def _update_metadata_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) -> None:
     from pydicom import dcmread
 
     try:
@@ -236,7 +241,7 @@ def _update_injected_mass(dcm_result: pd.DataFrame) -> None:
 
 def get_json_data(dcm_dir: Path) -> pd.DataFrame:
     df = _get_dicom_tags_and_defaults()
-    _update_from_image_dicoms(df, dcm_dir)
+    _update_metadata_from_image_dicoms(df, dcm_dir)
 
     _set_decay_time(df)
     _set_scan_start(df)
