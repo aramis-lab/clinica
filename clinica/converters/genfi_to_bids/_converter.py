@@ -96,6 +96,7 @@ def convert(
         participants=results["participants"],
         sessions=results["sessions"],
         scans=results["scans"],
+        source=path_to_dataset,
     )
     write_modality_agnostic_files(
         study_name=StudyName.GENFI,

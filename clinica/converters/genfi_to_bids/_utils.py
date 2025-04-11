@@ -785,6 +785,7 @@ def write_bids(
     participants: DataFrame,
     sessions: DataFrame,
     scans: DataFrame,
+    source: Path,
 ) -> None:
     """This function writes the BIDS
 
@@ -801,6 +802,9 @@ def write_bids(
 
     scans: DataFrame
         DataFrame containing the data for the scans.tsv
+
+    source : Path
+        Path to the source imaging data
     """
     import os
 
@@ -834,6 +838,7 @@ def write_bids(
         sessions_filepath = to / str(participant_id) / f"{participant_id}_sessions.tsv"
         with fs.open(sessions_filepath, "w") as sessions_file:
             write_to_tsv(sessions, sessions_file)
+
     scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
     for bids_full_path, metadata in scans.iterrows():
         bids_full_path = Path(bids_full_path)
@@ -854,6 +859,7 @@ def write_bids(
                 / str(metadata.session_id)
                 / f"{metadata.participant_id}_{metadata.session_id}_scan.tsv"
             )
+            metadata.source_path = metadata.source_path.relative_to(source)
             row_to_write = _serialize_row(
                 metadata.drop(["participant_id", "session_id"]),
                 write_column_names=not scans_filepath.exists(),
