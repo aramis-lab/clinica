@@ -310,7 +310,21 @@ def test_get_image_with_good_orientation(tmp_path) -> None:
     assert len(image.shape) == 3  # the image dimension should be 3D
 
 
-def test_get_subjects_list_from_data(tmp_path) -> None:
+def test_get_subjects_list_from_correct_data(tmp_path) -> None:
+    from clinica.converters.oasis_to_bids._utils import get_subjects_list
+
+    source_dir = tmp_path / "dataset"
+    source_dir.mkdir()
+
+    for filename in ("OAS1_0001_MR1",):
+        (source_dir / filename).mkdir()
+
+    (source_dir / "OAS1_0002_MR1").touch()
+
+    assert get_subjects_list(source_dir) == [source_dir / "OAS1_0001_MR1"]
+
+
+def test_get_subjects_list_from_wrong_data(tmp_path) -> None:
     from clinica.converters.oasis_to_bids._utils import get_subjects_list
 
     source_dir = tmp_path / "dataset"
@@ -325,12 +339,42 @@ def test_get_subjects_list_from_data(tmp_path) -> None:
     ):
         (source_dir / filename).mkdir()
 
-    (source_dir / "OAS1_0005_MR1").touch()
+    with pytest.raises(ValueError):
+        get_subjects_list(source_dir)
 
-    assert get_subjects_list(source_dir) == [source_dir / "OAS1_0001_MR1"]
+
+def test_get_subjects_list_from_correct_file(tmp_path) -> None:
+    from clinica.converters.oasis_to_bids._utils import get_subjects_list
+
+    source_dir = tmp_path / "dataset"
+    source_dir.mkdir()
+
+    lines = [
+        "OAS1_0001_MR1\n",
+    ]
+
+    for filename in lines:
+        (source_dir / filename[:-1]).mkdir()
+
+    (source_dir / "OAS1_0002_MR1").touch()
+
+    lines.append("OAS1_0002_MR1\n")
+
+    subjects_list_dir = tmp_path / "subjects_list_dir"
+    subjects_list_dir.mkdir()
+
+    subjects_list = subjects_list_dir / "subjects_list.txt"
+    subjects_list.touch()
+
+    with open(str(subjects_list), "a") as file:
+        file.writelines(lines)
+
+    assert get_subjects_list(source_dir, subjects_list) == [
+        source_dir / "OAS1_0001_MR1"
+    ]
 
 
-def test_get_subjects_list_from_file(tmp_path) -> None:
+def test_get_subjects_list_from_wrong_file(tmp_path) -> None:
     from clinica.converters.oasis_to_bids._utils import get_subjects_list
 
     source_dir = tmp_path / "dataset"
@@ -347,10 +391,6 @@ def test_get_subjects_list_from_file(tmp_path) -> None:
     for filename in lines:
         (source_dir / filename[:-1]).mkdir()
 
-    (source_dir / "OAS1_0005_MR1").touch()
-
-    lines.append("OAS1_0005_MR1\n")
-
     subjects_list_dir = tmp_path / "subjects_list_dir"
     subjects_list_dir.mkdir()
 
@@ -360,9 +400,8 @@ def test_get_subjects_list_from_file(tmp_path) -> None:
     with open(str(subjects_list), "a") as file:
         file.writelines(lines)
 
-    assert get_subjects_list(source_dir, subjects_list) == [
-        source_dir / "OAS1_0001_MR1"
-    ]
+    with pytest.raises(ValueError):
+        get_subjects_list(source_dir, subjects_list)
 
 
 @pytest.mark.parametrize(

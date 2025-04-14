@@ -68,11 +68,16 @@ class OasisToBids(Converter):
             bids_dir: path to the BIDS directory
             subjects: (optional) path to the subjects list file
         """
-        from clinica.dataset import get_subjects_from_bids_dataset
+        from clinica.converters.study_models import BIDSSubjectID
         from clinica.utils.stream import cprint
 
+        from ._utils import get_subjects_list
+
         cprint("Converting clinical data...", lvl="info")
-        bids_ids = get_subjects_from_bids_dataset(bids_dir)
+        bids_ids: list[BIDSSubjectID] = [
+            subject.name
+            for subject in get_subjects_list(bids_dir, subjects, is_bids=True)
+        ]
         self._create_participants_tsv(
             clinical_data_dir, bids_dir, bids_ids, subjects=subjects
         )
