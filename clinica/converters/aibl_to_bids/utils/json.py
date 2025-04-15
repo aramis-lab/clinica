@@ -3,7 +3,7 @@ This module handles json writing from DICOM for PET modality in AIBL for BIDS 1.
 """
 
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -20,13 +20,16 @@ from clinica.utils.stream import cprint
 # todo : write docstrings
 
 
+# todo : would using a class be beneficial ? I am starting to get a lot of if modality truc...
+
+
 def write_json(json_path: Path, json_data: pd.DataFrame):
     # todo : date format ?
     # todo : why n/a written as n><a ? or np.nan as null ?
     json_data["Value"].to_json(json_path, indent=4)
 
 
-def _get_dicom_tags_and_defaults() -> pd.DataFrame:
+def _get_dicom_tags_and_defaults_pet() -> pd.DataFrame:
     return pd.DataFrame(
         columns=["BIDSname", "DCMtag", "Value"],
         data=[
@@ -118,8 +121,31 @@ def _get_dicom_tags_and_defaults() -> pd.DataFrame:
     ).set_index(keys="BIDSname", drop=False)
 
 
+def _get_dicom_tags_and_defaults_base() -> pd.DataFrame:
+    return pd.DataFrame(
+        columns=["BIDSname", "DCMtag", "Value"],
+        data=[
+            # Hardware
+            ["DeviceSerialNumber", ("DeviceSerialNumber",), "n/a"],
+            ["ManufacturersModelName", ("ManufacturerModelName",), "n/a"],
+            ["SoftwareVersions", ("SoftwareVersions",), "n/a"],
+            ["BodyPart", ("BodyPartExamined",), "n/a"],
+            ["MagneticFieldStrength", ("MagneticFieldStrength",), "n/a"],
+            ["Units", ("Units",), "n/a"],
+            # Institution
+            ["InstitutionName", ("InstitutionName",), "n/a"],
+            ["InstitutionAddress", ("InstitutionAddress",), "n/a"],
+            [
+                "InstitutionalDepartmentName",
+                ("InstitutionalDepartmentName",),
+                "n/a",
+            ],
+        ],
+    )
+
+
 def _check_dcm_value(
-    dicom_data: Union[None, DataElement],
+    dicom_data: Optional[DataElement],
 ) -> Union[None, str, list, float]:
     # Handles case where result is MultiValue, which is not JSON serializable
     if dicom_data:
@@ -131,7 +157,7 @@ def _check_dcm_value(
 
 def _fetch_dcm_data_from_header(
     keys_list: tuple[str], dicom_header: Union[FileDataset, DataElement]
-) -> Union[None, DataElement]:
+) -> Optional[DataElement]:
     """
     Get the value from the dicom header corresponding to a dicom Tag/key list
 
@@ -231,7 +257,6 @@ def _update_default_units(dcm_result: pd.DataFrame) -> None:
 
 
 def _update_injected_mass(dcm_result: pd.DataFrame) -> None:
-    # todo :test
     injected = dcm_result.loc["InjectedRadioactivity", "Value"]
     specific = dcm_result.loc["SpecificRadioactivity", "Value"]
     if injected and specific:
@@ -239,17 +264,27 @@ def _update_injected_mass(dcm_result: pd.DataFrame) -> None:
         dcm_result.loc["InjectedMassUnits", "Value"] = "mole"
 
 
-def get_json_data(dcm_dir: Path) -> pd.DataFrame:
-    df = _get_dicom_tags_and_defaults()
-    _update_metadata_from_image_dicoms(df, dcm_dir)
+def _get_default_for_modality(modality: str) -> Optional[pd.DataFrame]:
+    # todo : might need to adapt if other converters involved one day
+    if modality in ("av45", "flute", "pib"):
+        return _get_dicom_tags_and_defaults_pet()
+    return _get_dicom_tags_and_defaults_base()
 
-    _set_decay_time(df)
-    _set_scan_start(df)
 
-    # todo :
+def _postprocess_for_pet(metadata: pd.DataFrame):
+    _set_decay_time(metadata)
+    _set_scan_start(metadata)
+
     # _get_admin_mode_from_start_time(df)
     # _update_default_units(df)
     # _update_injected_mass(df)
     # _check_decay_correction(df)
     # _set_injection_start(df)
-    return df
+
+
+def get_json_data(dcm_dir: Path, modality: str) -> pd.DataFrame:
+    metadata = _get_default_for_modality(modality)
+    _update_metadata_from_image_dicoms(metadata, dcm_dir)
+    if modality in ("av45", "flute", "pib"):
+        _postprocess_for_pet(metadata)
+    return metadata
