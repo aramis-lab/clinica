@@ -141,7 +141,7 @@ def _get_dicom_tags_and_defaults_base() -> pd.DataFrame:
                 "n/a",
             ],
         ],
-    )
+    ).set_index(keys="BIDSname", drop=False)
 
 
 def _check_dcm_value(
@@ -188,7 +188,8 @@ def _fetch_dcm_data_from_header(
 def _get_dcm_value_from_header(
     keys_list: tuple[str], dicom_header: Union[FileDataset, DataElement]
 ) -> Union[None, str, list, float]:
-    return _check_dcm_value(_fetch_dcm_data_from_header(keys_list, dicom_header))
+    test = _fetch_dcm_data_from_header(keys_list, dicom_header)
+    return _check_dcm_value(test)
 
 
 def _update_metadata_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) -> None:
