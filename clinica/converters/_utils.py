@@ -192,7 +192,7 @@ def create_participants_df(
 
     participant_df.reset_index(inplace=True, drop=True)
 
-    if subjects:
+    if subjects and study_name == StudyName.OASIS:
         subjects_set = set(_get_subjects_list_from_file(subjects))
 
     # Adding participant_id column with BIDS ids
