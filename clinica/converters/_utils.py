@@ -24,6 +24,7 @@ __all__ = [
     "load_clinical_csv",
     "get_subjects_list_from_file",
     "get_subject_id_pattern",
+    "compare_bids_ids",
 ]
 
 
@@ -100,8 +101,6 @@ def create_participants_df(
     prev_location = ""
     prev_sheet = 0
     index_to_drop = []
-    subjects_to_drop = []
-    subjects_set = {}
     study_name = StudyName(study_name)
     location_name = f"{study_name.value} location"
 
@@ -192,9 +191,6 @@ def create_participants_df(
 
     participant_df.reset_index(inplace=True, drop=True)
 
-    if subjects and study_name == StudyName.OASIS:
-        subjects_set = set(_get_subjects_list_from_file(subjects))
-
     # Adding participant_id column with BIDS ids
     for i in range(0, len(participant_df)):
         bids_id_from_participant_df = bids_id_factory(
@@ -207,24 +203,6 @@ def create_participants_df(
         else:
             index_to_drop.append(i)
 
-            if (
-                subjects and bids_id_from_participant_df in subjects_set
-            ) or not subjects:
-                subjects_to_drop.append(bids_id_from_participant_df)
-
-    if len(subjects_to_drop) > 0:
-        cprint(
-            msg=(
-                "The following subjects were not found in your BIDS folder :\n"
-                + ", ".join(subjects_to_drop)
-            ),
-            lvl="info",
-        )
-    else:
-        cprint(
-            msg=("All selected subjects were found in your BIDS folder."),
-            lvl="info",
-        )
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
         participant_df = participant_df.drop(index_to_drop)
@@ -611,3 +589,24 @@ def get_subjects_list_from_file(subjects_list_path: Path) -> list[str]:
         List of subjects.
     """
     return subjects_list_path.read_text().splitlines()
+
+
+def compare_bids_ids(
+    bids_ids_1: list[BIDSSubjectID], bids_ids_2: list[BIDSSubjectID]
+) -> list[BIDSSubjectID]:
+    """Gets the difference between bids ids lists.
+
+    Parameters
+    ----------
+    bids_ids_1 : list[BIDSSubjectID]
+        First bids ids list.
+
+    bids_ids_2 : list[BIDSSubjectID]
+        Second bids ids list.
+
+    Returns
+    -------
+    list[BIDSSubjectID] :
+        Bids ids difference.
+    """
+    return list(set(bids_ids_1).symmetric_difference(set(bids_ids_2)))

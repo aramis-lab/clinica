@@ -41,9 +41,7 @@ def _get_subjects_list_from_file(subjects_list_path: Path) -> list[OASISBIDSSubj
     ]
 
 
-def _get_subjects_list_from_data(
-    source_dir: Path, is_bids: Optional[bool] = False
-) -> list[OASISBIDSSubjectID]:
+def _get_subjects_list_from_data(source_dir: Path) -> list[OASISBIDSSubjectID]:
     """Gets the list of subjects folders names from the input dataset folder.
 
     Parameters
@@ -51,31 +49,20 @@ def _get_subjects_list_from_data(
     source_dir : Path
         The path to the input dataset folder.
 
-    is_bids : Optional[bool]
-        Boolean checking if the input dataset folder is the original or the BIDS one.
-        Default=False.
-
     Returns
     -------
     list[OASISBIDSSubjectID] :
         List of subjects folders names.
     """
     return [
-        OASISBIDSSubjectID(
-            folder.name
-            if is_bids
-            else OASISBIDSSubjectID.from_original_study_id(folder.name)
-        )
+        OASISBIDSSubjectID(OASISBIDSSubjectID.from_original_study_id(folder.name))
         for folder in source_dir.iterdir()
-        if not (is_bids or folder.name.startswith("."))
-        or (is_bids and folder.name.startswith("sub-"))
+        if not folder.name.startswith(".")
     ]
 
 
 def _filter_oasis_subjects(
-    source_dir: Path,
-    subjects_list: list[OASISBIDSSubjectID],
-    is_bids: Optional[bool] = False,
+    source_dir: Path, subjects_list: list[OASISBIDSSubjectID]
 ) -> list[Path]:
     """Filters and builds the paths to the subjects folders.
 
@@ -87,10 +74,6 @@ def _filter_oasis_subjects(
     subjects_list : list[OASISBIDSSubjectID]
         The list of subjects folders names.
 
-    is_bids : Optional[bool]
-        Boolean checking if the input dataset folder is the original or the BIDS one.
-        Default=False.
-
     Returns
     -------
     list[Path] :
@@ -99,10 +82,7 @@ def _filter_oasis_subjects(
     return list(
         filter(
             lambda path: path.is_dir(),
-            [
-                source_dir / (str(subj) if is_bids else subj.to_original_study_id())
-                for subj in subjects_list
-            ],
+            [source_dir / subj.to_original_study_id() for subj in subjects_list],
         )
     )
 
@@ -110,9 +90,8 @@ def _filter_oasis_subjects(
 def get_subjects_list(
     source_dir: Path,
     subjs_list_path: Optional[Path] = None,
-    is_bids: Optional[bool] = False,
 ) -> list[Path]:
-    """Gets the list of paths to the subjects folders.
+    """Gets the list of paths to the subjects folders from the raw dataset.
 
     Parameters
     ----------
@@ -122,24 +101,18 @@ def get_subjects_list(
     subjs_list_path : Optional[Path]
         The path to the subjects list file.
 
-    is_bids : Optional[bool]
-        Boolean checking if the input dataset folder is the original or the BIDS one.
-        Default=False.
-
     Returns
     -------
     list[Path] :
         List of paths to the subjects folders.
     """
 
-    if subjs_list_path and not is_bids:
+    if subjs_list_path:
         return _filter_oasis_subjects(
             source_dir, _get_subjects_list_from_file(subjs_list_path)
         )
 
-    return _filter_oasis_subjects(
-        source_dir, _get_subjects_list_from_data(source_dir, is_bids), is_bids
-    )
+    return _filter_oasis_subjects(source_dir, _get_subjects_list_from_data(source_dir))
 
 
 def _convert_cdr_to_diagnosis(cdr: Union[int, str]) -> str:
