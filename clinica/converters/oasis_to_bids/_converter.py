@@ -60,7 +60,7 @@ class OasisToBids(Converter):
         self.log_missing_data(source_dir, destination_dir, subjects=subjects)
 
     def log_missing_data(
-        source_dir: Path, bids_dir: Path, subjects: Optional[Path] = None
+        self, source_dir: Path, bids_dir: Path, subjects: Optional[Path] = None
     ):
         """Log missing subjects in BIDS folders.
 
@@ -84,8 +84,8 @@ class OasisToBids(Converter):
         from ._utils import get_subjects_list
 
         raw_ids: list[OASISBIDSSubjectID] = [
-            subject.name
-            for subject in get_subjects_list(source_dir, subjects, is_bids=True)
+            OASISBIDSSubjectID(OASISBIDSSubjectID.from_original_study_id(subject.name))
+            for subject in get_subjects_list(source_dir, subjs_list_path=subjects)
         ]
         bids_ids: list[OASISBIDSSubjectID] = get_subjects_from_bids_dataset(bids_dir)
 
