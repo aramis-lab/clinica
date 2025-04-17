@@ -175,7 +175,7 @@ def _create_clinical_data(
         ),
     ],
 )
-def test_create_participants_df_with_data(
+def test_create_participants_df(
     tmp_path, bids_ids, expected, study_name, adni_genotype
 ):
     from clinica.converters._utils import create_participants_df
@@ -194,108 +194,28 @@ def test_create_participants_df_with_data(
     )
 
 
-@pytest.mark.parametrize(
-    "study_name, bids_ids, expected, adni_genotype",
-    [
-        (
-            StudyName.OASIS,
-            ["sub-OASIS10001"],
-            pd.DataFrame(
-                {
-                    "participant_id": ["sub-OASIS10001"],
-                    "alternative_id_1": ["OAS1_0001_MR1"],
-                    "sex": ["F"],
-                }
-            ),
-            False,
-        ),
-        (
-            StudyName.ADNI,
-            ["sub-ADNI001S0001"],
-            pd.DataFrame(
-                {
-                    "participant_id": ["sub-ADNI001S0001"],
-                    "alternative_id_1": ["001_S_0001"],
-                    "sex": ["Male"],
-                    "apoegen1": ["3"],
-                }
-            ),
-            True,
-        ),
-        (
-            StudyName.OASIS,
-            ["sub-OASIS10002", "sub-OASIS10004", "sub-OASIS10007"],
-            pd.DataFrame(
-                {
-                    "participant_id": ["sub-OASIS10002", "sub-OASIS10004"],
-                    "alternative_id_1": ["OAS1_0002_MR1", "OAS1_0004_MR1"],
-                    "sex": ["M", "M"],
-                }
-            ),
-            False,
-        ),
-        (
-            StudyName.ADNI,
-            ["sub-ADNI001S0005"],
-            pd.DataFrame(
-                {
-                    "participant_id": ["sub-ADNI001S0005"],
-                    "alternative_id_1": ["001_S_0005"],
-                    "sex": ["Female"],
-                    "apoegen1": ["n/a"],
-                }
-            ),
-            False,
-        ),
-        (
-            StudyName.ADNI,
-            ["sub-ADNI001S0006"],
-            pd.DataFrame(
-                {
-                    "participant_id": ["sub-ADNI001S0006"],
-                    "alternative_id_1": ["001_S_0006"],
-                    "sex": ["n/a"],
-                    "apoegen1": [3.0],
-                }
-            ),
-            False,
-        ),
-    ],
-)
-def test_create_participants_df_with_file(
-    tmp_path, bids_ids, expected, study_name, adni_genotype
-):
-    from clinica.converters._utils import create_participants_df
+def test_compare_bids_ids():
+    from clinica.converters._utils import compare_bids_ids
+    from clinica.converters.study_models import OASISBIDSSubjectID
 
-    lines = [
-        "OAS1_0001_MR1\n",
-        "OAS1_0002_MR1\n",
-        "OAS1_0004_MR1\n",
-        "OAS1_0007_MR1\n",
-    ]
+    sub1 = OASISBIDSSubjectID("sub-OASIS10001")
+    sub2 = OASISBIDSSubjectID("sub-OASIS10002")
+    sub3 = OASISBIDSSubjectID("sub-OASIS10003")
+    sub4 = OASISBIDSSubjectID("sub-OASIS10004")
 
-    subjects_list_dir = tmp_path / "subjects_list_dir"
-    subjects_list_dir.mkdir()
+    # Basic symmetric difference
+    assert set(compare_bids_ids([sub1, sub2, sub3], [sub2, sub4])) == {sub1, sub3, sub4}
 
-    subjects_list = subjects_list_dir / "subjects_list.txt"
-    subjects_list.touch()
+    # No difference
+    assert compare_bids_ids([sub1, sub2], [sub1, sub2]) == []
 
-    with open(str(subjects_list), "a") as file:
-        file.writelines(lines)
+    # Everything different
+    assert set(compare_bids_ids([sub1, sub2], [sub3, sub4])) == {sub1, sub2, sub3, sub4}
 
-    assert (
-        create_participants_df(
-            study_name,
-            clinical_specifications_folder=_create_participants_spec(tmp_path),
-            clinical_data_dir=_create_clinical_data(
-                tmp_path, study_name, adni_genotype
-            ),
-            bids_ids=bids_ids,
-            subjects=subjects_list,
-        )
-        .reset_index(drop=True)
-        .equals(expected)
-    )
+    # Difference with empty lists
+    assert compare_bids_ids([], []) == []
+    assert set(compare_bids_ids([sub1], [])) == {sub1}
+    assert set(compare_bids_ids([], [sub1])) == {sub1}
 
 
 @pytest.mark.parametrize("compress", [True, False])
