@@ -54,9 +54,7 @@ class OasisToBids(Converter):
         self.convert_images(
             source_dir, destination_dir, subjects=subjects, n_procs=n_procs
         )
-        self.convert_clinical_data(
-            clinical_data_dir, destination_dir, subjects=subjects
-        )
+        self.convert_clinical_data(clinical_data_dir, destination_dir)
         self.log_missing_data(source_dir, destination_dir, subjects=subjects)
 
     def log_missing_data(
@@ -105,15 +103,12 @@ class OasisToBids(Converter):
                 lvl="info",
             )
 
-    def convert_clinical_data(
-        self, clinical_data_dir: Path, bids_dir: Path, subjects: Optional[Path] = None
-    ):
+    def convert_clinical_data(self, clinical_data_dir: Path, bids_dir: Path):
         """Convert the clinical data defined inside the clinical_specifications.xlx into BIDS.
 
         Args:
             clinical_data_dir: path to the folder with the original clinical data
             bids_dir: path to the BIDS directory
-            subjects: (optional) path to the subjects list file
         """
         from clinica.converters.study_models import BIDSSubjectID
         from clinica.dataset.bids._queries import get_subjects_from_bids_dataset
@@ -121,9 +116,7 @@ class OasisToBids(Converter):
 
         cprint("Converting clinical data...", lvl="info")
         bids_ids: list[BIDSSubjectID] = get_subjects_from_bids_dataset(bids_dir)
-        self._create_participants_tsv(
-            clinical_data_dir, bids_dir, bids_ids, subjects=subjects
-        )
+        self._create_participants_tsv(clinical_data_dir, bids_dir, bids_ids)
         self._create_sessions_tsv(clinical_data_dir, bids_dir, bids_ids)
         self._create_scans_tsv(bids_dir)
 
@@ -132,7 +125,6 @@ class OasisToBids(Converter):
         clinical_data_dir: Path,
         bids_dir: Path,
         bids_ids: list[str],
-        subjects: Optional[Path] = None,
     ):
         from clinica.converters._utils import create_participants_df
         from clinica.converters.study_models import StudyName
@@ -144,7 +136,6 @@ class OasisToBids(Converter):
             clinical_specifications_folder=Path(__file__).parents[1] / "specifications",
             clinical_data_dir=clinical_data_dir,
             bids_ids=bids_ids,
-            subjects=subjects,
         )
 
         participants_df["diagnosis_bl"] = participants_df["diagnosis_bl"].apply(

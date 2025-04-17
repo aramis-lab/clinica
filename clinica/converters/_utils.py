@@ -23,7 +23,6 @@ __all__ = [
     "viscode_to_session",
     "load_clinical_csv",
     "get_subjects_list_from_file",
-    "get_subject_id_pattern",
     "compare_bids_ids",
 ]
 
@@ -59,7 +58,6 @@ def create_participants_df(
     clinical_data_dir: Path,
     bids_ids: list[str],
     delete_non_bids_info: bool = True,
-    subjects: Optional[Path] = None,
 ) -> pd.DataFrame:
     """Create the file participants.tsv.
 
@@ -81,10 +79,6 @@ def create_participants_df(
         If True delete all the rows of the subjects that are not available in the BIDS dataset.
         Default=True.
 
-    subjects : Path, optional
-        Path to the input subjects list provided by the user.
-        Default=None.
-
     Returns
     -------
     pd.DataFrame :
@@ -94,7 +88,6 @@ def create_participants_df(
 
     from clinica.utils.stream import cprint
 
-    from .oasis_to_bids._utils import _get_subjects_list_from_file
     from .study_models import bids_id_factory
 
     fields_bids = ["participant_id"]
