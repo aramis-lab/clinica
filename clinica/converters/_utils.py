@@ -23,7 +23,7 @@ __all__ = [
     "viscode_to_session",
     "load_clinical_csv",
     "get_subjects_list_from_file",
-    "compare_bids_ids",
+    "compare_bids_ids_lists",
 ]
 
 
@@ -584,17 +584,17 @@ def get_subjects_list_from_file(subjects_list_path: Path) -> list[str]:
     return subjects_list_path.read_text().splitlines()
 
 
-def compare_bids_ids(
-    bids_ids_1: list[BIDSSubjectID], bids_ids_2: list[BIDSSubjectID]
+def compare_bids_ids_lists(
+    expected_subjects: list[BIDSSubjectID], obtained_subjects: list[BIDSSubjectID]
 ) -> list[BIDSSubjectID]:
     """Gets the difference between bids ids lists.
 
     Parameters
     ----------
-    bids_ids_1 : list[BIDSSubjectID]
+    expected_subjects : list[BIDSSubjectID]
         First bids ids list.
 
-    bids_ids_2 : list[BIDSSubjectID]
+    obtained_subjects : list[BIDSSubjectID]
         Second bids ids list.
 
     Returns
@@ -602,4 +602,4 @@ def compare_bids_ids(
     list[BIDSSubjectID] :
         Bids ids difference.
     """
-    return list(set(bids_ids_1).symmetric_difference(set(bids_ids_2)))
+    return list(set(expected_subjects).symmetric_difference(set(obtained_subjects)))

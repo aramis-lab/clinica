@@ -74,32 +74,33 @@ class OasisToBids(Converter):
             Path to the subjects list file.
             Default=None.
         """
-        from clinica.converters._utils import compare_bids_ids
+        from clinica.converters._utils import compare_bids_ids_lists
         from clinica.converters.study_models import OASISBIDSSubjectID
         from clinica.dataset.bids._queries import get_subjects_from_bids_dataset
         from clinica.utils.stream import cprint
 
         from ._utils import get_subjects_list
 
-        raw_ids: list[OASISBIDSSubjectID] = [
+        raw_ids = [
             OASISBIDSSubjectID(OASISBIDSSubjectID.from_original_study_id(subject.name))
             for subject in get_subjects_list(source_dir, subjs_list_path=subjects)
         ]
-        bids_ids: list[OASISBIDSSubjectID] = get_subjects_from_bids_dataset(bids_dir)
+        bids_ids = [
+            OASISBIDSSubjectID(subject)
+            for subject in get_subjects_from_bids_dataset(bids_dir)
+        ]
 
-        ids_difference = compare_bids_ids(raw_ids, bids_ids)
-
-        if len(ids_difference) > 0:
+        if ids_difference := compare_bids_ids_lists(raw_ids, bids_ids):
             cprint(
                 msg=(
-                    "The following subjects were not found in your BIDS folder :\n"
+                    "The following subjects were not converted to your BIDS folder :\n"
                     + ", ".join(ids_difference)
                 ),
                 lvl="info",
             )
         else:
             cprint(
-                msg=("All selected subjects were found in your BIDS folder."),
+                msg=("All selected subjects were converted to your BIDS folder."),
                 lvl="info",
             )
 
@@ -115,7 +116,7 @@ class OasisToBids(Converter):
         from clinica.utils.stream import cprint
 
         cprint("Converting clinical data...", lvl="info")
-        bids_ids: list[BIDSSubjectID] = get_subjects_from_bids_dataset(bids_dir)
+        bids_ids = get_subjects_from_bids_dataset(bids_dir)
         self._create_participants_tsv(clinical_data_dir, bids_dir, bids_ids)
         self._create_sessions_tsv(clinical_data_dir, bids_dir, bids_ids)
         self._create_scans_tsv(bids_dir)

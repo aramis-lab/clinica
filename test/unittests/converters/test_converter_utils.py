@@ -194,28 +194,31 @@ def test_create_participants_df(
     )
 
 
-def test_compare_bids_ids():
-    from clinica.converters._utils import compare_bids_ids
+@pytest.mark.parametrize(
+    "asked, obtained, expected",
+    [
+        (
+            ["sub-OASIS10001", "sub-OASIS10002"],
+            ["sub-OASIS10002", "sub-OASIS10001"],
+            set(),
+        ),
+        (["sub-OASIS10001"], ["sub-OASIS10002"], {"sub-OASIS10001", "sub-OASIS10002"}),
+        (["sub-OASIS10001"], [], {"sub-OASIS10001"}),
+    ],
+)
+def test_compare_bids_ids(asked, obtained, expected):
+    from clinica.converters._utils import compare_bids_ids_lists
     from clinica.converters.study_models import OASISBIDSSubjectID
 
-    sub1 = OASISBIDSSubjectID("sub-OASIS10001")
-    sub2 = OASISBIDSSubjectID("sub-OASIS10002")
-    sub3 = OASISBIDSSubjectID("sub-OASIS10003")
-    sub4 = OASISBIDSSubjectID("sub-OASIS10004")
-
-    # Basic symmetric difference
-    assert set(compare_bids_ids([sub1, sub2, sub3], [sub2, sub4])) == {sub1, sub3, sub4}
-
-    # No difference
-    assert compare_bids_ids([sub1, sub2], [sub1, sub2]) == []
-
-    # Everything different
-    assert set(compare_bids_ids([sub1, sub2], [sub3, sub4])) == {sub1, sub2, sub3, sub4}
-
-    # Difference with empty lists
-    assert compare_bids_ids([], []) == []
-    assert set(compare_bids_ids([sub1], [])) == {sub1}
-    assert set(compare_bids_ids([], [sub1])) == {sub1}
+    assert (
+        set(
+            compare_bids_ids_lists(
+                [OASISBIDSSubjectID(subject) for subject in asked],
+                [OASISBIDSSubjectID(subject) for subject in obtained],
+            )
+        )
+        == expected
+    )
 
 
 @pytest.mark.parametrize("compress", [True, False])
