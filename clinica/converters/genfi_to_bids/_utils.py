@@ -67,7 +67,6 @@ def _filter_dicoms(df: DataFrame) -> DataFrame:
         "localiser",
         "localizer",
     ]
-
     df = df.drop_duplicates(subset=["source"])
     df = df.assign(
         series_desc=lambda x: x.source_path.apply(
@@ -859,7 +858,7 @@ def write_bids(
                 / str(metadata.session_id)
                 / f"{metadata.participant_id}_{metadata.session_id}_scan.tsv"
             )
-            metadata.source_path = metadata.source_path.relative_to(source)
+            metadata.source_path = metadata.source_path.relative_to(source).parent
             row_to_write = _serialize_row(
                 metadata.drop(["participant_id", "session_id"]),
                 write_column_names=not scans_filepath.exists(),
