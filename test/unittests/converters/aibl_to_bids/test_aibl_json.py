@@ -11,6 +11,8 @@ from clinica.converters.aibl_to_bids.utils.json import (
 def build_dicom_header():
     header = Dataset()
     header.add_new("Time", "TM", "093015")
+    header.BeamSequence = [Dataset(), Dataset(), Dataset()]
+    header.BeamSequence[0].Manufacturer = "Linac, co."
     return header
 
 
@@ -39,8 +41,9 @@ def test_get_dicom_tags_and_defaults_pet(get_default, length, tag):
     "element, expected",
     [
         (None, None),
-        (DataElement("Time", "TM", "093015"), "093015"),
-        (DataElement("InstitutionName", "DS", MultiValue(int, [1, 2])), [1, 2]),
+        ("093015", "093015"),
+        (2, 2),
+        (MultiValue(int, [1, 2]), [1, 2]),
     ],
 )
 def test_check_dcm_value(element, expected):

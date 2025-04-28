@@ -145,13 +145,13 @@ def _get_dicom_tags_and_defaults_base() -> pd.DataFrame:
 
 
 def _check_dcm_value(
-    dicom_data: Optional[DataElement],
+    dicom_data: Union[None, str, list, float],
 ) -> Union[None, str, list, float]:
-    # Handles case where result is MultiValue, which is not JSON serializable
+    # Handles case where result is MultiValue, which is not JSON serializable and would be replaced by a blank space
     if dicom_data:
-        if type(dicom_data.value) == MultiValue:
-            return list(dicom_data.value)
-        return dicom_data.value
+        if type(dicom_data) == MultiValue:
+            return list(dicom_data)
+        return dicom_data
     return None
 
 
@@ -174,10 +174,9 @@ def _fetch_dcm_data_from_header(
         The value of the tag obtained from the header
 
     """
-    # todo : how do i test this with sequences ?
     if not keys_list:
         return None
-    header = dicom_header.get(Tag(keys_list[0]))
+    header = dicom_header.get(keys_list[0])
     if len(keys_list) == 1:
         return header
     if header:
