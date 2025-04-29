@@ -710,7 +710,7 @@ def _get_images_with_suffix(
 def _remove_existing_images_if_necessary(
     folder: Path,
     suffixes: Iterable[str],
-    mod_to_update: bool = False,
+    force_new_extraction: bool = False,
 ) -> bool:
     """Returns whether it was possible to delete the existing images or not."""
     from clinica.utils.stream import cprint
@@ -718,14 +718,14 @@ def _remove_existing_images_if_necessary(
     images_to_remove = _get_images_with_suffix(folder, suffixes)
     if not images_to_remove:
         return True
-    elif mod_to_update:
+    elif force_new_extraction:
         cprint(f"Removing old images : {images_to_remove}", lvl="info")
         for path_to_unlink in images_to_remove:
             (path_to_unlink).unlink()
         return True
     cprint(
         f"There already exist images : {images_to_remove}. "
-        "The parameter 'mod_to_update' is set to False so that "
+        "The parameter 'force_new_extraction' is set to False so that "
         "they cannot be overwritten.",
         lvl="warning",
     )

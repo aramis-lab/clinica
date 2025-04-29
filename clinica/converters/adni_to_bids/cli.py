@@ -20,10 +20,10 @@ from ._utils import ADNIModality
     help="Convert clinical data only.",
 )
 @click.option(
-    "-u",
-    "--mod_to_update",
+    "-f",
+    "--force-new-extraction",
     is_flag=True,
-    help="Defines updating mode. Force overwriting and new data extraction if set to True.",
+    help="Force new data extraction.",
 )
 @click.option(
     "-m",
@@ -45,7 +45,7 @@ def cli(
     xml_path: Optional[str] = None,
     subjects_list: Optional[str] = None,
     clinical_data_only: bool = False,
-    mod_to_update: bool = False,
+    force_new_extraction: bool = False,
     modalities: Optional[Iterable[Union[str, ADNIModality]]] = None,
     n_procs: Optional[int] = None,
 ) -> None:
@@ -58,9 +58,9 @@ def cli(
 
     from ._converter import convert
 
-    if clinical_data_only and mod_to_update:
+    if clinical_data_only and force_new_extraction:
         raise ClinicaParserError(
-            "Arguments `clinical_data_only` and `mod_to_update` are mutually exclusive."
+            "Arguments `clinical_data_only` and `force_new_extraction` are mutually exclusive."
         )
     convert(
         dataset_directory,
@@ -70,7 +70,7 @@ def cli(
         subjects=subjects_list,
         modalities=modalities or list(ADNIModality),
         xml_path=xml_path,
-        mod_to_update=mod_to_update,
+        force_new_extraction=force_new_extraction,
         n_procs=n_procs,
     )
 

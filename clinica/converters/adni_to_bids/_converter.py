@@ -17,7 +17,7 @@ def convert(
     subjects: Optional[UserProvidedPath] = None,
     modalities: Optional[Iterable[Union[str, ADNIModality]]] = None,
     xml_path: Optional[UserProvidedPath] = None,
-    mod_to_update: bool = False,
+    force_new_extraction: bool = False,
     n_procs: Optional[int] = 1,
 ):
     from .._utils import validate_input_path
@@ -41,7 +41,7 @@ def convert(
             dest_dir=bids_dir,
             modalities=modalities,
             subjects=subjects,
-            mod_to_update=mod_to_update,
+            force_new_extraction=force_new_extraction,
             n_procs=n_procs,
         )
     adni_to_bids.convert_clinical_data(
@@ -188,7 +188,7 @@ class AdniToBids(Converter):
         dest_dir: Path,
         modalities: Iterable[ADNIModality],
         subjects: Optional[Path] = None,
-        mod_to_update: bool = False,
+        force_new_extraction: bool = False,
         n_procs: Optional[int] = 1,
     ):
         """Convert the images of ADNI.
@@ -199,7 +199,7 @@ class AdniToBids(Converter):
             dest_dir: path to the BIDS directory
             subjects: Path to list of subjects to process
             modalities: modalities to convert (T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI)
-            mod_to_update: if given pre-existing images in the BIDS directory will be erased and extracted again.
+            force_new_extraction: if given pre-existing images in the BIDS directory will be erased and extracted again.
         """
         from clinica.utils.stream import cprint
 
@@ -224,7 +224,7 @@ class AdniToBids(Converter):
                     destination_dir=dest_dir,
                     conversion_dir=conversion_dir,
                     subjects=subjects,
-                    mod_to_update=mod_to_update,
+                    mod_to_update=force_new_extraction,
                     n_procs=n_procs,
                 )
 
