@@ -11,12 +11,19 @@ from clinica.converters.aibl_to_bids.utils.json import (
 def build_dicom_header():
     header = Dataset()
     header.add_new("Time", "TM", "093015")
-    header.BeamSequence = [Dataset(), Dataset(), Dataset()]
+    header.BeamSequence = [Dataset()]
     header.BeamSequence[0].Manufacturer = "Linac, co."
     return header
 
 
-@pytest.mark.parametrize("keys, expected", [((), None), (("Time",), "093015")])
+@pytest.mark.parametrize(
+    "keys, expected",
+    [
+        ((), None),
+        (("Time",), "093015"),
+        (("BeamSequence", "Manufacturer"), "Linac, co."),
+    ],
+)
 def test_get_dcm_value_from_header(keys, expected):
     from clinica.converters.aibl_to_bids.utils.json import _get_dcm_value_from_header
 

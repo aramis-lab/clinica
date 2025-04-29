@@ -180,15 +180,14 @@ def _fetch_dcm_data_from_header(
     if len(keys_list) == 1:
         return header
     if header:
-        _get_dcm_value_from_header(keys_list[1:], header[0])
+        return _get_dcm_value_from_header(keys_list[1:], header[0])
     return None
 
 
 def _get_dcm_value_from_header(
     keys_list: tuple[str], dicom_header: Union[FileDataset, DataElement]
 ) -> Union[None, str, list, float]:
-    test = _fetch_dcm_data_from_header(keys_list, dicom_header)
-    return _check_dcm_value(test)
+    return _check_dcm_value(_fetch_dcm_data_from_header(keys_list, dicom_header))
 
 
 def _update_metadata_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) -> None:
