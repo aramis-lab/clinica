@@ -195,7 +195,7 @@ def _update_metadata_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) ->
 
     try:
         dicom_header = dcmread(next(dcm_dir.rglob("*.dcm")))
-    except IndexError:
+    except StopIteration:
         cprint(
             msg=f"No DICOM found at {dcm_dir}, the image json will be filled with default values",
             lvl="warning",
@@ -208,6 +208,7 @@ def _update_metadata_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) ->
 
 
 def _set_scan_start(dcm_result: pd.DataFrame) -> None:
+    # todo : explain arbitrary
     dcm_result.loc["ScanStart", "Value"] = "0"
 
 
@@ -265,6 +266,7 @@ def _update_injected_mass(dcm_result: pd.DataFrame) -> None:
 
 def _get_default_for_modality(modality: str) -> Optional[pd.DataFrame]:
     # todo : might need to adapt if other converters involved one day
+    # todo : more restrictive on modality ? class or something
     if modality in ("av45", "flute", "pib"):
         return _get_dicom_tags_and_defaults_pet()
     return _get_dicom_tags_and_defaults_base()

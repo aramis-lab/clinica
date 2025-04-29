@@ -1,10 +1,14 @@
+from unittest.mock import patch
+
+import pandas as pd
 import pytest
-from pydicom.dataset import DataElement, Dataset
+from pydicom.dataset import Dataset
 from pydicom.multival import MultiValue
 
 from clinica.converters.aibl_to_bids.utils.json import (
     _get_dicom_tags_and_defaults_base,
     _get_dicom_tags_and_defaults_pet,
+    _update_metadata_from_image_dicoms,
 )
 
 
@@ -66,3 +70,30 @@ def test_get_dicom_tags_and_defaults_pet(get_default, length, tag):
     assert len(defaults) == length
     assert set(defaults.columns) == {"BIDSname", "DCMtag", "Value"}
     assert tag in defaults["BIDSname"]
+
+
+@pytest.mark.parametrize(
+    "modality, length",
+    [
+        ("av45", 38),
+        ("flute", 38),
+        ("pib", 38),
+        ("foo", 9),
+    ],
+)
+def test_get_default_for_modality(modality, length):
+    from clinica.converters.aibl_to_bids.utils.json import _get_default_for_modality
+
+    assert len(_get_default_for_modality(modality)) == length
+
+
+@patch("clinica.converters.aibl_to_bids.utils.json.cprint")
+def test_update_metadata_from_image_dicoms_error(mock_cprint, tmp_path):
+    _update_metadata_from_image_dicoms(pd.DataFrame(), tmp_path)
+    mock_cprint.assert_called_once_with(
+        msg=f"No DICOM found at {tmp_path}, the image json will be filled with default values",
+        lvl="warning",
+    )
+
+
+# todo : success : need to mock header + defaults
