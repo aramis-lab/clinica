@@ -202,7 +202,7 @@ def test_create_participants_df(
             ["sub-OASIS10002", "sub-OASIS10001"],
             set(),
         ),
-        (["sub-OASIS10001"], ["sub-OASIS10002"], {"sub-OASIS10001", "sub-OASIS10002"}),
+        (["sub-OASIS10001"], ["sub-OASIS10002"], {"sub-OASIS10001"}),
         (["sub-OASIS10001"], [], {"sub-OASIS10001"}),
     ],
 )

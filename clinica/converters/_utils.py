@@ -602,4 +602,4 @@ def compare_bids_ids_lists(
     list[BIDSSubjectID] :
         Bids ids difference.
     """
-    return list(set(expected_subjects).symmetric_difference(set(obtained_subjects)))
+    return list(set(expected_subjects) - set(obtained_subjects))
