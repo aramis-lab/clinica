@@ -24,24 +24,10 @@ def build_dicom_header():
         (("BeamSequence", "Manufacturer"), "Linac, co."),
     ],
 )
-def test_get_dcm_value_from_header(keys, expected):
-    from clinica.converters.aibl_to_bids.utils.json import _get_dcm_value_from_header
+def test_fetch_dcm_data_from_header(keys, expected):
+    from clinica.converters.aibl_to_bids.utils.json import _fetch_dcm_data_from_header
 
-    assert expected == _get_dcm_value_from_header(keys, build_dicom_header())
-
-
-@pytest.mark.parametrize(
-    "get_default, length, tag",
-    [
-        (_get_dicom_tags_and_defaults_pet, 38, "AttenuationCorrection"),
-        (_get_dicom_tags_and_defaults_base, 9, "Units"),
-    ],
-)
-def test_get_dicom_tags_and_defaults_pet(get_default, length, tag):
-    defaults = get_default()
-    assert len(defaults) == length
-    assert set(defaults.columns) == {"BIDSname", "DCMtag", "Value"}
-    assert tag in defaults["BIDSname"]
+    assert expected == _fetch_dcm_data_from_header(keys, build_dicom_header())
 
 
 @pytest.mark.parametrize(
@@ -57,3 +43,17 @@ def test_check_dcm_value(element, expected):
     from clinica.converters.aibl_to_bids.utils.json import _check_dcm_value
 
     assert expected == _check_dcm_value(element)
+
+
+@pytest.mark.parametrize(
+    "get_default, length, tag",
+    [
+        (_get_dicom_tags_and_defaults_pet, 38, "AttenuationCorrection"),
+        (_get_dicom_tags_and_defaults_base, 9, "Units"),
+    ],
+)
+def test_get_dicom_tags_and_defaults_pet(get_default, length, tag):
+    defaults = get_default()
+    assert len(defaults) == length
+    assert set(defaults.columns) == {"BIDSname", "DCMtag", "Value"}
+    assert tag in defaults["BIDSname"]
