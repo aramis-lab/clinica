@@ -23,7 +23,7 @@ __all__ = [
     "viscode_to_session",
     "load_clinical_csv",
     "get_subjects_list_from_file",
-    "compare_bids_ids_lists",
+    "comparing_expected_vs_obtained_bids_ids",
 ]
 
 
@@ -584,10 +584,10 @@ def get_subjects_list_from_file(subjects_list_path: Path) -> list[str]:
     return subjects_list_path.read_text().splitlines()
 
 
-def compare_bids_ids_lists(
+def comparing_expected_vs_obtained_bids_ids(
     expected_subjects: list[BIDSSubjectID], obtained_subjects: list[BIDSSubjectID]
 ) -> list[BIDSSubjectID]:
-    """Gets the difference between bids ids lists.
+    """Gets the BIDS ids that were expected but not found in the obtained subjects list.
 
     Parameters
     ----------

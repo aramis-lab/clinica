@@ -206,13 +206,13 @@ def test_create_participants_df(
         (["sub-OASIS10001"], [], {"sub-OASIS10001"}),
     ],
 )
-def test_compare_bids_ids(asked, obtained, expected):
-    from clinica.converters._utils import compare_bids_ids_lists
+def test_comparing_expected_vs_obtained_bids_ids(asked, obtained, expected):
+    from clinica.converters._utils import comparing_expected_vs_obtained_bids_ids
     from clinica.converters.study_models import OASISBIDSSubjectID
 
     assert (
         set(
-            compare_bids_ids_lists(
+            comparing_expected_vs_obtained_bids_ids(
                 [OASISBIDSSubjectID(subject) for subject in asked],
                 [OASISBIDSSubjectID(subject) for subject in obtained],
             )

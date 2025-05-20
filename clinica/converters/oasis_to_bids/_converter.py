@@ -74,23 +74,25 @@ class OasisToBids(Converter):
             Path to the subjects list file.
             Default=None.
         """
-        from clinica.converters._utils import compare_bids_ids_lists
+        from clinica.converters._utils import comparing_expected_vs_obtained_bids_ids
         from clinica.converters.study_models import OASISBIDSSubjectID
         from clinica.dataset.bids._queries import get_subjects_from_bids_dataset
         from clinica.utils.stream import cprint
 
         from ._utils import get_subjects_list
 
-        raw_ids = [
+        expected_ids = [
             OASISBIDSSubjectID(OASISBIDSSubjectID.from_original_study_id(subject.name))
             for subject in get_subjects_list(source_dir, subjs_list_path=subjects)
         ]
-        bids_ids = [
+        obtained_ids = [
             OASISBIDSSubjectID(subject)
             for subject in get_subjects_from_bids_dataset(bids_dir)
         ]
 
-        if ids_difference := compare_bids_ids_lists(raw_ids, bids_ids):
+        if ids_difference := comparing_expected_vs_obtained_bids_ids(
+            expected_ids, obtained_ids
+        ):
             cprint(
                 msg=(
                     "The following subjects were not converted to your BIDS folder :\n"
