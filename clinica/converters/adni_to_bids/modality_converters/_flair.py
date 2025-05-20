@@ -14,7 +14,7 @@ def convert_flair(
     destination_dir: Path,
     conversion_dir: Path,
     subjects: Iterable[str],
-    mod_to_update: bool = False,
+    force_new_extraction: bool = False,
     n_procs: int = 1,
 ):
     """Convert FLAIR images of ADNI into BIDS format.
@@ -36,7 +36,7 @@ def convert_flair(
     subjects : List of str, optional
         List of subjects.
 
-    mod_to_update : bool
+    force_new_extraction : bool
         If True, pre-existing images in the BIDS directory
         will be erased and extracted again.
 
@@ -63,7 +63,7 @@ def convert_flair(
         images,
         destination_dir,
         ADNIModalityConverter.FLAIR,
-        mod_to_update=mod_to_update,
+        force_new_extraction=force_new_extraction,
         n_procs=n_procs,
     )
     cprint(msg="FLAIR conversion done.", lvl="debug")

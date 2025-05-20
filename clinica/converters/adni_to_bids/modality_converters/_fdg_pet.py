@@ -53,7 +53,7 @@ def _convert_fdg_pet(
     conversion_dir: Path,
     preprocessing_step: ADNIPreprocessingStep,
     subjects: Iterable[str],
-    mod_to_update: bool = False,
+    force_new_extraction: bool = False,
     n_procs: int = 1,
 ):
     """Convert FDG PET images of ADNI into BIDS format.
@@ -78,7 +78,7 @@ def _convert_fdg_pet(
     subjects : List of str, optional
         List of subjects.
 
-    mod_to_update : bool
+    force_new_extraction : bool
         If True, pre-existing images in the BIDS directory
         will be erased and extracted again.
 
@@ -102,7 +102,11 @@ def _convert_fdg_pet(
     cprint("Paths of FDG PET images found. Exporting images into BIDS ...")
     modality = _get_modality_from_adni_preprocessing_step(preprocessing_step)
     paths_to_bids(
-        images, destination_dir, modality, mod_to_update=mod_to_update, n_procs=n_procs
+        images,
+        destination_dir,
+        modality,
+        force_new_extraction=force_new_extraction,
+        n_procs=n_procs,
     )
     cprint(msg="FDG PET conversion done.", lvl="debug")
 

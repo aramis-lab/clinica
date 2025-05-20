@@ -224,7 +224,7 @@ class AdniToBids(Converter):
                     destination_dir=dest_dir,
                     conversion_dir=conversion_dir,
                     subjects=subjects,
-                    mod_to_update=force_new_extraction,
+                    force_new_extraction=force_new_extraction,
                     n_procs=n_procs,
                 )
 
