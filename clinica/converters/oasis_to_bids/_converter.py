@@ -55,6 +55,56 @@ class OasisToBids(Converter):
             source_dir, destination_dir, subjects=subjects, n_procs=n_procs
         )
         self.convert_clinical_data(clinical_data_dir, destination_dir)
+        self.log_missing_data(source_dir, destination_dir, subjects=subjects)
+
+    def log_missing_data(
+        self, source_dir: Path, bids_dir: Path, subjects: Optional[Path] = None
+    ):
+        """Log missing subjects in BIDS folders.
+
+        Parameters
+        ----------
+        source_dir : Path
+            Path to the OASIS dataset.
+
+        bids_dir : Path
+            Path to the BIDS directory.
+
+        subjects : (Optional) Path
+            Path to the subjects list file.
+            Default=None.
+        """
+        from clinica.converters._utils import comparing_expected_vs_obtained_bids_ids
+        from clinica.converters.study_models import OASISBIDSSubjectID
+        from clinica.dataset.bids._queries import get_subjects_from_bids_dataset
+        from clinica.utils.stream import cprint
+
+        from ._utils import get_subjects_list
+
+        expected_ids = [
+            OASISBIDSSubjectID(OASISBIDSSubjectID.from_original_study_id(subject.name))
+            for subject in get_subjects_list(source_dir, subjs_list_path=subjects)
+        ]
+        obtained_ids = [
+            OASISBIDSSubjectID(subject)
+            for subject in get_subjects_from_bids_dataset(bids_dir)
+        ]
+
+        if ids_difference := comparing_expected_vs_obtained_bids_ids(
+            expected_ids, obtained_ids
+        ):
+            cprint(
+                msg=(
+                    "The following subjects were not converted to your BIDS folder :\n"
+                    + ", ".join(ids_difference)
+                ),
+                lvl="info",
+            )
+        else:
+            cprint(
+                msg=("All selected subjects were converted to your BIDS folder."),
+                lvl="info",
+            )
 
     def convert_clinical_data(self, clinical_data_dir: Path, bids_dir: Path):
         """Convert the clinical data defined inside the clinical_specifications.xlx into BIDS.
@@ -63,7 +113,8 @@ class OasisToBids(Converter):
             clinical_data_dir: path to the folder with the original clinical data
             bids_dir: path to the BIDS directory
         """
-        from clinica.dataset import get_subjects_from_bids_dataset
+        from clinica.converters.study_models import BIDSSubjectID
+        from clinica.dataset.bids._queries import get_subjects_from_bids_dataset
         from clinica.utils.stream import cprint
 
         cprint("Converting clinical data...", lvl="info")

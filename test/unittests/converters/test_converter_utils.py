@@ -194,6 +194,33 @@ def test_create_participants_df(
     )
 
 
+@pytest.mark.parametrize(
+    "asked, obtained, expected",
+    [
+        (
+            ["sub-OASIS10001", "sub-OASIS10002"],
+            ["sub-OASIS10002", "sub-OASIS10001"],
+            set(),
+        ),
+        (["sub-OASIS10001"], ["sub-OASIS10002"], {"sub-OASIS10001"}),
+        (["sub-OASIS10001"], [], {"sub-OASIS10001"}),
+    ],
+)
+def test_comparing_expected_vs_obtained_bids_ids(asked, obtained, expected):
+    from clinica.converters._utils import comparing_expected_vs_obtained_bids_ids
+    from clinica.converters.study_models import OASISBIDSSubjectID
+
+    assert (
+        set(
+            comparing_expected_vs_obtained_bids_ids(
+                [OASISBIDSSubjectID(subject) for subject in asked],
+                [OASISBIDSSubjectID(subject) for subject in obtained],
+            )
+        )
+        == expected
+    )
+
+
 @pytest.mark.parametrize("compress", [True, False])
 @pytest.mark.parametrize("sidecar", [True, False])
 def test_build_dcm2niix_command(tmp_path, compress: bool, sidecar: bool):

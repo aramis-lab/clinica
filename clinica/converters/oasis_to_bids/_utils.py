@@ -5,7 +5,11 @@ import nibabel as nb
 import numpy as np
 import pandas as pd
 
-from clinica.converters.study_models import StudyName, bids_id_factory
+from clinica.converters.study_models import (
+    OASISBIDSSubjectID,
+    StudyName,
+    bids_id_factory,
+)
 
 __all__ = [
     "get_subjects_list",
@@ -18,37 +22,76 @@ __all__ = [
 ]
 
 
-def _get_subjects_list_from_data(source_dir: Path) -> list[str]:
+def _get_subjects_list_from_file(subjects_list_path: Path) -> list[OASISBIDSSubjectID]:
+    """Gets the list of subjects folders names from the subjects list file.
+
+    Parameters
+    ----------
+    subjects_list_path : Path
+        The path to the subjects list file.
+
+    Returns
+    -------
+    list[OASISBIDSSubjectID] :
+        List of subjects folders names.
+    """
     return [
-        folder.name
+        OASISBIDSSubjectID(OASISBIDSSubjectID.from_original_study_id(subject))
+        for subject in subjects_list_path.read_text().splitlines()
+    ]
+
+
+def _get_subjects_list_from_data(source_dir: Path) -> list[OASISBIDSSubjectID]:
+    """Gets the list of subjects folders names from the input dataset folder.
+
+    Parameters
+    ----------
+    source_dir : Path
+        The path to the input dataset folder.
+
+    Returns
+    -------
+    list[OASISBIDSSubjectID] :
+        List of subjects folders names.
+    """
+    return [
+        OASISBIDSSubjectID(OASISBIDSSubjectID.from_original_study_id(folder.name))
         for folder in source_dir.iterdir()
         if not folder.name.startswith(".")
     ]
 
 
-def _filter_oasis_subjects(source_dir: Path, subjects_list: list[str]) -> list[Path]:
-    import re
+def _filter_oasis_subjects(
+    source_dir: Path, subjects_list: list[OASISBIDSSubjectID]
+) -> list[Path]:
+    """Filters and builds the paths to the subjects folders.
 
-    rgx = re.compile(r"OAS1_\d{4}_MR1")
+    Parameters
+    ----------
+    source_dir : Path
+        The path to the input dataset folder.
 
+    subjects_list : list[OASISBIDSSubjectID]
+        The list of subjects folders names.
+
+    Returns
+    -------
+    list[Path] :
+        List of paths to the subjects folders.
+    """
     return list(
         filter(
             lambda path: path.is_dir(),
-            [
-                source_dir / subj
-                for subj in filter(
-                    rgx.fullmatch,
-                    subjects_list,
-                )
-            ],
+            [source_dir / subj.to_original_study_id() for subj in subjects_list],
         )
     )
 
 
 def get_subjects_list(
-    source_dir: Path, subjs_list_path: Optional[Path] = None
+    source_dir: Path,
+    subjs_list_path: Optional[Path] = None,
 ) -> list[Path]:
-    """Gets the list of paths to the subjects folders.
+    """Gets the list of paths to the subjects folders from the raw dataset.
 
     Parameters
     ----------
@@ -63,11 +106,10 @@ def get_subjects_list(
     list[Path] :
         List of paths to the subjects folders.
     """
-    from .._utils import get_subjects_list_from_file
 
     if subjs_list_path:
         return _filter_oasis_subjects(
-            source_dir, get_subjects_list_from_file(subjs_list_path)
+            source_dir, _get_subjects_list_from_file(subjs_list_path)
         )
 
     return _filter_oasis_subjects(source_dir, _get_subjects_list_from_data(source_dir))

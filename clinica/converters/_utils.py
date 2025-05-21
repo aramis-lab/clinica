@@ -10,7 +10,7 @@ import pandas as pd
 
 from clinica.utils.filemanip import UserProvidedPath
 
-from .study_models import StudyName
+from .study_models import BIDSSubjectID, StudyName
 
 __all__ = [
     "create_participants_df",
@@ -23,6 +23,7 @@ __all__ = [
     "viscode_to_session",
     "load_clinical_csv",
     "get_subjects_list_from_file",
+    "comparing_expected_vs_obtained_bids_ids",
 ]
 
 
@@ -93,7 +94,6 @@ def create_participants_df(
     prev_location = ""
     prev_sheet = 0
     index_to_drop = []
-    subjects_to_drop = []
     study_name = StudyName(study_name)
     location_name = f"{study_name.value} location"
 
@@ -175,33 +175,27 @@ def create_participants_df(
         participant_df = participant_df.drop_duplicates(
             subset=["alternative_id_1"], keep="first"
         )
+
     elif study_name == StudyName.OASIS:
         # OASIS provides several MRI for the same session
         participant_df = participant_df[
             ~participant_df.alternative_id_1.str.endswith("_MR2")
         ]
+
     participant_df.reset_index(inplace=True, drop=True)
 
     # Adding participant_id column with BIDS ids
     for i in range(0, len(participant_df)):
-        value = bids_id_factory(study_name).from_original_study_id(
-            participant_df["alternative_id_1"][i]
-        )
-        bids_id = [s for s in bids_ids if value in s]
-        if len(bids_id) == 0:
-            index_to_drop.append(i)
-            subjects_to_drop.append(value)
-        else:
-            participant_df.at[i, "participant_id"] = bids_id[0]
+        bids_id_from_participant_df = bids_id_factory(
+            study_name
+        ).from_original_study_id(participant_df["alternative_id_1"][i])
 
-    if len(subjects_to_drop) > 0:
-        cprint(
-            msg=(
-                "The following subjects of dataset directory were not found in your BIDS folder :\n"
-                + ", ".join(subjects_to_drop)
-            ),
-            lvl="info",
-        )
+        if bids_id_from_participant_df in bids_ids:
+            participant_df.at[i, "participant_id"] = bids_id_from_participant_df
+
+        else:
+            index_to_drop.append(i)
+
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
         participant_df = participant_df.drop(index_to_drop)
@@ -588,3 +582,24 @@ def get_subjects_list_from_file(subjects_list_path: Path) -> list[str]:
         List of subjects.
     """
     return subjects_list_path.read_text().splitlines()
+
+
+def comparing_expected_vs_obtained_bids_ids(
+    expected_subjects: list[BIDSSubjectID], obtained_subjects: list[BIDSSubjectID]
+) -> list[BIDSSubjectID]:
+    """Gets the BIDS ids that were expected but not found in the obtained subjects list.
+
+    Parameters
+    ----------
+    expected_subjects : list[BIDSSubjectID]
+        First bids ids list.
+
+    obtained_subjects : list[BIDSSubjectID]
+        Second bids ids list.
+
+    Returns
+    -------
+    list[BIDSSubjectID] :
+        Bids ids difference.
+    """
+    return list(set(expected_subjects) - set(obtained_subjects))
