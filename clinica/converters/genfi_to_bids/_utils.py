@@ -67,7 +67,7 @@ def _filter_dicoms(df: DataFrame) -> DataFrame:
         "localiser",
         "localizer",
     ]
-
+    df = df.sort_values(by="source_path").reset_index(drop=True)
     df = df.drop_duplicates(subset=["source"])
     df = df.assign(
         series_desc=lambda x: x.source_path.apply(
