@@ -1,6 +1,5 @@
 name: clinica
 channels:
-  - defaults
   - conda-forge
   - mrtrix3
 dependencies:
