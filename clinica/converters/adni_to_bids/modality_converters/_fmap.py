@@ -22,7 +22,7 @@ def convert_fmap(
     destination_dir: PathLike,
     conversion_dir: PathLike,
     subjects: Iterable[str],
-    mod_to_update: bool = False,
+    force_new_extraction: bool = False,
     n_procs: int = 1,
 ):
     """Convert field map images of ADNI into BIDS format.
@@ -44,7 +44,7 @@ def convert_fmap(
     subjects : List of str, optional
         List of subjects.
 
-    mod_to_update : bool
+    force_new_extraction : bool
         If True, pre-existing images in the BIDS directory
         will be erased and extracted again.
     """
@@ -66,7 +66,10 @@ def convert_fmap(
     cprint("Paths of field maps found. Exporting images into BIDS ...")
 
     paths_to_bids(
-        images, destination_dir, ADNIModalityConverter.FMAP, mod_to_update=mod_to_update
+        images,
+        destination_dir,
+        ADNIModalityConverter.FMAP,
+        force_new_extraction=force_new_extraction,
     )
     reorganize_fmaps(destination_dir)
 

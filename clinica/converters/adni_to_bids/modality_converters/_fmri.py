@@ -14,7 +14,7 @@ def convert_fmri(
     destination_dir: Path,
     conversion_dir: Path,
     subjects: Iterable[str],
-    mod_to_update: bool = False,
+    force_new_extraction: bool = False,
     n_procs: int = 1,
     convert_multiband: bool = True,
 ):
@@ -37,7 +37,7 @@ def convert_fmri(
     subjects : List of str, optional
         List of subjects.
 
-    mod_to_update : bool
+    force_new_extraction : bool
         If True, pre-existing images in the BIDS directory
         will be erased and extracted again.
 
@@ -70,7 +70,7 @@ def convert_fmri(
         images,
         destination_dir,
         ADNIModalityConverter.FMRI,
-        mod_to_update=mod_to_update,
+        force_new_extraction=force_new_extraction,
         n_procs=n_procs,
     )
     cprint(msg=f"{ADNIModalityConverter.FMRI} conversion done.", lvl="debug")

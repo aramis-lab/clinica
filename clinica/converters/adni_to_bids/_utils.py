@@ -645,7 +645,7 @@ def paths_to_bids(
     images: pd.DataFrame,
     bids_dir: Path,
     modality: ADNIModalityConverter,
-    mod_to_update: bool = False,
+    force_new_extraction: bool = False,
     n_procs: Optional[int] = 1,
 ) -> List[Path]:
     """Images in the list are converted and copied to directory in BIDS format.
@@ -661,7 +661,7 @@ def paths_to_bids(
     modality : str
         Imaging modality.
 
-    mod_to_update : bool
+    force_new_extraction : bool
         If True, pre-existing images in the BIDS directory will be erased
         and extracted again.
 
@@ -684,7 +684,7 @@ def paths_to_bids(
         _create_file,
         modality=modality,
         bids_dir=bids_dir,
-        mod_to_update=mod_to_update,
+        force_new_extraction=force_new_extraction,
     )
     # If n_procs==1 do not rely on a Process Pool to enable classical debugging
     if n_procs == 1:
@@ -710,7 +710,7 @@ def _get_images_with_suffix(
 def _remove_existing_images_if_necessary(
     folder: Path,
     suffixes: Iterable[str],
-    mod_to_update: bool = False,
+    force_new_extraction: bool = False,
 ) -> bool:
     """Returns whether it was possible to delete the existing images or not."""
     from clinica.utils.stream import cprint
@@ -718,14 +718,14 @@ def _remove_existing_images_if_necessary(
     images_to_remove = _get_images_with_suffix(folder, suffixes)
     if not images_to_remove:
         return True
-    elif mod_to_update:
+    elif force_new_extraction:
         cprint(f"Removing old images : {images_to_remove}", lvl="info")
         for path_to_unlink in images_to_remove:
             (path_to_unlink).unlink()
         return True
     cprint(
         f"There already exist images : {images_to_remove}. "
-        "The parameter 'mod_to_update' is set to False so that "
+        "The parameter 'force_new_extraction' is set to False so that "
         "they cannot be overwritten.",
         lvl="warning",
     )
@@ -753,7 +753,7 @@ def _create_file(
     image: pd.Series,
     modality: ADNIModalityConverter,
     bids_dir: Path,
-    mod_to_update: bool,
+    force_new_extraction: bool,
 ) -> Optional[Path]:
     """Creates an image file at the corresponding output folder.
 
@@ -771,7 +771,7 @@ def _create_file(
     bids_dir : Path
         The path to the output BIDS directory.
 
-    mod_to_update : bool
+    force_new_extraction : bool
         If True, pre-existing images in the BIDS directory will be
         erased and extracted again.
 
@@ -837,7 +837,7 @@ def _create_file(
     if not _remove_existing_images_if_necessary(
         output_path,
         (_get_output_filename(modality, image_tracer), "magnitude", "phase"),
-        mod_to_update,
+        force_new_extraction,
     ):
         return None
 
