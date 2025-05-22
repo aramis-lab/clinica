@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 from typing import BinaryIO, Optional, Union
 
+import fsspec
 import pandas as pd
 
 from clinica.utils.filemanip import UserProvidedPath
@@ -24,6 +25,7 @@ __all__ = [
     "load_clinical_csv",
     "get_subjects_list_from_file",
     "comparing_expected_vs_obtained_bids_ids",
+    "install_nifti",
 ]
 
 
@@ -603,3 +605,47 @@ def comparing_expected_vs_obtained_bids_ids(
         Bids ids difference.
     """
     return list(set(expected_subjects) - set(obtained_subjects))
+
+
+def install_nifti(
+    source: Union[str, Path],
+    bids_path: Union[str, Path],
+    filename: Optional[Union[str, Path]] = None,
+) -> None:
+    """
+    Install a NIfTI file from a ZIP archive or a directory into a BIDS path.
+
+    Parameters
+    ----------
+    source : Union[str, Path]
+        Path to a ZIP archive or directory containing the NIfTI file.
+
+    bids_path : Union[str, Path]
+        Target path for the output file.
+
+    filename : Union[str, Path], Optional
+        Filename to extract from ZIP archive (ignored if source is a directory).
+    """
+    source = Path(source)
+    bids_path = Path(bids_path)
+    if filename:
+        filename = Path(filename)
+
+    if source.suffix == ".zip":
+        # Handle ZIP archive source
+        fo = fsspec.open(source.as_posix())
+        fs = fsspec.filesystem("zip", fo=fo)
+
+        with fsspec.open(bids_path.as_posix(), mode="wb") as f:
+            f.write(fs.cat(filename.as_posix()))
+    else:
+        # Handle local directory
+        from fsspec.implementations.local import LocalFileSystem
+
+        fs = LocalFileSystem(auto_mkdir=True)
+        files = fs.ls(source.as_posix())
+        source_file = fs.open(files[0], mode="rb")
+        target_file = fs.open(bids_path.as_posix(), mode="wb", compression="gzip")
+
+        with source_file as sf, target_file as tf:
+            tf.write(sf.read())

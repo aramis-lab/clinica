@@ -195,14 +195,15 @@ def _parse_imaging_data(paths: list[tuple[str, str]]) -> Optional[pd.DataFrame]:
     return df
 
 
+"""
 def _install_nifti(zipfile: str, filename: str, bids_path: str) -> None:
-    """Install a NIfTI file from a source archive to the target BIDS path."""
     import fsspec
 
     fo = fsspec.open(zipfile)
     fs = fsspec.filesystem("zip", fo=fo)
     with fsspec.open(bids_path, mode="wb") as f:
         f.write(fs.cat(filename))
+"""
 
 
 def _write_bids(
@@ -215,6 +216,7 @@ def _write_bids(
     from pandas import notna
 
     from clinica.converters._utils import (
+        install_nifti,
         write_modality_agnostic_files,
         write_to_tsv,
     )
@@ -280,10 +282,10 @@ def _write_bids(
         )
 
         for filename, row in dataframe.iterrows():
-            _install_nifti(
-                zipfile=str(sourcedata / row.source_zipfile),
-                filename=row.source_filename,
+            install_nifti(
+                source=str(sourcedata / row.source_zipfile),
                 bids_path=str(bids_basedir / filename),
+                filename=row.source_filename,
             )
 
         dataframe = dataframe.drop(columns=["source_zipfile", "source_filename"])

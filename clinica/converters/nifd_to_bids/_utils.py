@@ -282,6 +282,7 @@ def _convert_dicom(sourcedata_dir: Path, bids_filename: Path) -> None:
     )
 
 
+"""
 def _install_nifti(sourcedata_dir: Path, bids_filename: Path) -> None:
     from fsspec.implementations.local import LocalFileSystem
 
@@ -291,6 +292,7 @@ def _install_nifti(sourcedata_dir: Path, bids_filename: Path) -> None:
 
     with source_file as sf, target_file as tf:
         tf.write(sf.read())
+"""
 
 
 def write_bids(
@@ -301,7 +303,7 @@ def write_bids(
 ) -> list[Path]:
     from fsspec.implementations.local import LocalFileSystem
 
-    from clinica.converters._utils import write_to_tsv
+    from clinica.converters._utils import install_nifti, write_to_tsv
     from clinica.converters.study_models import StudyName
     from clinica.dataset import BIDSDatasetDescription
 
@@ -327,8 +329,8 @@ def write_bids(
 
     for filename, metadata in scans.iterrows():
         filename = str(filename)
-        (_convert_dicom if metadata.format == "DCM" else _install_nifti)(
-            sourcedata_dir=metadata.source_dir, bids_filename=to / filename
+        (_convert_dicom if metadata.format == "DCM" else install_nifti)(
+            source=metadata.source_dir, bids_path=to / filename
         )
 
     return scans.index.to_list()

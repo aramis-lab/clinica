@@ -221,6 +221,54 @@ def test_comparing_expected_vs_obtained_bids_ids(asked, obtained, expected):
     )
 
 
+def test_install_nifti_from_directory(tmp_path):
+    import gzip
+
+    from clinica.converters._utils import install_nifti
+
+    source_dir = tmp_path / "source_dir"
+    source_dir.mkdir()
+
+    nifti_file = source_dir / "test.nii.gz"
+    nifti_file.write_bytes(b"NIfTI test data")
+
+    output_path = tmp_path / "output.nii.gz"
+
+    install_nifti(source=source_dir, bids_path=output_path)
+
+    assert output_path.exists()
+
+    with gzip.open(output_path, "rb") as f:
+        content = f.read()
+        assert content == b"NIfTI test data"
+
+
+def test_install_nifti_from_zip(tmp_path):
+    from zipfile import ZipFile
+
+    from clinica.converters._utils import install_nifti
+
+    source_dir = tmp_path / "source_zip"
+    source_dir.mkdir()
+
+    nifti_file = source_dir / "test.nii.gz"
+    nifti_file.write_bytes(b"NIfTI test data")
+
+    zip_path = tmp_path / "archive.zip"
+    with ZipFile(zip_path, "w") as zipf:
+        zipf.write(nifti_file, arcname="test.nii.gz")
+
+    output_path = tmp_path / "output.nii.gz"
+
+    install_nifti(source=zip_path, bids_path=output_path, filename="test.nii.gz")
+
+    assert output_path.exists()
+
+    with open(output_path, "rb") as f:
+        content = f.read()
+        assert content == b"NIfTI test data"
+
+
 @pytest.mark.parametrize("compress", [True, False])
 @pytest.mark.parametrize("sidecar", [True, False])
 def test_build_dcm2niix_command(tmp_path, compress: bool, sidecar: bool):
