@@ -234,7 +234,7 @@ def test_install_nifti_from_directory(tmp_path):
 
     output_path = tmp_path / "output.nii.gz"
 
-    install_nifti(source=source_dir, bids_path=output_path)
+    install_nifti(sourcedata_dir=source_dir, bids_filename=output_path)
 
     assert output_path.exists()
 
@@ -260,7 +260,11 @@ def test_install_nifti_from_zip(tmp_path):
 
     output_path = tmp_path / "output.nii.gz"
 
-    install_nifti(source=zip_path, bids_path=output_path, filename="test.nii.gz")
+    install_nifti(
+        sourcedata_dir=zip_path,
+        bids_filename=output_path,
+        source_filename="test.nii.gz",
+    )
 
     assert output_path.exists()
 

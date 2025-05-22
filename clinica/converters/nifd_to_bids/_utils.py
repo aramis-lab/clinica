@@ -282,19 +282,6 @@ def _convert_dicom(sourcedata_dir: Path, bids_filename: Path) -> None:
     )
 
 
-"""
-def _install_nifti(sourcedata_dir: Path, bids_filename: Path) -> None:
-    from fsspec.implementations.local import LocalFileSystem
-
-    fs = LocalFileSystem(auto_mkdir=True)
-    source_file = fs.open(fs.ls(str(sourcedata_dir))[0], mode="rb")
-    target_file = fs.open(str(bids_filename), mode="wb", compression="gzip")
-
-    with source_file as sf, target_file as tf:
-        tf.write(sf.read())
-"""
-
-
 def write_bids(
     to: Path,
     participants: pd.DataFrame,
@@ -330,7 +317,7 @@ def write_bids(
     for filename, metadata in scans.iterrows():
         filename = str(filename)
         (_convert_dicom if metadata.format == "DCM" else install_nifti)(
-            source=metadata.source_dir, bids_path=to / filename
+            sourcedata_dir=metadata.source_dir, bids_filename=to / filename
         )
 
     return scans.index.to_list()

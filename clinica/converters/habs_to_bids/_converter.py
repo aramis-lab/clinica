@@ -195,17 +195,6 @@ def _parse_imaging_data(paths: list[tuple[str, str]]) -> Optional[pd.DataFrame]:
     return df
 
 
-"""
-def _install_nifti(zipfile: str, filename: str, bids_path: str) -> None:
-    import fsspec
-
-    fo = fsspec.open(zipfile)
-    fs = fsspec.filesystem("zip", fo=fo)
-    with fsspec.open(bids_path, mode="wb") as f:
-        f.write(fs.cat(filename))
-"""
-
-
 def _write_bids(
     sourcedata: Path,
     rawdata: Path,
@@ -283,9 +272,9 @@ def _write_bids(
 
         for filename, row in dataframe.iterrows():
             install_nifti(
-                source=str(sourcedata / row.source_zipfile),
-                bids_path=str(bids_basedir / filename),
-                filename=row.source_filename,
+                sourcedata_dir=str(sourcedata / row.source_zipfile),
+                bids_filename=str(bids_basedir / filename),
+                source_filename=row.source_filename,
             )
 
         dataframe = dataframe.drop(columns=["source_zipfile", "source_filename"])

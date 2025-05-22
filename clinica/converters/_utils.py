@@ -608,44 +608,44 @@ def comparing_expected_vs_obtained_bids_ids(
 
 
 def install_nifti(
-    source: Union[str, Path],
-    bids_path: Union[str, Path],
-    filename: Optional[Union[str, Path]] = None,
+    sourcedata_dir: Union[str, Path],
+    bids_filename: Union[str, Path],
+    source_filename: Optional[Union[str, Path]] = None,
 ) -> None:
     """
     Install a NIfTI file from a ZIP archive or a directory into a BIDS path.
 
     Parameters
     ----------
-    source : Union[str, Path]
-        Path to a ZIP archive or directory containing the NIfTI file.
+    sourcedata_dir : Union[str, Path]
+        Path to a ZIP archive or directory containing the NIfTI source data.
 
-    bids_path : Union[str, Path]
-        Target path for the output file.
+    bids_filename : Union[str, Path]
+        Target path for the BIDS output file.
 
-    filename : Union[str, Path], Optional
-        Filename to extract from ZIP archive (ignored if source is a directory).
+    source_filename : Union[str, Path], Optional
+        Source filename to extract from ZIP archive (ignored if source is a directory).
     """
-    source = Path(source)
-    bids_path = Path(bids_path)
-    if filename:
-        filename = Path(filename)
+    sourcedata_dir = Path(sourcedata_dir)
+    bids_filename = Path(bids_filename)
+    if source_filename:
+        source_filename = Path(source_filename)
 
-    if source.suffix == ".zip":
+    if sourcedata_dir.suffix == ".zip":
         # Handle ZIP archive source
-        fo = fsspec.open(source.as_posix())
+        fo = fsspec.open(sourcedata_dir.as_posix())
         fs = fsspec.filesystem("zip", fo=fo)
 
-        with fsspec.open(bids_path.as_posix(), mode="wb") as f:
-            f.write(fs.cat(filename.as_posix()))
+        with fsspec.open(bids_filename.as_posix(), mode="wb") as f:
+            f.write(fs.cat(source_filename.as_posix()))
     else:
         # Handle local directory
         from fsspec.implementations.local import LocalFileSystem
 
         fs = LocalFileSystem(auto_mkdir=True)
-        files = fs.ls(source.as_posix())
+        files = fs.ls(sourcedata_dir.as_posix())
         source_file = fs.open(files[0], mode="rb")
-        target_file = fs.open(bids_path.as_posix(), mode="wb", compression="gzip")
+        target_file = fs.open(bids_filename.as_posix(), mode="wb", compression="gzip")
 
         with source_file as sf, target_file as tf:
             tf.write(sf.read())
