@@ -334,7 +334,10 @@ def write_bids(
         sessions_filepath = to / str(participant_id) / f"{participant_id}_sessions.tsv"
         with fs.open(str(sessions_filepath), "w") as sessions_file:
             write_to_tsv(sessions, sessions_file)
-    scans = scans.set_index(["bids_full_path"], verify_integrity=True)
+
+    # scans = scans.set_index(["bids_full_path"], verify_integrity=True)
+    scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
+
     for bids_full_path, metadata in scans.iterrows():
         if metadata["modality_num"] != "20217" and metadata["modality_num"] != "20225":
             _copy_file_to_bids(
@@ -349,7 +352,36 @@ def write_bids(
             )
             if metadata["modality_num"] == "20217":
                 _import_event_tsv(bids_path=to)
+
+        bids_full_path = Path(bids_full_path)
+        scans_filepath = (
+            to
+            / str(metadata.participant_id)
+            / str(metadata.sessions)
+            / f"{metadata.participant_id}_{metadata.sessions}_scan.tsv"
+        )
+        # metadata.source_filename = metadata.source_filename.relative_to(dataset_directory)
+        row_to_write = _serialize_row(
+            metadata.drop(["participant_id", "sessions"]),
+            write_column_names=not scans_filepath.exists(),
+        )
+        with open(scans_filepath, "a") as scans_file:
+            scans_file.write(f"{row_to_write}\n")
     return
+
+
+def _serialize_row(row: pd.Series, write_column_names: bool) -> str:
+    row_dict = row.to_dict()
+    to_write = (
+        [row_dict.keys(), row_dict.values()]
+        if write_column_names
+        else [row_dict.values()]
+    )
+    return "\n".join([_serialize_list(list(_)) for _ in to_write])
+
+
+def _serialize_list(data: list, sep="\t") -> str:
+    return sep.join([str(value) for value in data])
 
 
 def _copy_file_to_bids(zipfile: Path, filenames: List[Path], bids_path: Path) -> None:
