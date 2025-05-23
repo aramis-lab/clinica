@@ -272,8 +272,8 @@ def _write_bids(
 
         for filename, row in dataframe.iterrows():
             install_nifti(
-                sourcedata_dir=str(sourcedata / row.source_zipfile),
-                bids_filename=str(bids_basedir / filename),
+                sourcedata_dir=sourcedata / row.source_zipfile,
+                bids_filename=bids_basedir / filename,
                 source_filename=row.source_filename,
             )
 
