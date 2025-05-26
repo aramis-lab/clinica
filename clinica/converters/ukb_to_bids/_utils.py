@@ -10,6 +10,7 @@ __all__ = [
     "merge_imaging_and_clinical_data",
     "prepare_dataset_to_bids_format",
     "write_bids",
+    "write_row_in_scans_tsv_file",
 ]
 
 
@@ -335,7 +336,6 @@ def write_bids(
         with fs.open(str(sessions_filepath), "w") as sessions_file:
             write_to_tsv(sessions, sessions_file)
 
-    # scans = scans.set_index(["bids_full_path"], verify_integrity=True)
     scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
 
     for bids_full_path, metadata in scans.iterrows():
@@ -353,21 +353,32 @@ def write_bids(
             if metadata["modality_num"] == "20217":
                 _import_event_tsv(bids_path=to)
 
-        bids_full_path = Path(bids_full_path)
-        scans_filepath = (
-            to
-            / str(metadata.participant_id)
-            / str(metadata.sessions)
-            / f"{metadata.participant_id}_{metadata.sessions}_scan.tsv"
-        )
-        # metadata.source_filename = metadata.source_filename.relative_to(dataset_directory)
-        row_to_write = _serialize_row(
-            metadata.drop(["participant_id", "sessions"]),
-            write_column_names=not scans_filepath.exists(),
-        )
-        with open(scans_filepath, "a") as scans_file:
-            scans_file.write(f"{row_to_write}\n")
-    return
+        write_row_in_scans_tsv_file(metadata, to)
+
+
+def write_row_in_scans_tsv_file(row: pd.Series, to: Path):
+    """Write rows from a dataframe into a scans.tsv file.
+
+    Parameters
+    ----------
+    row : pd.Series
+        Row to write into the scans.tsv file.
+
+    to : Path
+        Path to the BIDS folder.
+    """
+    scans_filepath = (
+        to
+        / str(row.participant_id)
+        / str(row.sessions)
+        / f"{row.participant_id}_{row.sessions}_scans.tsv"
+    )
+    row_to_write = _serialize_row(
+        row.drop(["participant_id", "sessions"]),
+        write_column_names=not scans_filepath.exists(),
+    )
+    with open(scans_filepath, "a") as scans_file:
+        scans_file.write(f"{row_to_write}\n")
 
 
 def _serialize_row(row: pd.Series, write_column_names: bool) -> str:
