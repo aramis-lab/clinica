@@ -1,5 +1,6 @@
 import math
 
+import numpy as np
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
@@ -111,3 +112,35 @@ def test_compute_scan_sequence_numbers_error():
 
     with pytest.raises(ValueError):
         _compute_scan_sequence_numbers([])
+
+
+def test_drop_duplicate_line_with_nans_error():
+    from clinica.converters.genfi_to_bids._utils import _drop_duplicate_line_with_nans
+    from clinica.utils.exceptions import ClinicaBIDSError
+
+    with pytest.raises(
+        ClinicaBIDSError,
+        match="Column participant_id was not found in the participants tsv while it is required by BIDS specifications.",
+    ):
+        _drop_duplicate_line_with_nans(pd.DataFrame())
+
+
+def test_drop_duplicate_line_with_nans():
+    from clinica.converters.genfi_to_bids._utils import _drop_duplicate_line_with_nans
+
+    assert_frame_equal(
+        _drop_duplicate_line_with_nans(
+            pd.DataFrame(
+                {
+                    "participant_id": ["sub-1", "sub-1", "sub-2", "sub-3"],
+                    "metadata": ["1", np.nan, np.nan, "3"],
+                }
+            )
+        ).reset_index(drop=True),
+        pd.DataFrame(
+            {
+                "participant_id": ["sub-1", "sub-2", "sub-3"],
+                "metadata": ["1", np.nan, "3"],
+            }
+        ),
+    )

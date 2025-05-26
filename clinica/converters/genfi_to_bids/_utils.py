@@ -7,6 +7,8 @@ import pandas as pd
 import pydicom as pdcm
 from pandas import DataFrame
 
+from clinica.utils.stream import cprint
+
 __all__ = [
     "merge_imaging_and_clinical_data",
     "parse_clinical_data",
@@ -29,8 +31,6 @@ def _find_dicoms(path_to_source_data: Path) -> Iterable[Tuple[Path, Path]]:
     Iterable[Tuple[Path, Path]]
         Path to found files and parent directory
     """
-    from clinica.utils.stream import cprint
-
     cprint("Looking for imaging data.", lvl="info")
     for z in path_to_source_data.rglob("*.dcm"):
         yield z, z.parent
@@ -153,8 +153,6 @@ def _find_clinical_data(
     List[DataFrame]
         Dataframes containing the clinical data
     """
-    from clinica.utils.stream import cprint
-
     cprint("Looking for clinical data.", lvl="info")
 
     return tuple(
@@ -780,6 +778,52 @@ def _compute_bids_full_path(df: DataFrame) -> DataFrame:
     )
 
 
+def _drop_duplicate_line_with_nans(participants: pd.DataFrame) -> pd.DataFrame:
+    """Performs an operation specific to participants metadata file in GENFI :
+    There can subsist two lines per participant in case one holds the information and one holds some nans.
+    It is not recommended to just use dropna() since it is possible there is no information for one subject, which would be lost
+    The proposed solution here drops the line with nans if there is another line for the participant.
+
+    Parameters
+    ----------
+    participants :
+        The participants metadata frame
+
+    Returns
+    -------
+        The same frame with dropped duplicate lines with nan values
+
+    """
+    from clinica.utils.exceptions import ClinicaBIDSError
+
+    if "participant_id" not in participants.columns:
+        raise ClinicaBIDSError(
+            "Column participant_id was not found in the participants tsv while it is required by BIDS specifications."
+        )
+
+    to_drop = pd.DataFrame()
+    for participant, size in participants.groupby(["participant_id"]).size().items():
+        if size > 1:
+            to_drop = pd.concat(
+                [
+                    to_drop,
+                    participants[
+                        (participants["participant_id"] == participant)
+                        * (participants.isna().any(axis=1))
+                    ],
+                ]
+            )
+    cprint(
+        f"Dropping the following lines from the participants.tsv : \n{to_drop}",
+        lvl="debug",
+    )
+    participants.drop(
+        to_drop.index,
+        inplace=True,
+    )
+    return participants
+
+
 def write_bids(
     to: Path,
     participants: DataFrame,
@@ -812,7 +856,6 @@ def write_bids(
 
     from clinica.converters._utils import run_dcm2niix, write_to_tsv
     from clinica.dataset import BIDSDatasetDescription
-    from clinica.utils.stream import cprint
 
     cprint("Starting to write the BIDS.", lvl="info")
     fs = LocalFileSystem(auto_mkdir=True)
@@ -822,8 +865,11 @@ def write_bids(
         participants.reset_index()
         .drop(["session_id", "modality", "run_num", "bids_filename", "source"], axis=1)
         .drop_duplicates()
-        .set_index("participant_id")
     )
+    participants = _drop_duplicate_line_with_nans(participants).set_index(
+        "participant_id"
+    )
+
     with fs.transaction:
         with fs.open(to / "dataset_description.json", "w") as dataset_description_file:
             BIDSDatasetDescription(name="GENFI").write(to=dataset_description_file)
@@ -840,7 +886,9 @@ def write_bids(
             write_to_tsv(sessions, sessions_file)
 
     scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
+
     for bids_full_path, metadata in scans.iterrows():
+        metadata.rename({"bids_filename": "filename"}, inplace=True)
         bids_full_path = Path(bids_full_path)
         try:
             os.makedirs(to / bids_full_path.parent)
@@ -849,7 +897,7 @@ def write_bids(
         dcm2niix_success = run_dcm2niix(
             Path(metadata["source_path"]).parent,
             to / Path(bids_full_path).parent,
-            metadata["bids_filename"],
+            metadata["filename"],
             True,
         )
         if dcm2niix_success:
@@ -857,7 +905,7 @@ def write_bids(
                 to
                 / str(metadata.participant_id)
                 / str(metadata.session_id)
-                / f"{metadata.participant_id}_{metadata.session_id}_scan.tsv"
+                / f"{metadata.participant_id}_{metadata.session_id}_scans.tsv"
             )
             metadata.source_path = metadata.source_path.relative_to(source)
             row_to_write = _serialize_row(
@@ -866,10 +914,7 @@ def write_bids(
             )
             with open(scans_filepath, "a") as scans_file:
                 scans_file.write(f"{row_to_write}\n")
-            if (
-                "dwi" in metadata["bids_filename"]
-                and "Philips" in metadata.manufacturer
-            ):
+            if "dwi" in metadata["filename"] and "Philips" in metadata.manufacturer:
                 _merge_philips_diffusion(
                     to / bids_full_path.with_suffix(".json"),
                     metadata.number_of_parts,
@@ -960,8 +1005,6 @@ def _merge_philips_diffusion(
     """
     import json
 
-    from clinica.utils.stream import cprint
-
     multipart_id = _get_multipart_id(
         PhilipsNumberOfParts.from_int(int(number_of_parts)), run_num
     )
@@ -1026,8 +1069,6 @@ def _delete_real_and_imaginary_files(bids_folder: Path) -> None:
     bids_folder : PathLike
         Path to the BIDS folder.
     """
-    from clinica.utils.stream import cprint
-
     for file_type in ("real", "imaginary"):
         for f in bids_folder.rglob(f"*_{file_type}.*"):
             f.unlink()
