@@ -117,17 +117,12 @@ def _get_dicom_tags_and_defaults_pet() -> pd.DataFrame:
                 (),
                 "n/a",
             ],
-            # todo :  and (0054, 1002) Counts Source
-            ["InfusionRadioactivity", (), np.nan],  # todo : corresp ?
-            ["InfusionStart", ("RadiopharmaceuticalStartTime",), np.nan],
-            ["InfusionSpeed", (), np.nan],  # todo : corresp ?
-            ["InfusionSpeedUnits", (), "n/a"],  # todo : corresp ?
-            ["InjectedVolume", ("RadiopharmaceuticalVolume",), np.nan],
             # Reconstruction
-            # todo : see(0054, 1000) Series Type ; (0054, 1001) Units ; (0028, 0051) Corrected Image
-            # see (0028, 1052) Rescale Intercept ; (0028, 1053) Rescale Slope
-            # (0018, 1100) Reconstruction Diameter ; (0018, 1149) Field of View Dimension(s) ; (0018, 1147) Field of View Shape
-            ["AcquisitionMode", (), "n/a"],
+            [
+                "AcquisitionMode",
+                (),
+                "n/a",
+            ],  # todo : could not find / (0054, 1000) Series Type ?
             ["ImageDecayCorrected", ("DecayCorrection",), "n/a"],
             ["ImageDecayCorrectionTime", ("DecayCorrection",), np.nan],
             ["ReconMethodName", ("ReconstructionMethod",), "n/a"],
@@ -135,11 +130,15 @@ def _get_dicom_tags_and_defaults_pet() -> pd.DataFrame:
                 "ReconMethodParameterLabels",
                 ("ReconstructionMethod",),
                 [""],
-            ],  # todo : corresp more precise ?
+            ],  # todo : could not find
             ["ReconMethodParameterUnits", ("ReconstructionMethod",), [""]],
             ["ReconMethodParameterValues", ("ReconstructionMethod",), [""]],
             ["ReconFilterType", ("ConvolutionKernel",), "n/a"],
-            ["ReconFilterSize", ("ConvolutionKernel",), np.nan],  # todo : corresp ?
+            [
+                "ReconFilterSize",
+                ("ConvolutionKernel",),
+                np.nan,
+            ],  # todo : could not find
             ["AttenuationCorrection", ("AttenuationCorrectionMethod",), "n/a"],
         ],
     ).set_index(keys="BIDSname", drop=False)
