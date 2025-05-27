@@ -10,7 +10,6 @@ __all__ = [
     "merge_imaging_and_clinical_data",
     "prepare_dataset_to_bids_format",
     "write_bids",
-    "write_row_in_scans_tsv_file",
 ]
 
 
@@ -353,10 +352,10 @@ def write_bids(
             if metadata["modality_num"] == "20217":
                 _import_event_tsv(bids_path=to)
 
-        write_row_in_scans_tsv_file(metadata, to)
+        _write_row_in_scans_tsv_file(metadata, to)
 
 
-def write_row_in_scans_tsv_file(row: pd.Series, to: Path):
+def _write_row_in_scans_tsv_file(row: pd.Series, to: Path):
     """Write rows from a dataframe into a scans.tsv file.
 
     Parameters

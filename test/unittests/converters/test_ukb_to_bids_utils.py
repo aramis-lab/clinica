@@ -21,7 +21,7 @@ def test_read_imaging_data(tmp_path):
 
 
 def test_write_row_in_scans_tsv_file(tmp_path):
-    from clinica.converters.ukb_to_bids._utils import write_row_in_scans_tsv_file
+    from clinica.converters.ukb_to_bids._utils import _write_row_in_scans_tsv_file
 
     row = pd.Series(
         {
@@ -35,7 +35,7 @@ def test_write_row_in_scans_tsv_file(tmp_path):
     target_dir = tmp_path / "BIDS" / "sub-0001" / "ses-M000"
     target_dir.mkdir(parents=True)
 
-    write_row_in_scans_tsv_file(row, tmp_path / "BIDS")
+    _write_row_in_scans_tsv_file(row, tmp_path / "BIDS")
 
     scans_tsv = target_dir / "sub-0001_ses-M000_scans.tsv"
     assert scans_tsv.exists()
