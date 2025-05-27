@@ -100,15 +100,18 @@ def _get_dicom_tags_and_defaults_pet() -> pd.DataFrame:
                 ),
                 np.nan,
             ],
-            ["InjectedRadioactivityUnits", (), "n/a"],
+            ["InjectedRadioactivityUnits", (), "MBq"],
             ["InjectedMass", (), "n/a"],
             ["InjectedMassUnits", (), "n/a"],
             [
                 "SpecificRadioactivity",
-                ("RadiopharmaceuticalSpecificActivity",),
+                (
+                    "RadiopharmaceuticalInformationSequence",
+                    "RadiopharmaceuticalSpecificActivity",
+                ),
                 "n/a",
             ],
-            ["SpecificRadioactivityUnits", (), "n/a"],  # todo ?
+            ["SpecificRadioactivityUnits", (), "Bq/micromole"],
             [
                 "ModeOfAdministration",
                 (),
@@ -289,15 +292,10 @@ def _set_decay_time(dcm_result: pd.DataFrame) -> None:
         dcm_result.loc["ImageDecayCorrectionTime", "Value"] = None
 
 
-def _update_default_units(dcm_result: pd.DataFrame) -> None:
-    dcm_result.loc["InjectedRadioactivityUnits", "Value"] = "MBq"
-    dcm_result.loc["SpecificRadioactivityUnits", "Value"] = "Bq/micromole"
-
-
 def _update_injected_mass(dcm_result: pd.DataFrame) -> None:
     injected = dcm_result.loc["InjectedRadioactivity", "Value"]
     specific = dcm_result.loc["SpecificRadioactivity", "Value"]
-    if injected and specific:
+    if injected and specific != "n/a":
         dcm_result.loc["InjectedMass", "Value"] = injected / float(specific)
         dcm_result.loc["InjectedMassUnits", "Value"] = "mole"
 
@@ -311,7 +309,6 @@ def _get_default_for_modality(modality: str) -> Optional[pd.DataFrame]:
 
 
 def _postprocess_for_pet(metadata: pd.DataFrame):
-    _set_decay_time(metadata)
     _format_timezero(metadata)
     # Scan Start in BIDS is the difference between Time Zero and the beginning of image acquisition
     _set_time_relative_to_zero(metadata, field="ScanStart")
@@ -322,10 +319,10 @@ def _postprocess_for_pet(metadata: pd.DataFrame):
     _set_time_from_ms_to_seconds(metadata, "FrameDuration")
     _get_admin_injection_time_to_zero(metadata)
 
-    # _update_default_units(df)
-    # _update_injected_mass(df)
-    # _check_decay_correction(df)
-    # _set_injection_start(df)
+    _set_decay_time(metadata)
+    _check_decay_correction(metadata)
+
+    _update_injected_mass(metadata)
 
 
 def get_json_data(dcm_dir: Path, modality: str) -> pd.DataFrame:
