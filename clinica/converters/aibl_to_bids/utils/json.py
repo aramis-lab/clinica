@@ -27,18 +27,17 @@ def write_json(json_path: Path, json_data: pd.DataFrame):
 
 def _format_time(timestamp: str) -> str:
     # todo : test
-    # maybe not used elsewhere
     from time import strftime, strptime
 
-    return strftime("%H:%M:%S", strptime(timestamp, "%H%M%S"))
+    return strftime("%H:%M:%S", strptime(timestamp.split(".")[0], "%H%M%S"))
 
 
-def _substract_formatted_times(time1: str, time2: str) -> float:
+def _substract_formatted_times(reference: str, action: str) -> float:
     # todo : test
     from datetime import datetime
 
     return (
-        datetime.strptime(time1, "%H:%M:%S") - datetime.strptime(time2, "%H:%M:%S")
+        datetime.strptime(action, "%H:%M:%S") - datetime.strptime(reference, "%H:%M:%S")
     ).total_seconds()
 
 
@@ -109,12 +108,12 @@ def _get_dicom_tags_and_defaults_pet() -> pd.DataFrame:
                 ("RadiopharmaceuticalSpecificActivity",),
                 "n/a",
             ],
-            ["SpecificRadioactivityUnits", (), "n/a"],
+            ["SpecificRadioactivityUnits", (), "n/a"],  # todo ?
             [
                 "ModeOfAdministration",
-                ("RadiopharmaceuticalStartTime",),
+                (),
                 "n/a",
-            ],  # uses "RadiopharmaceuticalStartTime" to decide on admin mode
+            ],
             # todo :  and (0054, 1002) Counts Source
             ["InfusionRadioactivity", (), np.nan],  # todo : corresp ?
             ["InfusionStart", ("RadiopharmaceuticalStartTime",), np.nan],
@@ -246,22 +245,25 @@ def _set_time_relative_to_zero(dcm_result: pd.DataFrame, field: str) -> None:
         except ValueError:
             return
         dcm_result.loc[field, "Value"] = _substract_formatted_times(
-            zero, dcm_result.loc[field, "Value"]
+            reference=zero, action=dcm_result.loc[field, "Value"]
         )
 
 
-def _set_frame_time_to_seconds(dcm_result: pd.DataFrame) -> None:
-    if start := dcm_result.loc["FrameTimesStart", "Value"]:
-        start = start / 1000
+def _set_time_from_ms_to_seconds(dcm_result: pd.DataFrame, field: str) -> None:
+    if start := dcm_result.loc[field, "Value"]:
+        dcm_result.loc[field, "Value"] = start / 1000
 
 
-def _get_admin_mode_from_start_time(dcm_result: pd.DataFrame) -> None:
-    if (injection := dcm_result.loc["ModeOfAdministration", "Value"]) and (
-        acquisition := dcm_result.loc["TimeZero", "Value"]
-    ):
-        if injection - float(acquisition):
+def _get_admin_injection_time_to_zero(dcm_result: pd.DataFrame) -> None:
+    """The administration mode should be defined as bolus if < 10 min and infusion if > 30 min."""
+    # todo : confirm ?
+    if (injection := dcm_result.loc["InjectionStart", "Value"]) != "n/a":
+        if abs(injection) / 60 < 10:
+            dcm_result.loc["ModeOfAdministration", "Value"] = "bolus"
+        elif abs(injection) / 60 > 30:
+            dcm_result.loc["ModeOfAdministration", "Value"] = "infusion"
+        else:
             dcm_result.loc["ModeOfAdministration", "Value"] = "bolus-infusion"
-        dcm_result.loc["ModeOfAdministration", "Value"] = "bolus"
 
 
 def _check_decay_correction(dcm_result: pd.DataFrame) -> None:
@@ -314,10 +316,12 @@ def _postprocess_for_pet(metadata: pd.DataFrame):
     # Scan Start in BIDS is the difference between Time Zero and the beginning of image acquisition
     _set_time_relative_to_zero(metadata, field="ScanStart")
     # Injection Start in BIDS is the difference between Time Zero and the beginning of injection
+    # RQ : can be negative
     _set_time_relative_to_zero(metadata, field="InjectionStart")
-    _set_frame_time_to_seconds(metadata)
+    _set_time_from_ms_to_seconds(metadata, "FrameTimesStart")
+    _set_time_from_ms_to_seconds(metadata, "FrameDuration")
+    _get_admin_injection_time_to_zero(metadata)
 
-    # _get_admin_mode_from_start_time(df)
     # _update_default_units(df)
     # _update_injected_mass(df)
     # _check_decay_correction(df)
