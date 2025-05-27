@@ -62,7 +62,7 @@ def test_check_dcm_value(element, expected):
     "get_default, length, tag",
     [
         (_get_dicom_tags_and_defaults_pet, 38, "AttenuationCorrection"),
-        (_get_dicom_tags_and_defaults_base, 9, "Units"),
+        (_get_dicom_tags_and_defaults_base, 8, "Units"),
     ],
 )
 def test_get_dicom_tags_and_defaults_pet(get_default, length, tag):
@@ -78,7 +78,7 @@ def test_get_dicom_tags_and_defaults_pet(get_default, length, tag):
         ("av45", 38),
         ("flute", 38),
         ("pib", 38),
-        ("foo", 9),
+        ("foo", 8),
     ],
 )
 def test_get_default_for_modality(modality, length):

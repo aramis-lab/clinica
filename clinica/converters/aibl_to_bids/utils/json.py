@@ -9,24 +9,37 @@ import numpy as np
 import pandas as pd
 from pydicom.dataset import DataElement, FileDataset
 from pydicom.multival import MultiValue
-from pydicom.tag import Tag
 
 from clinica.utils.stream import cprint
 
 # todo : __all__
 
 # todo : can this be used for other than AIBL ?
-# todo : adapt to modality, rn computed for all though tags are for PET
 # todo : write docstrings
 
-
-# todo : would using a class be beneficial ? I am starting to get a lot of if modality truc...
+# todo : would using a class be beneficial ? I am starting to get a lot of : if modality do something
 
 
 def write_json(json_path: Path, json_data: pd.DataFrame):
-    # todo : date format ?
     # todo : why n/a written as n><a ? or np.nan as null ?
     json_data["Value"].to_json(json_path, indent=4)
+
+
+def _format_time(timestamp: str) -> str:
+    # todo : test
+    # maybe not used elsewhere
+    from time import strftime, strptime
+
+    return strftime("%H:%M:%S", strptime(timestamp, "%H%M%S"))
+
+
+def _substract_formatted_times(time1: str, time2: str) -> float:
+    # todo : test
+    from datetime import datetime
+
+    return (
+        datetime.strptime(time1, "%H:%M:%S") - datetime.strptime(time2, "%H:%M:%S")
+    ).total_seconds()
 
 
 def _get_dicom_tags_and_defaults_pet() -> pd.DataFrame:
@@ -49,14 +62,16 @@ def _get_dicom_tags_and_defaults_pet() -> pd.DataFrame:
                 "n/a",
             ],
             # Time
-            # todo : definitions ?? Study Time != Series time != Content Time != Acquisition Time (but dates same)
-            ["TimeZero", ("AcquisitionTime",), "n/a"],
-            ["ScanStart", (), "n/a"],  # same as acquisition time
+            ["TimeZero", ("SeriesTime",), "n/a"],
+            ["ScanStart", ("AcquisitionTime",), np.nan],
             [
                 "InjectionStart",
-                ("RadiopharmaceuticalStartTime",),
+                (
+                    "RadiopharmaceuticalInformationSequence",
+                    "RadiopharmaceuticalStartTime",
+                ),
                 np.nan,
-            ],  # diff between "RadiopharmaceuticalStartTime" and acquisition time
+            ],
             ["FrameTimesStart", ("FrameReferenceTime",), []],
             ["FrameDuration", ("ActualFrameDuration",), []],
             # Radiochemistry
@@ -78,7 +93,14 @@ def _get_dicom_tags_and_defaults_pet() -> pd.DataFrame:
                 ),
                 "n/a",
             ],
-            ["InjectedRadioactivity", ("RadionuclideTotalDose",), np.nan],
+            [
+                "InjectedRadioactivity",
+                (
+                    "RadiopharmaceuticalInformationSequence",
+                    "RadionuclideTotalDose",
+                ),
+                np.nan,
+            ],
             ["InjectedRadioactivityUnits", (), "n/a"],
             ["InjectedMass", (), "n/a"],
             ["InjectedMassUnits", (), "n/a"],
@@ -131,7 +153,6 @@ def _get_dicom_tags_and_defaults_base() -> pd.DataFrame:
             ["SoftwareVersions", ("SoftwareVersions",), "n/a"],
             ["BodyPart", ("BodyPartExamined",), "n/a"],
             ["MagneticFieldStrength", ("MagneticFieldStrength",), "n/a"],
-            ["Units", ("Units",), "n/a"],
             # Institution
             ["InstitutionName", ("InstitutionName",), "n/a"],
             ["InstitutionAddress", ("InstitutionAddress",), "n/a"],
@@ -207,16 +228,31 @@ def _update_metadata_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) ->
                 metadata.loc[index, "Value"] = dcm_value
 
 
-def _set_scan_start(dcm_result: pd.DataFrame) -> None:
-    # todo : explain arbitrary
-    dcm_result.loc["ScanStart", "Value"] = "0"
+def _format_timezero(dcm_result: pd.DataFrame) -> None:
+    try:
+        dcm_result.loc["TimeZero", "Value"] = _format_time(
+            dcm_result.loc["TimeZero", "Value"]
+        )
+    except ValueError:
+        return
 
 
-def _set_injection_start(dcm_result: pd.DataFrame) -> None:
-    if (injection := dcm_result.loc["InjectionStart", "Value"]) and (
-        acquisition := dcm_result.loc["TimeZero", "Value"]
-    ):
-        dcm_result.loc["InjectionStart", "Value"] = injection - float(acquisition)
+def _set_time_relative_to_zero(dcm_result: pd.DataFrame, field: str) -> None:
+    if (zero := dcm_result.loc["TimeZero", "Value"]) != "n/a":
+        try:
+            dcm_result.loc[field, "Value"] = _format_time(
+                dcm_result.loc[field, "Value"]
+            )
+        except ValueError:
+            return
+        dcm_result.loc[field, "Value"] = _substract_formatted_times(
+            zero, dcm_result.loc[field, "Value"]
+        )
+
+
+def _set_frame_time_to_seconds(dcm_result: pd.DataFrame) -> None:
+    if start := dcm_result.loc["FrameTimesStart", "Value"]:
+        start = start / 1000
 
 
 def _get_admin_mode_from_start_time(dcm_result: pd.DataFrame) -> None:
@@ -266,7 +302,7 @@ def _update_injected_mass(dcm_result: pd.DataFrame) -> None:
 
 def _get_default_for_modality(modality: str) -> Optional[pd.DataFrame]:
     # todo : might need to adapt if other converters involved one day
-    # todo : more restrictive on modality ? class or something
+    # todo : more restrictive on modality ? dataclass or something
     if modality in ("av45", "flute", "pib"):
         return _get_dicom_tags_and_defaults_pet()
     return _get_dicom_tags_and_defaults_base()
@@ -274,7 +310,12 @@ def _get_default_for_modality(modality: str) -> Optional[pd.DataFrame]:
 
 def _postprocess_for_pet(metadata: pd.DataFrame):
     _set_decay_time(metadata)
-    _set_scan_start(metadata)
+    _format_timezero(metadata)
+    # Scan Start in BIDS is the difference between Time Zero and the beginning of image acquisition
+    _set_time_relative_to_zero(metadata, field="ScanStart")
+    # Injection Start in BIDS is the difference between Time Zero and the beginning of injection
+    _set_time_relative_to_zero(metadata, field="InjectionStart")
+    _set_frame_time_to_seconds(metadata)
 
     # _get_admin_mode_from_start_time(df)
     # _update_default_units(df)
