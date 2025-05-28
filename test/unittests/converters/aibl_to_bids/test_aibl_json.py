@@ -61,7 +61,7 @@ def test_check_dcm_value(element, expected):
 @pytest.mark.parametrize(
     "get_default, length, tag",
     [
-        (_get_dicom_tags_and_defaults_pet, 38, "AttenuationCorrection"),
+        (_get_dicom_tags_and_defaults_pet, 33, "AttenuationCorrection"),
         (_get_dicom_tags_and_defaults_base, 8, "Units"),
     ],
 )
@@ -75,9 +75,9 @@ def test_get_dicom_tags_and_defaults_pet(get_default, length, tag):
 @pytest.mark.parametrize(
     "modality, length",
     [
-        ("av45", 38),
-        ("flute", 38),
-        ("pib", 38),
+        ("av45", 33),
+        ("flute", 33),
+        ("pib", 33),
         ("foo", 8),
     ],
 )
