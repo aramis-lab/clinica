@@ -54,13 +54,9 @@ def create_participants_df(
     """
     import numpy as np
 
-    from clinica.converters._utils import load_clinical_csv
     from clinica.converters.study_models import bids_id_factory
-    from clinica.utils.stream import cprint
 
     fields_bids = ["participant_id"]
-    prev_location = ""
-    prev_sheet = 0
     index_to_drop = []
     study_name = StudyName.OASIS
     location_name = f"{study_name.value} location"
@@ -88,20 +84,7 @@ def create_participants_df(
             location = tmp[0]
             # If a sheet is available
             sheet = tmp[1] if len(tmp) > 1 else 0
-            # Check if the file to open for a certain field is the same of the previous field
-            if location == prev_location and sheet == prev_sheet:
-                pass
-            else:
-                file_ext = os.path.splitext(location)[1]
-                file_to_read_path = clinical_data_dir / location
-                if file_ext == ".xlsx":
-                    file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
-                elif file_ext == ".csv":
-                    file_to_read = load_clinical_csv(
-                        clinical_data_dir, location.split(".")[0]
-                    )
-                prev_location = location
-                prev_sheet = sheet
+            file_to_read = pd.read_excel(clinical_data_dir / location, sheet_name=sheet)
 
             field_col_values = []
             # For each field in fields_dataset extract all the column values
@@ -116,7 +99,7 @@ def create_participants_df(
                             file_to_read.at[j, participant_fields_db[i]]
                         ).rstrip(".0")
                     else:
-                        value_to_append = np.NaN
+                        value_to_append = np.nan
                 else:
                     value_to_append = file_to_read.at[j, participant_fields_db[i]]
                 field_col_values.append(value_to_append)
