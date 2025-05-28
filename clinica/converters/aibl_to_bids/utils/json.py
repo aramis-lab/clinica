@@ -15,8 +15,6 @@ from clinica.utils.stream import cprint
 # todo : __all__
 
 # todo : can this be used for other than AIBL ?
-# todo : write docstrings
-
 # todo : would using a class be beneficial ? I am starting to get a lot of : if modality do something
 
 
@@ -33,7 +31,6 @@ def _format_time(timestamp: str) -> str:
 
 
 def _substract_formatted_times(reference: str, action: str) -> float:
-    # todo : test
     from datetime import datetime
 
     return (
@@ -169,7 +166,7 @@ def _get_dicom_tags_and_defaults_base() -> pd.DataFrame:
 def _check_dcm_value(
     dicom_data: Union[None, str, list, float],
 ) -> Union[None, str, list, float]:
-    # Handles case where result is MultiValue, which is not JSON serializable and would be replaced by a blank space
+    """Handles case where result is MultiValue, which is not JSON serializable and would be replaced by a blank space"""
     if dicom_data:
         if type(dicom_data) == MultiValue:
             return list(dicom_data)
@@ -181,7 +178,7 @@ def _fetch_dcm_data_from_header(
     keys_list: tuple[str], dicom_header: Union[FileDataset, DataElement]
 ) -> Optional[DataElement]:
     """
-    Get the value from the dicom header corresponding to a dicom Tag/key list
+    Gets the value from the dicom header corresponding to a dicom Tag/key list
 
     Parameters
     ----------
@@ -213,6 +210,8 @@ def _get_dcm_value_from_header(
 
 
 def _update_metadata_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) -> None:
+    from logging import getLevelName, getLogger
+
     from pydicom import dcmread
 
     try:
@@ -223,10 +222,15 @@ def _update_metadata_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) ->
             lvl="warning",
         )
     else:
-        # todo : prints in debug ?
         for index, data in metadata.iterrows():
             if dcm_value := _get_dcm_value_from_header(data.DCMtag, dicom_header):
+                cprint(msg=f"Value for {data.DCMtag} is : {dcm_value}", lvl="debug")
                 metadata.loc[index, "Value"] = dcm_value
+            elif getLevelName(getLogger("clinica").level) == "DEBUG":
+                # todo : ain't sure it is proper
+                cprint(
+                    msg=f"Value for {data.DCMtag} could not be retrieved.", lvl="debug"
+                )
 
 
 def _format_timezero(dcm_result: pd.DataFrame) -> None:
@@ -241,7 +245,6 @@ def _format_timezero(dcm_result: pd.DataFrame) -> None:
 
 def _set_time_relative_to_zero(dcm_result: pd.DataFrame, field: str) -> None:
     """Computes the difference from the time inside the field compared to TimeZero which should be formatted."""
-    # todo : test
     if (zero := dcm_result.loc["TimeZero", "Value"]) != "n/a":
         try:
             dcm_result.loc[field, "Value"] = _format_time(
@@ -256,6 +259,7 @@ def _set_time_relative_to_zero(dcm_result: pd.DataFrame, field: str) -> None:
 
 
 def _set_time_from_ms_to_seconds(dcm_result: pd.DataFrame, field: str) -> None:
+    """Set time to seconds for FrameTimeStart and FrameDuration which are encoded as list(float), given in ms."""
     if start := dcm_result.loc[field, "Value"]:
         dcm_result.loc[field, "Value"] = start / 1000
 
@@ -274,10 +278,10 @@ def _get_admin_injection_time_to_zero(dcm_result: pd.DataFrame) -> None:
 
 def _check_decay_correction(dcm_result: pd.DataFrame) -> None:
     corrected = dcm_result.loc["ImageDecayCorrected", "Value"]
-    if corrected == "NONE":
-        dcm_result.loc["ImageDecayCorrected", "Value"] = False
-    elif corrected:
+    if corrected == "START" or corrected == "ADMIN":
         dcm_result.loc["ImageDecayCorrected", "Value"] = True
+    else:
+        dcm_result.loc["ImageDecayCorrected", "Value"] = False
 
 
 def _set_decay_time(dcm_result: pd.DataFrame) -> None:

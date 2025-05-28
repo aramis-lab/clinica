@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+import numpy as np
 import pandas as pd
 import pytest
 from pydicom.dataset import Dataset
@@ -24,6 +25,98 @@ def test_format_time_success(input, expected):
 def test_format_time_error(input):
     with pytest.raises((ValueError, AttributeError)):
         _format_time(input)
+
+
+@pytest.mark.parametrize(
+    "reference, action, expected",
+    [("01:00:00", "01:00:01", 1), ("01:00:01", "01:00:00", -1)],
+)
+def test_substract_formatted_times(reference, action, expected):
+    from clinica.converters.aibl_to_bids.utils.json import _substract_formatted_times
+
+    assert expected == _substract_formatted_times(reference, action)
+
+
+@pytest.mark.parametrize(
+    "input, expected", [("112233", "11:22:33"), (112233, "n/a"), ("112233,00", "n/a")]
+)
+def test_format_timezero(input, expected):
+    from clinica.converters.aibl_to_bids.utils.json import _format_timezero
+
+    metadata = pd.DataFrame({"DCMtag": ["TimeZero"], "Value": [input]}).set_index(
+        "DCMtag", drop=False
+    )
+    _format_timezero(metadata)
+    assert expected == metadata.loc["TimeZero", "Value"]
+
+
+@pytest.mark.parametrize(
+    "input, expected", [("010001", 1), (112233, np.nan), ("112233,00", np.nan)]
+)
+def test_set_time_relative_to_zero(input, expected):
+    from clinica.converters.aibl_to_bids.utils.json import _set_time_relative_to_zero
+
+    metadata = pd.DataFrame(
+        {"DCMtag": ["TimeZero", "Test"], "Value": ["01:00:00", input]}
+    ).set_index("DCMtag", drop=False)
+    _set_time_relative_to_zero(metadata, "Test")
+    if not np.isnan(expected):
+        assert expected == metadata.loc["Test", "Value"]
+    else:
+        assert np.isnan(metadata.loc["Test", "Value"])
+
+
+@pytest.mark.parametrize(
+    "input, expected",
+    [("START", True), ("ADMIN", True), ("foo", False), ("NONE", False)],
+)
+def test_check_decay_correction(input, expected):
+    from clinica.converters.aibl_to_bids.utils.json import _check_decay_correction
+
+    metadata = pd.DataFrame(
+        {"DCMtag": ["ImageDecayCorrected"], "Value": [input]}
+    ).set_index("DCMtag", drop=False)
+    _check_decay_correction(metadata)
+    assert metadata.loc["ImageDecayCorrected", "Value"] == expected
+
+
+@pytest.mark.parametrize(
+    "input, expected",
+    [("START", "scan"), ("ADMIN", "injection"), ("foo", None), ("NONE", None)],
+)
+def test_set_decay_time(input, expected):
+    from clinica.converters.aibl_to_bids.utils.json import _set_decay_time
+
+    metadata = pd.DataFrame(
+        {
+            "DCMtag": ["ImageDecayCorrectionTime", "ScanStart", "InjectionStart"],
+            "Value": [input, "scan", "injection"],
+        }
+    ).set_index("DCMtag", drop=False)
+    _set_decay_time(metadata)
+    assert metadata.loc["ImageDecayCorrectionTime", "Value"] == expected
+
+
+@pytest.mark.parametrize(
+    "injected, specific, expected",
+    [(5, "2", 2.5), (None, "2", "n/a"), (12, "n/a", "n/a")],
+)
+def test_update_injected_mass(injected, specific, expected):
+    from clinica.converters.aibl_to_bids.utils.json import _update_injected_mass
+
+    metadata = pd.DataFrame(
+        {
+            "DCMtag": [
+                "InjectedRadioactivity",
+                "SpecificRadioactivity",
+                "InjectedMass",
+            ],
+            "Value": [injected, specific, "n/a"],
+        }
+    ).set_index("DCMtag", drop=False)
+    _update_injected_mass(metadata)
+
+    assert metadata.loc["InjectedMass", "Value"] == expected
 
 
 def build_dicom_header():
