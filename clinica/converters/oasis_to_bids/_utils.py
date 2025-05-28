@@ -56,61 +56,43 @@ def create_participants_df(
 
     from clinica.converters.study_models import bids_id_factory
 
-    fields_bids = ["participant_id"]
-    index_to_drop = []
     study_name = StudyName.OASIS
+    location = f"{study_name.value} location"
 
-    participants_specs = pd.read_csv(
-        clinical_specifications_folder / "participant.tsv", sep="\t"
+    participants_specs = (
+        pd.read_csv(clinical_specifications_folder / "participant.tsv", sep="\t")[
+            ["BIDS CLINICA", study_name, location]
+        ]
+        .dropna()
+        .reset_index()
     )
-    participant_fields_db = participants_specs[study_name.value]
-    field_location = participants_specs[f"{study_name.value} location"]
-    participant_fields_bids = participants_specs["BIDS CLINICA"]
 
-    # Extract the list of the available BIDS fields for the dataset
-    for i in range(0, len(participant_fields_db)):
-        if not pd.isnull(participant_fields_db[i]):
-            fields_bids.append(participant_fields_bids[i])
+    excel_location = participants_specs[location].unique()
 
-    # Init the dataframe that will be saved in the file participants.tsv
-    participant_df = pd.DataFrame(columns=fields_bids)
+    if len(excel_location) > 1:
+        # todo :test
+        raise ValueError(
+            "More than one file was found for the location of metadata for OASIS1. Please check the specifications file."
+        )
 
-    for i in range(0, len(participant_fields_db)):
-        # If a field not empty is found
-        if not pd.isnull(participant_fields_db[i]):
-            # Extract the file location of the field and read the value from the file
-            tmp = field_location[i].split("/")
-            location = tmp[0]
-            # If a sheet is available
-            sheet = tmp[1] if len(tmp) > 1 else 0
-            file_to_read = pd.read_excel(clinical_data_dir / location, sheet_name=sheet)
+    file_to_read = pd.read_excel(clinical_data_dir / excel_location[0], sheet_name=0)
 
-            field_col_values = []
-            # For each field in fields_dataset extract all the column values
-            for j in range(0, len(file_to_read)):
-                # Convert the alternative_id_1 to string if is an integer/float
-                value_to_read = file_to_read[participant_fields_db[i]]
-                if participant_fields_bids[i] == "alternative_id_1" and (
-                    value_to_read.dtype == np.float64 or value_to_read.dtype == np.int64
-                ):
-                    if not pd.isnull(file_to_read.at[j, participant_fields_db[i]]):
-                        value_to_append = str(
-                            file_to_read.at[j, participant_fields_db[i]]
-                        ).rstrip(".0")
-                    else:
-                        value_to_append = np.nan
-                else:
-                    value_to_append = file_to_read.at[j, participant_fields_db[i]]
-                field_col_values.append(value_to_append)
-            # Add the extracted column to the participant_df
-            participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
+    participant_df = file_to_read[participants_specs[study_name.value].values]
+    participant_df = participant_df.loc[:, ~participant_df.columns.duplicated()]
+    participant_df.rename(
+        columns=participants_specs.set_index(study_name).to_dict()["BIDS CLINICA"],
+        inplace=True,
+    )
+    if "cdr" not in participant_df.columns:
+        participant_df["cdr"] = participant_df["diagnosis_bl"]
+    else:
+        participant_df["diagnosis_bl"] = participant_df["cdr"]
+    # todo :fix test
 
     # OASIS provides several MRI for the same session
     participant_df = participant_df[
         ~participant_df.alternative_id_1.str.endswith("_MR2")
     ]
-    participant_df.reset_index(inplace=True, drop=True)
-
     # Adding participant_id column with BIDS ids
     participant_df["participant_id"] = participant_df["alternative_id_1"].apply(
         lambda x: bids_id_factory(study_name).from_original_study_id(x)
@@ -121,10 +103,8 @@ def create_participants_df(
         participant_df = participant_df.set_index("participant_id", drop=False).loc[
             bids_ids
         ]
-
-    participant_df = participant_df.fillna("n/a")
-
-    return participant_df
+    participant_df.reset_index(inplace=True, drop=True)
+    return participant_df.fillna("n/a")
 
 
 def _get_subjects_list_from_file(subjects_list_path: Path) -> list[OASISBIDSSubjectID]:
