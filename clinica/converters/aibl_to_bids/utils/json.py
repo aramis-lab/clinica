@@ -12,6 +12,8 @@ from pydicom.multival import MultiValue
 
 from clinica.utils.stream import cprint
 
+from .bids import Modality
+
 # todo : __all__
 
 # todo : can this be used for other than AIBL ?
@@ -307,10 +309,9 @@ def _update_injected_mass(dcm_result: pd.DataFrame) -> None:
         dcm_result.loc["InjectedMassUnits", "Value"] = "mole"
 
 
-def _get_default_for_modality(modality: str) -> Optional[pd.DataFrame]:
+def _get_default_for_modality(modality: Modality) -> Optional[pd.DataFrame]:
     # todo : might need to adapt if other converters involved one day
-    # todo : more restrictive on modality ? dataclass or something
-    if modality in ("av45", "flute", "pib"):
+    if modality in (Modality.AV45, Modality.FLUTE, Modality.PIB):
         return _get_dicom_tags_and_defaults_pet()
     return _get_dicom_tags_and_defaults_base()
 
@@ -333,8 +334,9 @@ def _postprocess_for_pet(metadata: pd.DataFrame):
 
 
 def get_json_data(dcm_dir: Path, modality: str) -> pd.DataFrame:
+    modality = Modality(modality)
     metadata = _get_default_for_modality(modality)
     _update_metadata_from_image_dicoms(metadata, dcm_dir)
-    if modality in ("av45", "flute", "pib"):
+    if modality in (Modality.AV45, Modality.FLUTE, Modality.PIB):
         _postprocess_for_pet(metadata)
     return metadata

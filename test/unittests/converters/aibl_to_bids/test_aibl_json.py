@@ -4,9 +4,10 @@ from unittest.mock import patch
 import numpy as np
 import pandas as pd
 import pytest
-from pydicom.dataset import DataElement, Dataset, FileDataset
+from pydicom.dataset import Dataset
 from pydicom.multival import MultiValue
 
+from clinica.converters.aibl_to_bids.utils.bids import Modality
 from clinica.converters.aibl_to_bids.utils.json import (
     _format_time,
     _get_dicom_tags_and_defaults_base,
@@ -183,9 +184,9 @@ def test_get_dicom_tags_and_defaults_pet(get_default, length, tag):
 @pytest.mark.parametrize(
     "modality, length",
     [
-        ("av45", 33),
-        ("flute", 33),
-        ("pib", 33),
+        (Modality.AV45, 33),
+        (Modality.FLUTE, 33),
+        (Modality.PIB, 33),
         ("foo", 8),
     ],
 )
