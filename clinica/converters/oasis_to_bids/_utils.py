@@ -13,6 +13,7 @@ from clinica.converters.study_models import (
 )
 
 __all__ = [
+    "create_participants_df",
     "get_subjects_list",
     "create_sessions_df",
     "write_sessions_tsv",
@@ -24,7 +25,6 @@ __all__ = [
 
 
 def create_participants_df(
-    study_name: StudyName,
     clinical_specifications_folder: Path,
     clinical_data_dir: Path,
     bids_ids: list[str],
@@ -34,9 +34,6 @@ def create_participants_df(
 
     Parameters
     ----------
-    study_name : StudyName
-        The name of the study (Ex. ADNI).
-
     clinical_specifications_folder : Path
         The path to the clinical file.
 
@@ -65,7 +62,7 @@ def create_participants_df(
     prev_location = ""
     prev_sheet = 0
     index_to_drop = []
-    study_name = StudyName(study_name)
+    study_name = StudyName.OASIS
     location_name = f"{study_name.value} location"
 
     participants_specs = pd.read_csv(
@@ -103,21 +100,6 @@ def create_participants_df(
                     file_to_read = load_clinical_csv(
                         clinical_data_dir, location.split(".")[0]
                     )
-                    # Condition to handle ADNI modification of file APOERES.csv
-                    # See issue https://github.com/aramis-lab/clinica/issues/1294
-                    if study_name == StudyName.ADNI and location == "APOERES.csv":
-                        if (
-                            participant_fields_db[i] not in file_to_read.columns
-                            and "GENOTYPE" in file_to_read.columns
-                        ):
-                            # Split the 'GENOTYPE' column into 'APGEN1' and 'APGEN2'
-                            genotype = file_to_read["GENOTYPE"].str.split(
-                                "/", expand=True
-                            )
-                            file_to_read = file_to_read.assign(
-                                APGEN1=genotype[0], APGEN2=genotype[1]
-                            )
-
                 prev_location = location
                 prev_sheet = sheet
 
@@ -141,18 +123,10 @@ def create_participants_df(
             # Add the extracted column to the participant_df
             participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
 
-    if study_name == StudyName.ADNI or study_name == StudyName.AIBL:
-        # ADNImerge contains one row for each visits so there are duplicates
-        participant_df = participant_df.drop_duplicates(
-            subset=["alternative_id_1"], keep="first"
-        )
-
-    elif study_name == StudyName.OASIS:
-        # OASIS provides several MRI for the same session
-        participant_df = participant_df[
-            ~participant_df.alternative_id_1.str.endswith("_MR2")
-        ]
-
+    # OASIS provides several MRI for the same session
+    participant_df = participant_df[
+        ~participant_df.alternative_id_1.str.endswith("_MR2")
+    ]
     participant_df.reset_index(inplace=True, drop=True)
 
     # Adding participant_id column with BIDS ids

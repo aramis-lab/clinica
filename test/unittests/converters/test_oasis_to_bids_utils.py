@@ -484,11 +484,10 @@ def _create_participants_spec(tmp_path: Path) -> Path:
     ],
 )
 def test_create_participants_df(tmp_path, bids_ids, expected, clinical_data_path):
-    from clinica.converters._utils import create_participants_df
+    from clinica.converters.oasis_to_bids._utils import create_participants_df
 
     assert (
         create_participants_df(
-            StudyName.OASIS,
             clinical_specifications_folder=_create_participants_spec(tmp_path),
             clinical_data_dir=clinical_data_path,
             bids_ids=bids_ids,
