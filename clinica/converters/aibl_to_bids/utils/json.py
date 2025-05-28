@@ -19,7 +19,7 @@ from clinica.utils.stream import cprint
 
 
 def write_json(json_path: Path, json_data: pd.DataFrame):
-    # todo : why n/a written as n><a ? or np.nan as null ?
+    # todo : INVESTIGATE why n/a written as n><a ? or np.nan as null ?
     json_data["Value"].to_json(json_path, indent=4)
 
 

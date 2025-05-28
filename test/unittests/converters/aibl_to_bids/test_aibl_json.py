@@ -1,9 +1,10 @@
+from typing import Union
 from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
 import pytest
-from pydicom.dataset import Dataset
+from pydicom.dataset import DataElement, Dataset, FileDataset
 from pydicom.multival import MultiValue
 
 from clinica.converters.aibl_to_bids.utils.json import (
@@ -43,8 +44,8 @@ def test_substract_formatted_times(reference, action, expected):
 def test_format_timezero(input, expected):
     from clinica.converters.aibl_to_bids.utils.json import _format_timezero
 
-    metadata = pd.DataFrame({"DCMtag": ["TimeZero"], "Value": [input]}).set_index(
-        "DCMtag", drop=False
+    metadata = pd.DataFrame({"BIDSname": ["TimeZero"], "Value": [input]}).set_index(
+        "BIDSname", drop=False
     )
     _format_timezero(metadata)
     assert expected == metadata.loc["TimeZero", "Value"]
@@ -57,8 +58,8 @@ def test_set_time_relative_to_zero(input, expected):
     from clinica.converters.aibl_to_bids.utils.json import _set_time_relative_to_zero
 
     metadata = pd.DataFrame(
-        {"DCMtag": ["TimeZero", "Test"], "Value": ["01:00:00", input]}
-    ).set_index("DCMtag", drop=False)
+        {"BIDSname": ["TimeZero", "Test"], "Value": ["01:00:00", input]}
+    ).set_index("BIDSname", drop=False)
     _set_time_relative_to_zero(metadata, "Test")
     if not np.isnan(expected):
         assert expected == metadata.loc["Test", "Value"]
@@ -74,8 +75,8 @@ def test_check_decay_correction(input, expected):
     from clinica.converters.aibl_to_bids.utils.json import _check_decay_correction
 
     metadata = pd.DataFrame(
-        {"DCMtag": ["ImageDecayCorrected"], "Value": [input]}
-    ).set_index("DCMtag", drop=False)
+        {"BIDSname": ["ImageDecayCorrected"], "Value": [input]}
+    ).set_index("BIDSname", drop=False)
     _check_decay_correction(metadata)
     assert metadata.loc["ImageDecayCorrected", "Value"] == expected
 
@@ -89,10 +90,10 @@ def test_set_decay_time(input, expected):
 
     metadata = pd.DataFrame(
         {
-            "DCMtag": ["ImageDecayCorrectionTime", "ScanStart", "InjectionStart"],
+            "BIDSname": ["ImageDecayCorrectionTime", "ScanStart", "InjectionStart"],
             "Value": [input, "scan", "injection"],
         }
-    ).set_index("DCMtag", drop=False)
+    ).set_index("BIDSname", drop=False)
     _set_decay_time(metadata)
     assert metadata.loc["ImageDecayCorrectionTime", "Value"] == expected
 
@@ -106,14 +107,14 @@ def test_update_injected_mass(injected, specific, expected):
 
     metadata = pd.DataFrame(
         {
-            "DCMtag": [
+            "BIDSname": [
                 "InjectedRadioactivity",
                 "SpecificRadioactivity",
                 "InjectedMass",
             ],
             "Value": [injected, specific, "n/a"],
         }
-    ).set_index("DCMtag", drop=False)
+    ).set_index("BIDSname", drop=False)
     _update_injected_mass(metadata)
 
     assert metadata.loc["InjectedMass", "Value"] == expected
@@ -203,4 +204,15 @@ def test_update_metadata_from_image_dicoms_error(mock_cprint, tmp_path):
     )
 
 
-# todo : success : need to mock header + defaults
+# todo : mock to test for success scenario
+
+# def test_update_metadata_from_image_dicoms_success(tmp_path, mocker):
+#     metadata = pd.DataFrame({"BIDSname":["BodyPart"], "DCMtag":["Body"], "Value":["n/a"]}).set_index("BIDSname", drop=False)
+#     mocker.patch(
+#         "pydicom.filereader.dcmread", return_value="mock_header"
+#     )
+#     mocker.patch(
+#         "clinica.converters.aibl_to_bids.utils.json._get_dcm_value_from_header", return_value=1
+#     )
+#     _update_metadata_from_image_dicoms(metadata, tmp_path)
+#     assert metadata.loc["BodyPart", "Value"] == 1
