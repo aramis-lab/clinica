@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Iterable, Optional, Union
 
@@ -56,9 +57,9 @@ def create_participants_df(
     """
     import numpy as np
 
+    from clinica.converters._utils import load_clinical_csv
+    from clinica.converters.study_models import bids_id_factory
     from clinica.utils.stream import cprint
-
-    from .study_models import bids_id_factory
 
     fields_bids = ["participant_id"]
     prev_location = ""
