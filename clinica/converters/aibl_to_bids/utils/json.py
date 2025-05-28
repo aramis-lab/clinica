@@ -26,7 +26,7 @@ def write_json(json_path: Path, json_data: pd.DataFrame):
 
 
 def _format_time(timestamp: str) -> str:
-    # todo : test
+    """Format the timestamps that comes under the format HHMMSS or HHMMSS.0000 to HH:MM:SS."""
     from time import strftime, strptime
 
     return strftime("%H:%M:%S", strptime(timestamp.split(".")[0], "%H%M%S"))
@@ -230,25 +230,29 @@ def _update_metadata_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) ->
 
 
 def _format_timezero(dcm_result: pd.DataFrame) -> None:
+    """Formats TimeZero if possible, else uses the default value."""
     try:
         dcm_result.loc["TimeZero", "Value"] = _format_time(
             dcm_result.loc["TimeZero", "Value"]
         )
-    except ValueError:
-        return
+    except (ValueError, AttributeError) as e:
+        dcm_result.loc["TimeZero", "Value"] = "n/a"
 
 
 def _set_time_relative_to_zero(dcm_result: pd.DataFrame, field: str) -> None:
+    """Computes the difference from the time inside the field compared to TimeZero which should be formatted."""
+    # todo : test
     if (zero := dcm_result.loc["TimeZero", "Value"]) != "n/a":
         try:
             dcm_result.loc[field, "Value"] = _format_time(
                 dcm_result.loc[field, "Value"]
             )
-        except ValueError:
-            return
-        dcm_result.loc[field, "Value"] = _substract_formatted_times(
-            reference=zero, action=dcm_result.loc[field, "Value"]
-        )
+        except (ValueError, AttributeError) as e:
+            dcm_result.loc[field, "Value"] = np.nan
+        else:
+            dcm_result.loc[field, "Value"] = _substract_formatted_times(
+                reference=zero, action=dcm_result.loc[field, "Value"]
+            )
 
 
 def _set_time_from_ms_to_seconds(dcm_result: pd.DataFrame, field: str) -> None:

@@ -6,10 +6,24 @@ from pydicom.dataset import Dataset
 from pydicom.multival import MultiValue
 
 from clinica.converters.aibl_to_bids.utils.json import (
+    _format_time,
     _get_dicom_tags_and_defaults_base,
     _get_dicom_tags_and_defaults_pet,
     _update_metadata_from_image_dicoms,
 )
+
+
+@pytest.mark.parametrize(
+    "input, expected", [("112233", "11:22:33"), ("112233.00", "11:22:33")]
+)
+def test_format_time_success(input, expected):
+    assert _format_time(input) == expected
+
+
+@pytest.mark.parametrize("input", ["foo", "112233,0000", "12", 112233])
+def test_format_time_error(input):
+    with pytest.raises((ValueError, AttributeError)):
+        _format_time(input)
 
 
 def build_dicom_header():
@@ -62,7 +76,7 @@ def test_check_dcm_value(element, expected):
     "get_default, length, tag",
     [
         (_get_dicom_tags_and_defaults_pet, 33, "AttenuationCorrection"),
-        (_get_dicom_tags_and_defaults_base, 8, "Units"),
+        (_get_dicom_tags_and_defaults_base, 8, "BodyPart"),
     ],
 )
 def test_get_dicom_tags_and_defaults_pet(get_default, length, tag):
