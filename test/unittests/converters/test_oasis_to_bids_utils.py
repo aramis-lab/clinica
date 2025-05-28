@@ -6,6 +6,8 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
+from clinica.converters.study_models import StudyName
+
 
 @pytest.fixture
 def clinical_data_path(tmp_path: Path) -> Path:
@@ -429,3 +431,68 @@ def test_convert_cdr_to_diagnosis(cdr, diagnosis: str):
     from clinica.converters.oasis_to_bids._utils import _convert_cdr_to_diagnosis
 
     assert diagnosis == _convert_cdr_to_diagnosis(cdr)
+
+
+def _create_participants_spec(tmp_path: Path) -> Path:
+    spec_df = pd.DataFrame(
+        {
+            "BIDS CLINICA": [
+                "participant_id",
+                "alternative_id_1",
+                "date_of_birth",
+                "sex",
+                "apoegen1",
+            ],
+            "OASIS": [np.nan, "ID", np.nan, "M/F", np.nan],
+            "OASIS location": [
+                np.nan,
+                "oasis_cross-sectional-5708aa0a98d82080.xlsx",
+                np.nan,
+                "oasis_cross-sectional-5708aa0a98d82080.xlsx",
+                np.nan,
+            ],
+        }
+    )
+    spec_df.to_csv(tmp_path / "participant.tsv", sep="\t", index=False)
+
+    return tmp_path
+
+
+@pytest.mark.parametrize(
+    "bids_ids, expected",
+    [
+        (
+            ["sub-OASIS10001"],
+            pd.DataFrame(
+                {
+                    "participant_id": ["sub-OASIS10001"],
+                    "alternative_id_1": ["OAS1_0001_MR1"],
+                    "sex": ["F"],
+                }
+            ),
+        ),
+        (
+            ["sub-OASIS10002", "sub-OASIS10004", "sub-OASIS10007"],
+            pd.DataFrame(
+                {
+                    "participant_id": ["sub-OASIS10002"],
+                    "alternative_id_1": ["OAS1_0002_MR1"],
+                    "sex": ["M"],
+                }
+            ),
+        ),
+    ],
+)
+def test_create_participants_df(tmp_path, bids_ids, expected, clinical_data_path):
+    from clinica.converters._utils import create_participants_df
+
+    assert (
+        create_participants_df(
+            StudyName.OASIS,
+            clinical_specifications_folder=_create_participants_spec(tmp_path),
+            clinical_data_dir=clinical_data_path,
+            bids_ids=bids_ids,
+        )
+        .reset_index(drop=True)
+        .equals(expected)
+    )

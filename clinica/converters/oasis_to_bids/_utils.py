@@ -22,6 +22,159 @@ __all__ = [
 ]
 
 
+def create_participants_df(
+    study_name: StudyName,
+    clinical_specifications_folder: Path,
+    clinical_data_dir: Path,
+    bids_ids: list[str],
+    delete_non_bids_info: bool = True,
+) -> pd.DataFrame:
+    """Create the file participants.tsv.
+
+    Parameters
+    ----------
+    study_name : StudyName
+        The name of the study (Ex. ADNI).
+
+    clinical_specifications_folder : Path
+        The path to the clinical file.
+
+    clinical_data_dir : Path
+        The path to the directory where the clinical data are stored.
+
+    bids_ids : list of str
+        The list of bids ids.
+
+    delete_non_bids_info : bool, optional
+        If True delete all the rows of the subjects that are not available in the BIDS dataset.
+        Default=True.
+
+    Returns
+    -------
+    pd.DataFrame :
+        A pandas dataframe that contains the participants data.
+    """
+    import numpy as np
+
+    from clinica.utils.stream import cprint
+
+    from .study_models import bids_id_factory
+
+    fields_bids = ["participant_id"]
+    prev_location = ""
+    prev_sheet = 0
+    index_to_drop = []
+    study_name = StudyName(study_name)
+    location_name = f"{study_name.value} location"
+
+    participants_specs = pd.read_csv(
+        clinical_specifications_folder / "participant.tsv", sep="\t"
+    )
+    participant_fields_db = participants_specs[study_name.value]
+    field_location = participants_specs[location_name]
+    participant_fields_bids = participants_specs["BIDS CLINICA"]
+
+    # Extract the list of the available BIDS fields for the dataset
+    for i in range(0, len(participant_fields_db)):
+        if not pd.isnull(participant_fields_db[i]):
+            fields_bids.append(participant_fields_bids[i])
+
+    # Init the dataframe that will be saved in the file participants.tsv
+    participant_df = pd.DataFrame(columns=fields_bids)
+
+    for i in range(0, len(participant_fields_db)):
+        # If a field not empty is found
+        if not pd.isnull(participant_fields_db[i]):
+            # Extract the file location of the field and read the value from the file
+            tmp = field_location[i].split("/")
+            location = tmp[0]
+            # If a sheet is available
+            sheet = tmp[1] if len(tmp) > 1 else 0
+            # Check if the file to open for a certain field is the same of the previous field
+            if location == prev_location and sheet == prev_sheet:
+                pass
+            else:
+                file_ext = os.path.splitext(location)[1]
+                file_to_read_path = clinical_data_dir / location
+                if file_ext == ".xlsx":
+                    file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
+                elif file_ext == ".csv":
+                    file_to_read = load_clinical_csv(
+                        clinical_data_dir, location.split(".")[0]
+                    )
+                    # Condition to handle ADNI modification of file APOERES.csv
+                    # See issue https://github.com/aramis-lab/clinica/issues/1294
+                    if study_name == StudyName.ADNI and location == "APOERES.csv":
+                        if (
+                            participant_fields_db[i] not in file_to_read.columns
+                            and "GENOTYPE" in file_to_read.columns
+                        ):
+                            # Split the 'GENOTYPE' column into 'APGEN1' and 'APGEN2'
+                            genotype = file_to_read["GENOTYPE"].str.split(
+                                "/", expand=True
+                            )
+                            file_to_read = file_to_read.assign(
+                                APGEN1=genotype[0], APGEN2=genotype[1]
+                            )
+
+                prev_location = location
+                prev_sheet = sheet
+
+            field_col_values = []
+            # For each field in fields_dataset extract all the column values
+            for j in range(0, len(file_to_read)):
+                # Convert the alternative_id_1 to string if is an integer/float
+                value_to_read = file_to_read[participant_fields_db[i]]
+                if participant_fields_bids[i] == "alternative_id_1" and (
+                    value_to_read.dtype == np.float64 or value_to_read.dtype == np.int64
+                ):
+                    if not pd.isnull(file_to_read.at[j, participant_fields_db[i]]):
+                        value_to_append = str(
+                            file_to_read.at[j, participant_fields_db[i]]
+                        ).rstrip(".0")
+                    else:
+                        value_to_append = np.NaN
+                else:
+                    value_to_append = file_to_read.at[j, participant_fields_db[i]]
+                field_col_values.append(value_to_append)
+            # Add the extracted column to the participant_df
+            participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
+
+    if study_name == StudyName.ADNI or study_name == StudyName.AIBL:
+        # ADNImerge contains one row for each visits so there are duplicates
+        participant_df = participant_df.drop_duplicates(
+            subset=["alternative_id_1"], keep="first"
+        )
+
+    elif study_name == StudyName.OASIS:
+        # OASIS provides several MRI for the same session
+        participant_df = participant_df[
+            ~participant_df.alternative_id_1.str.endswith("_MR2")
+        ]
+
+    participant_df.reset_index(inplace=True, drop=True)
+
+    # Adding participant_id column with BIDS ids
+    for i in range(0, len(participant_df)):
+        bids_id_from_participant_df = bids_id_factory(
+            study_name
+        ).from_original_study_id(participant_df["alternative_id_1"][i])
+
+        if bids_id_from_participant_df in bids_ids:
+            participant_df.at[i, "participant_id"] = bids_id_from_participant_df
+
+        else:
+            index_to_drop.append(i)
+
+    # Delete all the rows of the subjects that are not available in the BIDS dataset
+    if delete_non_bids_info:
+        participant_df = participant_df.drop(index_to_drop)
+
+    participant_df = participant_df.fillna("n/a")
+
+    return participant_df
+
+
 def _get_subjects_list_from_file(subjects_list_path: Path) -> list[OASISBIDSSubjectID]:
     """Gets the list of subjects folders names from the subjects list file.
 

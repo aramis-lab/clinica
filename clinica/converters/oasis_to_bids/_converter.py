@@ -129,10 +129,9 @@ class OasisToBids(Converter):
         bids_dir: Path,
         bids_ids: list[str],
     ):
-        from clinica.converters._utils import create_participants_df
         from clinica.converters.study_models import StudyName
 
-        from ._utils import mapping_diagnosis
+        from ._utils import create_participants_df, mapping_diagnosis
 
         participants_df = create_participants_df(
             study_name=StudyName.OASIS,
