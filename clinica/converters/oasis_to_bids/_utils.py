@@ -59,13 +59,12 @@ def create_participants_df(
     fields_bids = ["participant_id"]
     index_to_drop = []
     study_name = StudyName.OASIS
-    location_name = f"{study_name.value} location"
 
     participants_specs = pd.read_csv(
         clinical_specifications_folder / "participant.tsv", sep="\t"
     )
     participant_fields_db = participants_specs[study_name.value]
-    field_location = participants_specs[location_name]
+    field_location = participants_specs[f"{study_name.value} location"]
     participant_fields_bids = participants_specs["BIDS CLINICA"]
 
     # Extract the list of the available BIDS fields for the dataset
@@ -113,20 +112,15 @@ def create_participants_df(
     participant_df.reset_index(inplace=True, drop=True)
 
     # Adding participant_id column with BIDS ids
-    for i in range(0, len(participant_df)):
-        bids_id_from_participant_df = bids_id_factory(
-            study_name
-        ).from_original_study_id(participant_df["alternative_id_1"][i])
-
-        if bids_id_from_participant_df in bids_ids:
-            participant_df.at[i, "participant_id"] = bids_id_from_participant_df
-
-        else:
-            index_to_drop.append(i)
+    participant_df["participant_id"] = participant_df["alternative_id_1"].apply(
+        lambda x: bids_id_factory(study_name).from_original_study_id(x)
+    )
 
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
-        participant_df = participant_df.drop(index_to_drop)
+        participant_df = participant_df.set_index("participant_id", drop=False).loc[
+            bids_ids
+        ]
 
     participant_df = participant_df.fillna("n/a")
 
