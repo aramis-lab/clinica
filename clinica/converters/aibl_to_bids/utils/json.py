@@ -2,6 +2,7 @@
 This module handles json writing from DICOM for PET modality in AIBL for BIDS 1.10 compliance
 """
 
+import json
 from pathlib import Path
 from typing import Any, Optional, Union
 
@@ -18,8 +19,13 @@ __all__ = ["write_json", "get_json_data"]
 
 
 def write_json(json_path: Path, json_data: pd.DataFrame):
-    # todo : INVESTIGATE why n/a written as n><a ? or np.nan as null ?
-    json_data["Value"].to_json(json_path, indent=4)
+    with open(json_path, "w") as f:
+        f.write(
+            json.dumps(
+                {row["BIDSname"]: row["Value"] for _, row in json_data.iterrows()},
+                indent=4,
+            )
+        )
 
 
 def _format_time(timestamp: str) -> str:
