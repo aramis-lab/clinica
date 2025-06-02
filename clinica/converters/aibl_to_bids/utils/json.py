@@ -119,7 +119,7 @@ def _get_dicom_tags_and_defaults_pet() -> pd.DataFrame:
                 "ModeOfAdministration",
                 (),
                 "n/a",
-            ],
+            ],  # todo : could not find
             # Reconstruction
             [
                 "AcquisitionMode",
@@ -182,7 +182,7 @@ def _check_dcm_value(
 
 def _fetch_dcm_data_from_header(
     dicom_header: Union[FileDataset, DataElement], dicom_tags: Optional[tuple[str, ...]]
-) -> Optional[Union[Any, DataElement]]:
+) -> Optional[Any]:
     """
     Gets the value from the dicom header corresponding to a dicom Tag/key list
 
@@ -267,18 +267,6 @@ def _set_time_from_ms_to_seconds(dcm_result: pd.DataFrame, field: str) -> None:
         dcm_result.loc[field, "Value"] = start / 1000
 
 
-def _get_mode_of_administration_from_injection_time(dcm_result: pd.DataFrame) -> str:
-    """The administration mode should be defined as bolus if < 10 min and infusion if > 30 min."""
-    # todo : confirm ?
-    if (injection := dcm_result.loc["InjectionStart", "Value"]) != "n/a":
-        if abs(injection) / 60 < 10:
-            return "bolus"
-        if abs(injection) / 60 > 30:
-            return "infusion"
-        return "bolus-infusion"
-    return "n/a"
-
-
 def _check_decay_correction(dcm_result: pd.DataFrame) -> None:
     dcm_result.loc["ImageDecayCorrected", "Value"] = dcm_result.loc[
         "ImageDecayCorrected", "Value"
@@ -321,10 +309,6 @@ def _postprocess_for_pet(metadata: pd.DataFrame):
     _set_time_relative_to_zero(metadata, field="InjectionStart")
     _set_time_from_ms_to_seconds(metadata, "FrameTimesStart")
     _set_time_from_ms_to_seconds(metadata, "FrameDuration")
-
-    metadata.loc[
-        "ModeOfAdministration", "Value"
-    ] = _get_mode_of_administration_from_injection_time(metadata)
 
     _set_decay_time(metadata)
     _check_decay_correction(metadata)

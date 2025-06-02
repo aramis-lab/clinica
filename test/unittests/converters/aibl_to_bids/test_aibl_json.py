@@ -204,15 +204,16 @@ def test_update_metadata_from_image_dicoms_error(mock_cprint, tmp_path):
     )
 
 
-# todo : mock to test for success scenario
+def test_update_metadata_from_image_dicoms_success(tmp_path, mocker):
+    metadata = pd.DataFrame(
+        {"BIDSname": ["BodyPart"], "DCMtag": ["Body"], "Value": ["n/a"]}
+    ).set_index("BIDSname", drop=False)
 
-# def test_update_metadata_from_image_dicoms_success(tmp_path, mocker):
-#     metadata = pd.DataFrame({"BIDSname":["BodyPart"], "DCMtag":["Body"], "Value":["n/a"]}).set_index("BIDSname", drop=False)
-#     mocker.patch(
-#         "pydicom.filereader.dcmread", return_value="mock_header"
-#     )
-#     mocker.patch(
-#         "clinica.converters.aibl_to_bids.utils.json._get_dcm_value_from_header", return_value=1
-#     )
-#     _update_metadata_from_image_dicoms(metadata, tmp_path)
-#     assert metadata.loc["BodyPart", "Value"] == 1
+    mocker.patch("pydicom.filereader.dcmread", return_value=build_dicom_header())
+
+    mocker.patch(
+        "clinica.converters.aibl_to_bids.utils.json._get_dcm_value_from_header",
+        return_value=1,
+    )
+    _update_metadata_from_image_dicoms(metadata, tmp_path)
+    assert metadata.loc["BodyPart", "Value"] == 1
