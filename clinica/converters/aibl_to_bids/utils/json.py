@@ -8,6 +8,7 @@ from typing import Any, Optional, Union
 
 import numpy as np
 import pandas as pd
+from pydicom import dcmread
 from pydicom.dataset import DataElement, FileDataset
 from pydicom.multival import MultiValue
 
@@ -216,8 +217,6 @@ def _get_dcm_value_from_header(
 
 
 def _update_metadata_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) -> None:
-    from pydicom import dcmread
-
     try:
         dicom_header = dcmread(next(dcm_dir.rglob("*.dcm")))
     except StopIteration:

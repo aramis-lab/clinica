@@ -209,8 +209,11 @@ def test_update_metadata_from_image_dicoms_success(tmp_path, mocker):
         {"BIDSname": ["BodyPart"], "DCMtag": ["Body"], "Value": ["n/a"]}
     ).set_index("BIDSname", drop=False)
 
-    mocker.patch("pydicom.filereader.dcmread", return_value=build_dicom_header())
-
+    mocker.patch("clinica.converters.aibl_to_bids.utils.json.next", return_value=[])
+    mocker.patch(
+        "clinica.converters.aibl_to_bids.utils.json.dcmread",
+        return_value=build_dicom_header(),
+    )
     mocker.patch(
         "clinica.converters.aibl_to_bids.utils.json._get_dcm_value_from_header",
         return_value=1,
