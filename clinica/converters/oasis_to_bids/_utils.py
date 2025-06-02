@@ -60,13 +60,19 @@ def create_participants_df(
     participants_specs = pd.read_csv(
         clinical_specifications_folder / "participant.tsv", sep="\t"
     )[["BIDS CLINICA", study_name, location]].dropna()
-    excel_location = participants_specs[location].unique()[0]
+
+    excel_location = participants_specs[location].unique()
+    if len(excel_location) > 1:
+        raise (
+            ValueError,
+            f"Several possibilities were given for OASIS metadata files, while only one is expected. Please check your participants specification files in {clinical_specifications_folder}",
+        )
 
     participant_df = pd.DataFrame()
     for _, row in participants_specs.iterrows():
-        if row[location] != excel_location:
-            excel_location = row[location]
-        file_to_read = pd.read_excel(clinical_data_dir / excel_location, sheet_name=0)
+        file_to_read = pd.read_excel(
+            clinical_data_dir / excel_location[0], sheet_name=0
+        )
         participant_df = pd.concat(
             [
                 participant_df,
