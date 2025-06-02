@@ -52,42 +52,30 @@ def create_participants_df(
     pd.DataFrame :
         A pandas dataframe that contains the participants data.
     """
-    import numpy as np
-
     from clinica.converters.study_models import bids_id_factory
 
     study_name = StudyName.OASIS
     location = f"{study_name.value} location"
 
-    participants_specs = (
-        pd.read_csv(clinical_specifications_folder / "participant.tsv", sep="\t")[
-            ["BIDS CLINICA", study_name, location]
-        ]
-        .dropna()
-        .reset_index()
-    )
+    participants_specs = pd.read_csv(
+        clinical_specifications_folder / "participant.tsv", sep="\t"
+    )[["BIDS CLINICA", study_name, location]].dropna()
+    excel_location = participants_specs[location].unique()[0]
 
-    excel_location = participants_specs[location].unique()
-
-    if len(excel_location) > 1:
-        # todo :test
-        raise ValueError(
-            "More than one file was found for the location of metadata for OASIS1. Please check the specifications file."
+    participant_df = pd.DataFrame()
+    for _, row in participants_specs.iterrows():
+        if row[location] != excel_location:
+            excel_location = row[location]
+        file_to_read = pd.read_excel(clinical_data_dir / excel_location, sheet_name=0)
+        participant_df = pd.concat(
+            [
+                participant_df,
+                file_to_read[[row[study_name]]].rename(
+                    {row[study_name]: row["BIDS CLINICA"]}, axis=1
+                ),
+            ],
+            axis=1,
         )
-
-    file_to_read = pd.read_excel(clinical_data_dir / excel_location[0], sheet_name=0)
-
-    participant_df = file_to_read[participants_specs[study_name.value].values]
-    participant_df = participant_df.loc[:, ~participant_df.columns.duplicated()]
-    participant_df.rename(
-        columns=participants_specs.set_index(study_name).to_dict()["BIDS CLINICA"],
-        inplace=True,
-    )
-    if "cdr" not in participant_df.columns:
-        participant_df["cdr"] = participant_df["diagnosis_bl"]
-    else:
-        participant_df["diagnosis_bl"] = participant_df["cdr"]
-    # todo :fix test
 
     # OASIS provides several MRI for the same session
     participant_df = participant_df[
@@ -103,6 +91,7 @@ def create_participants_df(
         participant_df = participant_df.set_index("participant_id", drop=False).loc[
             bids_ids
         ]
+        # todo : what happens if subject not in clinical data ?
     participant_df.reset_index(inplace=True, drop=True)
     return participant_df.fillna("n/a")
 

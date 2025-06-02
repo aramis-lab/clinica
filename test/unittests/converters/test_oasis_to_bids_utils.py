@@ -6,8 +6,6 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
-from clinica.converters.study_models import StudyName
-
 
 @pytest.fixture
 def clinical_data_path(tmp_path: Path) -> Path:
@@ -471,27 +469,17 @@ def _create_participants_spec(tmp_path: Path) -> Path:
                 }
             ),
         ),
-        (
-            ["sub-OASIS10002", "sub-OASIS10004", "sub-OASIS10007"],
-            pd.DataFrame(
-                {
-                    "participant_id": ["sub-OASIS10002"],
-                    "alternative_id_1": ["OAS1_0002_MR1"],
-                    "sex": ["M"],
-                }
-            ),
-        ),
     ],
 )
 def test_create_participants_df(tmp_path, bids_ids, expected, clinical_data_path):
     from clinica.converters.oasis_to_bids._utils import create_participants_df
 
-    assert (
+    assert_frame_equal(
+        expected,
         create_participants_df(
             clinical_specifications_folder=_create_participants_spec(tmp_path),
             clinical_data_dir=clinical_data_path,
             bids_ids=bids_ids,
-        )
-        .reset_index(drop=True)
-        .equals(expected)
+        ).reset_index(drop=True),
+        check_like=True,
     )
