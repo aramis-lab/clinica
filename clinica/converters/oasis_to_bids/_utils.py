@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Iterable, Optional, Union
 
@@ -12,6 +13,7 @@ from clinica.converters.study_models import (
 )
 
 __all__ = [
+    "create_participants_df",
     "get_subjects_list",
     "create_sessions_df",
     "write_sessions_tsv",
@@ -20,6 +22,84 @@ __all__ = [
     "mapping_diagnosis",
     "get_image_with_good_orientation",
 ]
+
+
+def create_participants_df(
+    clinical_specifications_folder: Path,
+    clinical_data_dir: Path,
+    bids_ids: list[str],
+    delete_non_bids_info: bool = True,
+) -> pd.DataFrame:
+    """Create the file participants.tsv.
+
+    Parameters
+    ----------
+    clinical_specifications_folder : Path
+        The path to the clinical file.
+
+    clinical_data_dir : Path
+        The path to the directory where the clinical data are stored.
+
+    bids_ids : list of str
+        The list of bids ids.
+
+    delete_non_bids_info : bool, optional
+        If True delete all the rows of the subjects that are not available in the BIDS dataset.
+        Default=True.
+
+    Returns
+    -------
+    pd.DataFrame :
+        A pandas dataframe that contains the participants data.
+    """
+    from clinica.converters.study_models import bids_id_factory
+
+    study_name = StudyName.OASIS
+    location = f"{study_name.value} location"
+
+    participants_specs = pd.read_csv(
+        clinical_specifications_folder / "participant.tsv", sep="\t"
+    )[["BIDS CLINICA", study_name, location]].dropna()
+
+    excel_location = participants_specs[location].unique()
+    if len(excel_location) > 1:
+        raise (
+            ValueError,
+            f"Several possibilities were given for OASIS metadata files, while only one is expected. Please check your participants specification files in {clinical_specifications_folder}",
+        )
+
+    participant_df = pd.DataFrame()
+    for _, row in participants_specs.iterrows():
+        file_to_read = pd.read_excel(
+            clinical_data_dir / excel_location[0], sheet_name=0
+        )
+        participant_df = pd.concat(
+            [
+                participant_df,
+                file_to_read[[row[study_name]]].rename(
+                    {row[study_name]: row["BIDS CLINICA"]}, axis=1
+                ),
+            ],
+            axis=1,
+        )
+
+    # OASIS provides several MRI for the same session
+    participant_df = participant_df[
+        ~participant_df.alternative_id_1.str.endswith("_MR2")
+    ]
+    # Adding participant_id column with BIDS ids
+    participant_df["participant_id"] = participant_df["alternative_id_1"].apply(
+        lambda x: bids_id_factory(study_name).from_original_study_id(x)
+    )
+
+    # Delete all the rows of the subjects that are not available in the BIDS dataset
+    if delete_non_bids_info:
+        participant_df = participant_df.set_index("participant_id", drop=False).loc[
+            bids_ids
+        ]
+        # todo : what happens if subject not in clinical data ?
+    participant_df.reset_index(inplace=True, drop=True)
+    return participant_df.fillna("n/a")
 
 
 def _get_subjects_list_from_file(subjects_list_path: Path) -> list[OASISBIDSSubjectID]:
