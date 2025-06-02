@@ -3,7 +3,7 @@ This module handles json writing from DICOM for PET modality in AIBL for BIDS 1.
 """
 
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -14,10 +14,7 @@ from clinica.utils.stream import cprint
 
 from .bids import Modality
 
-# todo : __all__
-
-# todo : can this be used for other than AIBL ?
-# todo : would using a class be beneficial ? I am starting to get a lot of : if modality do something
+__all__ = ["write_json", "get_json_data"]
 
 
 def write_json(json_path: Path, json_data: pd.DataFrame):
@@ -32,11 +29,12 @@ def _format_time(timestamp: str) -> str:
     return strftime("%H:%M:%S", strptime(timestamp.split(".")[0], "%H%M%S"))
 
 
-def _substract_formatted_times(reference: str, action: str) -> float:
+def _substract_formatted_times(reference_time: str, event_time: str) -> float:
     from datetime import datetime
 
     return (
-        datetime.strptime(action, "%H:%M:%S") - datetime.strptime(reference, "%H:%M:%S")
+        datetime.strptime(event_time, "%H:%M:%S")
+        - datetime.strptime(reference_time, "%H:%M:%S")
     ).total_seconds()
 
 
@@ -166,7 +164,7 @@ def _get_dicom_tags_and_defaults_base() -> pd.DataFrame:
 
 
 def _check_dcm_value(
-    dicom_data: Union[None, str, list, float],
+    dicom_data: Optional[Any],
 ) -> Union[None, str, list, float]:
     """Handles case where result is MultiValue, which is not JSON serializable and would be replaced by a blank space"""
     if dicom_data:
@@ -177,14 +175,14 @@ def _check_dcm_value(
 
 
 def _fetch_dcm_data_from_header(
-    keys_list: tuple[str], dicom_header: Union[FileDataset, DataElement]
-) -> Optional[DataElement]:
+    dicom_header: Union[FileDataset, DataElement], dicom_tags: Optional[tuple[str, ...]]
+) -> Optional[Union[Any, DataElement]]:
     """
     Gets the value from the dicom header corresponding to a dicom Tag/key list
 
     Parameters
     ----------
-    keys_list :
+    dicom_tags :
         Tuple representing where to get the expected information in the dicom header
 
     dicom_header :
@@ -195,25 +193,23 @@ def _fetch_dcm_data_from_header(
         The value of the tag obtained from the header
 
     """
-    if not keys_list:
+    if not dicom_tags:
         return None
-    header = dicom_header.get(keys_list[0])
-    if len(keys_list) == 1:
+    header = dicom_header.get(dicom_tags[0])
+    if len(dicom_tags) == 1:
         return header
     if header:
-        return _get_dcm_value_from_header(keys_list[1:], header[0])
+        return _fetch_dcm_data_from_header(header[0], dicom_tags[1:])
     return None
 
 
 def _get_dcm_value_from_header(
-    keys_list: tuple[str], dicom_header: Union[FileDataset, DataElement]
+    dicom_tags: tuple[str, ...], dicom_header: Union[FileDataset, DataElement]
 ) -> Union[None, str, list, float]:
-    return _check_dcm_value(_fetch_dcm_data_from_header(keys_list, dicom_header))
+    return _check_dcm_value(_fetch_dcm_data_from_header(dicom_header, dicom_tags))
 
 
 def _update_metadata_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) -> None:
-    from logging import getLevelName, getLogger
-
     from pydicom import dcmread
 
     try:
@@ -228,8 +224,7 @@ def _update_metadata_from_image_dicoms(metadata: pd.DataFrame, dcm_dir: Path) ->
             if dcm_value := _get_dcm_value_from_header(data.DCMtag, dicom_header):
                 cprint(msg=f"Value for {data.DCMtag} is : {dcm_value}", lvl="debug")
                 metadata.loc[index, "Value"] = dcm_value
-            elif getLevelName(getLogger("clinica").level) == "DEBUG":
-                # todo : ain't sure it is proper
+            else:
                 cprint(
                     msg=f"Value for {data.DCMtag} could not be retrieved.", lvl="debug"
                 )
@@ -256,7 +251,7 @@ def _set_time_relative_to_zero(dcm_result: pd.DataFrame, field: str) -> None:
             dcm_result.loc[field, "Value"] = np.nan
         else:
             dcm_result.loc[field, "Value"] = _substract_formatted_times(
-                reference=zero, action=dcm_result.loc[field, "Value"]
+                reference_time=zero, event_time=dcm_result.loc[field, "Value"]
             )
 
 
@@ -266,39 +261,35 @@ def _set_time_from_ms_to_seconds(dcm_result: pd.DataFrame, field: str) -> None:
         dcm_result.loc[field, "Value"] = start / 1000
 
 
-def _get_admin_injection_time_to_zero(dcm_result: pd.DataFrame) -> None:
+def _get_mode_of_administration_from_injection_time(dcm_result: pd.DataFrame) -> str:
     """The administration mode should be defined as bolus if < 10 min and infusion if > 30 min."""
     # todo : confirm ?
     if (injection := dcm_result.loc["InjectionStart", "Value"]) != "n/a":
         if abs(injection) / 60 < 10:
-            dcm_result.loc["ModeOfAdministration", "Value"] = "bolus"
-        elif abs(injection) / 60 > 30:
-            dcm_result.loc["ModeOfAdministration", "Value"] = "infusion"
-        else:
-            dcm_result.loc["ModeOfAdministration", "Value"] = "bolus-infusion"
+            return "bolus"
+        if abs(injection) / 60 > 30:
+            return "infusion"
+        return "bolus-infusion"
+    return "n/a"
 
 
 def _check_decay_correction(dcm_result: pd.DataFrame) -> None:
-    corrected = dcm_result.loc["ImageDecayCorrected", "Value"]
-    if corrected == "START" or corrected == "ADMIN":
-        dcm_result.loc["ImageDecayCorrected", "Value"] = True
-    else:
-        dcm_result.loc["ImageDecayCorrected", "Value"] = False
+    dcm_result.loc["ImageDecayCorrected", "Value"] = dcm_result.loc[
+        "ImageDecayCorrected", "Value"
+    ] in ("START", "ADMIN")
 
 
 def _set_decay_time(dcm_result: pd.DataFrame) -> None:
     correction = dcm_result.loc["ImageDecayCorrectionTime", "Value"]
 
+    decay_time = None
+
     if correction == "START":
-        dcm_result.loc["ImageDecayCorrectionTime", "Value"] = dcm_result.loc[
-            "ScanStart", "Value"
-        ]
+        decay_time = dcm_result.loc["ScanStart", "Value"]
     elif correction == "ADMIN":
-        dcm_result.loc["ImageDecayCorrectionTime", "Value"] = dcm_result.loc[
-            "InjectionStart", "Value"
-        ]
-    else:
-        dcm_result.loc["ImageDecayCorrectionTime", "Value"] = None
+        decay_time = dcm_result.loc["InjectionStart", "Value"]
+
+    dcm_result.loc["ImageDecayCorrectionTime", "Value"] = decay_time
 
 
 def _update_injected_mass(dcm_result: pd.DataFrame) -> None:
@@ -309,8 +300,7 @@ def _update_injected_mass(dcm_result: pd.DataFrame) -> None:
         dcm_result.loc["InjectedMassUnits", "Value"] = "mole"
 
 
-def _get_default_for_modality(modality: Modality) -> Optional[pd.DataFrame]:
-    # todo : might need to adapt if other converters involved one day
+def _get_dicom_tags_and_defaults(modality: Modality) -> pd.DataFrame:
     if modality in (Modality.AV45, Modality.FLUTE, Modality.PIB):
         return _get_dicom_tags_and_defaults_pet()
     return _get_dicom_tags_and_defaults_base()
@@ -325,7 +315,10 @@ def _postprocess_for_pet(metadata: pd.DataFrame):
     _set_time_relative_to_zero(metadata, field="InjectionStart")
     _set_time_from_ms_to_seconds(metadata, "FrameTimesStart")
     _set_time_from_ms_to_seconds(metadata, "FrameDuration")
-    _get_admin_injection_time_to_zero(metadata)
+
+    metadata.loc[
+        "ModeOfAdministration", "Value"
+    ] = _get_mode_of_administration_from_injection_time(metadata)
 
     _set_decay_time(metadata)
     _check_decay_correction(metadata)
@@ -333,9 +326,8 @@ def _postprocess_for_pet(metadata: pd.DataFrame):
     _update_injected_mass(metadata)
 
 
-def get_json_data(dcm_dir: Path, modality: str) -> pd.DataFrame:
-    modality = Modality(modality)
-    metadata = _get_default_for_modality(modality)
+def get_json_data(dcm_dir: Path, modality: Modality) -> pd.DataFrame:
+    metadata = _get_dicom_tags_and_defaults(modality)
     _update_metadata_from_image_dicoms(metadata, dcm_dir)
     if modality in (Modality.AV45, Modality.FLUTE, Modality.PIB):
         _postprocess_for_pet(metadata)

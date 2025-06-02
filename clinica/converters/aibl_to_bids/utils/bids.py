@@ -686,7 +686,7 @@ def _create_file(
             output_path.with_suffix(".nii.gz").unlink()
         output_image = _dicom_to_nii(output_path, image_path)
         write_json(
-            output_path.with_suffix(".json"), get_json_data(image_path, modality.value)
+            output_path.with_suffix(".json"), get_json_data(image_path, modality)
         )
 
     center_nifti_origin(output_image, output_image)

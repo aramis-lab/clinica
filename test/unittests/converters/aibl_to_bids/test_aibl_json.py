@@ -1,4 +1,3 @@
-from typing import Union
 from unittest.mock import patch
 
 import numpy as np
@@ -30,13 +29,13 @@ def test_format_time_error(input):
 
 
 @pytest.mark.parametrize(
-    "reference, action, expected",
+    "reference, event, expected",
     [("01:00:00", "01:00:01", 1), ("01:00:01", "01:00:00", -1)],
 )
-def test_substract_formatted_times(reference, action, expected):
+def test_substract_formatted_times(reference, event, expected):
     from clinica.converters.aibl_to_bids.utils.json import _substract_formatted_times
 
-    assert expected == _substract_formatted_times(reference, action)
+    assert expected == _substract_formatted_times(reference, event)
 
 
 @pytest.mark.parametrize(
@@ -141,7 +140,7 @@ def build_dicom_header():
 def test_fetch_dcm_data_from_header(keys, expected):
     from clinica.converters.aibl_to_bids.utils.json import _fetch_dcm_data_from_header
 
-    assert expected == _fetch_dcm_data_from_header(keys, build_dicom_header())
+    assert expected == _fetch_dcm_data_from_header(build_dicom_header(), keys)
 
 
 def test_get_dcm_value_from_header_multivalue():
@@ -191,9 +190,9 @@ def test_get_dicom_tags_and_defaults_pet(get_default, length, tag):
     ],
 )
 def test_get_default_for_modality(modality, length):
-    from clinica.converters.aibl_to_bids.utils.json import _get_default_for_modality
+    from clinica.converters.aibl_to_bids.utils.json import _get_dicom_tags_and_defaults
 
-    assert len(_get_default_for_modality(modality)) == length
+    assert len(_get_dicom_tags_and_defaults(modality)) == length
 
 
 @patch("clinica.converters.aibl_to_bids.utils.json.cprint")
