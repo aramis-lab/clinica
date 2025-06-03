@@ -635,7 +635,8 @@ def _create_file(
     from clinica.iotools.data_handling import center_nifti_origin
     from clinica.utils.stream import cprint
 
-    from ..._utils import json_from_dcm, viscode_to_session
+    from ..._utils import viscode_to_session
+    from .json import get_json_data, write_json
 
     # This function is executed in a multiprocessing context
     # such that we need to re-configure the clinica logger in the child processes.
@@ -684,7 +685,9 @@ def _create_file(
         if output_path.with_suffix(".nii.gz").exists():
             output_path.with_suffix(".nii.gz").unlink()
         output_image = _dicom_to_nii(output_path, image_path)
-        json_from_dcm(image_path, output_path.with_suffix(".json"))
+        write_json(
+            output_path.with_suffix(".json"), get_json_data(image_path, modality)
+        )
 
     center_nifti_origin(output_image, output_image)
 
