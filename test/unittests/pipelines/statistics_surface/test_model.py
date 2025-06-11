@@ -4,18 +4,17 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-from brainstat.stats.terms import FixedEffect
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
-from clinica.pipelines.statistics_surface.surfstat.models._correlation import (
-    CorrelationGLM,
-)
-from clinica.pipelines.statistics_surface.surfstat.models._group import (
-    GroupGLM,
-    GroupGLMWithInteraction,
-)
-
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
+
+
+def is_brainstat_missing() -> bool:
+    try:
+        import brainstat
+    except ImportError:
+        return True
+    return False
 
 
 @pytest.fixture
@@ -23,6 +22,7 @@ def df():
     return pd.read_csv(Path(CURRENT_DIR) / "data/subjects.tsv", sep="\t")
 
 
+@pytest.mark.skipif(is_brainstat_missing(), reason="Brainstat is not installed.")
 def test_missing_column_error(df):
     from clinica.pipelines.statistics_surface.surfstat.models._utils import (
         check_column_in_df,
@@ -38,6 +38,7 @@ def test_missing_column_error(df):
         check_column_in_df(df, "foo")
 
 
+@pytest.mark.skipif(is_brainstat_missing(), reason="Brainstat is not installed.")
 def test_is_categorical(df):
     from clinica.pipelines.statistics_surface.surfstat.models._utils import (
         is_categorical,
@@ -47,7 +48,10 @@ def test_is_categorical(df):
     assert not is_categorical(df, "age")
 
 
+@pytest.mark.skipif(is_brainstat_missing(), reason="Brainstat is not installed.")
 def test_build_model_term_error(df):
+    from brainstat.stats.terms import FixedEffect
+
     from clinica.pipelines.statistics_surface.surfstat.models._utils import (
         _build_model_term,
     )
@@ -55,12 +59,15 @@ def test_build_model_term_error(df):
     assert isinstance(_build_model_term("sex", df), FixedEffect)
 
 
+@pytest.mark.skipif(is_brainstat_missing(), reason="Brainstat is not installed.")
 @pytest.mark.parametrize("design", ["1 + age", "1+age", "age +1", "age"])
 def test_build_model_intercept(design, df):
     """Test that we get the same results with equivalent designs.
     Especially, the fact that adding explicitly the intercept doesn't change the results.
     Test also that spaces in the design expression have no effect.
     """
+    from brainstat.stats.terms import FixedEffect
+
     from clinica.pipelines.statistics_surface.surfstat.models._utils import build_model
 
     model = build_model(design, df)
@@ -70,7 +77,10 @@ def test_build_model_intercept(design, df):
     assert_array_equal(model.age, np.array([78.0, 73.4, 70.8, 82.3, 60.6, 72.1, 74.2]))
 
 
+@pytest.mark.skipif(is_brainstat_missing(), reason="Brainstat is not installed.")
 def test_build_model(df):
+    from brainstat.stats.terms import FixedEffect
+
     from clinica.pipelines.statistics_surface.surfstat.models._utils import build_model
 
     model = build_model("1 + age + sex", df)
@@ -96,6 +106,7 @@ def test_build_model(df):
     )
 
 
+@pytest.mark.skipif(is_brainstat_missing(), reason="Brainstat is not installed.")
 def test_base_glm_instantiation_error(df):
     """Test that the base abstract GLM class cannot be instantiated."""
     from clinica.pipelines.statistics_surface.surfstat.models._base import GLM
@@ -104,12 +115,13 @@ def test_base_glm_instantiation_error(df):
         GLM("1 + age", df, "feature_label", "age")
 
 
+@pytest.mark.skipif(is_brainstat_missing(), reason="Brainstat is not installed.")
 @pytest.mark.parametrize(
     "model,contrast",
     [
-        (CorrelationGLM, "age"),
-        (GroupGLM, "sex"),
-        (GroupGLMWithInteraction, "age * sex"),
+        ("CorrelationGLM", "age"),
+        ("GroupGLM", "sex"),
+        ("GroupGLMWithInteraction", "age * sex"),
     ],
 )
 @pytest.mark.parametrize(
@@ -125,6 +137,25 @@ def test_base_glm_instantiation_error(df):
     ],
 )
 def test_common_parameters_glm_instantiation(df, model, contrast, parameters):
+    from brainstat.stats.terms import FixedEffect
+
+    from clinica.pipelines.statistics_surface.surfstat.models._correlation import (
+        CorrelationGLM,
+    )
+    from clinica.pipelines.statistics_surface.surfstat.models._group import (
+        GroupGLM,
+        GroupGLMWithInteraction,
+    )
+
+    if model == "CorrelationGLM":
+        model = CorrelationGLM
+    elif model == "GroupGLM":
+        model = GroupGLM
+    elif model == "GroupGLMWithInteraction":
+        model = GroupGLMWithInteraction
+    else:
+        raise ValueError(f"Unknown model {model}.")
+
     model_instance = model("1 + age", df, "feature_label", contrast, "group")
 
     assert not model_instance._two_tailed
@@ -138,10 +169,14 @@ def test_common_parameters_glm_instantiation(df, model, contrast, parameters):
     assert isinstance(model_instance.model, FixedEffect)
 
 
+@pytest.mark.skipif(is_brainstat_missing(), reason="Brainstat is not installed.")
 @pytest.mark.parametrize("contrast", ["age", "-age"])
 def test_correlation_glm_instantiation(df, contrast):
     from clinica.pipelines.statistics_surface.surfstat.models._contrast import (
         CorrelationContrast,
+    )
+    from clinica.pipelines.statistics_surface.surfstat.models._correlation import (
+        CorrelationGLM,
     )
 
     model = CorrelationGLM("1 + age", df, "feature_label", contrast, "group")
@@ -165,7 +200,10 @@ def test_correlation_glm_instantiation(df, contrast):
     assert model.get_output_filename(contrast) == expected
 
 
+@pytest.mark.skipif(is_brainstat_missing(), reason="Brainstat is not installed.")
 def test_group_glm_instantiation(df):
+    from clinica.pipelines.statistics_surface.surfstat.models._group import GroupGLM
+
     with pytest.raises(
         ValueError,
         match="Contrast should refer to a categorical variable for group comparison.",
@@ -190,7 +228,12 @@ def test_group_glm_instantiation(df):
         assert model.get_output_filename(contrast_name) == expected
 
 
+@pytest.mark.skipif(is_brainstat_missing(), reason="Brainstat is not installed.")
 def test_group_glm_with_interaction_instantiation(df):
+    from clinica.pipelines.statistics_surface.surfstat.models._group import (
+        GroupGLMWithInteraction,
+    )
+
     with pytest.raises(
         ValueError,
         match=(
@@ -219,8 +262,13 @@ def test_group_glm_with_interaction_instantiation(df):
     )
 
 
+@pytest.mark.skipif(is_brainstat_missing(), reason="Brainstat is not installed.")
 def test_create_glm_model(df):
     from clinica.pipelines.statistics_surface.surfstat.models import create_glm_model
+    from clinica.pipelines.statistics_surface.surfstat.models._group import (
+        GroupGLM,
+        GroupGLMWithInteraction,
+    )
 
     model = create_glm_model(
         "correlation", "age", df, "age", feature_label="feature_label"
@@ -246,6 +294,7 @@ def test_create_glm_model(df):
     assert isinstance(model, GroupGLMWithInteraction)
 
 
+@pytest.mark.skipif(is_brainstat_missing(), reason="Brainstat is not installed.")
 def test_p_value_results():
     from clinica.pipelines.statistics_surface.surfstat.models.results._statistics import (
         PValueResults,
@@ -265,6 +314,7 @@ def test_p_value_results():
         assert sub in d
 
 
+@pytest.mark.skipif(is_brainstat_missing(), reason="Brainstat is not installed.")
 def test_statistics_results_serializer(tmp_path):
     import json
 
