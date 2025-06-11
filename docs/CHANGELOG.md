@@ -6,6 +6,32 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.10.0
+
+### Fixed
+
+- [IOTools] Fix broken import of `bids.dataset` module (PR [#1484](https://github.com/aramis-lab/clinica/issues/1484))
+- [IOTools] `Center-Nifti` now runs by default on T1 as it was expected (PR [#1418](https://github.com/aramis-lab/clinica/pull/1418))
+- [DWI] Fix broken import of `bids.dataset` module (PR[#1523](https://github.com/aramis-lab/clinica/pull/1523))
+- [Converters] GENFI : Fix validation of optional path to clinical data (PR [#1513](https://github.com/aramis-lab/clinica/pull/1513))
+- [Pipelines] Fix SPM standalone version check (PR [#1488](https://github.com/aramis-lab/clinica/pull/1488))
+
+### Enhanced
+
+- [Pipelines] Search for SPM standalone version is not hardcoded to SPM12 anymore (PR [#1490](https://github.com/aramis-lab/clinica/pull/1490))
+- Improve architecture for BIDS and CAPS datasets logic (PR [#1453](https://github.com/aramis-lab/clinica/pull/1453))
+
+### Added
+
+- [IOTools] When using `Center-Nifti` it is now possible to choose the centering threshold (PR [#1433](https://github.com/aramis-lab/clinica/pull/1433))
+- [DOC] Warning about SPM standalone version (PR [#1496](https://github.com/aramis-lab/clinica/pull/1496))
+- [T1Volume] Skip processed visits (PR [#1403](https://github.com/aramis-lab/clinica/pull/1403))
+- [AIBL-to-BIDS] Now has a json constructor based on dicoms to retrieve information required to fit BIDS specifications (PR [1500](https://github.com/aramis-lab/clinica/pull/1500))
+
+### Removed
+
+- [Pipelines] Remove interactivity when centering images is required by the pipeline (PET-Volume, T1-Volume, PET-Surface, T1-Freesurfer) (PR [#1419](https://github.com/aramis-lab/clinica/pull/1419))
+
 ## Clinica 0.9.4
 
 ### Fixed
