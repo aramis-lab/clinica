@@ -10,16 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- [IOTools] Fix broken import of bids.dataset module (PR [#1484](https://github.com/aramis-lab/clinica/issues/1484))
+- [IOTools] Fix broken import of `bids.dataset` module (PR [#1484](https://github.com/aramis-lab/clinica/issues/1484))
 - [IOTools] `Center-Nifti` now runs by default on T1 as it was expected (PR [#1418](https://github.com/aramis-lab/clinica/pull/1418))
-- [DWI] Fix broken import of bids.dataset module (PR[#1523](https://github.com/aramis-lab/clinica/pull/1523))
+- [DWI] Fix broken import of `bids.dataset` module (PR[#1523](https://github.com/aramis-lab/clinica/pull/1523))
 - [Converters] GENFI : Fix validation of optional path to clinical data (PR [#1513](https://github.com/aramis-lab/clinica/pull/1513))
 - [Pipelines] Fix SPM standalone version check (PR [#1488](https://github.com/aramis-lab/clinica/pull/1488))
 
 ### Enhanced
 
 - [Pipelines] Search for SPM standalone version is not hardcoded to SPM12 anymore (PR [#1490](https://github.com/aramis-lab/clinica/pull/1490))
-- [Dependencies] Support python 3.13 (PR [#1510](https://github.com/aramis-lab/clinica/pull/1510))
 - Improve architecture for BIDS and CAPS datasets logic (PR [#1453](https://github.com/aramis-lab/clinica/pull/1453))
 
 ### Added
