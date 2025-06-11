@@ -43,10 +43,6 @@ Clinica provides data handling tools for [BIDS](http://bids.neuroimaging.io) and
 
 --8<-- "snippets/inventory_iotools.md"
 
-### Visualize pipeline outputs (`clinica visualize`)
-
-Clinica allows visualization of the main outputs of some pipelines.
-Currently only supported for the [`t1-freesurfer` pipeline](./Pipelines/T1_FreeSurfer.md).
 
 ## Clinica at conferences
 
