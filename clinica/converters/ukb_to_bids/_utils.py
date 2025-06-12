@@ -367,8 +367,27 @@ def _write_images(scans: pd.DataFrame, to: Path, source: Path, fs: LocalFileSyst
 
 def _write_scans(scans: pd.DataFrame, to: Path) -> None:
     scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
+    # for participant_id, session in scans.groupby("participant_id"):
+    #     breakpoint()
     for bids_full_path, metadata in scans.iterrows():
         _write_row_in_scans_tsv_file(metadata, to)
+
+
+# def _add_sidecars_metadata_lines(metadata: pd.Series) -> pd.DataFrame:
+#     # todo :test
+#     # todo : use
+#     metadata.rename({"bids_filename": "filename"}, inplace=True)
+#     metadata["filename"] = f"{Path(metadata.name).parent.name}/{metadata["filename"]}.nii.gz"
+#     if sidecars := metadata.pop("sidecars"):
+#         metadata = metadata.to_frame().T.reset_index(
+#             drop=True)  # todo : do the series keep its name if I don't drop it ?
+#         for extension in list(map(lambda x: x.split(".")[-1], sidecars)):
+#             line_copy = metadata.loc[0].copy()
+#             line_copy["filename"] = line_copy["filename"].replace("nii.gz", extension)
+#             metadata = pd.concat([metadata, line_copy.to_frame().T], ignore_index=True)
+#             # todo : change what is used to serialize /write
+#     return metadata
+#
 
 
 def _write_row_in_scans_tsv_file(row: pd.Series, to: Path):
