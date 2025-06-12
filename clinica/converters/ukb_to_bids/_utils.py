@@ -3,6 +3,9 @@ from typing import Iterable, List, Optional
 
 import numpy as np
 import pandas as pd
+from fsspec.implementations.local import LocalFileSystem
+
+from clinica.converters._utils import write_to_tsv
 
 __all__ = [
     "find_clinical_data",
@@ -303,13 +306,17 @@ def write_bids(
     scans: pd.DataFrame,
     dataset_directory: Path,
 ) -> None:
-    from fsspec.implementations.local import LocalFileSystem
+    fs = LocalFileSystem(auto_mkdir=True)
+    _write_description_and_participants(participants, to, fs)
+    _write_sessions(sessions, to, fs)
+    _write_scans(scans, dataset_directory, to, fs)
 
-    from clinica.converters._utils import write_to_tsv
+
+def _write_description_and_participants(
+    participants: pd.DataFrame, to: Path, fs: LocalFileSystem
+):
     from clinica.converters.study_models import StudyName
     from clinica.dataset import BIDSDatasetDescription
-
-    fs = LocalFileSystem(auto_mkdir=True)
 
     participants = participants.droplevel(
         ["sessions", "modality", "bids_filename"]
@@ -326,32 +333,37 @@ def write_bids(
         with fs.open(str(to / "participants.tsv"), "w") as participant_file:
             write_to_tsv(participants, participant_file)
 
+
+def _write_sessions(sessions: pd.DataFrame, to: Path, fs: LocalFileSystem):
     for participant_id, data_frame in sessions.groupby("participant_id"):
         sessions = data_frame.droplevel(
             ["participant_id", "modality", "bids_filename"]
         ).drop_duplicates()
-
+        sessions.index.name = "session_id"
         sessions_filepath = to / str(participant_id) / f"{participant_id}_sessions.tsv"
         with fs.open(str(sessions_filepath), "w") as sessions_file:
             write_to_tsv(sessions, sessions_file)
 
-    scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
 
+def _write_scans(
+    scans: pd.DataFrame, source: Path, to: Path, fs: LocalFileSystem
+) -> None:
+    scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
     for bids_full_path, metadata in scans.iterrows():
         if metadata["modality_num"] != "20217" and metadata["modality_num"] != "20225":
             _copy_file_to_bids(
-                zipfile=dataset_directory / metadata["source_zipfile"],
+                zipfile=source / metadata["source_zipfile"],
                 filenames=[metadata["source_filename"]] + metadata["sidecars"],
                 bids_path=to / bids_full_path,
             )
         else:
             _convert_dicom_to_nifti(
-                zipfiles=dataset_directory / metadata["source_zipfile"],
+                zipfiles=source / metadata["source_zipfile"],
                 bids_path=to / bids_full_path,
+                fs=fs,
             )
             if metadata["modality_num"] == "20217":
-                _import_event_tsv(bids_path=to)
-
+                _import_event_tsv(bids_path=to, fs=fs)
         _write_row_in_scans_tsv_file(metadata, to)
 
 
@@ -408,7 +420,9 @@ def _copy_file_to_bids(zipfile: Path, filenames: List[Path], bids_path: Path) ->
                 f.write(fs.cat(filename))
 
 
-def _convert_dicom_to_nifti(zipfiles: Path, bids_path: Path) -> None:
+def _convert_dicom_to_nifti(
+    zipfiles: Path, bids_path: Path, fs: LocalFileSystem
+) -> None:
     """Install the requested files in the BIDS  dataset.
     First, the dicom is extracted in a temporary directory
     Second, the dicom extracted is converted in the right place using dcm2niix"""
@@ -418,10 +432,6 @@ def _convert_dicom_to_nifti(zipfiles: Path, bids_path: Path) -> None:
     import zipfile
     from pathlib import PurePath
 
-    from fsspec.implementations.local import LocalFileSystem
-
-    fs = LocalFileSystem(auto_mkdir=True)
-
     zf = zipfile.ZipFile(zipfiles)
     try:
         bids_path.parent.mkdir(exist_ok=True, parents=True)
@@ -430,15 +440,9 @@ def _convert_dicom_to_nifti(zipfiles: Path, bids_path: Path) -> None:
         pass
     with tempfile.TemporaryDirectory() as tempdir:
         zf.extractall(tempdir)
-        command = [
-            "dcm2niix",
-            "-w",
-            "0",
-        ]
-        command += ["-9", "-z", "y"]
-        command += ["-b", "y", "-ba", "y"]
-        command += [tempdir]
-        subprocess.run(command)
+        subprocess.run(
+            ["dcm2niix", "-w", "0", "-9", "-z", "y", "-b", "y", "-ba", "y", tempdir]
+        )
         fmri_image_path = _find_largest_imaging_data(Path(tempdir))
         fmri_image_path = fmri_image_path or ""
         fs.copy(str(fmri_image_path), str(bids_path) + ".nii.gz")
@@ -485,11 +489,8 @@ def _select_sessions(x: pd.Series) -> Optional[float]:
     return None
 
 
-def _import_event_tsv(bids_path: Path) -> None:
+def _import_event_tsv(bids_path: Path, fs: LocalFileSystem) -> None:
     """Import the csv containing the events' information."""
-    from fsspec.implementations.local import LocalFileSystem
-
-    fs = LocalFileSystem(auto_mkdir=True)
     event_tsv = (
         Path(__file__).parents[2]
         / "resources"
