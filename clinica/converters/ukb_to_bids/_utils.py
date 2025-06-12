@@ -309,7 +309,8 @@ def write_bids(
     fs = LocalFileSystem(auto_mkdir=True)
     _write_description_and_participants(participants, to, fs)
     _write_sessions(sessions, to, fs)
-    _write_scans(scans, dataset_directory, to, fs)
+    _write_images(scans, to, dataset_directory, fs)
+    _write_scans(scans, to)
 
 
 def _write_description_and_participants(
@@ -345,9 +346,7 @@ def _write_sessions(sessions: pd.DataFrame, to: Path, fs: LocalFileSystem):
             write_to_tsv(sessions, sessions_file)
 
 
-def _write_scans(
-    scans: pd.DataFrame, source: Path, to: Path, fs: LocalFileSystem
-) -> None:
+def _write_images(scans: pd.DataFrame, to: Path, source: Path, fs: LocalFileSystem):
     scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
     for bids_full_path, metadata in scans.iterrows():
         if metadata["modality_num"] != "20217" and metadata["modality_num"] != "20225":
@@ -364,6 +363,11 @@ def _write_scans(
             )
             if metadata["modality_num"] == "20217":
                 _import_event_tsv(bids_path=to, fs=fs)
+
+
+def _write_scans(scans: pd.DataFrame, to: Path) -> None:
+    scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
+    for bids_full_path, metadata in scans.iterrows():
         _write_row_in_scans_tsv_file(metadata, to)
 
 
