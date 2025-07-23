@@ -1,6 +1,12 @@
 <!-- markdownlint-disable MD007 -->
 # Clinica Documentation
 
+{% extends "base.html" %}
+
+{% block announce %}
+  TESTING
+{% endblock %}
+
 ## What is Clinica ?
 
 Clinica is a software platform for clinical neuroscience research studies using multimodal data and most often longitudinal follow-up.
