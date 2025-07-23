@@ -28,7 +28,6 @@ theme:
     - content.tooltips
     - content.tabs.link
     - navigation.top
-  custom_dir: overrides
 
 # Version panel
 extra_javascript:
