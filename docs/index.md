@@ -1,8 +1,15 @@
 <!-- markdownlint-disable MD007 -->
 # Clinica Documentation
 
-TEST
+<header>
+    <h2>The Planet Earth</h2>
+    <p>
+      Posted on Wednesday, <time datetime="2017-10-04">4 October 2017</time> by
+      Jane Smith
+    </p>
+</header>
 
+TEST
 <div style="background-color: #fcf8e5; color: #8C6D46; padding: 16px 24px;">
  <div style="font-size: 16px; font-weight: bold;">⚠ Warning</div>
  <div style="font-size: 12px">
@@ -11,8 +18,6 @@ TEST
 </div>
 
 ## What is Clinica ?
-
-TEST 
 
 Clinica is a software platform for clinical neuroscience research studies using multimodal data and most often longitudinal follow-up.
 You can learn more on [this page](./WhatIsClinica.md).
