@@ -1,6 +1,7 @@
 <!-- markdownlint-disable MD007 -->
 
 --8<-- "snippets/spm_banner.md"
+--8<-- "snippets/inventory_converters.md"
 
 
 # Clinica Documentation
