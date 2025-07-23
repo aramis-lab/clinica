@@ -12,6 +12,8 @@ TEST
 
 ## What is Clinica ?
 
+TEST 
+
 Clinica is a software platform for clinical neuroscience research studies using multimodal data and most often longitudinal follow-up.
 You can learn more on [this page](./WhatIsClinica.md).
 
