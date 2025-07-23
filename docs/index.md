@@ -2,9 +2,10 @@
 
 --8<-- "snippets/spm_banner.md"
 
-TEST
 
 # Clinica Documentation
+
+--8<-- "snippets/spm_banner.md"
 
 ## What is Clinica ?
 
