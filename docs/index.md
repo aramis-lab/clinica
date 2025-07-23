@@ -1,6 +1,8 @@
 <!-- markdownlint-disable MD007 -->
 # Clinica Documentation
 
+TEST
+
 <div style="background-color: #fcf8e5; color: #8C6D46; padding: 16px 24px;">
  <div style="font-size: 16px; font-weight: bold;">⚠ Warning</div>
  <div style="font-size: 12px">
