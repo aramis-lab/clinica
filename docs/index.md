@@ -1,21 +1,8 @@
 <!-- markdownlint-disable MD007 -->
+
+--8<-- "snippets/spm_banner.md"
+
 # Clinica Documentation
-
-<header>
-    <h2>The Planet Earth</h2>
-    <p>
-      Posted on Wednesday, <time datetime="2017-10-04">4 October 2017</time> by
-      Jane Smith
-    </p>
-</header>
-
-TEST
-<div style="background-color: #fcf8e5; color: #8C6D46; padding: 16px 24px;">
- <div style="font-size: 16px; font-weight: bold;">⚠ Warning</div>
- <div style="font-size: 12px">
- Issue started on (DATE) and is currently active
- </div>
-</div>
 
 ## What is Clinica ?
 
