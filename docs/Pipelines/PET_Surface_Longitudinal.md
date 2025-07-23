@@ -1,4 +1,7 @@
 <!-- markdownlint-disable MD046 -->
+
+--8<-- "snippets/spm_banner.md"
+
 # `pet-surface-longitudinal` - Surface-based longitudinal processing of PET images
 
 This pipeline performs several processing steps for the longitudinal analysis of PET data on the cortical surface

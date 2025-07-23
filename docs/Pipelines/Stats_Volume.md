@@ -1,4 +1,7 @@
 <!-- markdownlint-disable MD046 -->
+
+--8<-- "snippets/spm_banner.md"
+
 # `statistics-volume` - Volume-based mass-univariate analysis with SPM
 
 This pipeline performs statistical analysis (currently group comparison) on volume-based features using the general linear model (GLM) [[Friston et al., 1994](https://doi.org/10.1002/hbm.460020402)].
