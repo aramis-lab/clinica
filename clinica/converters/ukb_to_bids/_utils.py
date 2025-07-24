@@ -6,6 +6,8 @@ import pandas as pd
 from fsspec.implementations.local import LocalFileSystem
 
 from clinica.converters._utils import write_to_tsv
+from clinica.dataset.bids._filename import Extension
+from clinica.utils.stream import cprint
 
 __all__ = [
     "find_clinical_data",
@@ -365,54 +367,53 @@ def _write_images(scans: pd.DataFrame, to: Path, source: Path, fs: LocalFileSyst
                 _import_event_tsv(bids_path=to, fs=fs)
 
 
+def _get_extensions_from_sidecars(sidecars: list[str]) -> list[str]:
+    extensions = []
+    for side in sidecars:
+        try:
+            extensions += [Extension("." + side.split(".")[1])]
+        except (ValueError, IndexError) as e:
+            cprint(
+                "An invalid extension for bids files was found and won't be registered in scans.tsv. Please check your files.",
+                lvl="warning",
+            )
+    return extensions + [".nii.gz"]
+
+
 def _write_scans(scans: pd.DataFrame, to: Path) -> None:
     scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
-    # for participant_id, session in scans.groupby("participant_id"):
-    #     breakpoint()
-    for bids_full_path, metadata in scans.iterrows():
-        _write_row_in_scans_tsv_file(metadata, to)
 
+    for subject_session, data in scans.groupby(["participant_id", "sessions"]):
+        data.reset_index(drop=False, inplace=True)
 
-# def _add_sidecars_metadata_lines(metadata: pd.Series) -> pd.DataFrame:
-#     # todo :test
-#     # todo : use
-#     metadata.rename({"bids_filename": "filename"}, inplace=True)
-#     metadata["filename"] = f"{Path(metadata.name).parent.name}/{metadata["filename"]}.nii.gz"
-#     if sidecars := metadata.pop("sidecars"):
-#         metadata = metadata.to_frame().T.reset_index(
-#             drop=True)  # todo : do the series keep its name if I don't drop it ?
-#         for extension in list(map(lambda x: x.split(".")[-1], sidecars)):
-#             line_copy = metadata.loc[0].copy()
-#             line_copy["filename"] = line_copy["filename"].replace("nii.gz", extension)
-#             metadata = pd.concat([metadata, line_copy.to_frame().T], ignore_index=True)
-#             # todo : change what is used to serialize /write
-#     return metadata
-#
+        data["filename_no_extension"] = data["bids_full_path"].apply(
+            lambda x: f"{Path(x).parent.name}/{Path(x).name}"
+        )
+        data["extensions"] = data["sidecars"].apply(
+            lambda x: _get_extensions_from_sidecars(x)
+        )
 
+        to_write = pd.DataFrame(columns=["filename"])
 
-def _write_row_in_scans_tsv_file(row: pd.Series, to: Path):
-    """Write rows from a dataframe into a scans.tsv file.
+        for _, line in data.iterrows():
+            for extension in line.extensions:
+                to_write = pd.concat(
+                    [
+                        to_write,
+                        pd.DataFrame(
+                            {"filename": [line.filename_no_extension + extension]}
+                        ),
+                    ]
+                )
 
-    Parameters
-    ----------
-    row : pd.Series
-        Row to write into the scans.tsv file.
-
-    to : Path
-        Path to the BIDS folder.
-    """
-    scans_filepath = (
-        to
-        / str(row.participant_id)
-        / str(row.sessions)
-        / f"{row.participant_id}_{row.sessions}_scans.tsv"
-    )
-    row_to_write = _serialize_row(
-        row.drop(["participant_id", "sessions"]),
-        write_column_names=not scans_filepath.exists(),
-    )
-    with open(scans_filepath, "a") as scans_file:
-        scans_file.write(f"{row_to_write}\n")
+        to_write.to_csv(
+            to
+            / subject_session[0]
+            / subject_session[1]
+            / f"{subject_session[0]}_{subject_session[1]}_scans.tsv",
+            sep="\t",
+            index=False,
+        )
 
 
 def _serialize_row(row: pd.Series, write_column_names: bool) -> str:

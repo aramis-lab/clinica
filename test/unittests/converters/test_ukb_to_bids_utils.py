@@ -20,8 +20,24 @@ def test_read_imaging_data(tmp_path):
         read_imaging_data(path_to_zip)
 
 
-def test_write_row_in_scans_tsv_file(tmp_path):
-    from clinica.converters.ukb_to_bids._utils import _write_row_in_scans_tsv_file
+@pytest.mark.parametrize(
+    "sidecars, expected", [([], {".nii.gz"}), (["truc.json"], {".nii.gz", ".json"})]
+)
+def test_get_extensions_from_sidecars_success(sidecars, expected):
+    from clinica.converters.ukb_to_bids._utils import _get_extensions_from_sidecars
+
+    assert expected == set(_get_extensions_from_sidecars(sidecars))
+
+
+@pytest.mark.parametrize("sidecars", [["foo"], [".bar"]])
+def test_get_extensions_from_sidecars_error(sidecars):
+    from clinica.converters.ukb_to_bids._utils import _get_extensions_from_sidecars
+
+    assert _get_extensions_from_sidecars(sidecars) == [".nii.gz"]
+
+
+def test_write_scans(tmp_path):
+    from clinica.converters.ukb_to_bids._utils import _write_scans
 
     row = pd.Series(
         {
@@ -35,7 +51,7 @@ def test_write_row_in_scans_tsv_file(tmp_path):
     target_dir = tmp_path / "BIDS" / "sub-0001" / "ses-M000"
     target_dir.mkdir(parents=True)
 
-    _write_row_in_scans_tsv_file(row, tmp_path / "BIDS")
+    _write_scans(row, tmp_path / "BIDS")
 
     scans_tsv = target_dir / "sub-0001_ses-M000_scans.tsv"
     assert scans_tsv.exists()
