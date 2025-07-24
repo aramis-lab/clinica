@@ -20,33 +20,20 @@ def test_read_imaging_data(tmp_path):
         read_imaging_data(path_to_zip)
 
 
-def test_write_row_in_scans_tsv_file(tmp_path):
-    from clinica.converters.ukb_to_bids._utils import _write_row_in_scans_tsv_file
+@pytest.mark.parametrize(
+    "sidecars, expected", [([], {".nii.gz"}), (["truc.json"], {".nii.gz", ".json"})]
+)
+def test_get_extensions_from_sidecars_success(sidecars, expected):
+    from clinica.converters.ukb_to_bids._utils import _get_extensions_from_sidecars
 
-    row = pd.Series(
-        {
-            "participant_id": "sub-0001",
-            "sessions": "ses-M000",
-            "filename": "sub-0001_ses-M000_T1w.nii.gz",
-            "modality": "T1w",
-        }
-    )
+    assert expected == set(_get_extensions_from_sidecars(sidecars))
 
-    target_dir = tmp_path / "BIDS" / "sub-0001" / "ses-M000"
-    target_dir.mkdir(parents=True)
 
-    _write_row_in_scans_tsv_file(row, tmp_path / "BIDS")
+@pytest.mark.parametrize("sidecars", [["foo"], [".bar"]])
+def test_get_extensions_from_sidecars_error(sidecars):
+    from clinica.converters.ukb_to_bids._utils import _get_extensions_from_sidecars
 
-    scans_tsv = target_dir / "sub-0001_ses-M000_scans.tsv"
-    assert scans_tsv.exists()
-
-    content = scans_tsv.read_text().strip().splitlines()
-
-    columns_names = content[0].split("\t")
-    columns_items = content[1].split("\t")
-
-    assert columns_names == ["filename", "modality"]
-    assert columns_items == ["sub-0001_ses-M000_T1w.nii.gz", "T1w"]
+    assert _get_extensions_from_sidecars(sidecars) == [".nii.gz"]
 
 
 @pytest.mark.parametrize(
