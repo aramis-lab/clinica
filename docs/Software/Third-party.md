@@ -1,4 +1,7 @@
 <!-- markdownlint-disable MD046 -->
+
+--8<-- "snippets/spm_banner.md"
+
 # Third-party software
 
 ## Environment variables set-up

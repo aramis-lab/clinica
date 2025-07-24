@@ -1,4 +1,7 @@
 <!-- markdownlint-disable MD007 -->
+
+--8<-- "snippets/spm_banner.md"
+
 # Clinica Documentation
 
 ## What is Clinica ?

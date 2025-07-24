@@ -1,4 +1,7 @@
 <!-- markdownlint-disable MD033 MD046 -->
+
+--8<-- "snippets/spm_banner.md"
+
 # `pet-surface` - Surface-based processing of PET images
 
 This pipeline performs several processing steps for the analysis of PET data on the cortical surface [[Marcoux et al., 2018](https://doi.org/10.3389/fninf.2018.00094)]:
