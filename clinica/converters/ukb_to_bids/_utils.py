@@ -381,11 +381,8 @@ def _get_extensions_from_sidecars(sidecars: list[str]) -> list[str]:
 
 
 def _write_scans(scans: pd.DataFrame, to: Path) -> None:
-    scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
-
+    # todo : test
     for subject_session, data in scans.groupby(["participant_id", "sessions"]):
-        data.reset_index(drop=False, inplace=True)
-
         data["filename_no_extension"] = data["bids_full_path"].apply(
             lambda x: f"{Path(x).parent.name}/{Path(x).name}"
         )
@@ -405,7 +402,6 @@ def _write_scans(scans: pd.DataFrame, to: Path) -> None:
                         ),
                     ]
                 )
-
         to_write.to_csv(
             to
             / subject_session[0]
