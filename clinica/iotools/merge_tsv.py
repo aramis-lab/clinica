@@ -57,11 +57,11 @@ def merge_tsv(
 
     ignore_session_scan_files : bool, optional
     """
-    from clinica.utils.inputs import check_bids_folder
+    from clinica.dataset import check_bids_dataset
 
     from .data_handling import create_merge_file
 
-    check_bids_folder(bids_directory)
+    check_bids_dataset(bids_directory)
 
     atlas_selection = []
     if volume_atlas_selection is not None:
