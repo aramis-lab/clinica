@@ -153,7 +153,7 @@ def _call_n4_bias_field_correction(
     verbose: bool = False,
 ) -> Path:
     import ants
-    from ants.utils.bias_correction import n4_bias_field_correction
+    from ants.ops.bias_correction import n4_bias_field_correction
 
     return n4_bias_field_correction(
         ants.image_read(str(input_image)),
