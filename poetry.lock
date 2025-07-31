@@ -2586,14 +2586,14 @@ test = ["coverage", "pytest (>=6.0.0)", "pytest-cov", "pytest-randomly", "pytest
 
 [[package]]
 name = "nimare"
-version = "0.5.3"
+version = "0.5.4"
 description = "NiMARE: Neuroimaging Meta-Analysis Research Environment"
 optional = false
 python-versions = ">=3.8"
 groups = ["optional"]
 files = [
-    {file = "nimare-0.5.3-py3-none-any.whl", hash = "sha256:2ee904d1a16fc8492a71bd9bff40bd5668f275a1db6f8b8d3a0c7c9816237f35"},
-    {file = "nimare-0.5.3.tar.gz", hash = "sha256:c8358bf0ef1ac3c34a3bffbb71bd456a8877ecfb07ab79f3f02378ae67d82508"},
+    {file = "nimare-0.5.4-py3-none-any.whl", hash = "sha256:33b60c07d559e33fc6fdf4a5315e0eeeec02506eef23bd3bc17fcb54f563f82d"},
+    {file = "nimare-0.5.4.tar.gz", hash = "sha256:ce88779152331933b83724e505bfddcaa89a3ae78a65f66169f8efa7d1068798"},
 ]
 
 [package.dependencies]
@@ -3176,7 +3176,7 @@ version = "4.3.8"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a `user data dir`."
 optional = false
 python-versions = ">=3.9"
-groups = ["main", "docs"]
+groups = ["docs"]
 files = [
     {file = "platformdirs-4.3.8-py3-none-any.whl", hash = "sha256:ff7059bb7eb1179e2685604f4aaf157cfd9535242bd23742eadc3c13542139b4"},
     {file = "platformdirs-4.3.8.tar.gz", hash = "sha256:3d512d96e16bcb959a814c9f348431070822a6496326a4be0911c40b5a74c2bc"},
@@ -3368,35 +3368,28 @@ types = ["mypy"]
 
 [[package]]
 name = "pydra"
-version = "0.25"
+version = "0.22"
 description = "Pydra dataflow engine"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.7"
 groups = ["main"]
 files = [
-    {file = "pydra-0.25-py3-none-any.whl", hash = "sha256:3fec6cc8e60cabb698fc6259ab265aede4961d33be84b31f677bc9e251c49c15"},
-    {file = "pydra-0.25.tar.gz", hash = "sha256:bf3f4e31a369fa69db6c5d6b1c27248b1541e647032a33f239c53c052846791f"},
+    {file = "pydra-0.22-py3-none-any.whl", hash = "sha256:b764b147f80e19ca900ab15bbccc2e16529d353019b6d26285a1ba0bd2c2efde"},
+    {file = "pydra-0.22.tar.gz", hash = "sha256:8e37e621f61c76e54b82dfbb1b53fe46dd117c76872d9e2ac2b4c7b95fb89d4c"},
 ]
 
 [package.dependencies]
 attrs = ">=19.1.0"
 cloudpickle = ">=2.0.0"
 etelemetry = ">=0.2.2"
-fileformats = ">=0.8"
 filelock = ">=3.0.0"
-importlib_resources = {version = ">=5.7", markers = "python_version < \"3.11\""}
-platformdirs = ">=2"
-typing_extensions = {version = ">=4.6.3", markers = "python_version < \"3.10\""}
-typing_utils = {version = ">=0.1.0", markers = "python_version < \"3.10\""}
 
 [package.extras]
 all = ["pydra[dev,doc]"]
 dask = ["dask", "distributed"]
 dev = ["black", "pre-commit", "pydra[test]"]
-doc = ["packaging", "sphinx (==6.2.1)", "sphinx_rtd_theme", "sphinxcontrib-apidoc (>=0.3.0,<0.4.0)", "sphinxcontrib-versioning"]
+doc = ["packaging", "sphinx (>=2.1.2)", "sphinx_rtd_theme", "sphinxcontrib-apidoc (>=0.3.0,<0.4.0)", "sphinxcontrib-versioning"]
 docs = ["pydra[doc]"]
-jupyter = ["nest_asyncio"]
-psij = ["psij-python"]
 test = ["boutiques", "codecov", "numpy", "psutil", "pyld", "pympler", "pytest (>=6.2.5)", "pytest-cov", "pytest-env", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist (<2.0)", "python-dateutil", "tornado"]
 tests = ["pydra[test]"]
 
@@ -4793,22 +4786,6 @@ files = [
 markers = {dev = "python_version < \"3.11\""}
 
 [[package]]
-name = "typing-utils"
-version = "0.1.0"
-description = "utils to inspect Python type annotations"
-optional = false
-python-versions = ">=3.6.1"
-groups = ["main"]
-markers = "python_version == \"3.9\""
-files = [
-    {file = "typing_utils-0.1.0-py3-none-any.whl", hash = "sha256:6bd26f3d38a5dd526ca3a59f0a451ccb59bcee9dc829c872dd6c0aae4ec8bbef"},
-    {file = "typing_utils-0.1.0.tar.gz", hash = "sha256:8ff6b6705414b82575ad5ae0925ac414a9650fb8c5718289b1327dec61252f65"},
-]
-
-[package.extras]
-test = ["pytest"]
-
-[[package]]
 name = "tzdata"
 version = "2025.2"
 description = "Provider of IANA time zone data"
@@ -5077,21 +5054,21 @@ scikit-learn = ["scikit-learn"]
 
 [[package]]
 name = "xgboost"
-version = "3.0.2"
+version = "3.0.3"
 description = "XGBoost Python Package"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 markers = "python_version >= \"3.11\""
 files = [
-    {file = "xgboost-3.0.2-py3-none-macosx_10_15_x86_64.whl", hash = "sha256:923f46cd1b25c0a39fc98e969fa0a72a1a84feb7f55797cb3385962cd8d3b2d4"},
-    {file = "xgboost-3.0.2-py3-none-macosx_12_0_arm64.whl", hash = "sha256:5c4e377c86df815669939646b3abe7a20559e4d4c0f5c2ab10c31252e7a9d7d9"},
-    {file = "xgboost-3.0.2-py3-none-manylinux2014_aarch64.whl", hash = "sha256:e9acf97b3b2a628b33f1dc80ee3f16a658e1f9f43c4ed2aa85b0a824c87dbde5"},
-    {file = "xgboost-3.0.2-py3-none-manylinux2014_x86_64.whl", hash = "sha256:7d1ad8c5ae361161ce5288a04916c89d13d247b9a98e25c4b3983783cfad0377"},
-    {file = "xgboost-3.0.2-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:a112df38f2faaae31f1c00d373ff35fb5965a65e74de2eea9081dbef7a9ddffe"},
-    {file = "xgboost-3.0.2-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:d534242489265621397ff403bb1c6235d2e6c66938639239fdf2d6b39d27e339"},
-    {file = "xgboost-3.0.2-py3-none-win_amd64.whl", hash = "sha256:b4c89b71d134da9fa6318e3c9f5459317d1013b4d57059d10ed2840750e2f7e1"},
-    {file = "xgboost-3.0.2.tar.gz", hash = "sha256:0ea95fef12313f8563458bbf49458db434d620af27b1991ddb8f46806cb305a5"},
+    {file = "xgboost-3.0.3-py3-none-macosx_10_15_x86_64.whl", hash = "sha256:bb6e1b7d63276b9a95b1142b0e9e736137214a8dd108605b1d7d93841b631989"},
+    {file = "xgboost-3.0.3-py3-none-macosx_12_0_arm64.whl", hash = "sha256:fd8309499243c60e441503259e9e39b644bbc3041d05f25d597f7fe01e4102bc"},
+    {file = "xgboost-3.0.3-py3-none-manylinux2014_aarch64.whl", hash = "sha256:06e7fa513bbf70ae106e9f231e08908b42ce08b5cafeec898b62f6b13cb9573b"},
+    {file = "xgboost-3.0.3-py3-none-manylinux2014_x86_64.whl", hash = "sha256:5b755051749a718feacb9bf863fa2478f8ac17c106477c4457a018991387765e"},
+    {file = "xgboost-3.0.3-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:5b0ecfd62abd52869444c15aadd6db6f899e47aa8855541e574cf65181957bf6"},
+    {file = "xgboost-3.0.3-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:93a198b3aee33b3b597f5b1502b32353c5055a022a3877f79e2c1bd8048ab8ec"},
+    {file = "xgboost-3.0.3-py3-none-win_amd64.whl", hash = "sha256:a5dff641676fea3ac80641ffe3531969ac3a071f9e1bc6f04e90a5b3554c94a9"},
+    {file = "xgboost-3.0.3.tar.gz", hash = "sha256:5cd13796b4eb8ca72c994f1f76aae74a977082c0dee6b4af5ab7c2826ad6045d"},
 ]
 
 [package.dependencies]
@@ -5159,4 +5136,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9,<3.13"
-content-hash = "e76d331e18fa1ca77b336e28845f3a3f0acc919d95fe92aaf338c4c1a94161ae"
+content-hash = "2aa360f4f77b0e480e6ddfa00bd20cc974a7e02ad64ba45e5b3fd38abff710d9"

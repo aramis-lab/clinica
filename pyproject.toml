@@ -54,7 +54,7 @@ dependencies = [
     "openpyxl",
     "fsspec",
     "pydra-nipype1",
-    "pydra (>=0.22,<1.0)",
+    "pydra (>=0.22,<0.23)",
     "pybids (>=0.16,<1.0)",
     "joblib (>=1.2.0,<2.0)",
     "attrs (>=20.1.0)",
