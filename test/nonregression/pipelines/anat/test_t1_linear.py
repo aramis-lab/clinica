@@ -10,11 +10,12 @@ import pytest
 
 
 @pytest.mark.fast
-def test_t1_linear(cmdopt, tmp_path):
+@pytest.mark.parametrize("antspy", (False, True))
+def test_t1_linear(cmdopt, tmp_path, antspy):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "T1Linear")
-    run_t1_linear(input_dir, tmp_dir, ref_dir, working_dir)
+    run_t1_linear(input_dir, tmp_dir, ref_dir, working_dir, antspy)
 
 
 @pytest.mark.fast
@@ -26,7 +27,11 @@ def test_flair_linear(cmdopt, tmp_path):
 
 
 def run_t1_linear(
-    input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
+    input_dir: Path,
+    output_dir: Path,
+    ref_dir: Path,
+    working_dir: Path,
+    antspy: bool = False,
 ) -> None:
     from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
 
@@ -38,7 +43,7 @@ def run_t1_linear(
         caps_directory=fspath(out_caps),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
-        parameters={"uncropped_image": False},
+        parameters={"uncropped_image": False, "use_antspy": antspy},
         name="t1-linear",
     )
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
