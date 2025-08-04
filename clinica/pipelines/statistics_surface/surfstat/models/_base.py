@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from brainstat.stats.SLM import SLM
 from brainstat.stats.terms import FixedEffect
-from nilearn.surface import Mesh
+from nilearn.surface import InMemoryMesh
 
 from clinica.utils.stream import cprint
 
@@ -205,7 +205,7 @@ class GLM:
         self,
         output_dir: Path,
         method: Union[str, List[str]],
-        mesh: Mesh,
+        mesh: InMemoryMesh,
     ) -> None:
         """Plot results to the provided directory.
 
@@ -217,7 +217,7 @@ class GLM:
         method : str or List[str]
             The method(s) to make the plots.
 
-        mesh : nilearn.surface.Mesh
+        mesh : nilearn.surface.SurfaceMesh
             The mesh on which to plot the result data.
         """
         if not self._is_fitted():

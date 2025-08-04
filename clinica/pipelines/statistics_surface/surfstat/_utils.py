@@ -7,7 +7,7 @@ from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
-from nilearn.surface import Mesh
+from nilearn.surface import InMemoryMesh
 
 TSV_FIRST_COLUMN = "participant_id"
 TSV_SECOND_COLUMN = "session_id"
@@ -116,7 +116,7 @@ def build_thickness_array(
     return thickness
 
 
-def get_average_surface(fsaverage_path: Path) -> Tuple[Dict, Mesh]:
+def get_average_surface(fsaverage_path: Path) -> Tuple[Dict, InMemoryMesh]:
     """This function extracts the average surface and the average mesh
     from the path to the fsaverage templates.
 
@@ -124,7 +124,7 @@ def get_average_surface(fsaverage_path: Path) -> Tuple[Dict, Mesh]:
 
         Note that the average surface is returned as a dictionary
         with 'coord' and 'tri' as keys, while the average mesh is
-        returned as a Nilearn Mesh object (basically a NamedTuple
+        returned as a Nilearn SurfaceMesh object (basically a NamedTuple
         with 'coordinates' and 'faces' attributes). The surface
         isn't returned as a Nilearn Surface object for compatibility
         with BrainStats.
@@ -145,12 +145,12 @@ def get_average_surface(fsaverage_path: Path) -> Tuple[Dict, Mesh]:
     average_surface : dict
         Average surface as a dictionary for BrainStat compatibility.
 
-    average_mesh : nilearn.surface.Mesh
-        Average mesh as a Nilearn Mesh object.
+    average_mesh : nilearn.surface.SurfaceMesh
+        Average mesh as a Nilearn SurfaceMesh object.
     """
     import copy
 
-    from nilearn.surface import Mesh, load_surf_mesh
+    from nilearn.surface import InMemoryMesh, load_surf_mesh
 
     meshes = [
         load_surf_mesh(str(fsaverage_path / f"{hemi}.pial")) for hemi in ("lh", "rh")
@@ -159,7 +159,7 @@ def get_average_surface(fsaverage_path: Path) -> Tuple[Dict, Mesh]:
     faces = np.vstack(
         [meshes[0].faces, meshes[1].faces + meshes[0].coordinates.shape[0]]
     )
-    average_mesh = Mesh(
+    average_mesh = InMemoryMesh(
         coordinates=coordinates,
         faces=copy.deepcopy(faces),
     )

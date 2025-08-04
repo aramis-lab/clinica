@@ -24,7 +24,7 @@ def test_first_lv(generate_cli_first_lv):
     runner = CliRunner()
     cli_input = generate_cli_first_lv
     print(f"Testing input cli {cli_input}")
-    result = runner.invoke(cli, cli_input)
+    result = runner.invoke(cli, cli_input + " -h")
     assert result.exit_code == 0
 
 

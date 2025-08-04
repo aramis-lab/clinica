@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Callable
 
-from nilearn.surface import Mesh
+from nilearn.surface import InMemoryMesh
 
 from ._statistics import StatisticsResults
 
@@ -16,11 +16,11 @@ class StatisticsResultsPlotter:
     output_file : PathLike
         Path to the output file.
 
-    mesh : nilearn.surface.Mesh
+    mesh : nilearn.surface.SurfaceMesh
         The mesh to be used for plotting results.
     """
 
-    def __init__(self, output_file: Path, mesh: Mesh):
+    def __init__(self, output_file: Path, mesh: InMemoryMesh):
         self.output_file = output_file
         self.mesh = mesh
         self.plotting_extension = ".png"

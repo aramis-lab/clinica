@@ -468,7 +468,7 @@ def test_instantiate_t1_freesurfer_longitudinal_correction(cmdopt, tmp_path):
     ).build()
 
 
-def test_instantiate_t1_linear(cmdopt, tmp_path):
+def test_instantiate_t1_linear_ants(cmdopt, tmp_path):
     from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
 
     base_dir = Path(cmdopt["input"])
@@ -481,6 +481,22 @@ def test_instantiate_t1_linear(cmdopt, tmp_path):
         base_dir=fspath(working_dir),
         name="t1-linear",
         parameters={"uncropped_image": False},
+    ).build()
+
+
+def test_instantiate_t1_linear_antspy(cmdopt, tmp_path):
+    from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
+
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "T1Linear")
+    AnatLinear(
+        bids_directory=fspath(input_dir / "bids"),
+        caps_directory=fspath(tmp_dir / "caps"),
+        tsv_file=fspath(input_dir / "subjects.tsv"),
+        base_dir=fspath(working_dir),
+        name="t1-linear",
+        parameters={"uncropped_image": False, "use_antspy": True},
     ).build()
 
 
