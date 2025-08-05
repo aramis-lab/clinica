@@ -353,8 +353,7 @@ def _skip_atlas_based_on_selection(
 ) -> bool:
     """Returns True if the atlas provided through its path should be skipped based on the user-provided selection."""
     return (
-        atlas_selection is not None
-        and _get_atlas_name(atlas_path, pipeline) not in atlas_selection
+        atlas_selection and _get_atlas_name(atlas_path, pipeline) not in atlas_selection
     )
 
 
