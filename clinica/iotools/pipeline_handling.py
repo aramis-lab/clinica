@@ -266,16 +266,18 @@ def _get_single_record(
             atlas_path, pipeline, pvc_restriction, tracers_selection, atlas_selection
         )
     ]
-    return {
-        **{"participant_id": participant_id, "session_id": session_id},
-        **reduce(
-            lambda a, b: {**a, **b},
-            [
-                _get_records_for_atlas(atlas, pipeline, metric, group_path.name)
-                for atlas in atlases
-            ],
-        ),
-    }
+    if atlases:
+        return {
+            **{"participant_id": participant_id, "session_id": session_id},
+            **reduce(
+                lambda a, b: {**a, **b},
+                [
+                    _get_records_for_atlas(atlas, pipeline, metric, group_path.name)
+                    for atlas in atlases
+                ],
+            ),
+        }
+    return {**{"participant_id": participant_id, "session_id": session_id}}
 
 
 def _get_atlas_paths(

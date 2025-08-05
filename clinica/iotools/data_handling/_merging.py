@@ -330,7 +330,6 @@ def _add_data_to_merge_file_from_caps(
                 f"{pipeline.value} outputs were not found in the CAPS folder.",
                 lvl="info",
             )
-
     return _post_process_merged_df_from_caps(merged_df, merged_summary_df)
 
 
