@@ -266,16 +266,18 @@ def _get_single_record(
             atlas_path, pipeline, pvc_restriction, tracers_selection, atlas_selection
         )
     ]
-    return {
-        **{"participant_id": participant_id, "session_id": session_id},
-        **reduce(
-            lambda a, b: {**a, **b},
-            [
-                _get_records_for_atlas(atlas, pipeline, metric, group_path.name)
-                for atlas in atlases
-            ],
-        ),
-    }
+    if atlases:
+        return {
+            **{"participant_id": participant_id, "session_id": session_id},
+            **reduce(
+                lambda a, b: {**a, **b},
+                [
+                    _get_records_for_atlas(atlas, pipeline, metric, group_path.name)
+                    for atlas in atlases
+                ],
+            ),
+        }
+    return {**{"participant_id": participant_id, "session_id": session_id}}
 
 
 def _get_atlas_paths(
@@ -351,8 +353,7 @@ def _skip_atlas_based_on_selection(
 ) -> bool:
     """Returns True if the atlas provided through its path should be skipped based on the user-provided selection."""
     return (
-        atlas_selection is not None
-        and _get_atlas_name(atlas_path, pipeline) not in atlas_selection
+        atlas_selection and _get_atlas_name(atlas_path, pipeline) not in atlas_selection
     )
 
 
