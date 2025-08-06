@@ -6,6 +6,14 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.10.1
+
+### Fixed
+
+- [IOTools] Fix `merge-tsv` tool and its `caps` option (PR [#1535](https://github.com/aramis-lab/clinica/pull/1535))
+- [Dependencies] Update dependencies and perform associated fixes (PR [#1531](https://github.com/aramis-lab/clinica/pull/1531))
+
+
 ## Clinica 0.10.0
 
 ### Fixed
