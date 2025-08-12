@@ -321,9 +321,8 @@ def _write_description_and_participants(
     from clinica.converters.study_models import StudyName
     from clinica.dataset import BIDSDatasetDescription
 
-    participants = participants.droplevel(
-        ["sessions", "modality", "bids_filename"]
-    ).drop_duplicates()
+    participants = participants.droplevel(["sessions", "modality", "bids_filename"])
+    participants = participants.loc[~participants.index.duplicated(keep="first")]
 
     # Ensure BIDS hierarchy is written first.
     with fs.transaction:

@@ -59,3 +59,39 @@ def test_select_sessions(subject_id, source_session, age_2, age_3, expected):
     )
 
     assert expected == _select_sessions(clinical_data)
+
+
+def test_write_description_and_participants(tmp_path):
+    from fsspec.implementations.local import LocalFileSystem
+
+    from clinica.converters.ukb_to_bids._utils import (
+        _write_description_and_participants,
+    )
+
+    to = tmp_path / "BIDS"
+    to.mkdir()
+    participants = pd.DataFrame(
+        {
+            "participants": ["1", "2", "2"],
+            "sessions": ["ses-M000", "ses-M000", "ses-M001"],
+            "modality": ["dwi", "dwi", "dwi"],
+            "bids_filename": ["1-0-dwi", "2-0-dwi", "2-1-dwi"],
+            "sex": ["F", "F", "F"],
+        }
+    )
+    participants.set_index(
+        ["participants", "sessions", "modality", "bids_filename"], inplace=True
+    )
+    _write_description_and_participants(
+        participants, to, LocalFileSystem(auto_mkdir=True)
+    )
+
+    tsv_files = list(to.rglob("*tsv"))
+    json_files = list(to.rglob("*json"))
+
+    assert len(tsv_files) == 1
+    assert len(json_files) == 1
+
+    tsv = pd.read_csv(tsv_files[0], sep="\t")
+    assert set(tsv.columns) == {"participants", "sex"}
+    assert len(tsv) == 2
