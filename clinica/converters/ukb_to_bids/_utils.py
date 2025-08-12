@@ -338,13 +338,13 @@ def _write_description_and_participants(
 
 def _write_sessions(sessions: pd.DataFrame, to: Path, fs: LocalFileSystem):
     for participant_id, data_frame in sessions.groupby("participant_id"):
-        sessions = data_frame.droplevel(
+        sessions_to_write = data_frame.droplevel(
             ["participant_id", "modality", "bids_filename"]
         ).drop_duplicates()
-        sessions.index.name = "session_id"
+        sessions_to_write.index.name = "session_id"
         sessions_filepath = to / str(participant_id) / f"{participant_id}_sessions.tsv"
         with fs.open(str(sessions_filepath), "w") as sessions_file:
-            write_to_tsv(sessions, sessions_file)
+            write_to_tsv(sessions_to_write, sessions_file)
 
 
 def _write_images(scans: pd.DataFrame, to: Path, source: Path, fs: LocalFileSystem):
@@ -380,7 +380,6 @@ def _get_extensions_from_sidecars(sidecars: list[str]) -> list[str]:
 
 
 def _write_scans(scans: pd.DataFrame, to: Path) -> None:
-    # todo : test
     for subject_session, data in scans.groupby(["participant_id", "sessions"]):
         data["filename_no_extension"] = data["bids_full_path"].apply(
             lambda x: f"{Path(x).parent.name}/{Path(x).name}"

@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from fsspec.implementations.local import LocalFileSystem
 
 
 def test_read_imaging_data(tmp_path):
@@ -62,14 +63,11 @@ def test_select_sessions(subject_id, source_session, age_2, age_3, expected):
 
 
 def test_write_description_and_participants(tmp_path):
-    from fsspec.implementations.local import LocalFileSystem
-
     from clinica.converters.ukb_to_bids._utils import (
         _write_description_and_participants,
     )
 
     to = tmp_path / "BIDS"
-    to.mkdir()
     participants = pd.DataFrame(
         {
             "participants": ["1", "2", "2"],
@@ -95,3 +93,49 @@ def test_write_description_and_participants(tmp_path):
     tsv = pd.read_csv(tsv_files[0], sep="\t")
     assert set(tsv.columns) == {"participants", "sex"}
     assert len(tsv) == 2
+
+
+def test_write_sessions(tmp_path):
+    from clinica.converters.ukb_to_bids._utils import _write_sessions
+
+    to = tmp_path / "BIDS"
+
+    sessions = pd.DataFrame(
+        {
+            "participant_id": ["1", "2", "2"],
+            "sessions": ["ses-M000", "ses-M000", "ses-M001"],
+            "modality": ["dwi", "dwi", "dwi"],
+            "bids_filename": ["1-0-dwi", "2-0-dwi", "2-1-dwi"],
+            "session_identifier": ["2", "2", "3"],
+        }
+    )
+    sessions.set_index(
+        ["participant_id", "sessions", "modality", "bids_filename"], inplace=True
+    )
+
+    _write_sessions(sessions, to, LocalFileSystem(auto_mkdir=True))
+    tsv_files = list(to.rglob("*tsv"))
+
+    assert len(tsv_files) == 2
+
+    tsv = pd.read_csv(to / "2" / "2_sessions.tsv", sep="\t")
+    assert len(tsv) == 2
+
+
+# def test_write_scans(tmp_path):
+# todo
+
+# from clinica.converters.ukb_to_bids._utils import _write_scans
+# scans = pd.DataFrame(pd.DataFrame(
+#     {
+#         "participants": ["1", "2", "2"],
+#         "sessions": ["ses-M000", "ses-M000", "ses-M001"],
+#         "modality": ["dwi", "dwi", "dwi"],
+#         "bids_filename": ["1-0-dwi", "2-0-dwi", "2-1-dwi"],
+#         "sex": ["F", "F", "F"],
+#     }
+# ))
+#
+# to = tmp_path / "BIDS" / "sub-001" / "ses-M000"
+# to.mkdir(parents=True)
+# _write_scans(scans, to)
