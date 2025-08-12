@@ -376,7 +376,7 @@ def _get_extensions_from_sidecars(sidecars: list[str]) -> list[str]:
                 "An invalid extension for bids files was found and won't be registered in scans.tsv. Please check your files.",
                 lvl="warning",
             )
-    return extensions + [".nii.gz"]
+    return extensions + [Extension(".nii.gz")]
 
 
 def _write_scans(scans: pd.DataFrame, to: Path) -> None:
@@ -408,20 +408,6 @@ def _write_scans(scans: pd.DataFrame, to: Path) -> None:
             sep="\t",
             index=False,
         )
-
-
-def _serialize_row(row: pd.Series, write_column_names: bool) -> str:
-    row_dict = row.to_dict()
-    to_write = (
-        [row_dict.keys(), row_dict.values()]
-        if write_column_names
-        else [row_dict.values()]
-    )
-    return "\n".join([_serialize_list(list(_)) for _ in to_write])
-
-
-def _serialize_list(data: list, sep="\t") -> str:
-    return sep.join([str(value) for value in data])
 
 
 def _copy_file_to_bids(zipfile: Path, filenames: List[Path], bids_path: Path) -> None:

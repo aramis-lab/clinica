@@ -122,20 +122,27 @@ def test_write_sessions(tmp_path):
     assert len(tsv) == 2
 
 
-# def test_write_scans(tmp_path):
-# todo
+def test_write_scans(tmp_path):
+    from clinica.converters.ukb_to_bids._utils import _write_scans
 
-# from clinica.converters.ukb_to_bids._utils import _write_scans
-# scans = pd.DataFrame(pd.DataFrame(
-#     {
-#         "participants": ["1", "2", "2"],
-#         "sessions": ["ses-M000", "ses-M000", "ses-M001"],
-#         "modality": ["dwi", "dwi", "dwi"],
-#         "bids_filename": ["1-0-dwi", "2-0-dwi", "2-1-dwi"],
-#         "sex": ["F", "F", "F"],
-#     }
-# ))
-#
-# to = tmp_path / "BIDS" / "sub-001" / "ses-M000"
-# to.mkdir(parents=True)
-# _write_scans(scans, to)
+    to = tmp_path / "BIDS"
+    (to / "sub-001" / "ses-M000").mkdir(parents=True, exist_ok=True)
+    scans = pd.DataFrame(
+        pd.DataFrame(
+            {
+                "participant_id": ["sub-001"],
+                "sessions": ["ses-M000"],
+                "modality": ["T1w"],
+                "bids_filename": ["sub-001_ses-M000_T1w"],
+                "bids_full_path": [
+                    to / "sub-001" / "ses-M000" / "sub-001_ses-M000_T1w"
+                ],
+                "sidecars": [["truc.json"]],
+            }
+        )
+    )
+    _write_scans(scans, to)
+    tsv_files = list(to.rglob("*tsv"))
+    assert len(tsv_files) == 1
+    tsv = pd.read_csv(tsv_files[0], sep="\t")
+    assert len(tsv) == 2
