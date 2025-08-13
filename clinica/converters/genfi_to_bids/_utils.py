@@ -824,42 +824,22 @@ def _drop_duplicate_line_with_nans(participants: pd.DataFrame) -> pd.DataFrame:
     return participants
 
 
-def write_bids(
-    to: Path,
-    participants: DataFrame,
-    sessions: DataFrame,
-    scans: DataFrame,
-    source: Path,
-) -> None:
-    """This function writes the BIDS
+def _write_description_and_participants(to, fs, participants):
+    """This function writes the dataset_description.json and participants.tsv files of the BIDS architecture.
 
     Parameters
     ----------
     to: Path
         The path where the BIDS should be written
 
+    fs: LocalFileSystem
+        The local filesystem handler
+
     participants: DataFrame
         DataFrame containing the data for the participants.tsv
-
-    sessions: DataFrame
-        DataFrame containing the data for the sessions.tsv
-
-    scans: DataFrame
-        DataFrame containing the data for the scans.tsv
-
-    source : Path
-        Path to the source imaging data
     """
-    import os
-
-    from fsspec.implementations.local import LocalFileSystem
-
-    from clinica.converters._utils import run_dcm2niix, write_to_tsv
+    from clinica.converters._utils import write_to_tsv
     from clinica.dataset import BIDSDatasetDescription
-
-    cprint("Starting to write the BIDS.", lvl="info")
-    fs = LocalFileSystem(auto_mkdir=True)
-    # Ensure BIDS hierarchy is written first.
 
     participants = (
         participants.reset_index()
@@ -876,6 +856,23 @@ def write_bids(
         with fs.open(to / "participants.tsv", "w") as participant_file:
             write_to_tsv(participants, participant_file)
 
+
+def _write_sessions(to, fs, sessions):
+    """This function writes the session.tsv files of the BIDS architecture.
+
+    Parameters
+    ----------
+    to: Path
+        The path where the BIDS should be written
+
+    fs: LocalFileSystem
+        The local filesystem handler
+
+    sessions: DataFrame
+        DataFrame containing the data for the sessions.tsv
+    """
+    from clinica.converters._utils import write_to_tsv
+
     for participant_id, data_frame in sessions.groupby("participant_id"):
         sessions = data_frame.droplevel(
             ["participant_id", "modality", "bids_filename", "run_num"]
@@ -884,6 +881,25 @@ def write_bids(
         sessions_filepath = to / str(participant_id) / f"{participant_id}_sessions.tsv"
         with fs.open(sessions_filepath, "w") as sessions_file:
             write_to_tsv(sessions, sessions_file)
+
+
+def _write_scans(to, source, scans):
+    """This function writes the scans.tsv files of the BIDS architecture.
+
+    Parameters
+    ----------
+    to: Path
+        The path where the BIDS should be written
+
+    source : Path
+        Path to the source imaging data
+
+    scans: DataFrame
+        DataFrame containing the data for the scans.tsv
+    """
+    import os
+
+    from clinica.converters._utils import run_dcm2niix
 
     scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
 
@@ -920,6 +936,47 @@ def write_bids(
                     metadata.number_of_parts,
                     metadata.run_num,
                 )
+
+
+def write_bids(
+    to: Path,
+    participants: DataFrame,
+    sessions: DataFrame,
+    scans: DataFrame,
+    source: Path,
+) -> None:
+    """This function writes the BIDS
+
+    Parameters
+    ----------
+    to: Path
+        The path where the BIDS should be written
+
+    participants: DataFrame
+        DataFrame containing the data for the participants.tsv
+
+    sessions: DataFrame
+        DataFrame containing the data for the sessions.tsv
+
+    scans: DataFrame
+        DataFrame containing the data for the scans.tsv
+
+    source : Path
+        Path to the source imaging data
+    """
+    import pandas as pd
+    from fsspec.implementations.local import LocalFileSystem
+
+    cprint("Starting to write the BIDS.", lvl="info")
+    fs = LocalFileSystem(auto_mkdir=True)
+    # Ensure BIDS hierarchy is written first.
+
+    _write_description_and_participants(to, fs, participants)
+
+    _write_sessions(to, fs, sessions)
+
+    _write_scans(to, source, scans)
+
     _correct_fieldmaps_name(to)
     _delete_real_and_imaginary_files(to)
 
