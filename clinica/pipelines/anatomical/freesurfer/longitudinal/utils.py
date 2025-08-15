@@ -71,7 +71,7 @@ def grab_image_ids_from_caps_directory(
 
     part_ids = ["sub-CLNC01",  "sub-CLNC01",  "sub-CLNC01" ]
     sess_ids = ["ses-M000",     "ses-M018",     "ses-M036"    ]
-    long_ids = ["long-M000M018", "long-M000M018", "long-M000M018"]
+    long_ids = ["long-M000+M018", "long-M000+M018", "long-M000+M018"]
     (sub-CLNC02 does not have longitudinal ID so it does not appear on the result)
 
     Parameters
