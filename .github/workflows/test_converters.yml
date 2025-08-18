@@ -19,7 +19,7 @@ jobs:
 #      - self-hosted
 #      - macOS
 #    steps:
-#      - uses: actions/checkout@v4
+#      - uses: actions/checkout@v5
 #      - name: Run non-regression tests for converters
 #        run: |
 #          make env.conda
@@ -41,7 +41,7 @@ jobs:
       - Linux
       - test-runner
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Run non-regression tests for converters
         run: |
           make env.conda
