@@ -14,7 +14,7 @@ jobs:
 #      - macOS
 #    timeout-minutes: 720
 #    steps:
-#      - uses: actions/checkout@v4
+#      - uses: actions/checkout@v5
 #      - name: Run tests for pet pipelines
 #        run: |
 #          make env.conda
@@ -39,7 +39,7 @@ jobs:
       - test-runner
     timeout-minutes: 720
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Run tests for pet pipelines
         run: |
           make env.conda
