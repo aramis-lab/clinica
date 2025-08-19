@@ -3,6 +3,11 @@ from typing import Iterable, List, Optional
 
 import numpy as np
 import pandas as pd
+from fsspec.implementations.local import LocalFileSystem
+
+from clinica.converters._utils import write_to_tsv
+from clinica.dataset.bids._filename import Extension
+from clinica.utils.stream import cprint
 
 __all__ = [
     "find_clinical_data",
@@ -303,17 +308,21 @@ def write_bids(
     scans: pd.DataFrame,
     dataset_directory: Path,
 ) -> None:
-    from fsspec.implementations.local import LocalFileSystem
+    fs = LocalFileSystem(auto_mkdir=True)
+    _write_description_and_participants(participants, to, fs)
+    _write_sessions(sessions, to, fs)
+    _write_images(scans, to, dataset_directory, fs)
+    _write_scans(scans, to)
 
-    from clinica.converters._utils import write_to_tsv
+
+def _write_description_and_participants(
+    participants: pd.DataFrame, to: Path, fs: LocalFileSystem
+):
     from clinica.converters.study_models import StudyName
     from clinica.dataset import BIDSDatasetDescription
 
-    fs = LocalFileSystem(auto_mkdir=True)
-
-    participants = participants.droplevel(
-        ["sessions", "modality", "bids_filename"]
-    ).drop_duplicates()
+    participants = participants.droplevel(["sessions", "modality", "bids_filename"])
+    participants = participants.loc[~participants.index.duplicated(keep="first")]
 
     # Ensure BIDS hierarchy is written first.
     with fs.transaction:
@@ -326,72 +335,79 @@ def write_bids(
         with fs.open(str(to / "participants.tsv"), "w") as participant_file:
             write_to_tsv(participants, participant_file)
 
+
+def _write_sessions(sessions: pd.DataFrame, to: Path, fs: LocalFileSystem):
     for participant_id, data_frame in sessions.groupby("participant_id"):
-        sessions = data_frame.droplevel(
+        sessions_to_write = data_frame.droplevel(
             ["participant_id", "modality", "bids_filename"]
         ).drop_duplicates()
-
+        sessions_to_write.index.name = "session_id"
         sessions_filepath = to / str(participant_id) / f"{participant_id}_sessions.tsv"
         with fs.open(str(sessions_filepath), "w") as sessions_file:
-            write_to_tsv(sessions, sessions_file)
+            write_to_tsv(sessions_to_write, sessions_file)
 
+
+def _write_images(scans: pd.DataFrame, to: Path, source: Path, fs: LocalFileSystem):
     scans = scans.reset_index().set_index(["bids_full_path"], verify_integrity=True)
-
     for bids_full_path, metadata in scans.iterrows():
         if metadata["modality_num"] != "20217" and metadata["modality_num"] != "20225":
             _copy_file_to_bids(
-                zipfile=dataset_directory / metadata["source_zipfile"],
+                zipfile=source / metadata["source_zipfile"],
                 filenames=[metadata["source_filename"]] + metadata["sidecars"],
                 bids_path=to / bids_full_path,
             )
         else:
             _convert_dicom_to_nifti(
-                zipfiles=dataset_directory / metadata["source_zipfile"],
+                zipfiles=source / metadata["source_zipfile"],
                 bids_path=to / bids_full_path,
+                fs=fs,
             )
             if metadata["modality_num"] == "20217":
-                _import_event_tsv(bids_path=to)
-
-        _write_row_in_scans_tsv_file(metadata, to)
+                _import_event_tsv(bids_path=to, fs=fs)
 
 
-def _write_row_in_scans_tsv_file(row: pd.Series, to: Path):
-    """Write rows from a dataframe into a scans.tsv file.
-
-    Parameters
-    ----------
-    row : pd.Series
-        Row to write into the scans.tsv file.
-
-    to : Path
-        Path to the BIDS folder.
-    """
-    scans_filepath = (
-        to
-        / str(row.participant_id)
-        / str(row.sessions)
-        / f"{row.participant_id}_{row.sessions}_scans.tsv"
-    )
-    row_to_write = _serialize_row(
-        row.drop(["participant_id", "sessions"]),
-        write_column_names=not scans_filepath.exists(),
-    )
-    with open(scans_filepath, "a") as scans_file:
-        scans_file.write(f"{row_to_write}\n")
+def _get_extensions_from_sidecars(sidecars: list[str]) -> list[str]:
+    extensions = []
+    for side in sidecars:
+        try:
+            extensions += [Extension("." + side.split(".")[1])]
+        except (ValueError, IndexError) as e:
+            cprint(
+                "An invalid extension for bids files was found and won't be registered in scans.tsv. Please check your files.",
+                lvl="warning",
+            )
+    return extensions + [Extension(".nii.gz")]
 
 
-def _serialize_row(row: pd.Series, write_column_names: bool) -> str:
-    row_dict = row.to_dict()
-    to_write = (
-        [row_dict.keys(), row_dict.values()]
-        if write_column_names
-        else [row_dict.values()]
-    )
-    return "\n".join([_serialize_list(list(_)) for _ in to_write])
+def _write_scans(scans: pd.DataFrame, to: Path) -> None:
+    for subject_session, data in scans.groupby(["participant_id", "sessions"]):
+        data["filename_no_extension"] = data["bids_full_path"].apply(
+            lambda x: f"{Path(x).parent.name}/{Path(x).name}"
+        )
+        data["extensions"] = data["sidecars"].apply(
+            lambda x: _get_extensions_from_sidecars(x)
+        )
 
+        to_write = pd.DataFrame(columns=["filename"])
 
-def _serialize_list(data: list, sep="\t") -> str:
-    return sep.join([str(value) for value in data])
+        for _, line in data.iterrows():
+            for extension in line.extensions:
+                to_write = pd.concat(
+                    [
+                        to_write,
+                        pd.DataFrame(
+                            {"filename": [line.filename_no_extension + extension]}
+                        ),
+                    ]
+                )
+        to_write.to_csv(
+            to
+            / subject_session[0]
+            / subject_session[1]
+            / f"{subject_session[0]}_{subject_session[1]}_scans.tsv",
+            sep="\t",
+            index=False,
+        )
 
 
 def _copy_file_to_bids(zipfile: Path, filenames: List[Path], bids_path: Path) -> None:
@@ -408,7 +424,9 @@ def _copy_file_to_bids(zipfile: Path, filenames: List[Path], bids_path: Path) ->
                 f.write(fs.cat(filename))
 
 
-def _convert_dicom_to_nifti(zipfiles: Path, bids_path: Path) -> None:
+def _convert_dicom_to_nifti(
+    zipfiles: Path, bids_path: Path, fs: LocalFileSystem
+) -> None:
     """Install the requested files in the BIDS  dataset.
     First, the dicom is extracted in a temporary directory
     Second, the dicom extracted is converted in the right place using dcm2niix"""
@@ -418,10 +436,6 @@ def _convert_dicom_to_nifti(zipfiles: Path, bids_path: Path) -> None:
     import zipfile
     from pathlib import PurePath
 
-    from fsspec.implementations.local import LocalFileSystem
-
-    fs = LocalFileSystem(auto_mkdir=True)
-
     zf = zipfile.ZipFile(zipfiles)
     try:
         bids_path.parent.mkdir(exist_ok=True, parents=True)
@@ -430,15 +444,9 @@ def _convert_dicom_to_nifti(zipfiles: Path, bids_path: Path) -> None:
         pass
     with tempfile.TemporaryDirectory() as tempdir:
         zf.extractall(tempdir)
-        command = [
-            "dcm2niix",
-            "-w",
-            "0",
-        ]
-        command += ["-9", "-z", "y"]
-        command += ["-b", "y", "-ba", "y"]
-        command += [tempdir]
-        subprocess.run(command)
+        subprocess.run(
+            ["dcm2niix", "-w", "0", "-9", "-z", "y", "-b", "y", "-ba", "y", tempdir]
+        )
         fmri_image_path = _find_largest_imaging_data(Path(tempdir))
         fmri_image_path = fmri_image_path or ""
         fs.copy(str(fmri_image_path), str(bids_path) + ".nii.gz")
@@ -485,11 +493,8 @@ def _select_sessions(x: pd.Series) -> Optional[float]:
     return None
 
 
-def _import_event_tsv(bids_path: Path) -> None:
+def _import_event_tsv(bids_path: Path, fs: LocalFileSystem) -> None:
     """Import the csv containing the events' information."""
-    from fsspec.implementations.local import LocalFileSystem
-
-    fs = LocalFileSystem(auto_mkdir=True)
     event_tsv = (
         Path(__file__).parents[2]
         / "resources"
