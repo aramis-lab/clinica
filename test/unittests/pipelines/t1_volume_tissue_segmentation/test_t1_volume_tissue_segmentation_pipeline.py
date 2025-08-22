@@ -27,7 +27,7 @@ def test_t1_volume_tissue_segmentation_info_loading(tmp_path):
         "space_caps": "35M",
         "space_wd": "147M",
         "version": "0.1.0",
-        "dependencies": [{"type": "software", "name": "spm", "version": ">=12"}],
+        "dependencies": [{"type": "software", "name": "spm", "version": ">=25"}],
     }
 
 
@@ -41,7 +41,7 @@ def test_t1_volume_tissue_segmentation_dependencies(tmp_path, mocker):
 
     mocker.patch(
         "clinica.utils.check_dependency._get_spm_version",
-        return_value=Version("12.7219"),
+        return_value=Version("25.7219"),
     )
     caps = build_caps_directory(
         tmp_path / "caps",
@@ -54,7 +54,7 @@ def test_t1_volume_tissue_segmentation_dependencies(tmp_path, mocker):
 
     assert pipeline.dependencies == [
         SoftwareDependency(
-            ThirdPartySoftware.SPM, SpecifierSet(">=12"), Version("12.7219")
+            ThirdPartySoftware.SPM, SpecifierSet(">=25"), Version("25.7219")
         ),
     ]
 
@@ -66,7 +66,7 @@ def test_t1_volume_tissue_segmentation_get_processed_visits_empty(tmp_path, mock
 
     mocker.patch(
         "clinica.utils.check_dependency._get_spm_version",
-        return_value=Version("12.7219"),
+        return_value=Version("25.7219"),
     )
     bids = build_bids_directory(
         tmp_path / "bids", {"sub-01": ["ses-M000", "ses-M006"], "sub-02": ["ses-M000"]}
@@ -119,7 +119,7 @@ def test_t1_volume_tissue_segmentation_get_processed_visits(tmp_path, mocker):
 
     mocker.patch(
         "clinica.utils.check_dependency._get_spm_version",
-        return_value=Version("12.7219"),
+        return_value=Version("25.7219"),
     )
     bids = build_bids_directory(
         tmp_path / "bids",
