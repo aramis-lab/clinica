@@ -9,7 +9,7 @@
         {
             "type": "software",
             "name": "spm",
-            "version": ">=12"
+            "version": ">=25"
         }
     ]
 }
