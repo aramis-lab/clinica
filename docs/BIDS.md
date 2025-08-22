@@ -15,6 +15,7 @@ If you need more details, please check the [documentation](https://bids-specific
 
 ```Text
 BIDS_Dataset/
+├── dataset_description.json
 ├── sub-CLNC01/
 │   │   ├── ses-M000/
 │   │   │   ├── anat/
@@ -62,6 +63,10 @@ BIDS_Dataset/
     - PET files must use tracer entity `trc` (optional in BIDS but necessary for Clinica pipelines) and
     label names follow the proposed convention in BIDS
     (pib -> 11CPIB, av45 -> 18FAV45, fbb -> 18FFBB, fdg -> 18FFDG, flute -> 18FFMM, tau -> 18FAV1451).
+
+
+--8<-- "snippets/dataset_description.md"
+
 
 ## Validation of BIDS datasets
 
