@@ -11,7 +11,8 @@ This document present the specifications of the CAPS format version `1.0.0`.
 | 0.8.x           |         1.7.0          |       no version       |
 
 
---8<-- "snippets/dataset_description.md"
+!!! tip "File _dataset_description.json_"
+    For any question about this file see [this section](../BIDS.md#the-dataset_descriptionjson-file) in our BIDS specifications.
 
 ## Subjects and Groups folders
 
