@@ -3,6 +3,7 @@ import math
 import numpy as np
 import pandas as pd
 import pytest
+from fsspec.implementations.local import LocalFileSystem
 from pandas.testing import assert_frame_equal
 
 
@@ -147,9 +148,6 @@ def test_drop_duplicate_line_with_nans():
 
 
 def test_write_description_and_participants(tmp_path):
-    import pandas as pd
-    from fsspec.implementations.local import LocalFileSystem
-
     from clinica.converters.genfi_to_bids._utils import (
         _write_description_and_participants,
     )
@@ -182,9 +180,6 @@ def test_write_description_and_participants(tmp_path):
 
 
 def test_write_sessions(tmp_path):
-    import pandas as pd
-    from fsspec.implementations.local import LocalFileSystem
-
     from clinica.converters.genfi_to_bids._utils import _write_sessions
 
     participant_id = "sub-C9ORF004"
@@ -222,12 +217,10 @@ def test_write_sessions(tmp_path):
     assert session_ids == {"ses-M000", "ses-M070"}
 
 
-def test_write_scans(tmp_path, monkeypatch):
+def test_write_scans_and_niftis(tmp_path, monkeypatch):
     import subprocess
 
-    import pandas as pd
-
-    from clinica.converters.genfi_to_bids._utils import _write_scans
+    from clinica.converters.genfi_to_bids._utils import _write_scans_and_niftis
 
     # Make dcm2niix succeed without running anything to bypass it
     class FakeCompleted:
@@ -259,7 +252,7 @@ def test_write_scans(tmp_path, monkeypatch):
         ]
     )
 
-    _write_scans(to=tmp_path, source=source, scans=scans)
+    _write_scans_and_niftis(to=tmp_path, source=source, scans=scans)
 
     # Check scans.tsv existing
     tsv_path = (

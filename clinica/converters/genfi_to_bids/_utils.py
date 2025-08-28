@@ -5,7 +5,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 
 import pandas as pd
 import pydicom as pdcm
-from pandas import DataFrame
+from fsspec.implementations.local import LocalFileSystem
 
 from clinica.utils.stream import cprint
 
@@ -36,17 +36,17 @@ def _find_dicoms(path_to_source_data: Path) -> Iterable[Tuple[Path, Path]]:
         yield z, z.parent
 
 
-def _filter_dicoms(df: DataFrame) -> DataFrame:
+def _filter_dicoms(df: pd.DataFrame) -> pd.DataFrame:
     """Filters modalities handled by the converter.
 
     Parameters
     ----------
-    df: DataFrame
+    df: pd.DataFrame
         Dataframe containing all of the dicoms available in the source directory.
 
     Returns
     -------
-    df: DataFrame
+    df: pd.DataFrame
         Dataframe with only the modalities handled.
     """
     to_filter = [
@@ -134,13 +134,13 @@ def _check_file(directory: Path, pattern: str) -> Path:
     return data_file[0]
 
 
-def parse_clinical_data(clinical_data_directory: Path) -> DataFrame:
+def parse_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
     return _complete_clinical_data(*_find_clinical_data(clinical_data_directory))
 
 
 def _find_clinical_data(
     clinical_data_directory: Path,
-) -> tuple[DataFrame, DataFrame, DataFrame, DataFrame, DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Finds the clinical data associated with the dataset.
 
     Parameters
@@ -150,7 +150,7 @@ def _find_clinical_data(
 
     Returns
     -------
-    List[DataFrame]
+    List[pd.DataFrame]
         Dataframes containing the clinical data
     """
     cprint("Looking for clinical data.", lvl="info")
@@ -181,34 +181,34 @@ def _read_file(data_file: Path) -> pd.DataFrame:
 
 
 def _complete_clinical_data(
-    df_demographics: DataFrame,
-    df_imaging: DataFrame,
-    df_clinical: DataFrame,
-    df_biosamples: DataFrame,
-    df_neuropsych: DataFrame,
-) -> DataFrame:
+    df_demographics: pd.DataFrame,
+    df_imaging: pd.DataFrame,
+    df_clinical: pd.DataFrame,
+    df_biosamples: pd.DataFrame,
+    df_neuropsych: pd.DataFrame,
+) -> pd.DataFrame:
     """Merges the different clincal dataframes into one.
 
     Parameters
     ----------
-    df_demographics: DataFrame
+    df_demographics: pd.DataFrame
         Dataframe containing the demographic data
 
-    df_imaging: DataFrame
+    df_imaging: pd.DataFrame
         Dataframe containing the imaging data
 
-    df_clinical: DataFrame
+    df_clinical: pd.DataFrame
         Dataframe containing the clinical data
 
-    df_biosamples: DataFrame
+    df_biosamples: pd.DataFrame
         Dataframe containing the biosample data
 
-    df_neuropsych: DataFrame
+    df_neuropsych: pd.DataFrame
         Dataframe containing the neuropsych data
 
     Returns
     -------
-    df_clinical_complete: DataFrame
+    df_clinical_complete: pd.DataFrame
         Dataframe with the data of the 3 input dataframes
     """
     merge_key = ["blinded_code", "blinded_site", "visit"]
@@ -226,15 +226,15 @@ def _complete_clinical_data(
 
 
 def prepare_dataset_to_bids_format(
-    complete_data_df: DataFrame,
+    complete_data_df: pd.DataFrame,
     gif: bool,
     path_to_clinical_tsv: Path,
-) -> Dict[str, DataFrame]:
+) -> Dict[str, pd.DataFrame]:
     """Selects the data needed to write the participants, sessions, and scans tsvs.
 
     Parameters
     ----------
-    complete_data_df: DataFrame
+    complete_data_df: pd.DataFrame
         Dataframe containing the merged data extracted from the raw images and the clinical data
 
     gif: bool
@@ -245,7 +245,7 @@ def prepare_dataset_to_bids_format(
 
     Returns
     -------
-    Dict[str, DataFrame]
+    Dict[str, pd.DataFrame]
         Dictionary containing as key participants, sessions and scans, and the values wanted for each tsv
     """
     complete_data_df = complete_data_df.drop_duplicates(
@@ -279,22 +279,22 @@ def prepare_dataset_to_bids_format(
 
 
 def merge_imaging_and_clinical_data(
-    imaging_data: DataFrame, clinical_data: DataFrame
-) -> DataFrame:
+    imaging_data: pd.DataFrame, clinical_data: pd.DataFrame
+) -> pd.DataFrame:
     """This function merges the dataframe containing the data extracted
     from the raw images and from the clinical data.
 
     Parameters
     ----------
-    imaging_data : DataFrame
+    imaging_data : pd.DataFrame
         Dataframe containing the data extracted from the raw images
 
-    clinical_data : DataFrame
+    clinical_data : pd.DataFrame
         Dataframe containing the clinical data
 
     Returns
     -------
-    df_complete : DataFrame
+    df_complete : pd.DataFrame
         Dataframe containing the merged data
     """
     df_complete = imaging_data.merge(
@@ -306,11 +306,11 @@ def merge_imaging_and_clinical_data(
     return df_complete.loc[:, ~df_complete.columns.duplicated()]
 
 
-def parse_imaging_data(source_path: Path) -> DataFrame:
+def parse_imaging_data(source_path: Path) -> pd.DataFrame:
     return _merge_imaging_data(_read_imaging_data(source_path))
 
 
-def _read_imaging_data(source_path: Path) -> DataFrame:
+def _read_imaging_data(source_path: Path) -> pd.DataFrame:
     """This function finds the imaging data and filters it.
 
     Parameters
@@ -320,7 +320,7 @@ def _read_imaging_data(source_path: Path) -> DataFrame:
 
     Returns
     -------
-    df_dicom: DataFrame
+    df_dicom: pd.DataFrame
         Dataframe containing the data extracted.
     """
     return _filter_dicoms(
@@ -328,18 +328,18 @@ def _read_imaging_data(source_path: Path) -> DataFrame:
     )
 
 
-def _merge_imaging_data(df: DataFrame) -> DataFrame:
+def _merge_imaging_data(df: pd.DataFrame) -> pd.DataFrame:
     """This function uses the raw information extracted from the images,
     to obtain all the information necessary for the BIDS conversion.
 
     Parameters
     ----------
-    df: DataFrame
+    df: pd.DataFrame
         Dataframe containing the data extracted from the images
 
     Returns
     -------
-    DataFrame :
+    pd.DataFrame :
         Dataframe with the data necessary for the BIDS
     """
     df = _compute_source_id_and_source_ses_id(df).reset_index()
@@ -354,7 +354,7 @@ def _merge_imaging_data(df: DataFrame) -> DataFrame:
     return df
 
 
-def _compute_source_id_and_source_ses_id(df: DataFrame) -> DataFrame:
+def _compute_source_id_and_source_ses_id(df: pd.DataFrame) -> pd.DataFrame:
     """Adds two columns built from the column 'source'.
 
     - 'source': subject ID and session ID joined by a dash
@@ -379,7 +379,7 @@ def _compute_source_id_and_source_ses_id(df: DataFrame) -> DataFrame:
     )
 
 
-def _compute_genfi_version(df: DataFrame) -> DataFrame:
+def _compute_genfi_version(df: pd.DataFrame) -> pd.DataFrame:
     """Compute the genfi_version from the souce_ses_id column.
 
     The column `source_ses_id` is casted to integer values.
@@ -390,7 +390,7 @@ def _compute_genfi_version(df: DataFrame) -> DataFrame:
     )
 
 
-def _compute_baseline_and_session_numbers(df: DataFrame) -> DataFrame:
+def _compute_baseline_and_session_numbers(df: pd.DataFrame) -> pd.DataFrame:
     """Compute the baseline date and session numbers
     and merge on 'source_id` and `source_ses_id`.
     """
@@ -403,17 +403,17 @@ def _compute_baseline_and_session_numbers(df: DataFrame) -> DataFrame:
     )
 
 
-def _compute_baseline_date(df: DataFrame) -> DataFrame:
+def _compute_baseline_date(df: pd.DataFrame) -> pd.DataFrame:
     """Computes the baseline date by taking the minimum
     acq_date for each subject.
 
     Parameters
     ----------
-    df: Dataframe
+    df: pd.Dataframe
 
     Returns
     -------
-    Dataframe
+    pd.Dataframe
         Contains the baseline date.
     """
     df_1 = (
@@ -425,18 +425,18 @@ def _compute_baseline_date(df: DataFrame) -> DataFrame:
     return df_1.join(df_2.rename(columns={"acq_date": "baseline"}))
 
 
-def _compute_session_numbers(df: DataFrame) -> DataFrame:
+def _compute_session_numbers(df: pd.DataFrame) -> pd.DataFrame:
     """Computes the session IDs obtained from the number of months between
     an acquisition and the baseline acquisition.
 
     Parameters
     ----------
-    df: DataFrame
+    df: pd.DataFrame
         Dataframe containing the timestamp of the acquisition.
 
     Returns
     -------
-    DataFrame
+    pd.DataFrame
         Dataframe containing the session_id computed from the timestamps.
     """
     from datetime import datetime
@@ -451,7 +451,7 @@ def _compute_session_numbers(df: DataFrame) -> DataFrame:
     )
 
 
-def _compute_participant_id(df: DataFrame) -> DataFrame:
+def _compute_participant_id(df: pd.DataFrame) -> pd.DataFrame:
     """Compute the 'participant_id' column from the 'source_id' column."""
     from clinica.converters.study_models import StudyName, bids_id_factory
 
@@ -462,18 +462,18 @@ def _compute_participant_id(df: DataFrame) -> DataFrame:
     )
 
 
-def _compute_modality(df: DataFrame) -> DataFrame:
+def _compute_modality(df: pd.DataFrame) -> pd.DataFrame:
     """Parses the series_desc column to identify the modality, and map
     this modality to a metadata dictionary.
 
     Parameters
     ----------
-    df: Dataframe
+    df: pd.Dataframe
         DataFrame on which to compute the modality.
 
     Returns
     -------
-    Dataframe
+    pd.Dataframe
         Contains the datatype, suffix, sidecars and task that may be
         needed to form the complete file name.
     """
@@ -525,7 +525,7 @@ def _compute_modality(df: DataFrame) -> DataFrame:
     return df.join(df.modality.map(modality_mapping).apply(pd.Series))
 
 
-def _compute_fieldmaps(df: DataFrame) -> DataFrame:
+def _compute_fieldmaps(df: pd.DataFrame) -> pd.DataFrame:
     """Compute the fieldmaps. Please add details...
     For example, why do we need to compute the dir_num before and after ?
     """
@@ -540,17 +540,17 @@ def _compute_fieldmaps(df: DataFrame) -> DataFrame:
     return df_suf
 
 
-def _identify_fieldmaps(df: DataFrame) -> DataFrame:
+def _identify_fieldmaps(df: pd.DataFrame) -> pd.DataFrame:
     """Identifies the fieldmaps imaging type: magnitude or phase difference.
 
     Parameters
     ----------
-    df:Dataframe
+    df: pd.Dataframe
         Dataframe without the fieldmaps identified.
 
     Returns
     -------
-    Dataframe
+    pd.Dataframe
         Dataframe with the fieldmaps identified
     """
     column_filter = ["source_id", "source_ses_id", "modality", "dir_num", "suffix"]
@@ -573,20 +573,20 @@ def _identify_fieldmaps(df: DataFrame) -> DataFrame:
     )
 
 
-def _merge_fieldmaps(df: DataFrame, df_fmap: DataFrame) -> DataFrame:
+def _merge_fieldmaps(df: pd.DataFrame, df_fmap: pd.DataFrame) -> pd.DataFrame:
     """Merges the dataframe containing the fieldmaps names
 
     Parameters
     ----------
-    df: Dataframe
+    df: pd.Dataframe
         Initial dataframe. Fieldmaps are identified on information extracted here.
 
-    df_fmap: Dataframe
+    df_fmap: pd.Dataframe
         Dataframe in which fieldmaps are identified.
 
     Returns
     -------
-    Dataframe
+    pd.Dataframe
         Dataframe containing the correct fieldmap for each fieldmap acquisition.
     """
     column_filter = ["source_id", "source_ses_id", "modality", "dir_num", "fmap"]
@@ -597,7 +597,7 @@ def _merge_fieldmaps(df: DataFrame, df_fmap: DataFrame) -> DataFrame:
     return pd.concat([df2, df1], ignore_index=True)
 
 
-def _compute_runs(df: DataFrame) -> DataFrame:
+def _compute_runs(df: pd.DataFrame) -> pd.DataFrame:
     """Compute the run numbers."""
     df_with_number_of_parts = _compute_number_of_scan_parts(df)
     df_with_run_numbers = _compute_run_numbers_from_parts(df_with_number_of_parts)
@@ -617,7 +617,7 @@ def _compute_runs(df: DataFrame) -> DataFrame:
     )
 
 
-def _compute_number_of_scan_parts(df: DataFrame) -> DataFrame:
+def _compute_number_of_scan_parts(df: pd.DataFrame) -> pd.DataFrame:
     """Compute the number of parts. Explain me please..."""
     df_alt = _compute_philips_parts(df)
     df_parts = df.merge(
@@ -629,7 +629,7 @@ def _compute_number_of_scan_parts(df: DataFrame) -> DataFrame:
     return df_parts
 
 
-def _compute_philips_parts(df: DataFrame) -> DataFrame:
+def _compute_philips_parts(df: pd.DataFrame) -> pd.DataFrame:
     """Compute the parts numbers for philips dwi acquisitions.
 
     The amount of dwi acquisitions linked together is indicated.
@@ -641,12 +641,12 @@ def _compute_philips_parts(df: DataFrame) -> DataFrame:
 
     Parameters
     ----------
-    df: DataFrame
+    df: pd.DataFrame
         Dataframe without runs.
 
     Returns
     -------
-    DataFrame
+    pd.DataFrame
         Dataframe containing the correct dwi part number for each acquisition. It also contains
         the total amount of dwi parts for each subjects-session.
     """
@@ -658,7 +658,7 @@ def _compute_philips_parts(df: DataFrame) -> DataFrame:
     )
 
 
-def _find_duplicate_run(df: DataFrame) -> DataFrame:
+def _find_duplicate_run(df: pd.DataFrame) -> pd.DataFrame:
     """Create a column that contains the information of whether a run is a duplicate or not."""
     column_filter = ["source_id", "source_ses_id", "suffix", "dir_num"]
     df = df[df["suffix"].str.contains("dwi", case=False)]
@@ -668,7 +668,7 @@ def _find_duplicate_run(df: DataFrame) -> DataFrame:
     return df1.reset_index().assign(run=lambda x: (x.part_01_dir_num != x.dir_num))
 
 
-def _compute_part_numbers(df: DataFrame) -> DataFrame:
+def _compute_part_numbers(df: pd.DataFrame) -> pd.DataFrame:
     """Compute the sequence number of each part."""
     return pd.concat(
         [
@@ -681,7 +681,7 @@ def _compute_part_numbers(df: DataFrame) -> DataFrame:
     )
 
 
-def _compute_number_of_parts(df: pd.DataFrame) -> DataFrame:
+def _compute_number_of_parts(df: pd.DataFrame) -> pd.DataFrame:
     """Add the number of parts (the max value of the part_number column) to each part."""
     column_filter = ["source_id", "source_ses_id", "suffix", "part_number"]
     df_parts_1 = df[column_filter].groupby(column_filter).max()
@@ -691,17 +691,17 @@ def _compute_number_of_parts(df: pd.DataFrame) -> DataFrame:
     ).reset_index()
 
 
-def _compute_run_numbers_from_parts(df: DataFrame) -> DataFrame:
+def _compute_run_numbers_from_parts(df: pd.DataFrame) -> pd.DataFrame:
     """This functions computes the run numbers.
 
     Parameters
     ----------
-    df: DataFrame
+    df: pd.DataFrame
         Dataframe without runs.
 
     Returns
     -------
-    DataFrame
+    pd.DataFrame
         Dataframe containing the correct run for each acquisition.
     """
     column_filter = [
@@ -761,7 +761,7 @@ def _compute_scan_sequence_numbers(duplicate_flags: Iterable[bool]) -> List[int]
     return ses_numbers
 
 
-def _compute_bids_full_path(df: DataFrame) -> DataFrame:
+def _compute_bids_full_path(df: pd.DataFrame) -> pd.DataFrame:
     """Compute the BIDS full path."""
     df_with_bids_filename = df.assign(
         bids_filename=lambda x: x[
@@ -824,7 +824,9 @@ def _drop_duplicate_line_with_nans(participants: pd.DataFrame) -> pd.DataFrame:
     return participants
 
 
-def _write_description_and_participants(to, fs, participants):
+def _write_description_and_participants(
+    to: Path, fs: LocalFileSystem, participants: pd.DataFrame
+):
     """This function writes the dataset_description.json and participants.tsv files of the BIDS architecture.
 
     Parameters
@@ -835,7 +837,7 @@ def _write_description_and_participants(to, fs, participants):
     fs: LocalFileSystem
         The local filesystem handler
 
-    participants: DataFrame
+    participants: pd.DataFrame
         DataFrame containing the data for the participants.tsv
     """
     from clinica.converters._utils import write_to_tsv
@@ -857,7 +859,7 @@ def _write_description_and_participants(to, fs, participants):
             write_to_tsv(participants, participant_file)
 
 
-def _write_sessions(to, fs, sessions):
+def _write_sessions(to: Path, fs: LocalFileSystem, sessions: pd.DataFrame):
     """This function writes the session.tsv files of the BIDS architecture.
 
     Parameters
@@ -868,7 +870,7 @@ def _write_sessions(to, fs, sessions):
     fs: LocalFileSystem
         The local filesystem handler
 
-    sessions: DataFrame
+    sessions: pd.DataFrame
         DataFrame containing the data for the sessions.tsv
     """
     from clinica.converters._utils import write_to_tsv
@@ -883,8 +885,8 @@ def _write_sessions(to, fs, sessions):
             write_to_tsv(sessions, sessions_file)
 
 
-def _write_scans(to, source, scans):
-    """This function writes the scans.tsv files of the BIDS architecture.
+def _write_scans_and_niftis(to: Path, source: Path, scans: pd.DataFrame):
+    """This function writes the scans.tsv files of the BIDS architecture and converts the DICOM files to NIfTI.
 
     Parameters
     ----------
@@ -894,7 +896,7 @@ def _write_scans(to, source, scans):
     source : Path
         Path to the source imaging data
 
-    scans: DataFrame
+    scans: pd.DataFrame
         DataFrame containing the data for the scans.tsv
     """
     import os
@@ -940,32 +942,30 @@ def _write_scans(to, source, scans):
 
 def write_bids(
     to: Path,
-    participants: DataFrame,
-    sessions: DataFrame,
-    scans: DataFrame,
+    participants: pd.DataFrame,
+    sessions: pd.DataFrame,
+    scans: pd.DataFrame,
     source: Path,
 ) -> None:
-    """This function writes the BIDS
+    """This function writes the BIDS folder with both images and metadata files.
 
     Parameters
     ----------
     to: Path
         The path where the BIDS should be written
 
-    participants: DataFrame
+    participants: pd.DataFrame
         DataFrame containing the data for the participants.tsv
 
-    sessions: DataFrame
+    sessions: pd.DataFrame
         DataFrame containing the data for the sessions.tsv
 
-    scans: DataFrame
+    scans: pd.DataFrame
         DataFrame containing the data for the scans.tsv
 
     source : Path
         Path to the source imaging data
     """
-    import pandas as pd
-    from fsspec.implementations.local import LocalFileSystem
 
     cprint("Starting to write the BIDS.", lvl="info")
     fs = LocalFileSystem(auto_mkdir=True)
@@ -975,7 +975,7 @@ def write_bids(
 
     _write_sessions(to, fs, sessions)
 
-    _write_scans(to, source, scans)
+    _write_scans_and_niftis(to, source, scans)
 
     _correct_fieldmaps_name(to)
     _delete_real_and_imaginary_files(to)
