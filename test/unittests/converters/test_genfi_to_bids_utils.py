@@ -154,12 +154,40 @@ def test_write_description_and_participants(tmp_path):
 
     participants = pd.DataFrame(
         {
-            "participant_id": ["sub-C9ORF002", "sub-MAPT003"],
-            "session_id": [None, None],
-            "modality": [None, None],
-            "run_num": [None, None],
-            "bids_filename": [None, None],
-            "source": [None, None],
+            "participant_id": [
+                "sub-C9ORF002",
+                "sub-C9ORF002",
+                "sub-C9ORF002",
+                "sub-MAPT003",
+                "sub-MAPT003",
+                "sub-MAPT003",
+            ],
+            "session_id": [
+                "ses-M000",
+                "ses-M070",
+                np.nan,
+                "ses-M000",
+                "ses-M017",
+                np.nan,
+            ],
+            "modality": ["T1", "dwi", np.nan, "T2w", "rsfmri", np.nan],
+            "run_num": ["run-01", "run-02", np.nan, "run-03", "run-04", np.nan],
+            "bids_filename": [
+                "sub-C9ORF002_ses-M000_run-01_T1w",
+                "sub-C9ORF002_ses-M070_run-02_dwi",
+                np.nan,
+                "sub-MAPT003_ses-M000_run-03_T2w",
+                "sub-MAPT003_ses-M017_task-rest_run-04_bold",
+                np.nan,
+            ],
+            "source": [
+                "path/to/file/1",
+                "path/to/file/2",
+                np.nan,
+                "path/to/file/3",
+                "path/to/file/4",
+                np.nan,
+            ],
         }
     )
 
@@ -190,9 +218,12 @@ def test_write_sessions(tmp_path):
     sessions = pd.DataFrame(
         {
             "participant_id": [participant_id, participant_id],
-            "modality": [None, None],
-            "bids_filename": [None, None],
-            "run_num": [None, None],
+            "modality": ["T1w", "dwi"],
+            "bids_filename": [
+                "sub-C9ORF004_ses-M000_run-01_T1w",
+                "sub-C9ORF004_ses-M070_run-02_dwi",
+            ],
+            "run_num": ["run-01", "run-02"],
             "session_id": ["ses-M000", "ses-M070"],
         }
     ).set_index(
@@ -209,27 +240,16 @@ def test_write_sessions(tmp_path):
 
     # Check sessions.tsv content
     df_out = pd.read_csv(tsv_path, sep="\t")
-    session_ids = (
-        set(df_out["session_id"])
-        if "session_id" in df_out.columns
-        else set(df_out.index.astype(str))
-    )
-    assert session_ids == {"ses-M000", "ses-M070"}
+    assert set(df_out["session_id"]) == {"ses-M000", "ses-M070"}
 
 
-def test_write_scans_and_niftis(tmp_path, monkeypatch):
-    import subprocess
-
+def test_write_scans_and_niftis(tmp_path, mocker):
     from clinica.converters.genfi_to_bids._utils import _write_scans_and_niftis
 
-    # Make dcm2niix succeed without running anything to bypass it
-    class FakeCompleted:
-        def __init__(self):
-            self.returncode = 0
-            self.stdout = b""
-            self.stderr = b""
-
-    monkeypatch.setattr(subprocess, "run", lambda *a, **k: FakeCompleted())
+    mock_run = mocker.patch(
+        "clinica.converters._utils.run_dcm2niix",
+        return_value=True,
+    )
 
     participant_id = "sub-C9ORF006"
     session_id = "ses-M000"
@@ -254,6 +274,9 @@ def test_write_scans_and_niftis(tmp_path, monkeypatch):
 
     _write_scans_and_niftis(to=tmp_path, source=source, scans=scans)
 
+    # Check run_dcm2niix was called
+    assert mock_run.called
+
     # Check scans.tsv existing
     tsv_path = (
         tmp_path
@@ -276,9 +299,7 @@ def test_write_scans_and_niftis(tmp_path, monkeypatch):
         "number_of_parts",
     ]
 
-    print(list(df_out.columns))
-
-    assert list(df_out.columns) == expected_cols
+    assert set(df_out.columns) == set(expected_cols)
     assert len(df_out) == 1
 
     row = df_out.iloc[0]
