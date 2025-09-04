@@ -3,6 +3,7 @@ import math
 import numpy as np
 import pandas as pd
 import pytest
+from fsspec.implementations.local import LocalFileSystem
 from pandas.testing import assert_frame_equal
 
 
@@ -144,3 +145,168 @@ def test_drop_duplicate_line_with_nans():
             }
         ),
     )
+
+
+def test_write_description_and_participants(tmp_path):
+    from clinica.converters.genfi_to_bids._utils import (
+        _write_description_and_participants,
+    )
+
+    participants = pd.DataFrame(
+        {
+            "participant_id": [
+                "sub-C9ORF002",
+                "sub-C9ORF002",
+                "sub-C9ORF002",
+                "sub-MAPT003",
+                "sub-MAPT003",
+                "sub-MAPT003",
+            ],
+            "session_id": [
+                "ses-M000",
+                "ses-M070",
+                np.nan,
+                "ses-M000",
+                "ses-M017",
+                np.nan,
+            ],
+            "modality": ["T1", "dwi", np.nan, "T2w", "rsfmri", np.nan],
+            "run_num": ["run-01", "run-02", np.nan, "run-03", "run-04", np.nan],
+            "bids_filename": [
+                "sub-C9ORF002_ses-M000_run-01_T1w",
+                "sub-C9ORF002_ses-M070_run-02_dwi",
+                np.nan,
+                "sub-MAPT003_ses-M000_run-03_T2w",
+                "sub-MAPT003_ses-M017_task-rest_run-04_bold",
+                np.nan,
+            ],
+            "source": [
+                "path/to/file/1",
+                "path/to/file/2",
+                np.nan,
+                "path/to/file/3",
+                "path/to/file/4",
+                np.nan,
+            ],
+        }
+    )
+
+    fs = LocalFileSystem(auto_mkdir=True)
+
+    _write_description_and_participants(to=tmp_path, fs=fs, participants=participants)
+
+    # Check files existing
+    desc_file = tmp_path / "dataset_description.json"
+    tsv_file = tmp_path / "participants.tsv"
+    assert desc_file.exists()
+    assert tsv_file.exists()
+
+    # Check participants.tsv content
+    df_out = pd.read_csv(tsv_file, sep="\t")
+    assert "participant_id" in df_out.columns
+    assert set(df_out["participant_id"]) == {"sub-C9ORF002", "sub-MAPT003"}
+
+
+def test_write_sessions(tmp_path):
+    from clinica.converters.genfi_to_bids._utils import _write_sessions
+
+    participant_id = "sub-C9ORF004"
+
+    (tmp_path / participant_id / "ses-M000").mkdir(parents=True)
+    (tmp_path / participant_id / "ses-M070").mkdir(parents=True)
+
+    sessions = pd.DataFrame(
+        {
+            "participant_id": [participant_id, participant_id],
+            "modality": ["T1w", "dwi"],
+            "bids_filename": [
+                "sub-C9ORF004_ses-M000_run-01_T1w",
+                "sub-C9ORF004_ses-M070_run-02_dwi",
+            ],
+            "run_num": ["run-01", "run-02"],
+            "session_id": ["ses-M000", "ses-M070"],
+        }
+    ).set_index(
+        ["participant_id", "modality", "bids_filename", "run_num", "session_id"]
+    )
+
+    fs = LocalFileSystem(auto_mkdir=True)
+
+    _write_sessions(to=tmp_path, fs=fs, sessions=sessions)
+
+    # Check files existing
+    tsv_path = tmp_path / participant_id / f"{participant_id}_sessions.tsv"
+    assert tsv_path.exists()
+
+    # Check sessions.tsv content
+    df_out = pd.read_csv(tsv_path, sep="\t")
+    assert set(df_out["session_id"]) == {"ses-M000", "ses-M070"}
+
+
+def test_write_scans_and_niftis(tmp_path, mocker):
+    from clinica.converters.genfi_to_bids._utils import _write_scans_and_niftis
+
+    mock_run = mocker.patch(
+        "clinica.converters._utils.run_dcm2niix",
+        return_value=True,
+    )
+
+    participant_id = "sub-C9ORF006"
+    session_id = "ses-M000"
+    source = tmp_path / "source"
+    source.mkdir()
+
+    scans = pd.DataFrame(
+        [
+            {
+                "participant_id": participant_id,
+                "session_id": session_id,
+                "bids_full_path": f"{participant_id}/{session_id}/anat/{participant_id}_{session_id}_run-01_T1w.nii.gz",
+                "bids_filename": f"{participant_id}_{session_id}_run-01_T1w",
+                "modality": "T1",
+                "run_num": "run-01",
+                "source_path": source / "file.dcm",
+                "manufacturer": "SIEMENS",
+                "number_of_parts": 1,
+            }
+        ]
+    )
+
+    _write_scans_and_niftis(to=tmp_path, source=source, scans=scans)
+
+    # Check run_dcm2niix was called
+    assert mock_run.called
+
+    # Check scans.tsv existing
+    tsv_path = (
+        tmp_path
+        / participant_id
+        / session_id
+        / f"{participant_id}_{session_id}_scans.tsv"
+    )
+    assert tsv_path.exists()
+
+    # Check scans.tsv content
+    df_out = pd.read_csv(tsv_path, sep="\t")
+
+    expected_cols = [
+        "index",
+        "filename",
+        "modality",
+        "run_num",
+        "source_path",
+        "manufacturer",
+        "number_of_parts",
+    ]
+
+    assert set(df_out.columns) == set(expected_cols)
+    assert len(df_out) == 1
+
+    row = df_out.iloc[0]
+
+    assert row["modality"] == "T1"
+    assert row["run_num"] == "run-01"
+    assert row["filename"] == f"{participant_id}_{session_id}_run-01_T1w"
+    assert not str(row["source_path"]).startswith(str(source))
+    assert row["manufacturer"] == "SIEMENS"
+    assert row["number_of_parts"] == 1
