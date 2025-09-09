@@ -36,6 +36,7 @@ def run_workflows_ml(
 ) -> None:
     import warnings
 
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.machine_learning.ml_workflows import (
         RegionBasedRepHoldOutLogisticRegression,
         RegionBasedRepHoldOutRandomForest,
@@ -43,6 +44,8 @@ def run_workflows_ml(
         VoxelBasedKFoldDualSVM,
     )
     from clinica.utils.pet import SUVRReferenceRegion, Tracer
+
+    setup_logging(True)
 
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     warnings.filterwarnings("ignore", category=UserWarning)
@@ -140,9 +143,12 @@ def run_spatial_svm(
     import nibabel as nib
     from numpy.testing import assert_allclose
 
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import (
         SpatialSVM,
     )
+
+    setup_logging(True)
 
     caps_dir = output_dir / "caps"
     tsv = input_dir / "subjects.tsv"

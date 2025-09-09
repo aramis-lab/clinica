@@ -20,9 +20,12 @@ def test_t1_volume_tissue_segmentation(cmdopt, tmp_path):
 def run_t1_volume_tissue_segmentation(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import (
         T1VolumeTissueSegmentation,
     )
+
+    setup_logging(True)
 
     pipeline = T1VolumeTissueSegmentation(
         bids_directory=fspath(input_dir / "bids"),
@@ -75,9 +78,12 @@ def test_t1_volume_create_dartel(cmdopt, tmp_path):
 def run_t1_volume_create_dartel(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import (
         T1VolumeCreateDartel,
     )
+
+    setup_logging(True)
 
     shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
@@ -151,9 +157,12 @@ def test_t1_volume_dartel_to_mni(cmdopt, tmp_path):
 def run_t1_volume_dartel_to_mni(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_pipeline import (
         T1VolumeDartel2MNI,
     )
+
+    setup_logging(True)
 
     shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
@@ -211,9 +220,12 @@ def test_t1_volume_register_dartel(cmdopt, tmp_path):
 def run_t1_volume_register_dartel(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_pipeline import (
         T1VolumeRegisterDartel,
     )
+
+    setup_logging(True)
 
     shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 
@@ -272,9 +284,12 @@ def test_t1_volume_parcellation(cmdopt, tmp_path):
 def run_t1_volume_parcellation(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import (
         T1VolumeParcellation,
     )
+
+    setup_logging(True)
 
     shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 

@@ -76,7 +76,10 @@ def run_statistics_surface(
     import numpy as np
     from scipy.io import loadmat
 
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.statistics_surface.pipeline import StatisticsSurface
+
+    setup_logging(True)
 
     caps_dir = output_dir / "caps"
     tsv = input_dir / "subjects.tsv"
@@ -143,10 +146,13 @@ def run_statistics_volume_pet(
     import nibabel as nib
     import numpy as np
 
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import (
         StatisticsVolume,
     )
     from clinica.utils.pet import SUVRReferenceRegion, Tracer
+
+    setup_logging(True)
 
     caps_dir = output_dir / "caps"
     tsv = input_dir / "group-UnitTest_covariates.tsv"
@@ -204,9 +210,12 @@ def run_statistics_volume_t1(
     import nibabel as nib
     import numpy as np
 
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import (
         StatisticsVolume,
     )
+
+    setup_logging(True)
 
     caps_dir = output_dir / "caps"
     tsv = input_dir / "group-UnitTest_covariates.tsv"
@@ -255,9 +264,12 @@ def run_statistics_volume_correction(
 ) -> None:
     import shutil
 
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_pipeline import (
         StatisticsVolumeCorrection,
     )
+
+    setup_logging(True)
 
     caps_dir = output_dir / "caps"
 

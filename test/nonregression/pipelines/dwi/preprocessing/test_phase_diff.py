@@ -36,10 +36,13 @@ def test_dwi_compute_reference_b0(cmdopt, tmp_path):
         - The reference B0 volume
         - The brain mask computed on the B0 volume
     """
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.dwi.preprocessing.fmap.workflows import compute_reference_b0
     from clinica.pipelines.dwi.preprocessing.utils import (
         get_readout_time_and_phase_encoding_direction,
     )
+
+    setup_logging(True)
 
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(

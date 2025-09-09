@@ -13,7 +13,10 @@ from numpy.testing import assert_array_almost_equal
 
 @pytest.mark.fast
 def test_dwi_b0_flirt(cmdopt, tmp_path):
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.dwi.preprocessing.t1.workflows import b0_flirt_pipeline
+
+    setup_logging(True)
 
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIB0Flirt")
@@ -37,7 +40,10 @@ def test_dwi_b0_flirt(cmdopt, tmp_path):
 
 @pytest.mark.slow
 def test_dwi_epi_pipeline(cmdopt, tmp_path):
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.dwi.preprocessing.t1.workflows import epi_pipeline
+
+    setup_logging(True)
 
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIEPIPipeline")
@@ -79,9 +85,12 @@ def test_dwi_epi_pipeline(cmdopt, tmp_path):
 
 @pytest.mark.slow
 def test_dwi_perform_ants_registration(cmdopt, tmp_path):
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.dwi.preprocessing.t1.workflows import (
         perform_ants_registration,
     )
+
+    setup_logging(True)
 
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(
@@ -136,9 +145,12 @@ def test_dwi_perform_ants_registration(cmdopt, tmp_path):
 
 @pytest.mark.slow
 def test_dwi_perform_dwi_epi_correction(cmdopt, tmp_path):
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.dwi.preprocessing.t1.workflows import (
         perform_dwi_epi_correction,
     )
+
+    setup_logging(True)
 
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(
@@ -176,7 +188,10 @@ def test_dwi_perform_dwi_epi_correction(cmdopt, tmp_path):
 
 @pytest.mark.slow
 def test_dwi_eddy_fsl(cmdopt, tmp_path):
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.dwi.preprocessing.workflows import eddy_fsl_pipeline
+
+    setup_logging(True)
 
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "DWIEddyFSL")
@@ -232,9 +247,12 @@ def test_dwi_preprocessing_using_t1(cmdopt, tmp_path):
 def run_dwi_preprocessing_using_t1(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
+    from clinica.cmdline import setup_logging
     from clinica.pipelines.dwi.preprocessing.t1.pipeline import (
         DwiPreprocessingUsingT1,
     )
+
+    setup_logging(True)
 
     caps_dir = output_dir / "caps"
     parameters = {
