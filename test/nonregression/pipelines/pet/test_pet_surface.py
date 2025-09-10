@@ -22,10 +22,7 @@ def test_pet_surface(cmdopt, tmp_path):
 def run_pet_surface(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
-    from clinica.cmdline import setup_logging
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
-
-    setup_logging(True)
 
     shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 

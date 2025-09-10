@@ -16,10 +16,7 @@ def test_pet_linear(cmdopt, tmp_path):
 def run_pet_linear(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
-    from clinica.cmdline import setup_logging
     from clinica.pipelines.pet.linear.pipeline import PETLinear
-
-    setup_logging(True)
 
     shutil.copytree(input_dir / "caps", output_dir / "caps", copy_function=shutil.copy)
 

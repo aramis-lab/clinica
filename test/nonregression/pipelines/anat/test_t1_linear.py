@@ -33,10 +33,7 @@ def run_t1_linear(
     working_dir: Path,
     antspy: bool = False,
 ) -> None:
-    from clinica.cmdline import setup_logging
     from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
-
-    setup_logging(True)
 
     out_caps = output_dir / "caps"
     ref_caps = ref_dir / "caps"
@@ -58,10 +55,7 @@ def run_t1_linear(
 def run_flair_linear(
     input_dir: Path, output_dir: Path, ref_dir: Path, working_dir: Path
 ) -> None:
-    from clinica.cmdline import setup_logging
     from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
-
-    setup_logging(True)
 
     out_caps = output_dir / "caps"
     ref_caps = ref_dir / "caps"
