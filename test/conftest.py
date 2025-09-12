@@ -8,6 +8,19 @@
 import pytest
 
 
+def pytest_configure(config):
+    """
+    Allows plugins and conftest files to perform initial configuration.
+    This hook is called for every plugin and initial conftest
+    file after command line options have been parsed.
+
+    Here the same level of logging as clinica --verbose is used to allow for nipype debug set-up.
+    """
+    from clinica.cmdline import setup_logging
+
+    setup_logging(True)
+
+
 def pytest_addoption(parser):
     parser.addoption(
         "--input_data_directory",
