@@ -4,7 +4,7 @@
 The outputs of the Clinica pipelines are stored following a specific structure called **CAPS** (ClinicA Processed Structure), which is inspired from the [BIDS](../BIDS.md) structure and the upcoming BIDS Derivatives.
 The CAPS specifications are described in detail [here](./Specifications.md).
 Similar to the BIDS specifications, the CAPS specifications are versioned such that it can evolve in time.
-The version of the CAPS specifications is indicated in a `dataset_description.json` file, located at the root of the CAPS folder.
+The version of the CAPS specifications is indicated in a `dataset_description.json` file, located at the root of the CAPS folder and described in our CAPS specifications.
 This file is similar to the `dataset_description.json` file of the BIDS specifications and provides other metadata on the dataset.
 
 ## Motivation
