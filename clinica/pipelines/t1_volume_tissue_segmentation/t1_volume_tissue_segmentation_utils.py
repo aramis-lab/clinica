@@ -7,11 +7,10 @@ import numpy as np
 from nipype.interfaces.base import (
     File,
     InputMultiPath,
-    OutputMultiPath,
-    TraitedSpec,
     traits,
 )
-from nipype.interfaces.spm.base import SPMCommand, SPMCommandInputSpec
+from nipype.interfaces.spm.base import SPMCommandInputSpec
+from nipype.interfaces.spm.preprocess import ApplyDeformations
 from nipype.utils.filemanip import filename_to_list, list_to_filename
 
 
@@ -129,11 +128,7 @@ class ApplySegmentationDeformationInput(SPMCommandInputSpec):
     )
 
 
-class ApplySegmentationDeformationOutput(TraitedSpec):
-    out_files = OutputMultiPath(File(exists=True), desc="Transformed files")
-
-
-class ApplySegmentationDeformation(SPMCommand):
+class ApplySegmentationDeformation(ApplyDeformations):
     """Uses SPM to apply a deformation field obtained from Segmentation routine to a given file
 
     Examples
@@ -147,10 +142,6 @@ class ApplySegmentationDeformation(SPMCommand):
     """
 
     input_spec = ApplySegmentationDeformationInput
-    output_spec = ApplySegmentationDeformationOutput
-
-    _jobtype = "util"
-    _jobname = "defs"
 
     def _format_arg(self, opt, spec, val):
         """Convert input to appropriate format for spm"""
@@ -159,11 +150,3 @@ class ApplySegmentationDeformation(SPMCommand):
         if opt == "in_files":
             return np.array(filename_to_list(val), dtype=object)
         return val
-
-    def _list_outputs(self):
-        outputs = self._outputs().get()
-        outputs["out_files"] = []
-        for filename in self.inputs.in_files:
-            _, fname = os.path.split(filename)
-            outputs["out_files"].append(os.path.realpath("w%s" % fname))
-        return outputs
