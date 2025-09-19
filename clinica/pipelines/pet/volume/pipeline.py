@@ -624,7 +624,7 @@ class PETVolume(GroupPipeline, PETPipeline):
                 function=compute_atlas_statistics_task,
             ),
             name="atlas_stats_node",
-            iterfield=["in_image"],
+            iterfield=["image"],
         )
         atlas_stats_node.inputs.atlas_names = self.parameters["atlases"]
 
@@ -795,7 +795,7 @@ class PETVolume(GroupPipeline, PETPipeline):
                     function=compute_atlas_statistics_task,
                 ),
                 name="atlas_stats_pvc",
-                iterfield=["in_image"],
+                iterfield=["image"],
             )
             atlas_stats_pvc.inputs.in_atlas_names = self.parameters["atlases"]
 
