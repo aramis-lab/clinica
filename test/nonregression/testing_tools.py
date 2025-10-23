@@ -24,67 +24,18 @@ def configure_paths(
     return input_dir, tmp_out_dir, ref_dir
 
 
-def likeliness_measure(
-    file1: PathLike,
-    file2: PathLike,
-    threshold1: tuple,
-    threshold2: tuple,
-    display: bool = False,
+def nrmse_measure(
+    image1: Path,
+    image2: Path,
+    threshold: float = 0.05,
 ) -> bool:
-    """Compares 2 Nifti inputs, with 2 different thresholds.
+    import nibabel
+    from skimage.metrics import normalized_root_mse as nrmse
 
-    Parameters
-    ----------
-    file1: Path to first nifti input
-    file2: Path to second nifti to compare
-    threshold1: Defines the first criteria to meet: threshold1[0] defines the relative
-        difference between 2 voxels to be considered different (ex: 1e-4). threshold[1] defines
-        the maximum proportion of voxels that can different for the test to be negative.
-    threshold2: Defines the second criteria to meet.
-    display: If set to True, will display a useful graph to determine optimal threshold for the
-        comparison.
+    image1 = nibabel.load(image1).get_fdata()
+    image2 = nibabel.load(image2).get_fdata()
 
-    Returns
-    -------
-    bool
-        True if file1 and file2 can be considered similar enough (meeting criterion expressed in threshold1
-        and threshold2). False otherwise.
-    """
-    import matplotlib.pyplot as plt
-    import nibabel as nib
-
-    print(" ** comparing " + os.path.basename(file1) + " **")
-    data1 = nib.load(str(file1)).get_fdata(dtype="float32")
-    data1[np.isnan(data1)] = 0
-
-    data2 = nib.load(str(file2)).get_fdata(dtype="float32")
-    data2[np.isnan(data2)] = 0
-
-    # Get mask where data are 0 in data1 and data2
-    mask = (data1 == 0) & (data2 == 0)
-    data1[mask] = 1
-    data2[mask] = 1
-    metric = (2 * np.abs(data1 - data2)) / (np.abs(data1) + np.abs(data2))
-    metric_flattened = np.ndarray.flatten(metric)
-
-    # Display fig
-    if display:
-        thresholds = np.logspace(-8, 0, 20)
-        percents = np.array(
-            [np.sum((metric_flattened > t)) / metric_flattened.size for t in thresholds]
-        )
-        fig, ax = plt.subplots()
-        ax.semilogx(thresholds, percents)
-        ax.grid()
-        plt.xlabel("Threshold of relative difference")
-        plt.ylabel("Proportion of different voxels")
-        plt.show()
-
-    mask_different_voxels_cond1 = metric_flattened > threshold1[0]
-    mask_different_voxels_cond2 = metric_flattened > threshold2[0]
-    return (
-        np.sum(mask_different_voxels_cond1) / metric_flattened.size < threshold1[1]
-    ) & (np.sum(mask_different_voxels_cond2) / metric_flattened.size < threshold2[1])
+    return nrmse(image1, image2) < threshold
 
 
 def similarity_measure(

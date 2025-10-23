@@ -21,20 +21,16 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 
-def test_likeliness_measure(tmp_path: PurePath):
-    from test.nonregression.testing_tools import likeliness_measure
+def test_nrmse_measure(tmp_path: PurePath):
+    from test.nonregression.testing_tools import nrmse_measure
 
     rng = np.random.RandomState(42)
     img1 = nib.Nifti1Image(rng.random((2, 2, 2, 2)), affine=np.eye(4))
     img2 = nib.Nifti1Image(rng.random((2, 2, 2, 2)), affine=np.eye(4))
     img1.to_filename(str(tmp_path / "img1.nii"))
     img2.to_filename(str(tmp_path / "img2.nii"))
-    assert not likeliness_measure(
-        tmp_path / "img1.nii", tmp_path / "img2.nii", (1e-4, 1e-4), (1e-4, 1e-4)
-    )
-    assert likeliness_measure(
-        tmp_path / "img1.nii", tmp_path / "img1.nii", (1e-4, 1e-4), (1e-4, 1e-4)
-    )
+    assert not nrmse_measure(tmp_path / "img1.nii", tmp_path / "img2.nii")
+    assert nrmse_measure(tmp_path / "img1.nii", tmp_path / "img1.nii")
 
 
 def test_similarity_measure(tmp_path: PurePath):

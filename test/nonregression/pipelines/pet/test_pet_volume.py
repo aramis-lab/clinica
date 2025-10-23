@@ -1,7 +1,7 @@
 import shutil
 from os import fspath
 from pathlib import Path
-from test.nonregression.testing_tools import configure_paths, likeliness_measure
+from test.nonregression.testing_tools import configure_paths, nrmse_measure
 
 from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
@@ -53,11 +53,9 @@ def run_pet_volume(
             / subject
             / "ses-M000/pet/preprocessing/group-UnitTest"
         )
-        assert likeliness_measure(
+        assert nrmse_measure(
             output_folder
             / f"{subject}_ses-M000_trc-{tracer.value}_pet_space-Ixi549Space_suvr-{region.value}{suffix}",
             ref_dir
             / f"{subject}_ses-M000_trc-{tracer.value}_pet_space-Ixi549Space_suvr-{region.value}{suffix}",
-            (1e-2, 0.25),
-            (1e-1, 0.001),
         )

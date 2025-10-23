@@ -1,7 +1,7 @@
 import shutil
 from os import fspath
 from pathlib import Path
-from test.nonregression.testing_tools import configure_paths, likeliness_measure
+from test.nonregression.testing_tools import configure_paths, nrmse_measure
 from typing import Tuple
 
 import numpy as np
@@ -34,7 +34,7 @@ def run_t1_volume_tissue_segmentation(
     pipeline.build()
     pipeline.run(bypass_check=True)
 
-    out_file = fspath(
+    out_file = (
         output_dir
         / "caps"
         / "subjects"
@@ -44,10 +44,10 @@ def run_t1_volume_tissue_segmentation(
         / "spm"
         / "segmentation"
         / "dartel_input"
-        / "sub-ADNI011S4105_ses-M000_T1w_segm-graymatter_dartelinput.nii.gz",
+        / "sub-ADNI011S4105_ses-M000_T1w_segm-graymatter_dartelinput.nii.gz"
     )
 
-    ref_file = fspath(
+    ref_file = (
         ref_dir
         / "caps"
         / "subjects"
@@ -57,10 +57,10 @@ def run_t1_volume_tissue_segmentation(
         / "spm"
         / "segmentation"
         / "dartel_input"
-        / "sub-ADNI011S4105_ses-M000_T1w_segm-graymatter_dartelinput.nii.gz",
+        / "sub-ADNI011S4105_ses-M000_T1w_segm-graymatter_dartelinput.nii.gz"
     )
 
-    assert likeliness_measure(out_file, ref_file, (1e-1, 0.02), (0.4, 0.01))
+    assert nrmse_measure(out_file, ref_file)
 
 
 def test_t1_volume_create_dartel(cmdopt, tmp_path):
@@ -91,14 +91,15 @@ def run_t1_volume_create_dartel(
     pipeline.build()
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
-    out_template = fspath(
+    out_template = (
         output_dir / "caps/groups/group-UnitTest/t1/group-UnitTest_template.nii.gz"
     )
-    ref_template = fspath(ref_dir / "group-UnitTest_template.nii.gz")
-    assert likeliness_measure(out_template, ref_template, (1e-3, 0.1), (1e-2, 0.1))
+    ref_template = ref_dir / "group-UnitTest_template.nii.gz"
+
+    assert nrmse_measure(out_template, ref_template)
 
     out_data_forward_def = [
-        fspath(
+        (
             output_dir
             / "caps"
             / "subjects"
@@ -116,7 +117,7 @@ def run_t1_volume_create_dartel(
         for sub in _get_subjects()
     ]
     ref_data_forward_def = [
-        fspath(
+        (
             ref_dir
             / (
                 sub
@@ -127,7 +128,7 @@ def run_t1_volume_create_dartel(
     ]
 
     for out, ref in zip(out_data_forward_def, ref_data_forward_def):
-        assert likeliness_measure(out, ref, (1e-3, 0.25), (1e-2, 0.1))
+        assert nrmse_measure(out, ref)
 
 
 def _get_subjects() -> Tuple[str, ...]:
@@ -168,7 +169,7 @@ def run_t1_volume_dartel_to_mni(
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
     out_data_gm_mni = [
-        fspath(
+        (
             output_dir
             / "caps"
             / "subjects"
@@ -186,7 +187,7 @@ def run_t1_volume_dartel_to_mni(
         for sub in _get_subjects()
     ]
     ref_data_gm_mni = [
-        fspath(
+        (
             ref_dir
             / (
                 sub
@@ -196,7 +197,7 @@ def run_t1_volume_dartel_to_mni(
         for sub in _get_subjects()
     ]
     for out, ref in zip(out_data_gm_mni, ref_data_gm_mni):
-        assert likeliness_measure(out, ref, (1e-4, 0.15), (1, 0.02))
+        assert nrmse_measure(out, ref)
 
 
 def test_t1_volume_register_dartel(cmdopt, tmp_path):
@@ -228,7 +229,7 @@ def run_t1_volume_register_dartel(
     pipeline.run(plugin="MultiProc", plugin_args={"n_procs": 4}, bypass_check=True)
 
     out_data_forward_def = [
-        fspath(
+        (
             output_dir
             / "caps"
             / "subjects"
@@ -246,7 +247,7 @@ def run_t1_volume_register_dartel(
         for sub in _get_subjects()
     ]
     ref_data_forward_def = [
-        fspath(
+        (
             ref_dir
             / (
                 sub
@@ -257,7 +258,7 @@ def run_t1_volume_register_dartel(
     ]
 
     for out, ref in zip(out_data_forward_def, ref_data_forward_def):
-        assert likeliness_measure(out, ref, (1e-3, 0.25), (1e-2, 0.1))
+        assert nrmse_measure(out, ref)
 
 
 def test_t1_volume_parcellation(cmdopt, tmp_path):
