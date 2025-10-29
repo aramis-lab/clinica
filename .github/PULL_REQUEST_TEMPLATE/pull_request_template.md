@@ -12,7 +12,7 @@
 
 
 ## Checklist
-- [ ] Conding style respected
+- [ ] Coding style respected
 - [ ] Unit tests added
 - [ ] Functionally tested on Mac OS
 - [ ] Functionally tested on Linux
