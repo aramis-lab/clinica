@@ -32,7 +32,7 @@ jobs:
 #          --disable-warnings \
 #          ./nonregression/pipelines/pet
 
-  test-pipelines-pet-Linux:
+  test-pipelines-pet-surface-Linux:
     runs-on:
       - self-hosted
       - Linux
@@ -55,4 +55,54 @@ jobs:
           --basetemp=/mnt/data/ci/tmp \
           --junitxml=./test-reports/non_regression_pet_linux.xml \
           --disable-warnings \
-          ./nonregression/pipelines/pet
+          ./nonregression/pipelines/pet/test_pet_surface.py
+
+  test-pipelines-pet-linear-Linux:
+    runs-on:
+      - self-hosted
+      - Linux
+      - test-runner
+    timeout-minutes: 720
+    steps:
+      - uses: actions/checkout@v5
+      - name: Run tests for pet pipelines
+        run: |
+          make env.conda
+          source /builds/miniconda/etc/profile.d/conda.sh
+          conda activate "${{ github.workspace }}"/env
+          source /usr/local/Modules/init/profile.sh
+          module load clinica.all
+          make install
+          cd test
+          poetry run pytest --verbose \
+          --working_directory=/mnt/data/ci/working_dir_linux \
+          --input_data_directory=/mnt/data_ci \
+          --basetemp=/mnt/data/ci/tmp \
+          --junitxml=./test-reports/non_regression_pet_linux.xml \
+          --disable-warnings \
+          ./nonregression/pipelines/pet/test_pet_linear.py
+
+  test-pipelines-pet-volume-Linux:
+    runs-on:
+      - self-hosted
+      - Linux
+      - test-runner
+    timeout-minutes: 720
+    steps:
+      - uses: actions/checkout@v5
+      - name: Run tests for pet pipelines
+        run: |
+          make env.conda
+          source /builds/miniconda/etc/profile.d/conda.sh
+          conda activate "${{ github.workspace }}"/env
+          source /usr/local/Modules/init/profile.sh
+          module load clinica_standalone.all
+          make install
+          cd test
+          poetry run pytest --verbose \
+          --working_directory=/mnt/data/ci/working_dir_linux \
+          --input_data_directory=/mnt/data_ci \
+          --basetemp=/mnt/data/ci/tmp \
+          --junitxml=./test-reports/non_regression_pet_linux.xml \
+          --disable-warnings \
+          ./nonregression/pipelines/pet/test_pet_volume.py
