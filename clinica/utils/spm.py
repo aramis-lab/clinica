@@ -163,7 +163,7 @@ def configure_nipype_interface_to_work_with_spm_standalone() -> None:
     matlab_cmd = _get_platform_dependant_matlab_command_for_spm_standalone(
         spm_standalone_home, mcr_home
     )
-    cprint("MATLAB CMD ", matlab_cmd)
+    cprint(f"MATLAB CMD : {matlab_cmd}")
 
     spm.SPMCommand.set_mlab_paths(
         matlab_cmd=matlab_cmd,
