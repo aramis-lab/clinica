@@ -51,7 +51,6 @@ jobs:
           conda activate "${{ github.workspace }}"/env
           source /usr/local/Modules/init/profile.sh
           module load clinica_standalone.all
-          env | grep -E "SPM|MCR|LD_LIBRARY_PATH"
           echo $PATH
           make install
           cd test
