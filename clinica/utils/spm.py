@@ -159,10 +159,14 @@ def configure_nipype_interface_to_work_with_spm_standalone() -> None:
         f"SPM standalone has been found at {spm_standalone_home}, "
         f"with an MCR at {mcr_home} and will be used in this pipeline"
     )
+
+    matlab_cmd = _get_platform_dependant_matlab_command_for_spm_standalone(
+        spm_standalone_home, mcr_home
+    )
+    cprint("MATLAB CMD ", matlab_cmd)
+
     spm.SPMCommand.set_mlab_paths(
-        matlab_cmd=_get_platform_dependant_matlab_command_for_spm_standalone(
-            spm_standalone_home, mcr_home
-        ),
+        matlab_cmd=matlab_cmd,
         use_mcr=True,
     )
     cprint(f"Using SPM standalone version {spm.SPMCommand().version}", lvl="info")
