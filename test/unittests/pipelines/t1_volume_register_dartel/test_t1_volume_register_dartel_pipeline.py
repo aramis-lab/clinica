@@ -21,7 +21,9 @@ def test_t1_volume_register_dartel_info_loading(tmp_path):
         "version": "0.1.0",
         "space_caps": "30M",
         "space_wd": "110M",
-        "dependencies": [{"type": "software", "name": "spm", "version": ">=25"}],
+        "dependencies": [
+            {"type": "software", "name": "spm standalone", "version": ">=25"}
+        ],
     }
 
 

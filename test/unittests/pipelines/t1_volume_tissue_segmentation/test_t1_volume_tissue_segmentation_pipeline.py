@@ -27,7 +27,9 @@ def test_t1_volume_tissue_segmentation_info_loading(tmp_path):
         "space_caps": "35M",
         "space_wd": "147M",
         "version": "0.1.0",
-        "dependencies": [{"type": "software", "name": "spm", "version": ">=25"}],
+        "dependencies": [
+            {"type": "software", "name": "spm standalone", "version": ">=25"}
+        ],
     }
 
 
