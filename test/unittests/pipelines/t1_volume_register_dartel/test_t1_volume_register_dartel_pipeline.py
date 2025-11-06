@@ -51,6 +51,6 @@ def test_t1_volume_register_dartel_dependencies(tmp_path, mocker):
 
     assert pipeline.dependencies == [
         SoftwareDependency(
-            ThirdPartySoftware.SPM, SpecifierSet(">=25"), Version("25.7219")
+            ThirdPartySoftware.SPMSTANDALONE, SpecifierSet(">=25"), Version("25.7219")
         ),
     ]
