@@ -51,9 +51,9 @@ jobs:
           conda activate "${{ github.workspace }}"/env
           source /usr/local/Modules/init/profile.sh
           module load clinica_standalone.all
-          echo $PATH
           make install
           cd test
+          $SPM_HOME/run_spm25.sh $MCR_HOME quit
           poetry run pytest --verbose \
           --working_directory=/mnt/data/ci/working_dir_linux \
           --input_data_directory=/mnt/data_ci \
