@@ -37,7 +37,7 @@ def test_t1_volume_register_dartel_dependencies(tmp_path, mocker):
     from clinica.utils.check_dependency import SoftwareDependency, ThirdPartySoftware
 
     mocker.patch(
-        "clinica.utils.check_dependency._get_spm_version",
+        "clinica.utils.check_dependency._get_spm_standalone_version",
         return_value=Version("25.7219"),
     )
     caps = build_caps_directory(
