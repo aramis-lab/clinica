@@ -12,11 +12,13 @@
 
 
 ## Checklist
-- [ ] Coding style respected
-- [ ] Unit tests added
-- [ ] Functionally tested on Mac OS
-- [ ] Functionally tested on Linux
-- [ ] Documentation updated (if applicable)
+- [ ] Coding style respected (eg: '_' at the beginning of variable names, private or public functions, docstrings, ...)
+- [ ] Unit tests added and passing
+- [ ] Functional testing completed (on Linux and macOS)
+- [ ] Instantiation tests passing
+- [ ] Non-regression tests passing (on Linux and macOS)
+- [ ] CI database updated (if required)
+- [ ] Documentation updated (if required)
 
 
 ## How to Test
