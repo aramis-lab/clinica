@@ -655,7 +655,7 @@ def test_write_sessions(tmp_path):
     assert (
         assert_frame_equal(
             pd.read_csv(file_path, sep="\t"),
-            clinical[["source_id", "session_id", "acq_time"]],
+            clinical[["session_id", "source_id", "acq_time"]],
         )
         is None
     )
