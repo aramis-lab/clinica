@@ -627,8 +627,8 @@ def test_write_scans_not_empty(tmp_path):
 def formatted_clinical_data_builder() -> pd.DataFrame:
     return pd.DataFrame(
         {
-            "source_id": ["IXI001"],
             "participant_id": ["sub-IXI001"],
+            "source_id": ["IXI001"],
             "session_id": ["ses-M000"],
             "acq_time": ["2024-08-23"],
             "sex": ["female"],

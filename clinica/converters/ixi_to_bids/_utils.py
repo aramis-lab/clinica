@@ -399,12 +399,12 @@ def write_participants(
             clinical_data.loc[participant, "source_id"] = participant
     if not bids_dir.exists():
         bids_dir.mkdir()
-    clinical_data_to_csv = clinical_data[
+    clinical_data = clinical_data[
         ["participant_id"] + clinical_data.columns.drop("participant_id").tolist()
     ]
-    clinical_data_to_csv.loc[participants].drop(
-        ["acq_time", "session_id"], axis=1
-    ).to_csv(bids_dir / "participants.tsv", sep="\t", index=False, na_rep="n/a")
+    clinical_data.loc[participants].drop(["acq_time", "session_id"], axis=1).to_csv(
+        bids_dir / "participants.tsv", sep="\t", index=False, na_rep="n/a"
+    )
     clinical_data.reset_index(drop=True, inplace=True)
 
 
