@@ -630,7 +630,7 @@ def formatted_clinical_data_builder() -> pd.DataFrame:
             "source_id": ["IXI001"],
             "participant_id": ["sub-IXI001"],
             "session_id": ["ses-M000"],
-            "acq_time": ["2024-08-23"],
+            "acq_time": ["2024-08-23T00:00:00"],
             "sex": ["female"],
             "ethnicity": ["Other"],
             "marital status": ["Single"],
