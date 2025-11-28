@@ -392,7 +392,10 @@ def write_participants(
         participant_id=clinical_data.source_id.apply(
             lambda x: bids_id_factory(StudyName.IXI).from_original_study_id(x)
         )
-    )[["participant_id"] + clinical_data.columns.drop("participant_id").tolist()]
+    )
+    clinical_data = clinical_data[
+        ["participant_id"] + clinical_data.columns.drop("participant_id").tolist()
+    ]
     for participant in participants:
         if participant not in clinical_data.index:
             clinical_data.loc[participant] = "n/a"
