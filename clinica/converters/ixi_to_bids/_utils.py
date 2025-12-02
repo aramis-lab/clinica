@@ -364,7 +364,7 @@ def write_sessions(
     participant : Current converted subject study id (str).
     """
     to_write = clinical_data[clinical_data["source_id"] == participant][
-        ["source_id", "session_id", "acq_time"]
+        ["session_id", "source_id", "acq_time"]
     ]
     if to_write.empty:
         to_write.loc[0, "source_id"] = participant
