@@ -388,14 +388,13 @@ def write_participants(
     participants : List of converted subjects study source ids.
     """
     clinical_data.set_index("source_id", inplace=True, drop=False)
-    clinical_data = clinical_data.assign(
-        participant_id=clinical_data.source_id.apply(
+    clinical_data.insert(
+        0,
+        "participant_id",
+        clinical_data.source_id.apply(
             lambda x: bids_id_factory(StudyName.IXI).from_original_study_id(x)
-        )
+        ),
     )
-    clinical_data = clinical_data[
-        ["participant_id"] + clinical_data.columns.drop("participant_id").tolist()
-    ]
     for participant in participants:
         if participant not in clinical_data.index:
             clinical_data.loc[participant] = "n/a"
