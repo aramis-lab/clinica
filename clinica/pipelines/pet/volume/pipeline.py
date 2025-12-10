@@ -1,5 +1,3 @@
-from typing import List
-
 from nipype import config
 
 from clinica.pipelines.engine import GroupPipeline
@@ -34,7 +32,7 @@ class PETVolume(GroupPipeline, PETPipeline):
         """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
-    def get_input_fields(self) -> List[str]:
+    def get_input_fields(self) -> list[str]:
         """Specify the list of possible inputs of this pipeline.
 
         Returns
@@ -53,7 +51,7 @@ class PETVolume(GroupPipeline, PETPipeline):
             "reference_mask",
         ]
 
-    def get_output_fields(self) -> List[str]:
+    def get_output_fields(self) -> list[str]:
         """Specify the list of possible outputs of this pipeline.
 
         Returns

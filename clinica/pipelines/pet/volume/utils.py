@@ -1,6 +1,6 @@
 from os import PathLike
 from pathlib import Path
-from typing import List, Tuple, Union
+from typing import Union
 
 import nibabel as nib
 import numpy as np
@@ -35,7 +35,7 @@ def init_input_node(pet_nii: str) -> str:
     return pet_nii
 
 
-def _check_non_empty_tissue_list(tissues: List[PathLike]) -> None:
+def _check_non_empty_tissue_list(tissues: list[PathLike]) -> None:
     """Check that provided list is non-empty."""
     if len(tissues) == 0:
         raise RuntimeError(
@@ -44,8 +44,8 @@ def _check_non_empty_tissue_list(tissues: List[PathLike]) -> None:
 
 
 def _aggregate_tissue_images(
-    tissues: List[PathLike],
-) -> Tuple[np.ndarray, np.ndarray, Nifti1Header]:
+    tissues: list[PathLike],
+) -> tuple[np.ndarray, np.ndarray, Nifti1Header]:
     """Aggregates the image data contained in the tissue images provided.
 
     Parameters
@@ -74,7 +74,7 @@ def _aggregate_tissue_images(
     return data, first_image.affine, first_image.header
 
 
-def create_binary_mask(tissues: List[PathLike], threshold: float = 0.3) -> Path:
+def create_binary_mask(tissues: list[PathLike], threshold: float = 0.3) -> Path:
     """Create a binary mask Nifti1Image from the list of tissues.
 
     Tissue images are summed and the result is thresholded with the
@@ -135,7 +135,7 @@ def apply_binary_mask(image: Path, binary_mask: Path) -> Path:
     return masked_image_path
 
 
-def create_pvc_mask(tissues: List[PathLike]) -> Path:
+def create_pvc_mask(tissues: list[PathLike]) -> Path:
     """Create a pvc mask from tissue list.
 
     Parameters
@@ -224,7 +224,7 @@ def normalize_to_reference(pet_image: Path, region_mask: Path) -> Path:
     return suvr_pet_path
 
 
-def compute_atlas_statistics(image: Path, atlas_names: List[str]) -> List[Path]:
+def compute_atlas_statistics(image: Path, atlas_names: list[str]) -> list[Path]:
     """Generate regional measure from atlas_list in TSV files.
 
     For each atlas name provided it calculates for the input image the mean
