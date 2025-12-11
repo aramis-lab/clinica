@@ -664,10 +664,14 @@ def test_write_sessions(tmp_path):
 def test_write_participants(tmp_path):
     from clinica.converters.ixi_to_bids._utils import write_participants
 
-    clinical = formatted_clinical_data_builder().drop("participant_id", axis=1)
-    expected = formatted_clinical_data_builder()
-    write_participants(tmp_path, clinical, ["IXI001", "IXI002"])
-    expected.drop(["acq_time", "session_id"], axis=1, inplace=True)
+    write_participants(
+        tmp_path,
+        formatted_clinical_data_builder().drop("participant_id", axis=1),
+        ["IXI001", "IXI002"],
+    )
+    expected = formatted_clinical_data_builder().drop(
+        ["acq_time", "session_id"], axis=1
+    )
     expected = pd.concat(
         [expected, pd.DataFrame({col: ["n/a"] for col in expected.columns})]
     ).reset_index(drop=True)
