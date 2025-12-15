@@ -253,7 +253,6 @@ def compute_atlas_statistics(image: Path, atlas_names: list[str]) -> list[Path]:
         )
         statistics_on_atlas(image, atlas, out_atlas_statistics)
         atlas_statistics_list.append(out_atlas_statistics)
-        break  # Why is there a break here ????
     return atlas_statistics_list
 
 
