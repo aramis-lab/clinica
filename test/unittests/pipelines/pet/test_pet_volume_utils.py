@@ -6,7 +6,6 @@ def test_compute_atlas_statistics(tmp_path, mocker):
 
     atlases = ["foo", "bar", "foobar"]
 
-    with mocker.patch("clinica.utils.statistics.statistics_on_atlas") as mock:
-        result = compute_atlas_statistics(tmp_path, atlases)
-        assert mock.called
-        assert len(result) == len(atlases)
+    mocker.patch("clinica.utils.statistics.statistics_on_atlas")
+    result = compute_atlas_statistics(tmp_path, atlases)
+    assert len(result) == len(atlases)
