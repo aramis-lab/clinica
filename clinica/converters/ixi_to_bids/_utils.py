@@ -178,8 +178,11 @@ def read_clinical_data(clinical_data_path: Path) -> pd.DataFrame:
         clinical_data.rename(
             lambda x: _rename_clinical_data_to_bids(x), axis=1, inplace=True
         )
-        clinical_data.fillna("n/a", inplace=True)
         clinical_data["session_id"] = "ses-M000"
+        clinical_data["acq_time"] = pd.to_datetime(
+            clinical_data["acq_time"], format="%Y-%m-%d", errors="coerce"
+        ).dt.strftime("%Y-%m-%dT%H:%M:%S")
+        clinical_data.fillna("n/a", inplace=True)
         return clinical_data
 
 
