@@ -163,21 +163,21 @@ def test_write_description_and_participants(tmp_path):
                 "sub-MAPT003",
             ],
             "session_id": [
-                "ses-M000",
-                "ses-M070",
+                "ses-01",
+                "ses-11",
                 np.nan,
-                "ses-M000",
-                "ses-M017",
+                "ses-01",
+                "ses-11",
                 np.nan,
             ],
             "modality": ["T1", "dwi", np.nan, "T2w", "rsfmri", np.nan],
             "run_num": ["run-01", "run-02", np.nan, "run-03", "run-04", np.nan],
             "bids_filename": [
-                "sub-C9ORF002_ses-M000_run-01_T1w",
-                "sub-C9ORF002_ses-M070_run-02_dwi",
+                "sub-C9ORF002_ses-01_run-01_T1w",
+                "sub-C9ORF002_ses-11_run-02_dwi",
                 np.nan,
-                "sub-MAPT003_ses-M000_run-03_T2w",
-                "sub-MAPT003_ses-M017_task-rest_run-04_bold",
+                "sub-MAPT003_ses-02_run-03_T2w",
+                "sub-MAPT003_ses-11_task-rest_run-04_bold",
                 np.nan,
             ],
             "source": [
@@ -212,19 +212,19 @@ def test_write_sessions(tmp_path):
 
     participant_id = "sub-C9ORF004"
 
-    (tmp_path / participant_id / "ses-M000").mkdir(parents=True)
-    (tmp_path / participant_id / "ses-M070").mkdir(parents=True)
+    (tmp_path / participant_id / "ses-01").mkdir(parents=True)
+    (tmp_path / participant_id / "ses-11").mkdir(parents=True)
 
     sessions = pd.DataFrame(
         {
             "participant_id": [participant_id, participant_id],
             "modality": ["T1w", "dwi"],
             "bids_filename": [
-                "sub-C9ORF004_ses-M000_run-01_T1w",
-                "sub-C9ORF004_ses-M070_run-02_dwi",
+                "sub-C9ORF004_ses-01_run-01_T1w",
+                "sub-C9ORF004_ses-11_run-02_dwi",
             ],
             "run_num": ["run-01", "run-02"],
-            "session_id": ["ses-M000", "ses-M070"],
+            "session_id": ["ses-01", "ses-11"],
         }
     ).set_index(
         ["participant_id", "modality", "bids_filename", "run_num", "session_id"]
@@ -240,7 +240,7 @@ def test_write_sessions(tmp_path):
 
     # Check sessions.tsv content
     df_out = pd.read_csv(tsv_path, sep="\t")
-    assert set(df_out["session_id"]) == {"ses-M000", "ses-M070"}
+    assert set(df_out["session_id"]) == {"ses-01", "ses-11"}
 
 
 def test_write_scans_and_niftis(tmp_path, mocker):
@@ -252,7 +252,7 @@ def test_write_scans_and_niftis(tmp_path, mocker):
     )
 
     participant_id = "sub-C9ORF006"
-    session_id = "ses-M000"
+    session_id = "ses-01"
     source = tmp_path / "source"
     source.mkdir()
 

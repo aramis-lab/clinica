@@ -350,6 +350,7 @@ def _merge_imaging_data(df: pd.DataFrame) -> pd.DataFrame:
     df = _compute_fieldmaps(df)
     df = _compute_runs(df)
     df = _compute_bids_full_path(df)
+
     return df
 
 
@@ -969,17 +970,17 @@ def _correct_fieldmaps_name(to: Path) -> None:
     ├── dataset_description.json
     ├── participants.tsv
     └── sub-GRN001
-        ├── ses-M000
+        ├── ses-01
         │   ├── fmap
-        │   │   ├── sub-GRN001_ses-M000_run-01_magnitude_e1.json
-        │   │   ├── sub-GRN001_ses-M000_run-01_magnitude_e1.nii.gz
-        │   │   ├── sub-GRN001_ses-M000_run-01_magnitude_e2.json
-        │   │   ├── sub-GRN001_ses-M000_run-01_magnitude_e2.nii.gz
-        │   │   ├── sub-GRN001_ses-M000_run-01_phasediff_e2_ph.json
-        │   │   └── sub-GRN001_ses-M000_run-01_phasediff_e2_ph.nii.gz
+        │   │   ├── sub-GRN001_ses-01_run-01_magnitude_e1.json
+        │   │   ├── sub-GRN001_ses-01_run-01_magnitude_e1.nii.gz
+        │   │   ├── sub-GRN001_ses-01_run-01_magnitude_e2.json
+        │   │   ├── sub-GRN001_ses-01_run-01_magnitude_e2.nii.gz
+        │   │   ├── sub-GRN001_ses-01_run-01_phasediff_e2_ph.json
+        │   │   └── sub-GRN001_ses-01_run-01_phasediff_e2_ph.nii.gz
         │   └── func
-        │       ├── sub-GRN001_ses-M000_run-01_bold.json
-        │       └── sub-GRN001_ses-M000_run-01_bold.nii.gz
+        │       ├── sub-GRN001_ses-01_run-01_bold.json
+        │       └── sub-GRN001_ses-01_run-01_bold.nii.gz
         └── sub-GRN001_sessions.tsv
     >>> _correct_fieldmaps_name("path/to/bids")
     bids
@@ -987,17 +988,17 @@ def _correct_fieldmaps_name(to: Path) -> None:
     ├── dataset_description.json
     ├── participants.tsv
     └── sub-GRN001
-        ├── ses-M000
+        ├── ses-01
         │   ├── fmap
-        │   │   ├── sub-GRN001_ses-M000_run-01_magnitude1.json
-        │   │   ├── sub-GRN001_ses-M000_run-01_magnitude1.nii.gz
-        │   │   ├── sub-GRN001_ses-M000_run-01_magnitude2.json
-        │   │   ├── sub-GRN001_ses-M000_run-01_magnitude2.nii.gz
-        │   │   ├── sub-GRN001_ses-M000_run-01_phasediff.json
-        │   │   └── sub-GRN001_ses-M000_run-01_phasediff.nii.gz
+        │   │   ├── sub-GRN001_ses-01_run-01_magnitude1.json
+        │   │   ├── sub-GRN001_ses-01_run-01_magnitude1.nii.gz
+        │   │   ├── sub-GRN001_ses-01_run-01_magnitude2.json
+        │   │   ├── sub-GRN001_ses-01_run-01_magnitude2.nii.gz
+        │   │   ├── sub-GRN001_ses-01_run-01_phasediff.json
+        │   │   └── sub-GRN001_ses-01_run-01_phasediff.nii.gz
         │   └── func
-        │       ├── sub-GRN001_ses-M000_run-01_bold.json
-        │       └── sub-GRN001_ses-M000_run-01_bold.nii.gz
+        │       ├── sub-GRN001_ses-01_run-01_bold.json
+        │       └── sub-GRN001_ses-01_run-01_bold.nii.gz
         └── sub-GRN001_sessions.tsv
     """
     import os
