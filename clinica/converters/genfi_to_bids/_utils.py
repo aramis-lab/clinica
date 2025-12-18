@@ -344,13 +344,12 @@ def _merge_imaging_data(df: pd.DataFrame) -> pd.DataFrame:
     """
     df = _compute_source_id_and_source_ses_id(df).reset_index()
     df = _compute_genfi_version(df)
-    df = _compute_baseline_and_session_numbers(df)
+    df = _compute_session_numbers(df)
     df = _compute_participant_id(df)
     df = _compute_modality(df)
     df = _compute_fieldmaps(df)
     df = _compute_runs(df)
     df = _compute_bids_full_path(df)
-
     return df
 
 
@@ -380,75 +379,35 @@ def _compute_source_id_and_source_ses_id(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _compute_genfi_version(df: pd.DataFrame) -> pd.DataFrame:
-    """Compute the genfi_version from the souce_ses_id column.
-
-    The column `source_ses_id` is casted to integer values.
-    """
+    """Compute the genfi_version from the souce_ses_id column."""
     return df.assign(
-        source_ses_id=lambda x: x.source_ses_id.astype("int"),
-        genfi_version=lambda x: x.source_ses_id.apply(lambda y: f"GENFI{len(str(y))}"),
+        genfi_version=lambda x: x.source_ses_id.astype("int").apply(
+            lambda y: f"GENFI{len(str(y))}"
+        ),
     )
-
-
-def _compute_baseline_and_session_numbers(df: pd.DataFrame) -> pd.DataFrame:
-    """Compute the baseline date and session numbers
-    and merge on 'source_id` and `source_ses_id`.
-    """
-    df_with_acq_date = _compute_baseline_date(df)
-    df_with_acq_date_and_session_numbers = _compute_session_numbers(df_with_acq_date)
-    return df.merge(
-        df_with_acq_date_and_session_numbers[["baseline", "session_id"]],
-        how="inner",
-        on=["source_id", "source_ses_id"],
-    )
-
-
-def _compute_baseline_date(df: pd.DataFrame) -> pd.DataFrame:
-    """Computes the baseline date by taking the minimum
-    acq_date for each subject.
-
-    Parameters
-    ----------
-    df: pd.Dataframe
-
-    Returns
-    -------
-    pd.Dataframe
-        Contains the baseline date.
-    """
-    df_1 = (
-        df[["source_id", "source_ses_id", "acq_date"]]
-        .groupby(["source_id", "source_ses_id"])
-        .min()
-    )
-    df_2 = df[["source_id", "acq_date"]].groupby("source_id").min()
-    return df_1.join(df_2.rename(columns={"acq_date": "baseline"}))
 
 
 def _compute_session_numbers(df: pd.DataFrame) -> pd.DataFrame:
-    """Computes the session IDs obtained from the number of months between
-    an acquisition and the baseline acquisition.
+    """Computes the session IDs.
+
+    The column `source_ses_id` is also casted to integer values.
 
     Parameters
     ----------
     df: pd.DataFrame
-        Dataframe containing the timestamp of the acquisition.
+        Dataframe containing the visit code in the column `source_ses_id`.
 
     Returns
     -------
     pd.DataFrame
-        Dataframe containing the session_id computed from the timestamps.
+        Dataframe containing the session_id computed from the visit code.
     """
-    from datetime import datetime
 
-    for col in ("acq_date", "baseline"):
-        df[col] = df[col].apply(lambda x: datetime.strptime(x, "%Y%m%d"))
-    return df.assign(
-        ses_month=lambda x: 12
-        * (x.acq_date.apply(lambda y: y.year) - x.baseline.apply(lambda y: y.year))
-        + (x.acq_date.apply(lambda y: y.month) - x.baseline.apply(lambda y: y.month)),
-        session_id=lambda x: x.ses_month.map(lambda y: f"ses-M{y:03d}"),
+    df = df.assign(
+        session_id=lambda x: x.source_ses_id.map(lambda y: f"ses-{y}"),
+        source_ses_id=lambda x: x.source_ses_id.astype("int"),
     )
+    return df
 
 
 def _compute_participant_id(df: pd.DataFrame) -> pd.DataFrame:
