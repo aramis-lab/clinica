@@ -50,13 +50,9 @@ jobs:
           source /builds/miniconda/etc/profile.d/conda.sh
           conda activate "${{ github.workspace }}"/env
           source /usr/local/Modules/init/profile.sh
-          echo "Module Load"
           module load clinica_standalone.all
           make install
           cd test
-          echo $MCR_CACHE_ROOT
-          echo "TEST THE <path to spm> <path to MCR> --version LINE"
-          $SPM_HOME/run_spm25.sh $MCR_HOME --version
           poetry run pytest --verbose \
           --working_directory=/mnt/data/ci/working_dir_linux \
           --input_data_directory=/mnt/data_ci \
