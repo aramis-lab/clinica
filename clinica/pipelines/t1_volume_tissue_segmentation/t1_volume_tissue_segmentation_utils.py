@@ -9,10 +9,8 @@ from nipype.interfaces.base import (
     InputMultiPath,
     traits,
 )
-from nipype.interfaces.spm.base import SPMCommand, SPMCommandInputSpec
-from nipype.interfaces.spm.preprocess import NewSegment
 from nipype.interfaces.spm.base import SPMCommandInputSpec
-from nipype.interfaces.spm.preprocess import ApplyDeformations
+from nipype.interfaces.spm.preprocess import ApplyDeformations, NewSegment
 from nipype.utils.filemanip import filename_to_list, list_to_filename
 
 
