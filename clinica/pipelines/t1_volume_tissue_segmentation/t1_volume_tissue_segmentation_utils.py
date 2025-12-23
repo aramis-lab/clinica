@@ -151,6 +151,7 @@ class ApplySegmentationDeformation(ApplyDeformations):
             return np.array(filename_to_list(val), dtype=object)
         return val
 
+    # todo : duplicate method?
     def _list_outputs(self):
         outputs = self._outputs().get()
         outputs["out_files"] = []
