@@ -127,8 +127,6 @@ def _get_real_spm_standalone_file(spm_standalone_home: Path) -> str:
 def _get_platform_dependant_matlab_command_for_spm_standalone(
     spm_standalone_home: Path, mcr_home: Path
 ) -> str:
-    import platform
-
     from clinica.utils.stream import cprint
 
     spm_file = _get_real_spm_standalone_file(spm_standalone_home)
@@ -136,14 +134,9 @@ def _get_platform_dependant_matlab_command_for_spm_standalone(
         f"Using the following spm file to build the matlab dependent command : {spm_standalone_home/spm_file}",
         lvl="debug",
     )
-    user_system = platform.system().lower()
-    if user_system.startswith("darwin"):
-        return f"cd {spm_standalone_home} && ./{spm_file} {mcr_home} script"
-    if user_system.startswith("linux"):
-        return f"{spm_standalone_home / spm_file} {mcr_home} script"
-    raise SystemError(
-        f"Clinica only support macOS and Linux. Your system is {user_system}."
-    )
+    # todo : why do we need to adjust for mac ?
+    # todo : function used a bit everywhere, don't understand why it causes issues with t1-volume only
+    return f"{spm_standalone_home / spm_file} {mcr_home} script"
 
 
 def configure_nipype_interface_to_work_with_spm_standalone() -> None:
