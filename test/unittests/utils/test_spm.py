@@ -106,50 +106,15 @@ def test_use_spm_standalone_if_available_error(tmp_path):
             use_spm_standalone_if_available()
 
 
-@pytest.mark.parametrize(
-    "platform,expected_command",
-    [
-        ("Darwin", "cd /foo/bar && ./run_spm12.sh /foo/bar/baz script"),
-        ("Linux", "/foo/bar/run_spm12.sh /foo/bar/baz script"),
-    ],
-)
-def test_get_platform_dependant_matlab_command_for_spm_standalone(
-    mocker, platform, expected_command
-):
+def test_get_platform_dependant_matlab_command_for_spm_standalone():
     from clinica.utils.spm import (
-        _get_platform_dependant_matlab_command_for_spm_standalone,
-    )
-
-    mocker.patch("platform.system", return_value=platform)
-    mocker.patch(
-        "clinica.utils.spm._get_real_spm_standalone_file", return_value="run_spm12.sh"
+        _get_matlab_command_for_spm_standalone,
     )
 
     assert (
-        _get_platform_dependant_matlab_command_for_spm_standalone(
-            Path("/foo/bar"), Path("/foo/bar/baz")
-        )
-        == expected_command
+        _get_matlab_command_for_spm_standalone(Path("/foo/bar"), Path("/foo/bar/baz"))
+        == "/foo/bar/run_spm12.sh /foo/bar/baz script"
     )
-
-
-def test_get_platform_dependant_matlab_command_for_spm_standalone_error(mocker):
-    from clinica.utils.spm import (
-        _get_platform_dependant_matlab_command_for_spm_standalone,
-    )
-
-    mocker.patch("platform.system", return_value="foo")
-    mocker.patch(
-        "clinica.utils.spm._get_real_spm_standalone_file", return_value="run_spm12.sh"
-    )
-
-    with pytest.raises(
-        SystemError,
-        match="Clinica only support macOS and Linux. Your system is foo.",
-    ):
-        _get_platform_dependant_matlab_command_for_spm_standalone(
-            Path("/foo/bar"), Path("/foo/bar/baz")
-        )
 
 
 def test_get_real_spm_standalone_file_no_file_error(tmp_path):

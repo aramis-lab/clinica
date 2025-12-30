@@ -124,7 +124,7 @@ def _get_real_spm_standalone_file(spm_standalone_home: Path) -> str:
     return spm_files[0].name
 
 
-def _get_platform_dependant_matlab_command_for_spm_standalone(
+def _get_matlab_command_for_spm_standalone(
     spm_standalone_home: Path, mcr_home: Path
 ) -> str:
     from clinica.utils.stream import cprint
@@ -134,8 +134,6 @@ def _get_platform_dependant_matlab_command_for_spm_standalone(
         f"Using the following spm file to build the matlab dependent command : {spm_standalone_home/spm_file}",
         lvl="debug",
     )
-    # todo : why do we need to adjust for mac ?
-    # todo : function used a bit everywhere, don't understand why it causes issues with t1-volume only
     return f"{spm_standalone_home / spm_file} {mcr_home} script"
 
 
@@ -154,7 +152,7 @@ def configure_nipype_interface_to_work_with_spm_standalone() -> None:
     )
 
     spm.SPMCommand.set_mlab_paths(
-        matlab_cmd=_get_platform_dependant_matlab_command_for_spm_standalone(
+        matlab_cmd=_get_matlab_command_for_spm_standalone(
             spm_standalone_home, mcr_home
         ),
         use_mcr=True,
