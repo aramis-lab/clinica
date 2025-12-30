@@ -1049,7 +1049,6 @@ def get_wf(
         ),
         name="applyInverseDeformation",
     )
-    apply_inverse_deformation.inputs.img = ""
     apply_inverse_deformation.inputs.matscript_folder = (
         matscript_folder_inverse_deformation
     )
