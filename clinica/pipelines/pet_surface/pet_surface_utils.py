@@ -518,6 +518,7 @@ def surf2surf(
     )
 
     # If system is MacOS, this export command must be run just before the mri_vol2surf command to bypass MacOs security
+    # todo : still needed ?
     if sys.platform == "darwin":
         cmd = "export DYLD_LIBRARY_PATH=$FREESURFER_HOME/lib/gcc/lib && " + cmd
     subprocess_mri_surf2surf = subprocess.run(
@@ -789,16 +790,13 @@ def get_mid_surface(in_surfaces):
 
 
 def reformat_surfname(hemi, left_surface, right_surface):
-    res = None
     if hemi == "lh":
-        res = left_surface
-    elif hemi == "rh":
-        res = right_surface
-    else:
-        raise Exception(
-            "First input of this reformat_surfname function must be either lh or rh"
-        )
-    return res
+        return left_surface
+    if hemi == "rh":
+        return right_surface
+    raise Exception(
+        "First input of this reformat_surfname function must be either lh or rh"
+    )
 
 
 def produce_tsv(pet, atlas_files):
@@ -1051,6 +1049,7 @@ def get_wf(
         ),
         name="applyInverseDeformation",
     )
+    apply_inverse_deformation.inputs.img = ""
     apply_inverse_deformation.inputs.matscript_folder = (
         matscript_folder_inverse_deformation
     )
@@ -1222,7 +1221,7 @@ def get_wf(
         name="inputnode",
         mandatory_inputs=True,
     )
-
+    # todo : why are these set after ?
     inputnode.inputs.orig_nu = orig_nu
     inputnode.inputs.pet = pet
     inputnode.inputs.psf = pvc_psf_tsv
