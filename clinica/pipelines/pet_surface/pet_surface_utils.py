@@ -794,8 +794,8 @@ def reformat_surfname(hemi, left_surface, right_surface):
         return left_surface
     if hemi == "rh":
         return right_surface
-    raise Exception(
-        "First input of this reformat_surfname function must be either lh or rh"
+    raise ValueError(
+        f"First input of this reformat_surfname function must be either lh or rh. Here it is : {hemi}"
     )
 
 
