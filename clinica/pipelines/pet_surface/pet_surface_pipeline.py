@@ -284,7 +284,6 @@ class PetSurface(PETPipeline):
                     "acq_label",
                     "csv_segmentation",
                     "suvr_reference_region",
-                    "matscript_folder_inverse_deformation",
                     "desikan_left",
                     "desikan_right",
                     "destrieux_left",
@@ -328,9 +327,6 @@ class PetSurface(PETPipeline):
                 "resources",
                 "label_conversion_gtmsegmentation.csv",
             )
-        )
-        full_pipe.inputs.matscript_folder_inverse_deformation = os.path.abspath(
-            os.path.dirname(os.path.realpath(__file__))
         )
         full_pipe.inputs.is_longitudinal = self.parameters["longitudinal"]
 

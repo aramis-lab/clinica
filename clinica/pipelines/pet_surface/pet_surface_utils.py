@@ -202,8 +202,6 @@ def make_label_conversion(gtmsegfile, csv):
     dst_val = numpy.asarray(dst)
     dst_val = dst_val.astype("int")
 
-    reg = list(convert_lut.REGION)
-
     # Check that each label of original volume (old_label) has a matching transformation in the csv file
     for i in range(old_labels.size):
         index = numpy.argwhere(src_val == old_labels[i])
@@ -212,15 +210,12 @@ def make_label_conversion(gtmsegfile, csv):
             raise Exception(
                 f"Could not find label {old_labels[i]} on conversion table. Add it manually in CSV file to correct error"
             )
-        # else:
-        #     cprint(str(old_labels[i]) + " has been found on conversion table")
 
     # Instantiation of final volume, with same dtype as original volume
     new_volume = numpy.zeros(volume.shape, dtype=volume.dtype)
     # Computing the transformation
     for i in range(len(src)):
         new_volume[volume == src_val[i]] = dst_val[i]
-        # cprint("Region " + reg[i] + " transformed")
     # Get unique list of new label
     new_labels = numpy.unique(new_volume)
     new_labels = new_labels.astype("int")
@@ -235,7 +230,6 @@ def make_label_conversion(gtmsegfile, csv):
         current_path = os.path.abspath(current_path)
         nib.save(myNifti, current_path)
         list_of_regions.append(current_path)
-        # cprint("Label " + str(new_labels[i]) + " created in " + current_path)
         allsum = allsum + region_volume
 
     # The sum of a voxel location across the fourth dimension should be 1
@@ -248,9 +242,7 @@ def make_label_conversion(gtmsegfile, csv):
     return list_of_regions
 
 
-def runApplyInverseDeformationField_SPM_standalone(
-    target, deformation_field, img, matscript_folder
-):
+def runApplyInverseDeformationField_SPM_standalone(target, deformation_field, img):
     """
     This function does the exact same job as runApplyInverseDeformationField but with SPM standalone. We directly create
     a batch file that SPM standalone can run. This function does not check whether SPM standalone must be used. Previous
@@ -263,8 +255,6 @@ def runApplyInverseDeformationField_SPM_standalone(
     from clinica.utils.check_dependency import get_spm_standalone_home
     from clinica.utils.spm import _get_real_spm_standalone_file
 
-    # TODO : matscript_folder argument useless
-    # TODO : actually this function is ONLY for SPM Standalone, I think it never worked before.
     # TODO : surely this can be done more cleanly
 
     prefix = "subject_space_"
@@ -316,41 +306,6 @@ def runApplyInverseDeformationField_SPM_standalone(
             + cmdline
             + "\n. We strongly recommend that you use the supported version of Matlab MCR "
             + " recommended by the creators of SPM."
-        )
-    return output_file
-
-
-def runApplyInverseDeformationField(target, deformation_field, img, matscript_folder):
-    import os
-    import sys
-
-    from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
-    # TODO : this is for MATLAB + SPM (not standalone). Probably can be erased.
-
-    prefix = "subject_space_"
-
-    MatlabCommand.set_default_matlab_cmd(get_matlab_command())
-    matlab = MatlabCommand()
-    if sys.platform.startswith("linux"):
-        matlab.inputs.args = "-nosoftwareopengl"
-
-    matlab.inputs.paths = matscript_folder
-    matlab.inputs.script = """
-    applyInverseDeformationField('%s', '%s', '%s', './', '%s')
-    """ % (
-        target,
-        deformation_field,
-        img,
-        prefix,
-    )
-    matlab.inputs.single_comp_thread = False
-    matlab.inputs.logfile = os.path.join("./", "matlab_output.log")
-    matlab.run()
-
-    output_file = os.path.join(os.path.abspath("./"), prefix + os.path.basename(img))
-    if not os.path.exists(output_file):
-        raise IOError(
-            f"Something went wrong, please check {os.path.abspath(matlab.inputs.logfile)} for more information"
         )
     return output_file
 
@@ -891,7 +846,6 @@ def get_wf(
     acq_label: str,
     csv_segmentation,
     suvr_reference_region: str,
-    matscript_folder_inverse_deformation,
     destrieux_left,
     destrieux_right,
     desikan_left,
@@ -913,7 +867,6 @@ def get_wf(
         acq_label (string):
         csv_segmentation (string): Path to the CSV for the segmentation (problems encountered while using __file__)
         suvr_reference_region (string): Label of the SUVR reference region
-        matscript_folder_inverse_deformation (string): Path to the current folder containing the matlab script used to call the spm function for the inverse deformation
         destrieux_left (string):
         destrieux_right (string):
         desikan_left (string):
@@ -1038,22 +991,15 @@ def get_wf(
         name="normalize_to_MNI",
     )
 
-    if using_spm_standalone:
-        fun_apply_inverse_deformation = (
-            utils.runApplyInverseDeformationField_SPM_standalone
-        )
-    else:
-        fun_apply_inverse_deformation = utils.runApplyInverseDeformationField
+    # TODO : is matscript folder useful ?
+
     apply_inverse_deformation = pe.Node(
         niu.Function(
-            input_names=["target", "deformation_field", "img", "matscript_folder"],
+            input_names=["target", "deformation_field", "img"],
             output_names=["freesurfer_space_eroded_mask"],
-            function=fun_apply_inverse_deformation,
+            function=utils.runApplyInverseDeformationField_SPM_standalone,
         ),
         name="applyInverseDeformation",
-    )
-    apply_inverse_deformation.inputs.matscript_folder = (
-        matscript_folder_inverse_deformation
     )
 
     pons_normalization = pe.Node(
