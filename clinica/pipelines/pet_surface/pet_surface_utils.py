@@ -290,7 +290,7 @@ def runApplyInverseDeformationField_SPM_standalone(
     script_file.write("jobs{1}.spm.util.defs.out{1}.pull.mask = 1;\n")
     script_file.write("jobs{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];\n")
     script_file.write("jobs{1}.spm.util.defs.out{1}.pull.prefix = '" + prefix + "';\n")
-    script_file.write("spm_jobman('run', jobs)")
+    script_file.write("spm_jobman('run', jobs);")
     script_file.close()
 
     # TODO : This might not even be needed with cmd line setting done prior
