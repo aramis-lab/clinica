@@ -251,37 +251,43 @@ def runApplyInverseDeformationField_SPM_standalone(target, deformation_field, im
     import os
     import subprocess
     from os.path import abspath, basename, exists, join
+    from textwrap import dedent
 
     from clinica.utils.check_dependency import get_spm_standalone_home
     from clinica.utils.spm import _get_real_spm_standalone_file
-
-    # TODO : surely this can be done more cleanly
 
     prefix = "subject_space_"
 
     # Write SPM batch command directly in a script that is readable by SPM standalone
     script_location = abspath("./m_script.m")
-    script_file = open(script_location, "w+")
-    script_file.write("spm('Defaults', 'fMRI');")
-    script_file.write("spm_jobman('initcfg');")
-    script_file.write(
-        "jobs{1}.spm.util.defs.comp{1}.inv.comp{1}.def = {'"
-        + deformation_field
-        + "'};\n"
+    script_file = dedent(
+        """\
+        spm('Defaults', 'fMRI');\
+        spm_jobman('initcfg');\
+
+        jobs{{1}}.spm.util.defs.comp{{1}}.inv.comp{{1}}.def   = {{'{deformation_field}'}};\
+        jobs{{1}}.spm.util.defs.comp{{1}}.inv.space           = {{'{target}'}};\
+        jobs{{1}}.spm.util.defs.out{{1}}.pull.fnames          = {{'{img}'}};\
+        jobs{{1}}.spm.util.defs.out{{1}}.pull.savedir.saveusr = {{'{output_dir}'}};\
+        jobs{{1}}.spm.util.defs.out{{1}}.pull.interp          = 4;\
+        jobs{{1}}.spm.util.defs.out{{1}}.pull.mask            = 1;\
+        jobs{{1}}.spm.util.defs.out{{1}}.pull.fwhm            = [0 0 0];\
+        jobs{{1}}.spm.util.defs.out{{1}}.pull.prefix          = '{prefix}';\
+
+        spm_jobman('run', jobs);\
+        """
     )
-    script_file.write("jobs{1}.spm.util.defs.comp{1}.inv.space = {'" + target + "'};\n")
-    script_file.write("jobs{1}.spm.util.defs.out{1}.pull.fnames = {'" + img + "'};\n")
-    script_file.write(
-        "jobs{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {'"
-        + abspath(os.getcwd())
-        + "'};\n"
+
+    script_file = script_file.format(
+        deformation_field=deformation_field,
+        target=target,
+        img=img,
+        output_dir=abspath(os.getcwd()),
+        prefix=prefix,
     )
-    script_file.write("jobs{1}.spm.util.defs.out{1}.pull.interp = 4;\n")
-    script_file.write("jobs{1}.spm.util.defs.out{1}.pull.mask = 1;\n")
-    script_file.write("jobs{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];\n")
-    script_file.write("jobs{1}.spm.util.defs.out{1}.pull.prefix = '" + prefix + "';\n")
-    script_file.write("spm_jobman('run', jobs);")
-    script_file.close()
+
+    with open(script_location, "w", encoding="utf-8") as f:
+        f.write(script_file)
 
     # TODO : This might not even be needed with cmd line setting done prior
     spm_file = _get_real_spm_standalone_file(get_spm_standalone_home())
@@ -990,8 +996,6 @@ def get_wf(
         ),
         name="normalize_to_MNI",
     )
-
-    # TODO : is matscript folder useful ?
 
     apply_inverse_deformation = pe.Node(
         niu.Function(
