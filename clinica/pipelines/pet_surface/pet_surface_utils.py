@@ -261,20 +261,20 @@ def runApplyInverseDeformationField_SPM_standalone(target, deformation_field, im
     # Write SPM batch command directly in a script that is readable by SPM standalone
     script_location = abspath("./m_script.m")
     script_file = dedent(
-        """\
-        spm('Defaults', 'fMRI');\
-        spm_jobman('initcfg');\
+        """
+        spm('Defaults', 'fMRI');
+        spm_jobman('initcfg');
 
-        jobs{{1}}.spm.util.defs.comp{{1}}.inv.comp{{1}}.def   = {{'{deformation_field}'}};\
-        jobs{{1}}.spm.util.defs.comp{{1}}.inv.space           = {{'{target}'}};\
-        jobs{{1}}.spm.util.defs.out{{1}}.pull.fnames          = {{'{img}'}};\
-        jobs{{1}}.spm.util.defs.out{{1}}.pull.savedir.saveusr = {{'{output_dir}'}};\
-        jobs{{1}}.spm.util.defs.out{{1}}.pull.interp          = 4;\
-        jobs{{1}}.spm.util.defs.out{{1}}.pull.mask            = 1;\
-        jobs{{1}}.spm.util.defs.out{{1}}.pull.fwhm            = [0 0 0];\
-        jobs{{1}}.spm.util.defs.out{{1}}.pull.prefix          = '{prefix}';\
+        jobs{{1}}.spm.util.defs.comp{{1}}.inv.comp{{1}}.def   = {{'{deformation_field}'}};
+        jobs{{1}}.spm.util.defs.comp{{1}}.inv.space           = {{'{target}'}};
+        jobs{{1}}.spm.util.defs.out{{1}}.pull.fnames          = {{'{img}'}};
+        jobs{{1}}.spm.util.defs.out{{1}}.pull.savedir.saveusr = {{'{output_dir}'}};
+        jobs{{1}}.spm.util.defs.out{{1}}.pull.interp          = 4;
+        jobs{{1}}.spm.util.defs.out{{1}}.pull.mask            = 1;
+        jobs{{1}}.spm.util.defs.out{{1}}.pull.fwhm            = [0 0 0];
+        jobs{{1}}.spm.util.defs.out{{1}}.pull.prefix          = '{prefix}';
 
-        spm_jobman('run', jobs);\
+        spm_jobman('run', jobs);
         """
     )
 
