@@ -260,6 +260,9 @@ def runApplyInverseDeformationField_SPM_standalone(
     import subprocess
     from os.path import abspath, basename, exists, join
 
+    from clinica.utils.check_dependency import get_spm_standalone_home
+    from clinica.utils.spm import _get_real_spm_standalone_file
+
     prefix = "subject_space_"
 
     # Write SPM batch command directly in a script that is readable by SPM standalone
@@ -283,8 +286,12 @@ def runApplyInverseDeformationField_SPM_standalone(
     script_file.write("jobs{1}.spm.util.defs.out{1}.pull.prefix = '" + prefix + "';\n")
     script_file.close()
 
+    # TODO : This might not even be needed with cmd line setting done prior
+    spm_file = _get_real_spm_standalone_file(get_spm_standalone_home())
+    cmdline = f"$SPMSTANDALONE_HOME/{spm_file} $MCR_HOME batch {script_location}"
+
     subprocess_run = subprocess.run(
-        f"$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch {script_location}",
+        cmdline,
         shell=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
@@ -507,7 +514,6 @@ def surf2surf(
     )
 
     # If system is MacOS, this export command must be run just before the mri_vol2surf command to bypass MacOs security
-    # todo : still needed ?
     if sys.platform == "darwin":
         cmd = "export DYLD_LIBRARY_PATH=$FREESURFER_HOME/lib/gcc/lib && " + cmd
     subprocess_mri_surf2surf = subprocess.run(
@@ -1209,7 +1215,6 @@ def get_wf(
         name="inputnode",
         mandatory_inputs=True,
     )
-    # todo : why are these set after ?
     inputnode.inputs.orig_nu = orig_nu
     inputnode.inputs.pet = pet
     inputnode.inputs.psf = pvc_psf_tsv
