@@ -263,11 +263,17 @@ def runApplyInverseDeformationField_SPM_standalone(
     from clinica.utils.check_dependency import get_spm_standalone_home
     from clinica.utils.spm import _get_real_spm_standalone_file
 
+    # TODO : matscript_folder argument useless
+    # TODO : actually this function is ONLY for SPM Standalone, I think it never worked before.
+    # TODO : surely this can be done more cleanly
+
     prefix = "subject_space_"
 
     # Write SPM batch command directly in a script that is readable by SPM standalone
     script_location = abspath("./m_script.m")
     script_file = open(script_location, "w+")
+    script_file.write("spm('Defaults', 'fMRI');")
+    script_file.write("spm_jobman('initcfg');")
     script_file.write(
         "jobs{1}.spm.util.defs.comp{1}.inv.comp{1}.def = {'"
         + deformation_field
@@ -284,6 +290,7 @@ def runApplyInverseDeformationField_SPM_standalone(
     script_file.write("jobs{1}.spm.util.defs.out{1}.pull.mask = 1;\n")
     script_file.write("jobs{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];\n")
     script_file.write("jobs{1}.spm.util.defs.out{1}.pull.prefix = '" + prefix + "';\n")
+    script_file.write("spm_jobman('run', jobs)")
     script_file.close()
 
     # TODO : This might not even be needed with cmd line setting done prior
@@ -318,6 +325,7 @@ def runApplyInverseDeformationField(target, deformation_field, img, matscript_fo
     import sys
 
     from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
+    # TODO : this is for MATLAB + SPM (not standalone). Probably can be erased.
 
     prefix = "subject_space_"
 
