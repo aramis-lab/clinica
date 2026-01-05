@@ -106,14 +106,17 @@ def test_use_spm_standalone_if_available_error(tmp_path):
             use_spm_standalone_if_available()
 
 
-def test_get_platform_dependant_matlab_command_for_spm_standalone():
+def test_get_matlab_command_for_spm_standalone(mocker):
     from clinica.utils.spm import (
         _get_matlab_command_for_spm_standalone,
     )
 
+    mocker.patch(
+        "clinica.utils.spm._get_real_spm_standalone_file", return_value="run_spm25.sh"
+    )
     assert (
         _get_matlab_command_for_spm_standalone(Path("/foo/bar"), Path("/foo/bar/baz"))
-        == "/foo/bar/run_spm12.sh /foo/bar/baz script"
+        == "/foo/bar/run_spm25.sh /foo/bar/baz script"
     )
 
 
