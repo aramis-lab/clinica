@@ -30,6 +30,56 @@ def test_identify_modality_is_nan():
 
 
 @pytest.fixture
+def input_df_compute_genfi_version() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "source_id": ["GRN001", "GRN001", "C9ORF001", "C9ORF001"],
+            "source_ses_id": ["01", "11", "17", "21"],
+        }
+    )
+
+
+def test_compute_genfi_version(input_df_compute_genfi_version: pd.DataFrame):
+    from clinica.converters.genfi_to_bids._utils import _compute_genfi_version
+
+    expected = pd.DataFrame(
+        {
+            "source_id": ["GRN001", "GRN001", "C9ORF001", "C9ORF001"],
+            "source_ses_id": ["01", "11", "17", "21"],
+            "genfi_version": ["GENFI1", "GENFI2", "GENFI2", "GENFI3"],
+        }
+    )
+    assert_frame_equal(_compute_genfi_version(input_df_compute_genfi_version), expected)
+
+
+@pytest.fixture
+def input_df_compute_session_numbers() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "source_id": ["GRN001", "GRN001", "C9ORF001", "C9ORF001"],
+            "genfi_version": ["GENFI1", "GENFI2", "GENFI2", "GENFI3"],
+            "source_ses_id": ["01", "11", "17", "21"],
+        }
+    )
+
+
+def test_compute_session_numbers(input_df_compute_session_numbers: pd.DataFrame):
+    from clinica.converters.genfi_to_bids._utils import _compute_session_numbers
+
+    expected = pd.DataFrame(
+        {
+            "source_id": ["GRN001", "GRN001", "C9ORF001", "C9ORF001"],
+            "genfi_version": ["GENFI1", "GENFI2", "GENFI2", "GENFI3"],
+            "source_ses_id": [1, 11, 17, 21],
+            "session_id": ["ses-01", "ses-11", "ses-17", "ses-21"],
+        }
+    )
+    assert_frame_equal(
+        _compute_session_numbers(input_df_compute_session_numbers), expected
+    )
+
+
+@pytest.fixture
 def input_df_compute_runs() -> pd.DataFrame:
     return pd.DataFrame(
         {
