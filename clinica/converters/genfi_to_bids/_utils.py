@@ -382,9 +382,8 @@ def _compute_source_id_and_source_ses_id(df: pd.DataFrame) -> pd.DataFrame:
 def _compute_genfi_version(df: pd.DataFrame) -> pd.DataFrame:
     """Compute the genfi_version from the souce_ses_id column."""
     return df.assign(
-        genfi_version=lambda x: x.source_ses_id.astype("int").apply(
-            lambda y: f"GENFI{len(str(y))}"
-        ),
+        genfi_version=lambda x: "GENFI"
+        + (x.source_ses_id.str[0].astype(int) + 1).astype(str)
     )
 
 
@@ -405,7 +404,7 @@ def _compute_session_numbers(df: pd.DataFrame) -> pd.DataFrame:
     """
 
     df = df.assign(
-        session_id=lambda x: x.source_ses_id.map(lambda y: f"ses-{y}"),
+        session_id=lambda x: "ses-" + x.source_ses_id,
         source_ses_id=lambda x: x.source_ses_id.astype("int"),
     )
     return df
