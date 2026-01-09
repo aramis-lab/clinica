@@ -61,7 +61,38 @@ where:
         └── 9
     ```
 
-- `BIDS_DIRECTORY` is the path to the output directory where the BIDS-converted version of GENFI will be stored.
+- `BIDS_DIRECTORY` is the path to the output directory where the BIDS-converted version of GENFI will be stored, whose content should look like:
+
+    ```text
+    BIDS_DIRECTORY
+    ├── dataset_description.json
+    ├── participants.tsv
+    ├── README
+    ├── sub-C9ORF001
+    │   ├── ses-01
+    │   │   ├── anat
+    │   │   │   ├── sub-C9ORF001_ses-01_run-01_T1w.json
+    │   │   │   ├── sub-C9ORF001_ses-01_run-01_T1w.nii.gz
+    │   │   │   ├── ...
+    │   │   ├── dwi
+    │   │   │   ├── sub-C9ORF001_ses-01_run-01_dwi.bval
+    │   │   │   ├── sub-C9ORF001_ses-01_run-01_dwi.bvec
+    │   │   │   ├── ...
+    │   │   ├── func
+    │   │   │   ├── sub-C9ORF001_ses-01_task-rest_run-01_bold.json
+    │   │   │   └── sub-C9ORF001_ses-01_task-rest_run-01_bold.nii.gz
+    │   │   └── sub-C9ORF001_ses-01_scans.tsv
+    │   ├── ses-11
+    │   │   ├── ...
+    │   └── sub-C9ORF001_sessions.tsv
+    ├── sub-GRN001
+    │   ├── ses-01
+    │   │   ├── ...
+    │   └── sub-GRN001_sessions.tsv
+    └── ...
+    ```
+
+    Sessions naming respects the naming convention used in GENFI clinical data. In particular, for `ses-XY`, `X` represents the GENFI phase, and `Y` represents the visit number.
 
 - `OPTIONS`:
     - `--clinical-data-dir/-cdd` is the path to the clinical data directory.
