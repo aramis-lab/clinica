@@ -92,7 +92,7 @@ where:
     └── ...
     ```
 
-    Sessions naming respects the naming convention used in GENFI clinical data. In particular, for `ses-XY`, `X` represents the GENFI phase, and `Y` represents the visit number.
+    Sessions respect the naming convention used in GENFI clinical data. In particular, for `ses-XY`, `X` represents the GENFI phase, and `Y` represents the visit number.
 
 - `OPTIONS`:
     - `--clinical-data-dir/-cdd` is the path to the clinical data directory.
