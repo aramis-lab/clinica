@@ -58,7 +58,6 @@ def test_compute_session_numbers(_generate_clinical_data: pd.DataFrame):
     expected = pd.DataFrame(
         {
             "source_id": ["GRN001", "GRN001", "C9ORF001", "C9ORF001"],
-            "genfi_version": ["GENFI1", "GENFI2", "GENFI2", "GENFI3"],
             "source_ses_id": [1, 11, 17, 21],
             "session_id": ["ses-01", "ses-11", "ses-17", "ses-21"],
         }
