@@ -19,11 +19,11 @@ def test_get_luts(mocker):
     [
         (
             "fs_default.txt",
-            "bfebee26de22dc4cd03d5ee3f26524b046cce232679e1ba1bc26f18180d491f1",
+            "868b3492e6c8e334a005cbf98f6bdcac766a4d4ea33accf5bb5e39250c697bfc",
         ),
         (
             "fs_a2009s.txt",
-            "ae9660f2a9fb44b7d828dcf1f390ce81ed600471810af89042ba011c7a2a675f",
+            "2efb139e824c97a5b69e9044ab4ecbb0f5991657e5b79b768f8147ce3d2c42ec",
         ),
     ],
 )
