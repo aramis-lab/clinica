@@ -276,7 +276,11 @@ def _get_username() -> str:
     import os
     import pwd
 
-    return pwd.getpwuid(os.getuid()).pw_name
+    try:
+        return pwd.getpwuid(os.getuid()).pw_name
+    except KeyError:
+        cprint("Assuming a no-name docker user", lvl="debug")
+        return "docker_user"
 
 
 def _get_machine_name() -> str:
