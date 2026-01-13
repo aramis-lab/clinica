@@ -177,25 +177,6 @@ def _write_adni_sessions_tsv(
         bids_subjs_paths: a list with the path to all bids subjects
     """
 
-    df_subj_sessions["adas_memory"] = (
-        df_subj_sessions["adas_Q1"]
-        + df_subj_sessions["adas_Q4"]
-        + df_subj_sessions["adas_Q7"]
-        + df_subj_sessions["adas_Q8"]
-        + df_subj_sessions["adas_Q9"]
-    )  # / 45
-    df_subj_sessions["adas_language"] = (
-        df_subj_sessions["adas_Q2"]
-        + df_subj_sessions["adas_Q5"]
-        + df_subj_sessions["adas_Q10"]
-        + df_subj_sessions["adas_Q11"]
-        + df_subj_sessions["adas_Q12"]
-    )  # / 25
-    df_subj_sessions["adas_praxis"] = (
-        df_subj_sessions["adas_Q3"] + df_subj_sessions["adas_Q6"]
-    )  # / 10
-    df_subj_sessions["adas_concentration"] = df_subj_sessions["adas_Q13"]  # / 5
-
     df_subj_sessions = df_subj_sessions.fillna("n/a")
 
     # compute the amyloid and ptau status
