@@ -27,6 +27,8 @@ Logical Memory - Delayed Recall Total Number of Story Units Recalled	logmem_dela
 Logical Memory - Immediate Recall Total Number of Story Units Recalled	logmem_imm	Number (int)		LIMMTOTAL	NEUROBAT.csv
 Digit Symbol Substitution Test Score	dsst	Number (int)		DIGITSCOR	NEUROBAT.csv
 					
+AD Assessment scale - Delayed Word Recall	adas_Q4	Number		ADASQ4	ADNIMERGE.csv/ADNIMERGE
+
 Item Level Data - ANART	anart_Q1	Number		ANART_Q1	ITEM.csv
 Item Level Data - ANART	anart_Q2	Number		ANART_Q2	ITEM.csv
 Item Level Data - ANART	anart_Q3	Number		ANART_Q3	ITEM.csv
