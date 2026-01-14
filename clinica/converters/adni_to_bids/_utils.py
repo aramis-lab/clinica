@@ -143,16 +143,9 @@ def correct_diagnosis_sc_adni3(
         Corrected participants_df.
     """
     diagnosis_dict = {1: "CN", 2: "MCI", 3: "AD"}
-    # DXSUM_PDXCONV_ADNIALL has been renamed to DXSUM_PDXCONV
-    # this ensures old ADNI downloads still work with recent versions of Clinica
-    try:
-        dxsum_df = load_clinical_csv(
-            clinical_data_dir, "DXSUM_PDXCONV_ADNIALL"
-        ).set_index(["PTID", "VISCODE2"])
-    except OSError:
-        dxsum_df = load_clinical_csv(clinical_data_dir, "DXSUM_PDXCONV").set_index(
-            ["PTID", "VISCODE2"]
-        )
+    dxsum_df = load_clinical_csv(clinical_data_dir, "DXSUM").set_index(
+        ["PTID", "VISCODE2"]
+    )
     missing_sc = participants_df[
         participants_df.original_study == ADNIStudy.ADNI3.value
     ]
@@ -356,8 +349,7 @@ def _is_a_visit_code_2_type(csv_filename: str) -> bool:
     """If the csv file is among these files, then the visit code column is 'VISCODE2'."""
     return csv_filename in {
         "ADAS_ADNIGO2.csv",
-        "DXSUM_PDXCONV.csv",
-        "DXSUM_PDXCONV_ADNIALL.csv",
+        "DXSUM.csv",
         "CDR.csv",
         "NEUROBAT.csv",
         "GDSCALE.csv",
