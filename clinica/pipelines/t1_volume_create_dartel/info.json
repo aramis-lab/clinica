@@ -7,8 +7,8 @@
     "dependencies": [
         {
             "type": "software",
-            "name": "spm",
-            "version": ">=12"
+            "name": "spm standalone",
+            "version": ">=25"
         }
     ]
 }

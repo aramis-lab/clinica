@@ -10,7 +10,7 @@ from nipype.interfaces.base import (
     traits,
 )
 from nipype.interfaces.spm.base import SPMCommandInputSpec
-from nipype.interfaces.spm.preprocess import ApplyDeformations
+from nipype.interfaces.spm.preprocess import ApplyDeformations, NewSegment
 from nipype.utils.filemanip import filename_to_list, list_to_filename
 
 
@@ -150,3 +150,23 @@ class ApplySegmentationDeformation(ApplyDeformations):
         if opt == "in_files":
             return np.array(filename_to_list(val), dtype=object)
         return val
+
+    # todo : duplicate method?
+    def _list_outputs(self):
+        outputs = self._outputs().get()
+        outputs["out_files"] = []
+        for filename in self.inputs.in_files:
+            _, fname = os.path.split(filename)
+            outputs["out_files"].append(os.path.realpath("w%s" % fname))
+        return outputs
+
+
+class ComputeNewSegment(NewSegment):
+    """Use spm_preproc (New Segment) to separate structural images into
+    different tissue classes. Supports multiple modalities.
+
+    Adapts Nipype NewSegment interface to SPM25 and drops SPM8. When Nipype's own interface is adapted this class can be removed.
+    """
+
+    _jobtype = "spatial"
+    _jobname = "preproc"

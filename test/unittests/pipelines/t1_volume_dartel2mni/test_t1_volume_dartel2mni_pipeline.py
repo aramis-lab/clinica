@@ -21,7 +21,9 @@ def test_t1_volume_dartel2mni_info_loading(tmp_path):
         "version": "0.1.0",
         "space_caps": "30M",
         "space_wd": "150M",
-        "dependencies": [{"type": "software", "name": "spm", "version": ">=12"}],
+        "dependencies": [
+            {"type": "software", "name": "spm standalone", "version": ">=25"}
+        ],
     }
 
 
@@ -35,8 +37,8 @@ def test_t1_volume_dartel2mni_dependencies(tmp_path, mocker):
     from clinica.utils.check_dependency import SoftwareDependency, ThirdPartySoftware
 
     mocker.patch(
-        "clinica.utils.check_dependency._get_spm_version",
-        return_value=Version("12.7219"),
+        "clinica.utils.check_dependency._get_spm_standalone_version",
+        return_value=Version("25.7219"),
     )
     caps = build_caps_directory(
         tmp_path / "caps",
@@ -49,6 +51,6 @@ def test_t1_volume_dartel2mni_dependencies(tmp_path, mocker):
 
     assert pipeline.dependencies == [
         SoftwareDependency(
-            ThirdPartySoftware.SPM, SpecifierSet(">=12"), Version("12.7219")
+            ThirdPartySoftware.SPMSTANDALONE, SpecifierSet(">=25"), Version("25.7219")
         ),
     ]

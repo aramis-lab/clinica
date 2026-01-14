@@ -192,16 +192,15 @@ class T1VolumeTissueSegmentation(Pipeline):
     def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.io as nio
-        import nipype.interfaces.spm as spm
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
         from clinica.utils.filemanip import unzip_nii, zip_nii
         from clinica.utils.nipype import container_from_filename, fix_join
-        from clinica.utils.spm import use_spm_standalone_if_available
 
         from .t1_volume_tissue_segmentation_utils import (
             ApplySegmentationDeformation,
+            ComputeNewSegment,
             get_tissue_tuples,
             init_input_node,
             print_end_pipeline,
@@ -229,7 +228,7 @@ class T1VolumeTissueSegmentation(Pipeline):
 
         # Unified Segmentation
         # ====================
-        new_segment = npe.Node(spm.NewSegment(), name="2-SpmSegmentation")
+        new_segment = npe.Node(ComputeNewSegment(), name="2-SpmSegmentation")
         new_segment.inputs.write_deformation_fields = [True, True]
         new_segment.inputs.tissues = get_tissue_tuples(
             self.parameters["tissue_probability_maps"],
