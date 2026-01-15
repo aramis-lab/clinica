@@ -61,7 +61,6 @@ Specific dependencies are described in the table below (1) :
 ??? info "Clinica available pipelines"
     --8<-- "snippets/inventory_pipelines.md"
 
-<div markdown="1" class="third_party_table">
 
 |                     | ANTs  |  Convert3D  |  FreeSurfer  |   FSL    |  ITK  |  MRtrix3  | PETPVC | SPM |
 |:-------------------:|:-----:|:-----------:|:------------:|:--------:|:-----:|:---------:|:------:|:---:|
@@ -77,7 +76,6 @@ Specific dependencies are described in the table below (1) :
 |   Stats > Surface   |       |             |      ✓       |          |       |           |        |     |
 |   Stats > Volume    |       |             |              |          |       |           |        |  ✓  |
 
-</div>
 
 - *✓∘ : for anatomical linear pipelines there is also the possibility to use ANTsPy instead of ANTs since Clinica `v0.9.0`* 
 - *✓⟡ : you only need to install ITK if you plan to perform partial volume correction using PETPVC.*
