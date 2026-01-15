@@ -63,19 +63,19 @@ Specific dependencies are described in the table below (1) :
 
 <div markdown="1" class="third_party_table">
 
-|                     | ANTs | Convert3D | FreeSurfer | FSL | ITK | MRtrix3 | PETPVC | SPM |
-|:-------------------:|:----:|:---------:|:----------:|:---:|:---:|:-------:|:------:|:---:|
-|    Anat > Linear    |  ✓∘  |           |            |     |     |         |        |     |
-|    Anat > Volume    |      |           |            |     |     |         |        |  ✓  |
-|  Anat > FreeSurfer  |      |           |     ✓      |     |     |         |        |     |
-| DWI > Preprocessing |  ✓   |     ✓     |            |  ✓  |     |    ✓    |        |     |
-|      DWI > DTI      |  ✓   |           |            |  ✓  |     |    ✓    |        |     |
-|  DWI > Connectome   |      |           |     ✓      |  ✓  |     |    ✓    |        |     |
-|    PET > Linear     |  ✓   |           |            |     |     |         |        |     |
-|    PET > Surface    |      |           |     ✓      |  ✓  | ✓⟡  |         |   ✓⟡   |  ✓  |
-|    PET > Volume     |      |           |            |     | ✓⟡  |         |   ✓⟡   |  ✓  |
-|   Stats > Surface   |      |           |     ✓      |     |     |         |        |     |
-|   Stats > Volume    |      |           |            |     |     |         |        |  ✓  |
+|                     | ANTs | Convert3D | FreeSurfer | FSL &nbsp; | ITK &nbsp; | MRtrix3 | PETPVC | SPM |
+|:-------------------:|:----:|:---------:|:----------:|:----------:|:----------:|:-------:|:------:|:---:|
+|    Anat > Linear    |  ✓∘  |           |            |            |            |         |        |     |
+|    Anat > Volume    |      |           |            |            |            |         |        |  ✓  |
+|  Anat > FreeSurfer  |      |           |     ✓      |            |            |         |        |     |
+| DWI > Preprocessing |  ✓   |     ✓     |            |     ✓      |            |    ✓    |        |     |
+|      DWI > DTI      |  ✓   |           |            |     ✓      |            |    ✓    |        |     |
+|  DWI > Connectome   |      |           |     ✓      |     ✓      |            |    ✓    |        |     |
+|    PET > Linear     |  ✓   |           |            |            |            |         |        |     |
+|    PET > Surface    |      |           |     ✓      |     ✓      |     ✓⟡     |         |   ✓⟡   |  ✓  |
+|    PET > Volume     |      |           |            |            |     ✓⟡     |         |   ✓⟡   |  ✓  |
+|   Stats > Surface   |      |           |     ✓      |            |            |         |        |     |
+|   Stats > Volume    |      |           |            |            |            |         |        |  ✓  |
 
 </div>
 
