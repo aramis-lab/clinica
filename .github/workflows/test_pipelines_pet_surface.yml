@@ -1,4 +1,4 @@
-name: PET Pipelines Tests
+name: PET Surface Pipelines Tests
 
 on:
   schedule:
@@ -32,7 +32,7 @@ jobs:
 #          --disable-warnings \
 #          ./nonregression/pipelines/pet
 
-  test-pipelines-pet-Linux:
+  test-pipelines-pet-surface-Linux:
     runs-on:
       - self-hosted
       - Linux
@@ -55,4 +55,4 @@ jobs:
           --basetemp=/mnt/data/ci/tmp \
           --junitxml=./test-reports/non_regression_pet_linux.xml \
           --disable-warnings \
-          ./nonregression/pipelines/pet
+          ./nonregression/pipelines/pet/test_pet_surface.py

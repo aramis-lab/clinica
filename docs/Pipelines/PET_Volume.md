@@ -23,7 +23,7 @@ You need to have performed the [`t1-volume`](./T1_Volume.md) pipeline on your T1
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of either [SPM12](../Software/Third-party.md#spm12) and [Matlab](../Software/Third-party.md#matlab), or [spm standalone](../Software/Third-party.md#spm12-standalone).
+If you only installed the core of Clinica, this pipeline needs the installation of [SPM standalone](../Software/Third-party.md#spm12-standalone).
 
 In addition, if you want to apply partial volume correction (PVC) on your PET data, you will need to install [PETPVC 1.2.4](../Software/Third-party.md#petpvc), which depends on [ITK 4](../Software/Third-party.md#itk).
 
