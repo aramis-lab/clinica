@@ -1,7 +1,5 @@
 <!-- markdownlint-disable MD007 MD033 -->
 
---8<-- "snippets/spm_banner.md"
-
 # `t1-volume` – Volume-based processing of T1-weighted MR images with SPM
 
 This pipeline performs four main processing steps on T1-weighted MR images using the [SPM](http://www.fil.ion.ucl.ac.uk/spm/) software:

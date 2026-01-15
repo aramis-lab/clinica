@@ -1,7 +1,5 @@
 <!-- markdownlint-disable MD046 -->
 
---8<-- "snippets/spm_banner.md"
-
 # `pet-volume` – Volume-based processing of PET images
 
 This pipeline performs several processing steps on [PET](../glossary.md#pet) data in voxel space, which include:
