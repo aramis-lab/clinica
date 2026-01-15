@@ -40,12 +40,11 @@ def center_nifti(
     images detected as problematic are converted from INPUT_BIDS_DIRECTORY to OUTPUT_BIDS_DIRECTORY, whilst the others
     are copied verbatim.
     """
-    import time
     from pathlib import Path
 
     from clinica.utils.stream import cprint, log_and_raise
 
-    from .data_handling import center_all_nifti, write_list_of_files
+    from .data_handling import center_all_nifti, centered_timestamp, write_list_of_files
 
     cprint(
         f"Clinica is now centering the requested images with a threshold of {centering_threshold} mm.",
@@ -72,8 +71,10 @@ def center_nifti(
     )
 
     # Write list of created files
-    timestamp = time.strftime("%Y%m%d-%H%M%S", time.localtime(time.time()))
-    log_file = Path(output_bids_directory) / f"centered_nifti_list_{timestamp}.txt"
+    log_file = (
+        Path(output_bids_directory) / f"centered_nifti_list_{centered_timestamp()}.txt"
+    )
+
     if not write_list_of_files(
         sorted([f.relative_to(output_bids_directory) for f in centered_files]), log_file
     ):

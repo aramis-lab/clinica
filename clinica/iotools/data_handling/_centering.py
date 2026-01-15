@@ -11,7 +11,14 @@ __all__ = [
     "are_images_centered_around_origin_of_world_coordinate_system",
     "check_relative_volume_location_in_world_coordinate_system",
     "center_all_nifti",
+    "centered_timestamp",
 ]
+
+
+def centered_timestamp():
+    import time
+
+    return time.strftime("%Y%m%d-%H%M%S", time.localtime(time.time()))
 
 
 def _handle_output_existing_files(

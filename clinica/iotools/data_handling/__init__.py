@@ -2,6 +2,7 @@ from ._centering import (
     are_images_centered_around_origin_of_world_coordinate_system,
     center_all_nifti,
     center_nifti_origin,
+    centered_timestamp,
     check_relative_volume_location_in_world_coordinate_system,
 )
 from ._files import create_subs_sess_list, write_list_of_files
@@ -18,4 +19,5 @@ __all__ = [
     "write_list_of_files",
     "are_images_centered_around_origin_of_world_coordinate_system",
     "check_relative_volume_location_in_world_coordinate_system",
+    "centered_timestamp",
 ]

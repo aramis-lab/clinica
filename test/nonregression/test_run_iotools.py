@@ -84,7 +84,7 @@ def test_compute_missing_modalities(cmdopt, tmp_path):
         assert compare_missing_modality_tsv(out_name, ref_name)
 
 
-def _strftime_mock(format: str, struct_time: tuple) -> str:
+def _centered_timestamp_mock() -> str:
     """The mock returns the timestamp of the reference file in the CI data."""
     return "20250225-151004"
 
@@ -104,7 +104,10 @@ def test_center_nifti(cmdopt, tmp_path):
     output_dir = tmp_path / "bids_centered"
     ref_dir = base_dir / "CenterNifti" / "ref" / "bids_centered"
 
-    with patch("time.strftime", wraps=_strftime_mock) as time_mock:
+    with patch(
+        "clinica.iotools.data_handling.centered_timestamp",
+        wraps=_centered_timestamp_mock,
+    ) as time_mock:
         center_nifti(
             str(base_dir / "CenterNifti" / "in" / "bids"),
             output_dir,
