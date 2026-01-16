@@ -455,10 +455,6 @@ def create_adni_sessions_dict(
                 ]["BIDS CLINICA"].tolist()
             )
 
-            df_filtered = df_filtered.loc[
-                :, (~df_filtered.columns.isin(df_subj_session.columns))
-            ]
-
             df_subj_session = pd.concat([df_subj_session, df_filtered], axis=1)
     if df_subj_session.empty:
         cprint(
