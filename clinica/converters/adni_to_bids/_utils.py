@@ -329,7 +329,6 @@ def _get_visit_code_column_name(csv_filename: str) -> str:
 def _is_a_visit_code_2_type(csv_filename: str) -> bool:
     """If the csv file is among these files, then the visit code column is 'VISCODE2'."""
     return csv_filename in {
-        "ADAS_ADNIGO2.csv",
         "DXSUM.csv",
         "CDR.csv",
         "NEUROBAT.csv",
