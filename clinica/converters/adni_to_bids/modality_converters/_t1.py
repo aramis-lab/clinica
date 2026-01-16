@@ -108,7 +108,7 @@ def _compute_t1_paths(
     t1_df = _initialize_t1_df()
     adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
     mprage_meta = load_clinical_csv(csv_dir, "MPRAGEMETA")
-    mri_quality = load_clinical_csv(csv_dir, "MRIQUALITY")
+    mri_quality = load_clinical_csv(csv_dir, "MRIPROT")
     mayo_mri_qc = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_IMAGEQC_05_07_15")
 
     # Keep only T1 scans
