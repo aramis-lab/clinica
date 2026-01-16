@@ -428,13 +428,13 @@ def create_adni_sessions_dict(
                 f"Clinical dataframe extracted from {location} is empty after filtering.",
                 lvl="debug",
             )
-            dict_column_correspondence = dict(
-                zip(df_sessions["ADNI"], df_sessions["BIDS CLINICA"])
+
+            df_filtered = pd.DataFrame(
+                columns=df_sessions[
+                    df_sessions["ADNI location"].str.split("/").str[0] == location
+                ]["BIDS CLINICA"].tolist()
             )
-            df_filtered.rename(columns=dict_column_correspondence, inplace=True)
-            df_filtered = df_filtered.loc[
-                :, (~df_filtered.columns.isin(df_subj_session.columns))
-            ]
+
             df_subj_session = pd.concat([df_subj_session, df_filtered], axis=1)
     if df_subj_session.empty:
         cprint(
