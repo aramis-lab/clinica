@@ -449,13 +449,11 @@ def create_adni_sessions_dict(
                 lvl="debug",
             )
 
-            dict_column_correspondence = dict(
-                zip(df_sessions["ADNI"], df_sessions["BIDS CLINICA"])
+            df_filtered = pd.DataFrame(
+                columns=df_sessions[
+                    df_sessions["ADNI location"].str.split("/").str[0] == location
+                ]["BIDS CLINICA"].tolist()
             )
-            renamed_cols = set(dict_column_correspondence.values())
-
-            df_filtered.rename(columns=dict_column_correspondence, inplace=True)
-            df_filtered = df_filtered.loc[:, df_filtered.columns.isin(renamed_cols)]
 
             df_filtered = df_filtered.loc[
                 :, (~df_filtered.columns.isin(df_subj_session.columns))
