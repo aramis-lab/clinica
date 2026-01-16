@@ -9,8 +9,8 @@ Average PIB SUVR of frontal cortex, anterior cingulate, precuneus cortex and par
 Average AV45 SUVR of frontal, anterior cingulate, precuneus, and parietal cortex relative to cerebellum	adni_av45	Number (float)		AV45	ADNIMERGE.csv/ADNIMERGE
 Clinical Dementia Rating Scale - Sum of boxes	cdr_sb	"Number: 0;0.5;1;2;3"		CDRSB	ADNIMERGE.csv/ADNIMERGE
 Clinical Dementia Rating Scale - Global	cdr_global	"Number: 0;0.5;1;2;3"		CDGLOBAL	CDR.csv
-AD Assessment Scale - 11	adas11	Number (float)		ADAS11	ADNIMERGE.csv/ADNIMERGE
-AD Assessment Scale - 13	adas13	Number (float)		ADAS13	ADNIMERGE.csv/ADNIMERGE
+AD Assessment Scale Total Score - 11, classic 70 point total score excluding Q4 (Delayed Word Recall) and Q14 (Number Cancellation)	adas11	Number (float)		ADAS11	ADNIMERGE.csv/ADNIMERGE
+AD Assessment Scale Total Score - 13, 85 point total score including Q4 (Delayed Word Recall) and Q14 (Number Cancellation)	adas13	Number (float)		ADAS13	ADNIMERGE.csv/ADNIMERGE
 Mini-mental state exam	MMSE	Number	int	MMSE	ADNIMERGE.csv/ADNIMERGE
 Functional Activities Questionnaires	FAQ	Number		FAQ	ADNIMERGE.csv/ADNIMERGE
 UCSF Ventricule Volume	adni_ventricles_vol	Number (float)		Ventricles	ADNIMERGE.csv/ADNIMERGE
