@@ -100,7 +100,7 @@ def _compute_dwi_paths(
     dwi_dfs_list = []
     # Loading needed .csv files
     adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
-    mayo_mri_qc = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15")
+    mayo_mri_qc = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_IMAGEQC_05_07_15")
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == "DTI"]
     mri_list = load_clinical_csv(csv_dir, "MRILIST")
 
