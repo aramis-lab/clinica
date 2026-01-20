@@ -215,7 +215,7 @@ You have basically three options:
 
 ___
 
-### SPM standalone
+### SPM Standalone
 
 !!! danger "Set-up MATLAB + SPM"
     Clinica now only supports SPM standalone, which functions without MATLAB.

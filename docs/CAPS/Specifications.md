@@ -64,9 +64,9 @@ subjects/
                   └─ <source_file>_segm-<segm>_dartelinput.nii.gz
 ```
 
-- The `modulated-{on|off}` key indicates if modulation has been used in [SPM](../Software/Third-party.md#spm12) to compensate for the effect of spatial normalization.
+- The `modulated-{on|off}` key indicates if modulation has been used in [SPM](../Software/Third-party.md#spm-standalone) to compensate for the effect of spatial normalization.
 - The possible values for the `segm-<segm>` key/value are: `graymatter`, `whitematter`, `csf`, `bone`, `softtissue`, and `background`.
-- The T1 image in `Ixi549Space` (reference space of the TPM) is obtained by applying the transformation obtained from the [SPM](../Software/Third-party.md#spm12) segmentation routine to the T1 image in native space.
+- The T1 image in `Ixi549Space` (reference space of the TPM) is obtained by applying the transformation obtained from the [SPM](../Software/Third-party.md#spm-standalone) segmentation routine to the T1 image in native space.
 
 #### DARTEL
 
@@ -81,7 +81,7 @@ groups/
 ```
 
 - The final group template is `<group_id>_template.nii.gz`.
-- The `<group_id>_iteration-<index>_template.nii.gz` obtained at each iteration will only be used when obtaining flow fields for registering a new image into an existing template ([SPM](../Software/Third-party.md#spm12) DARTEL existing templates procedure).
+- The `<group_id>_iteration-<index>_template.nii.gz` obtained at each iteration will only be used when obtaining flow fields for registering a new image into an existing template ([SPM](../Software/Third-party.md#spm-standalone) DARTEL existing templates procedure).
 
 !!! Note "Note for SPM experts"
     The original name of `<group_id>_iteration-<index>_template.nii.gz` is `Template<index>.nii`.

@@ -1,7 +1,7 @@
 # `center-nifti` - Center NIfTI files of a BIDS directory
 
 Your [BIDS](http://bids.neuroimaging.io) dataset may contain NIfTI files where the origin does not correspond to the center of the image (i.e. the anterior commissure).
-[SPM](../Software/Third-party.md#spm12) is especially sensitive to this case and segmentation procedures may result in blank images or even fail.
+[SPM](../Software/Third-party.md#spm-standalone) is especially sensitive to this case and segmentation procedures may result in blank images or even fail.
 To mitigate this issue we offer a simple tool that generates from your BIDS a new dataset with centered NIfTI files for the selected modalities.
 
 
