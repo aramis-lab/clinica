@@ -406,9 +406,7 @@ def run_m_script(m_file: str) -> str:
     """
     from pathlib import Path
 
-    from clinica.pipelines.statistics_volume.statistics_volume_utils import (  # noqa
-        _delete_last_line,
-        _run_matlab_script_with_matlab,
+    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
         _run_matlab_script_with_spm_standalone,
     )
     from clinica.utils.spm import use_spm_standalone_if_available
@@ -420,51 +418,12 @@ def run_m_script(m_file: str) -> str:
         raise ValueError(
             f"[Error] {m_file} is not a Matlab file (extension must be .m)"
         )
-    if use_spm_standalone_if_available():
-        _delete_last_line(m_file)
-        _run_matlab_script_with_spm_standalone(m_file)
-    else:
-        _run_matlab_script_with_matlab(str(m_file))
+    use_spm_standalone_if_available()
+    _run_matlab_script_with_spm_standalone(m_file)
     output_mat_file = (m_file.parent.parent / "2_sample_t_test" / "SPM.mat").resolve()
     if not output_mat_file.is_file():
         raise RuntimeError(f"Output matrix {output_mat_file} was not produced")
     return str(output_mat_file)
-
-
-def _delete_last_line(filename: Path) -> None:
-    """Removes the last line of the provided file.
-
-    Used to remove the call to spm jobman if the MATLAB file
-    is used with SPM standalone.
-
-    Parameters
-    ----------
-    filename: Path
-        Path to filename
-    """
-    import os
-
-    with open(filename, "r+", encoding="utf-8") as file:
-        # Move the pointer (similar to a cursor in a text editor) to the end of the file
-        file.seek(0, os.SEEK_END)
-
-        # This code means the following code skips the very last character in the file -
-        # i.e. in the case the last line is null we delete the last line
-        # and the penultimate one
-        pos = file.tell() - 1
-
-        # Read each character in the file one at a time from the penultimate
-        # character going backwards, searching for a newline character
-        # If we find a new line, exit the search
-        while pos > 0 and file.read(1) != "\n":
-            pos -= 1
-            file.seek(pos, os.SEEK_SET)
-
-        # So long as we're not at the start of the file, delete all the characters ahead
-        # of this position
-        if pos > 0:
-            file.seek(pos, os.SEEK_SET)
-            file.truncate()
 
 
 def _run_matlab_script_with_spm_standalone(m_file: Path) -> None:
@@ -492,56 +451,10 @@ def _get_matlab_standalone_command(m_file: Path) -> str:
     SystemError
         If this is run on unsupported platforms.
     """
-    if _is_running_on_mac():
-        return f"cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch {m_file}"
-    if _is_running_on_linux():
-        return f"$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch {m_file}"
-    raise SystemError("Clinica only support Mac OS and Linux")
+    from clinica.utils.check_dependency import get_spm_standalone_home
+    from clinica.utils.spm import _get_real_spm_standalone_file
 
-
-def _is_running_on_os(os: str) -> bool:
-    import platform
-
-    return platform.system().lower().startswith(os)
-
-
-_is_running_on_mac = functools.partial(_is_running_on_os, os="darwin")
-_is_running_on_linux = functools.partial(_is_running_on_os, os="linux")
-
-
-def _run_matlab_script_with_matlab(m_file: str) -> None:
-    """Runs a matlab script using matlab
-
-    Parameters
-    ----------
-    m_file: str
-        Path to the script
-    """
-    import platform
-    from os.path import abspath
-
-    from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
-
-    _add_spm_path_to_matlab_script(m_file)
-    MatlabCommand.set_default_matlab_cmd(get_matlab_command())
-    matlab = MatlabCommand()
-    if platform.system().lower().startswith("linux"):
-        matlab.inputs.args = "-nosoftwareopengl"
-    matlab.inputs.paths = Path(m_file).parent
-    matlab.inputs.script = Path(m_file).stem
-    matlab.inputs.single_comp_thread = False
-    matlab.inputs.logfile = abspath("./matlab_output.log")
-    matlab.run()
-
-
-def _add_spm_path_to_matlab_script(m_file: str) -> None:
-    from clinica.utils.check_dependency import get_spm_home
-
-    with open(m_file, "r") as fp:
-        lines = fp.readlines()
-    lines.insert(0, f"addpath('{get_spm_home()}');")
-    with open(m_file, "w") as fp:
-        fp.writelines(lines)
+    return f"$SPMSTANDALONE_HOME/{_get_real_spm_standalone_file(get_spm_standalone_home())} $MCR_HOME batch {m_file}"
 
 
 def clean_template_file(mat_file: str, template_file: str) -> str:
