@@ -298,7 +298,6 @@ def test_get_spm_standalone_version(tmp_path, mocker, platform):
     mcr_home_mock = tmp_path / "mcr_home"
     mcr_home_mock.mkdir()
 
-    mocker.patch("platform.system", return_value=platform)
     with mock.patch.dict(
         os.environ,
         {
@@ -320,9 +319,7 @@ def test_get_spm_standalone_version(tmp_path, mocker, platform):
                     spm_mock.set_mlab_paths.assert_called()
                     mock_method.assert_called_once_with(
                         matlab_cmd=(
-                            f"cd {tmp_path / 'spm_standalone_home'} && ./{spm_filename} {tmp_path / 'mcr_home'} script"
-                            if platform == "darwin"
-                            else f"{tmp_path / 'spm_standalone_home' / spm_filename} {tmp_path / 'mcr_home'} script"
+                            f"{tmp_path / 'spm_standalone_home' / spm_filename} {tmp_path / 'mcr_home'} script"
                         ),
                         use_mcr=True,
                     )
