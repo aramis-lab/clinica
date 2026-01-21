@@ -299,12 +299,12 @@ def test_get_matlab_standalone_command(mocker):
     )
 
     mocker.patch(
-        f"clinica.pipelines.statistics_volume.statistics_volume_utils._get_matlab_standalone_command",
-        return_value="run_spm25.sh",
+        f"clinica.utils.spm._get_real_spm_standalone_file",
+        return_value="run_spm12.sh",
     )
     assert (
         _get_matlab_standalone_command(Path("script.m"))
-        == f"$SPMSTANDALONE_HOME/run_spm25.sh $MCR_HOME batch script.m"
+        == f"$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch script.m"
     )
 
 
