@@ -293,19 +293,21 @@ def test_run_m_script(tmp_path, mocker):
         assert run_m_script(m_file) == str(expected_output_file)
 
 
-def test_get_matlab_standalone_command(mocker):
+def test_get_matlab_standalone_command():
+    import clinica.utils.check_dependency as check_dep
+    import clinica.utils.spm as spm_utils
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
         _get_matlab_standalone_command,
     )
 
-    mocker.patch(
-        f"clinica.utils.spm._get_real_spm_standalone_file",
-        return_value="run_spm12.sh",
-    )
-    assert (
-        _get_matlab_standalone_command(Path("script.m"))
-        == f"$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch script.m"
-    )
+    with mock.patch.object(spm_utils, "_get_real_spm_standalone_file") as mock_get_real:
+        with mock.patch.object(check_dep, "get_spm_standalone_home") as mock_get_spm:
+            mock_get_real.return_value = "run_spm12.sh"
+            assert (
+                _get_matlab_standalone_command(Path("script.m"))
+                == f"$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch script.m"
+            )
+            mock_get_spm.assert_called_once()
 
 
 @pytest.mark.parametrize(
