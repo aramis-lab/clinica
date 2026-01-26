@@ -271,7 +271,7 @@ def test_load_clinical_csv_error(tmp_path):
 
     from clinica.converters._utils import load_clinical_csv  # TODO: move this test
 
-    pattern = r"(_\d{1,2}[A-Za-z]{3}\d{4})?.csv"
+    pattern = r"^(?!\.)" + r"(?:.*_)?" + r"(?:_\d{1,2}[A-Za-z]{3}\d{4})?\.csv$"
     with pytest.raises(
         IOError,
         match=re.escape(
