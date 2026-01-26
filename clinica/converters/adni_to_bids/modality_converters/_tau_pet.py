@@ -115,7 +115,9 @@ def _compute_tau_pet_paths(
         if subject_pet_meta.empty:
             continue
         # QC for TAU PET images for ADNI 2 and 3
-        tau_qc_subj = tauqc[(tauqc.SCANQLTY == 1) & (tauqc.RID == int(subject[-4:]))]
+        tau_qc_subj = tauqc[
+            (tauqc.SCANQLTY == 1) & (tauqc.RID == int(subject.split("_S_")[-1]))
+        ]
         tau_qc_subj.rename(columns={"SCANDATE": "EXAMDATE"}, inplace=True)
         subj_dfs_list = get_images_pet(
             subject=subject,
