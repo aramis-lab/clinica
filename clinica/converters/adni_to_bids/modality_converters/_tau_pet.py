@@ -107,7 +107,6 @@ def _compute_tau_pet_paths(
     pet_tau_df = pd.DataFrame(columns=_get_tau_pet_df_columns())
     pet_tau_dfs_list = []
     tauqc = load_clinical_csv(csv_dir, "TAUQC")
-    tauqc3 = load_clinical_csv(csv_dir, "TAUQC3")
     pet_meta_list = load_clinical_csv(csv_dir, "PET_META_LIST")
 
     for subject in subjects:
@@ -115,16 +114,10 @@ def _compute_tau_pet_paths(
         subject_pet_meta = pet_meta_list[pet_meta_list["Subject"] == subject]
         if subject_pet_meta.empty:
             continue
-        # QC for TAU PET images for ADNI 2
-        tau_qc2_subj = tauqc[(tauqc.SCANQLTY == 1) & (tauqc.RID == int(subject[-4:]))]
-        # QC for TAU PET images for ADNI 3
-        tau_qc3_subj = tauqc3[
-            (tauqc3.SCANQLTY == 1) & (tauqc3.RID == int(subject[-4:]))
+        # QC for TAU PET images for ADNI 2 and 3
+        tau_qc_subj = tauqc[
+            (tauqc.SCANQLTY == 1) & (tauqc.RID == int(subject.split("_S_")[-1]))
         ]
-        # Concatenating visits in both QC files
-        tau_qc_subj = pd.concat(
-            [tau_qc2_subj, tau_qc3_subj], axis=0, ignore_index=True, sort=False
-        )
         tau_qc_subj.rename(columns={"SCANDATE": "EXAMDATE"}, inplace=True)
         subj_dfs_list = get_images_pet(
             subject=subject,
