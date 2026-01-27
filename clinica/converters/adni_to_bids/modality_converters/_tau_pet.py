@@ -107,11 +107,17 @@ def _compute_tau_pet_paths(
     pet_tau_df = pd.DataFrame(columns=_get_tau_pet_df_columns())
     pet_tau_dfs_list = []
     tauqc = load_clinical_csv(csv_dir, "TAUQC")
-    pet_meta_list = load_clinical_csv(csv_dir, "PET_META_LIST")
+    tauqc3 = load_clinical_csv(csv_dir, "TAUQC3")
+    all_images = load_clinical_csv(csv_dir, "All_Images")
+    manifest = load_clinical_csv(csv_dir, "Manifest")
+
+    all_images = all_images.merge(
+        manifest[["image_id", "series_id"]], on="image_id", how="left"
+    )
 
     for subject in subjects:
         # PET images metadata for subject
-        subject_pet_meta = pet_meta_list[pet_meta_list["Subject"] == subject]
+        subject_pet_meta = all_images[all_images["subject_id"] == subject]
         if subject_pet_meta.empty:
             continue
         # QC for TAU PET images for ADNI 2 and 3

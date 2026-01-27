@@ -152,7 +152,7 @@ def _compute_fdg_pet_paths(
         CSV files:
             - PETQC.csv
             - PETC3.csv
-            - PET_META_LIST.csv
+            - [PREFIX]_All_Images_[DATE].csv
 
     subjects : list of str
         List of subjects.
@@ -222,7 +222,8 @@ def _get_csv_data(csv_dir: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFra
     return (
         _get_pet_qc_df(csv_dir),
         _get_qc_adni_3_df(csv_dir),
-        _get_meta_list_df(csv_dir),
+        _get_all_images_df(csv_dir),
+        _get_manifest_df(csv_dir),
     )
 
 
@@ -251,10 +252,15 @@ _get_qc_adni_3_df = partial(
     filename="PETC3",
     required_columns={"SCANQLTY", "RID", "SCANDATE"},
 )
-_get_meta_list_df = partial(
+_get_all_images_df = partial(
     _load_df_with_column_check,
-    filename="PET_META_LIST",
-    required_columns={"Subject"},
+    filename="All_Images",
+    required_columns={"subject_id"},
+)
+_get_manifest_df = partial(
+    _load_df_with_column_check,
+    filename="Manifest",
+    required_columns={"series_id"},
 )
 
 
@@ -266,8 +272,13 @@ def _get_images_pet_for_subject(
     """Filter the PET images' QC dataframes for the given subject."""
     from ._pet_utils import get_images_pet
 
-    pet_qc_df, pet_qc_adni_3_df, pet_meta_list_df = csv_data
-    subject_pet_metadata = pet_meta_list_df[pet_meta_list_df["Subject"] == subject]
+    pet_qc_df, pet_qc_adni_3_df, all_images_df, manifest_df = csv_data
+
+    all_images_df = all_images_df.merge(
+        manifest_df[["image_id", "series_id"]], on="image_id", how="left"
+    )
+
+    subject_pet_metadata = all_images_df[all_images_df["subject_id"] == subject]
 
     if subject_pet_metadata.empty:
         return []

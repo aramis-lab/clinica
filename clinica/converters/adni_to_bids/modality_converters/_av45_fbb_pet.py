@@ -117,11 +117,16 @@ def _compute_av45_fbb_pet_paths(
     # Loading needed .csv files
     av45qc = load_clinical_csv(csv_dir, "AV45QC")
     amyqc = load_clinical_csv(csv_dir, "AMYQC")
-    pet_meta_list = load_clinical_csv(csv_dir, "PET_META_LIST")
+    all_images = load_clinical_csv(csv_dir, "All_Images")
+    manifest = load_clinical_csv(csv_dir, "Manifest")
+
+    all_images = all_images.merge(
+        manifest[["image_id", "series_id"]], on="image_id", how="left"
+    )
 
     for subject in subjects:
         # PET images metadata for subject
-        subject_pet_meta = pet_meta_list[pet_meta_list["Subject"] == subject]
+        subject_pet_meta = all_images[all_images["subject_id"] == subject]
 
         if subject_pet_meta.empty:
             continue

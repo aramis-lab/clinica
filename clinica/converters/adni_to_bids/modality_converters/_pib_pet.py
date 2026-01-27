@@ -107,11 +107,16 @@ def _compute_pib_pet_paths(
     pet_pib_dfs_list = []
     pet_pib_df = pd.DataFrame(columns=_get_pib_pet_columns())
     pibqc = load_clinical_csv(csv_dir, "PIBQC")
-    pet_meta_list = load_clinical_csv(csv_dir, "PET_META_LIST")
+    all_images = load_clinical_csv(csv_dir, "All_Images")
+    manifest = load_clinical_csv(csv_dir, "Manifest")
+
+    all_images = all_images.merge(
+        manifest[["image_id", "series_id"]], on="image_id", how="left"
+    )
 
     for subject in subjects:
         # PET images metadata for subject
-        subject_pet_meta = pet_meta_list[pet_meta_list["Subject"] == subject]
+        subject_pet_meta = all_images[all_images["subject_id"] == subject]
         if subject_pet_meta.empty:
             continue
         # QC for PIB PET images
