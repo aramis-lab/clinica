@@ -110,6 +110,7 @@ def _compute_t1_paths(
     mprage_meta = load_clinical_csv(csv_dir, "MPRAGEMETA")
     mri_quality = load_clinical_csv(csv_dir, "MRIPROT")
     mayo_mri_qc = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_IMAGEQC_05_07_15")
+    mri_qc = load_clinical_csv(csv_dir, "MRIQC")
 
     # Keep only T1 scans
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == "T1"]
