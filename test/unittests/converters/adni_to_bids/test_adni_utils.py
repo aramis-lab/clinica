@@ -253,7 +253,13 @@ def input_df() -> pd.DataFrame:
 
 @pytest.mark.parametrize(
     "csv_name,csv_to_look_for",
-    [("adnimerge.csv", "adnimerge"), ("adnimerge_20Oct2023.csv", "adnimerge")],
+    [
+        ("adnimerge.csv", "adnimerge"),
+        ("adnimerge_20Oct2023.csv", "adnimerge"),
+        ("cohort_1_all_images_27jan2026.csv", "all_images"),
+        ("all_images_27Jan2026.csv", "all_images"),
+        ("all_images.csv", "all_images"),
+    ],
 )
 def test_load_clinical_csv(
     tmp_path, input_df: pd.DataFrame, csv_name: str, csv_to_look_for: str
@@ -271,12 +277,12 @@ def test_load_clinical_csv_error(tmp_path):
 
     from clinica.converters._utils import load_clinical_csv  # TODO: move this test
 
-    pattern = r"^(?!\.)" + r"(?:.*_)?" + r"(?:_\d{1,2}[A-Za-z]{3}\d{4})?\.csv$"
+    pattern = r"^(?:[^.]*_)?" + "adnimerge" + r"(?:_\d{1,2}[A-Za-z]{3}\d{4})?\.csv$"
     with pytest.raises(
         IOError,
         match=re.escape(
             f"Expecting to find exactly one file in folder {tmp_path} "
-            f"matching pattern adnimerge{pattern}. 0 "
+            f"matching pattern {pattern}. 0 "
             f"files were found instead : \n[- ]"
         ),
     ):
