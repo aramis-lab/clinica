@@ -253,7 +253,13 @@ def input_df() -> pd.DataFrame:
 
 @pytest.mark.parametrize(
     "csv_name,csv_to_look_for",
-    [("adnimerge.csv", "adnimerge"), ("adnimerge_20Oct2023.csv", "adnimerge")],
+    [
+        ("adnimerge.csv", "adnimerge"),
+        ("adnimerge_20Oct2023.csv", "adnimerge"),
+        ("cohort_1_all_images_27jan2026.csv", "all_images"),
+        ("all_images_27Jan2026.csv", "all_images"),
+        ("all_images.csv", "all_images"),
+    ],
 )
 def test_load_clinical_csv(
     tmp_path, input_df: pd.DataFrame, csv_name: str, csv_to_look_for: str
@@ -261,26 +267,38 @@ def test_load_clinical_csv(
     from clinica.converters._utils import load_clinical_csv  # TODO: move this test
 
     input_df.to_csv(tmp_path / csv_name, index=False)
-    pd.DataFrame().to_csv(tmp_path / f".{csv_name}")
 
     assert_frame_equal(load_clinical_csv(tmp_path, csv_to_look_for), input_df)
 
 
-def test_load_clinical_csv_error(tmp_path):
+@pytest.mark.parametrize(
+    "csv_name,csv_to_look_for",
+    [
+        (".adnimerge.csv", "adnimerge"),
+        (".adnimerge_27Jan2026.csv", "adnimerge"),
+        (".foobar_all_images_27Jan2026.csv", "all_images"),
+    ],
+)
+def test_load_clinical_csv_error(
+    tmp_path, input_df: pd.DataFrame, csv_name: str, csv_to_look_for: str
+):
     import re
 
     from clinica.converters._utils import load_clinical_csv  # TODO: move this test
 
-    pattern = r"(_\d{1,2}[A-Za-z]{3}\d{4})?.csv"
+    pd.DataFrame().to_csv(tmp_path / f".{csv_name}")
+
+    pattern = r"^(?:[^.]*_)?" + csv_to_look_for + r"(?:_\d{1,2}[A-Za-z]{3}\d{4})?\.csv$"
+
     with pytest.raises(
         IOError,
         match=re.escape(
             f"Expecting to find exactly one file in folder {tmp_path} "
-            f"matching pattern adnimerge{pattern}. 0 "
+            f"matching pattern {pattern}. 0 "
             f"files were found instead : \n[- ]"
         ),
     ):
-        load_clinical_csv(tmp_path, "adnimerge")
+        load_clinical_csv(tmp_path, csv_to_look_for)
 
 
 def test_load_clinical_csv_value_error(tmp_path):
