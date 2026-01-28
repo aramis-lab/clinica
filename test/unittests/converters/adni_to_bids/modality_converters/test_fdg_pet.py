@@ -333,7 +333,7 @@ def test_compute_fdg_pet_paths(tmp_path, expected_images_df_columns: list[str]):
             "image_date": ["2018-01-01", "2018-01-06", "2018-01-01", "2020-06-11"],
             "image_description": ["ADNI Brain PET: Raw"] * 4,
         }
-    ).to_csv(csv_dir / "Cohort_1_All_Images_27Jan2026.csv")
+    ).to_csv(csv_dir / "Cohort_1_Manifest_27Jan2026.csv")
 
     images = _compute_fdg_pet_paths(
         tmp_path,
