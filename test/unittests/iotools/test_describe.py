@@ -61,9 +61,9 @@ def build_test_dataset_caps(folder: Path):
                         "InstalledVersion": "2.5.1",
                     },
                     {
-                        "Name": "spm",
-                        "VersionConstraint": ">=12",
-                        "InstalledVersion": "12.2.1",
+                        "Name": "spm standalone",
+                        "VersionConstraint": ">=25",
+                        "InstalledVersion": "25.2.1",
                     },
                 ],
             },

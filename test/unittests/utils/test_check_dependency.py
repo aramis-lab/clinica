@@ -168,18 +168,6 @@ def test_check_software(tmp_path):
         )
 
 
-def test_check_spm_error(tmp_path):
-    from clinica.utils.check_dependency import _check_spm  # noqa
-
-    with pytest.raises(
-        ClinicaMissingDependencyError,
-        match=re.escape(
-            "Clinica could not find the SPM software (regular or standalone)."
-        ),
-    ):
-        _check_spm()
-
-
 @pytest.mark.parametrize("env_name", ["SPMSTANDALONE_HOME", "MCR_HOME"])
 def test_check_spm_standalone_error_incomplete_config(tmp_path, env_name):
     from clinica.utils.check_dependency import _check_spm  # noqa
@@ -187,9 +175,7 @@ def test_check_spm_standalone_error_incomplete_config(tmp_path, env_name):
     with mock.patch.dict(os.environ, {env_name: str(tmp_path)}):
         with pytest.raises(
             ClinicaMissingDependencyError,
-            match=re.escape(
-                "Clinica could not find the SPM software (regular or standalone)."
-            ),
+            match=re.escape("Clinica could not find the SPM standalone software."),
         ):
             _check_spm()
 

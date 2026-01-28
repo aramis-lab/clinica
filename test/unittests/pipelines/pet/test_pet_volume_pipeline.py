@@ -16,7 +16,9 @@ def test_pet_volume_info_loading(tmp_path):
         "version": "0.1.0",
         "space_caps": "55M",
         "space_wd": "245M",
-        "dependencies": [{"type": "software", "name": "spm", "version": ">=25"}],
+        "dependencies": [
+            {"type": "software", "name": "spm standalone", "version": ">=25"}
+        ],
     }
 
 
@@ -28,7 +30,7 @@ def test_pet_volume_dependencies(tmp_path, mocker):
     from clinica.utils.check_dependency import SoftwareDependency, ThirdPartySoftware
 
     mocker.patch(
-        "clinica.utils.check_dependency._get_spm_version",
+        "clinica.utils.check_dependency._get_spm_standalone_version",
         return_value=Version("25.7219"),
     )
     bids = build_bids_directory(tmp_path / "bids", {"sub-01": ["ses-M00"]})
@@ -39,6 +41,6 @@ def test_pet_volume_dependencies(tmp_path, mocker):
 
     assert pipeline.dependencies == [
         SoftwareDependency(
-            ThirdPartySoftware.SPM, SpecifierSet(">=25"), Version("25.7219")
+            ThirdPartySoftware.SPMSTANDALONE, SpecifierSet(">=25"), Version("25.7219")
         )
     ]

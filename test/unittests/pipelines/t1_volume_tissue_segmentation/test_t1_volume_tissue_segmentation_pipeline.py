@@ -67,7 +67,7 @@ def test_t1_volume_tissue_segmentation_get_processed_visits_empty(tmp_path, mock
     )
 
     mocker.patch(
-        "clinica.utils.check_dependency._get_spm_version",
+        "clinica.utils.check_dependency._get_spm_standalone_version",
         return_value=Version("25.7219"),
     )
     bids = build_bids_directory(
@@ -120,7 +120,7 @@ def test_t1_volume_tissue_segmentation_get_processed_visits(tmp_path, mocker):
     )
 
     mocker.patch(
-        "clinica.utils.check_dependency._get_spm_version",
+        "clinica.utils.check_dependency._get_spm_standalone_version",
         return_value=Version("25.7219"),
     )
     bids = build_bids_directory(
