@@ -18,4 +18,5 @@ matlabbatch{1}.spm.stats.con.consess{2}.tcon.name = ['Hypothesis: ', @GROUP1, ' 
 matlabbatch{1}.spm.stats.con.consess{2}.tcon.weights = weights2;
 matlabbatch{1}.spm.stats.con.consess{2}.tcon.sessrep = 'none';
 
+% run batch
 spm_jobman('run', matlabbatch)

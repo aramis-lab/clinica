@@ -3,6 +3,7 @@
 % Then View > Show m-code
 
 spm('defaults','pet');
+spm_get_defaults('cmdline',true);
 spm_jobman('initcfg');
 
 matlabbatch{1}.spm.stats.factorial_design.dir = {@OUTPUTDIR};
@@ -19,3 +20,6 @@ matlabbatch{1}.spm.stats.factorial_design.masking.em = {''};
 matlabbatch{1}.spm.stats.factorial_design.globalc.g_omit = 1;
 matlabbatch{1}.spm.stats.factorial_design.globalm.gmsca.gmsca_no = 1;
 matlabbatch{1}.spm.stats.factorial_design.globalm.glonorm = 1;
+
+
+% no need run batch bc things will be added here by spm

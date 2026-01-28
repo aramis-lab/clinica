@@ -199,52 +199,6 @@ def test_is_number(input_number, expected):
     assert _is_number(input_number) == expected
 
 
-@pytest.mark.parametrize(
-    "input_data,expected",
-    [
-        ("", ""),
-        ("foo bar baz", "foo bar baz"),
-        ("foo bar baz\n", "foo bar baz\n"),
-        ("foo bar\nbaz", "foo bar"),
-        ("foo bar\nbaz\n", "foo bar"),
-        (
-            _get_tsv_data_two_classes(),
-            "\n".join(_get_tsv_data_two_classes().split("\n")[:-1]),
-        ),
-    ],
-    ids=(
-        "empty content",
-        "one line",
-        "one line with new line",
-        "two lines",
-        "two lines with new line",
-        "multiple lines",
-    ),
-)
-def test_delete_last_line(tmp_path, input_data, expected):
-    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        _delete_last_line,
-    )
-
-    (tmp_path / "foo.tsv").write_text(input_data)
-
-    _delete_last_line(tmp_path / "foo.tsv")
-
-    assert (tmp_path / "foo.tsv").read_text() == expected
-
-
-def test_delete_last_line_empty(tmp_path):
-    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        _delete_last_line,
-    )
-
-    (tmp_path / "foo.tsv").touch()
-
-    _delete_last_line(tmp_path / "foo.tsv")
-
-    assert (tmp_path / "foo.tsv").read_text() == ""
-
-
 def test_write_covariate_lines_error(tmp_path):
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
         _write_covariate_lines,
@@ -303,7 +257,7 @@ def test_run_m_script_no_output_file_error(tmp_path, mocker):
     m_file = tmp_path / "script.m"
     m_file.touch()
     mocker.patch(
-        "clinica.pipelines.statistics_volume.statistics_volume_utils._run_matlab_script_with_matlab",
+        "clinica.pipelines.statistics_volume.statistics_volume_utils._run_matlab_script_with_spm_standalone",
         return_value=None,
     )
     (tmp_path / "spm_home_folder").mkdir()
@@ -330,7 +284,7 @@ def test_run_m_script(tmp_path, mocker):
     expected_output_file = expected_output_folder / "SPM.mat"
     expected_output_file.touch()
     mocker.patch(
-        "clinica.pipelines.statistics_volume.statistics_volume_utils._run_matlab_script_with_matlab",
+        "clinica.pipelines.statistics_volume.statistics_volume_utils._run_matlab_script_with_spm_standalone",
         return_value=None,
     )
     (tmp_path / "spm_home_folder").mkdir()
@@ -339,51 +293,21 @@ def test_run_m_script(tmp_path, mocker):
         assert run_m_script(m_file) == str(expected_output_file)
 
 
-@pytest.mark.parametrize(
-    "mocked_values,expected",
-    [
-        (
-            [True, False],
-            "cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch script.m",
-        ),
-        ([False, True], "$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch script.m"),
-    ],
-    ids=("running on MAC OS", "running on Linux"),
-)
-def test_get_matlab_standalone_command(mocker, mocked_values, expected):
+def test_get_matlab_standalone_command():
+    import clinica.utils.check_dependency as check_dep
+    import clinica.utils.spm as spm_utils
     from clinica.pipelines.statistics_volume.statistics_volume_utils import (
         _get_matlab_standalone_command,
     )
 
-    for func, return_value in zip(
-        ["_is_running_on_mac", "_is_running_on_linux"], mocked_values
-    ):
-        mocker.patch(
-            f"clinica.pipelines.statistics_volume.statistics_volume_utils.{func}",
-            return_value=return_value,
-        )
-
-    assert _get_matlab_standalone_command(Path("script.m")) == expected
-
-
-def test_get_matlab_standalone_command_system_error(mocker):
-    from clinica.pipelines.statistics_volume.statistics_volume_utils import (
-        _get_matlab_standalone_command,
-    )
-
-    for func, return_value in zip(
-        ["_is_running_on_mac", "_is_running_on_linux"], [False, False]
-    ):
-        mocker.patch(
-            f"clinica.pipelines.statistics_volume.statistics_volume_utils.{func}",
-            return_value=return_value,
-        )
-
-    with pytest.raises(
-        SystemError,
-        match="Clinica only support Mac OS and Linux",
-    ):
-        _get_matlab_standalone_command(Path("script.m"))
+    with mock.patch.object(spm_utils, "_get_real_spm_standalone_file") as mock_get_real:
+        with mock.patch.object(check_dep, "get_spm_standalone_home") as mock_get_spm:
+            mock_get_real.return_value = "run_spm12.sh"
+            assert (
+                _get_matlab_standalone_command(Path("script.m"))
+                == f"$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch script.m"
+            )
+            mock_get_spm.assert_called_once()
 
 
 @pytest.mark.parametrize(
