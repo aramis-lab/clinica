@@ -137,6 +137,6 @@ def test_build_processing_table_caps(tmp_path):
     for i, value in enumerate(("ants", ">=2.2.0", "2.3.5")):
         assert dependency_table_t1_linear.columns[i]._cells[0] == value
     for i, value in enumerate(
-        (["ants", "spm"], [">=2.3.0", ">=12"], ["2.5.1", "12.2.1"])
+        (["ants", "spm standalone"], [">=2.3.0", ">=25"], ["2.5.1", "25.2.1"])
     ):
         assert dependency_table_pet_linear.columns[i]._cells == value
