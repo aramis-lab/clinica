@@ -2,9 +2,9 @@ name: Unit Tests
 
 on:
   push:
-    branches: ["dev", "maint-*"]
+    branches: ["dev", "maint-*", "refactoring_adni"]
   pull_request:
-    branches: ["dev", "maint-*"]
+    branches: ["dev", "maint-*", "refactoring_adni"]
 
 permissions:
   contents: read
