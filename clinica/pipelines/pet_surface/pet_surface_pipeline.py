@@ -100,7 +100,11 @@ class PetSurface(PETPipeline):
             self._get_pet_scans_query(),
         )
         if pet_errors:
-            all_errors.append(format_clinica_file_reader_errors(pet_errors))
+            all_errors.append(
+                format_clinica_file_reader_errors(
+                    pet_errors, self._get_pet_scans_query()
+                )
+            )
 
         try:
             (
@@ -190,7 +194,11 @@ class PetSurface(PETPipeline):
             self._get_pet_scans_query(),
         )
         if pet_errors:
-            all_errors.append(format_clinica_file_reader_errors(pet_errors))
+            all_errors.append(
+                format_clinica_file_reader_errors(
+                    pet_errors, self._get_pet_scans_query()
+                )
+            )
 
         try:
             (
