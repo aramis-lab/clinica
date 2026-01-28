@@ -107,7 +107,6 @@ def _compute_tau_pet_paths(
     pet_tau_df = pd.DataFrame(columns=_get_tau_pet_df_columns())
     pet_tau_dfs_list = []
     tauqc = load_clinical_csv(csv_dir, "TAUQC")
-    tauqc3 = load_clinical_csv(csv_dir, "TAUQC3")
     all_images = load_clinical_csv(csv_dir, "All_Images")
     manifest = load_clinical_csv(csv_dir, "Manifest")
 
