@@ -372,9 +372,8 @@ def _check_spm() -> ThirdPartySoftware:
         _check_spm_standalone()
     except ClinicaMissingDependencyError as e1:
         raise ClinicaMissingDependencyError(
-            "Clinica could not find the SPM software (regular or standalone).\n"
-            "Please make sure you have installed SPM in one of these two ways "
-            "and have set the required environment variables.\n"
+            "Clinica could not find the SPM standalone software.\n"
+            "Please make sure you have set the required environment variables.\n"
             f"Full list of errors: \n- {e1}"
         )
     return ThirdPartySoftware.SPMSTANDALONE

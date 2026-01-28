@@ -207,28 +207,6 @@ def test_check_spm_standalone(tmp_path):
         _check_spm()
 
 
-def test_check_spm_alone_error_matlab_not_installed(tmp_path):
-    from clinica.utils.check_dependency import _check_spm  # noqa
-
-    with mock.patch.dict(os.environ, {"SPM_HOME": str(tmp_path)}):
-        with pytest.raises(
-            ClinicaMissingDependencyError,
-            match=re.escape(
-                "[Error] Clinica could not find spm software: the matlab "
-                "command is not present in your PATH environment."
-            ),
-        ):
-            _check_spm()
-
-
-def test_check_spm_alone(tmp_path, mocker):
-    from clinica.utils.check_dependency import _check_spm  # noqa
-
-    mocker.patch("clinica.utils.check_dependency.is_binary_present", return_value=True)
-    with mock.patch.dict(os.environ, {"SPM_HOME": str(tmp_path)}):
-        _check_spm()
-
-
 @pytest.mark.parametrize(
     "software,expected",
     [
@@ -238,8 +216,6 @@ def test_check_spm_alone(tmp_path, mocker):
         (ThirdPartySoftware.DCM2NIIX, Version("1.0.20240202")),
         (ThirdPartySoftware.MRTRIX, Version("3.0.3")),
         (ThirdPartySoftware.CONVERT3D, Version("1.0.0")),
-        (ThirdPartySoftware.MATLAB, Version("9.2.0.556344")),
-        (ThirdPartySoftware.SPM, Version("12.7219")),
         (ThirdPartySoftware.MCR, Version("9.0.1")),
         (ThirdPartySoftware.SPMSTANDALONE, Version("12.7219")),
         (ThirdPartySoftware.PETPVC, Version("0.0.0")),
@@ -259,34 +235,12 @@ def test_get_freesurfer_version(mocker):
     assert get_software_version("freesurfer") == Version("1.2.3")
 
 
-def test_get_spm_version(tmp_path):
-    from clinica.utils.check_dependency import get_software_version
-
-    class SPMVersionMock:
-        version: str = "12.6789"
-
-    spm_home_mock = tmp_path / "spm_home"
-    spm_home_mock.mkdir()
-
-    with mock.patch.dict(
-        os.environ,
-        {
-            "SPM_HOME": str(spm_home_mock),
-        },
-    ):
-        with mock.patch(
-            "nipype.interfaces.spm.SPMCommand", wraps=SPMVersionMock
-        ) as spm_mock:
-            assert get_software_version("spm") == Version("12.6789")
-            spm_mock.assert_called_once()
-
-
 @pytest.mark.parametrize("platform", ["linux", "darwin"])
 def test_get_spm_standalone_version(tmp_path, mocker, platform):
     from clinica.utils.check_dependency import get_software_version
 
     class SPMStandaloneVersionMock:
-        version: str = "13.234"
+        version: str = "25.234"
 
         def set_mlab_paths(self, matlab_cmd: str, use_mcr: bool):
             pass
@@ -315,7 +269,7 @@ def test_get_spm_standalone_version(tmp_path, mocker, platform):
                     "clinica.utils.spm._get_real_spm_standalone_file",
                     return_value=spm_filename,
                 ):
-                    assert get_software_version("spm standalone") == Version("13.234")
+                    assert get_software_version("spm standalone") == Version("25.234")
                     spm_mock.set_mlab_paths.assert_called()
                     mock_method.assert_called_once_with(
                         matlab_cmd=(
@@ -407,28 +361,6 @@ def test_get_convert3d_version():
     ) as c3d_mock:
         assert get_software_version("convert3d") == Version("1.0.0")
         c3d_mock.assert_called_once_with("c3d", two_dashes=False)
-
-
-def matlab_version_mock() -> str:
-    return (
-        "\x1b[?1h\x1b=\n                                                                                          "
-        "< M A T L A B (R) >\n                                                                                "
-        "Copyright 1984-2017 The MathWorks, Inc.\n"
-        "                                                                                 R2017b (9.3.0.713579) 64-bit (glnxa64)\n"
-        "September 14, 2017\n\n \nFor online documentation, see http://www.mathworks.com/support\n"
-        "For product information, visit www.mathworks.com.\n \n\x1b[?1l\x1b>"
-    )
-
-
-def test_get_matlab_version():
-    from clinica.utils.check_dependency import get_software_version
-
-    with mock.patch(
-        "clinica.utils.check_dependency._get_matlab_start_session_message",
-        wraps=matlab_version_mock,
-    ) as matlab_mock:
-        assert get_software_version("matlab") == Version("9.3.0.713579")
-        matlab_mock.assert_called_once()
 
 
 mcr_version_test_suite = [

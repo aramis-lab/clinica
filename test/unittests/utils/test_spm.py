@@ -38,16 +38,6 @@ def test_get_spm_tissue_from_index_error(index, expected, expected_value):
     assert get_spm_tissue_from_index(index).value == expected_value
 
 
-def test_spm_standalone_is_available_no_env_variable_error():
-    from clinica.utils.spm import use_spm_standalone_if_available
-
-    with pytest.raises(
-        ClinicaMissingDependencyError,
-        match="Clinica could not find spm software: the SPM_HOME variable is not set.",
-    ):
-        use_spm_standalone_if_available()
-
-
 def test_spm_standalone_is_available_warning(tmp_path):
     from clinica.utils.spm import use_spm_standalone_if_available
 
@@ -55,8 +45,7 @@ def test_spm_standalone_is_available_warning(tmp_path):
     with pytest.warns(
         UserWarning,
         match=re.escape(
-            "SPM standalone is not available on this system. The pipeline will try to use SPM and Matlab instead. "
-            "If you want to rely on spm standalone, please make sure to set the following environment variables: "
+            "SPM standalone is not available on this system. Please make sure to set the following environment variables: "
             "$SPMSTANDALONE_HOME, and $MCR_HOME"
         ),
     ):
