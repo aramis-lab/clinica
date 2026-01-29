@@ -24,51 +24,41 @@ def test_instantiate_t1_freesurfer_cross_sectional(cmdopt, tmp_path):
         base_dir=fspath(working_dir),
         parameters={
             "recon_all_args": "-qcache",
-            "skip_question": True,
         },
     ).build()
 
 
-def test_instantiate_spm_based_pipelines(cmdopt, tmp_path):
-    """Run the instantiation tests for all pipelines using SPM.
-    This avoids issues when running tests in parallel.
-    """
-    base_dir = Path(cmdopt["input"])
-    working_dir = Path(cmdopt["wd"])
-
-    run_tissue_segmentation(base_dir, tmp_path, working_dir)
-    run_create_dartel(base_dir, tmp_path, working_dir)
-    run_dartel_to_mni(base_dir, tmp_path, working_dir)
-    run_register_dartel(base_dir, tmp_path, working_dir)
-    run_pet_volume(base_dir, tmp_path, working_dir)
-
-
-def run_tissue_segmentation(
-    base_dir: Path, output_dir: Path, working_dir: Path
-) -> None:
+@pytest.mark.xdist_group(name="test-group-using-spm")
+def test_instantiate_t1_volume_tissue_segmentation(cmdopt, tmp_path) -> None:
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import (
         T1VolumeTissueSegmentation,
     )
 
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+
     input_dir, tmp_dir, ref_dir = configure_paths(
-        base_dir, output_dir, "T1VolumeTissueSegmentation"
+        base_dir, tmp_path, "T1VolumeTissueSegmentation"
     )
     T1VolumeTissueSegmentation(
         bids_directory=fspath(input_dir / "bids"),
         caps_directory=fspath(tmp_dir / "caps"),
         tsv_file=fspath(input_dir / "subjects.tsv"),
         base_dir=fspath(working_dir),
-        parameters={"skip_question": True},
     ).build()
 
 
-def run_create_dartel(base_dir: Path, output_dir: Path, working_dir: Path) -> None:
+@pytest.mark.xdist_group(name="test-group-using-spm")
+def test_instantiate_t1_volume_create_dartel(cmdopt, tmp_path) -> None:
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import (
         T1VolumeCreateDartel,
     )
 
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+
     input_dir, tmp_dir, ref_dir = configure_paths(
-        base_dir, output_dir, "T1VolumeCreateDartel"
+        base_dir, tmp_path, "T1VolumeCreateDartel"
     )
     # Copy the CAPS folder in temp folder in order to have writing privileges
     shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
@@ -81,13 +71,17 @@ def run_create_dartel(base_dir: Path, output_dir: Path, working_dir: Path) -> No
     ).build()
 
 
-def run_dartel_to_mni(base_dir: Path, output_dir: Path, working_dir: Path) -> None:
+@pytest.mark.xdist_group(name="test-group-using-spm")
+def test_instantiate_t1_volume_dartel_to_mni(cmdopt, tmp_path) -> None:
     from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_pipeline import (
         T1VolumeDartel2MNI,
     )
 
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+
     input_dir, tmp_dir, ref_dir = configure_paths(
-        base_dir, output_dir, "T1VolumeDartel2MNI"
+        base_dir, tmp_path, "T1VolumeDartel2MNI"
     )
     # Copy the CAPS folder in temp folder in order to have writing privileges
     shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
@@ -100,13 +94,17 @@ def run_dartel_to_mni(base_dir: Path, output_dir: Path, working_dir: Path) -> No
     ).build()
 
 
-def run_register_dartel(base_dir: Path, output_dir: Path, working_dir: Path) -> None:
+@pytest.mark.xdist_group(name="test-group-using-spm")
+def test_instantiate_t1_volume_register_dartel(cmdopt, tmp_path) -> None:
     from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_pipeline import (
         T1VolumeRegisterDartel,
     )
 
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+
     input_dir, tmp_dir, ref_dir = configure_paths(
-        base_dir, output_dir, "T1VolumeRegisterDartel"
+        base_dir, tmp_path, "T1VolumeRegisterDartel"
     )
     # Copy the CAPS folder in temp folder in order to have writing privileges
     shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
@@ -218,10 +216,14 @@ def test_instantiate_dwi_connectome(cmdopt, tmp_path):
     ).build()
 
 
-def run_pet_volume(base_dir: Path, output_dir: Path, working_dir: Path) -> None:
+@pytest.mark.xdist_group(name="test-group-using-spm")
+def test_instantiate_pet_volume(cmdopt, tmp_path) -> None:
     from clinica.pipelines.pet.volume.pipeline import PETVolume
 
-    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, output_dir, "PETVolume")
+    base_dir = Path(cmdopt["input"])
+    working_dir = Path(cmdopt["wd"])
+
+    input_dir, tmp_dir, ref_dir = configure_paths(base_dir, tmp_path, "PETVolume")
     # Copy the CAPS folder in temp folder in order to have writing privileges
     shutil.copytree(str(input_dir / "caps"), str(tmp_dir / "caps"))
     PETVolume(
@@ -233,7 +235,6 @@ def run_pet_volume(base_dir: Path, output_dir: Path, working_dir: Path) -> None:
         parameters={
             "acq_label": Tracer.FDG,
             "suvr_reference_region": SUVRReferenceRegion.PONS,
-            "skip_question": True,
             "reconstruction_method": None,
         },
     ).build()
@@ -255,7 +256,6 @@ def test_instantiate_pet_linear(cmdopt, tmp_path):
         parameters={
             "acq_label": Tracer.FDG,
             "suvr_reference_region": SUVRReferenceRegion.CEREBELLUM_PONS2,
-            "skip_question": True,
             "reconstruction_method": None,
         },
     ).build()
@@ -285,6 +285,7 @@ def test_instantiate_statistics_surface(cmdopt, tmp_path):
     ).build()
 
 
+@pytest.mark.xdist_group(name="test-group-using-spm")
 def test_instantiate_pet_surface_cross_sectional(cmdopt, tmp_path):
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
 
@@ -303,13 +304,13 @@ def test_instantiate_pet_surface_cross_sectional(cmdopt, tmp_path):
             "suvr_reference_region": SUVRReferenceRegion.PONS,
             "pvc_psf_tsv": fspath(input_dir / "subjects.tsv"),
             "longitudinal": False,
-            "skip_question": True,
             "reconstruction_method": None,
         },
     ).build()
 
 
 @pytest.mark.skip(reason="Currently broken. Needs to be fixed...")
+@pytest.mark.xdist_group(name="test-group-using-spm")
 def test_instantiate_pet_surface_longitudinal(cmdopt):
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
 
@@ -500,6 +501,7 @@ def test_instantiate_t1_linear_antspy(cmdopt, tmp_path):
     ).build()
 
 
+@pytest.mark.xdist_group(name="test-group-using-spm")
 def test_instantiate_statistics_volume(cmdopt, tmp_path):
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import (
         StatisticsVolume,

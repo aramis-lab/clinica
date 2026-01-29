@@ -31,7 +31,6 @@ __all__ = [
     "get_freesurfer_home",
     "get_mcr_home",
     "get_spm_standalone_home",
-    "get_spm_home",
     "is_binary_present",
     "check_binary",
     "check_environment_variable",
@@ -49,11 +48,9 @@ class ThirdPartySoftware(str, Enum):
     DCM2NIIX = "dcm2niix"
     FREESURFER = "freesurfer"
     FSL = "fsl"
-    MATLAB = "matlab"
     MCR = "MCR"
     MRTRIX = "mrtrix"
     PETPVC = "petpvc"
-    SPM = "spm"
     SPMSTANDALONE = "spm standalone"
 
 
@@ -166,13 +163,6 @@ def get_spm_standalone_home() -> Path:
         SoftwareEnvironmentVariable(
             "SPMSTANDALONE_HOME", ThirdPartySoftware.SPMSTANDALONE
         )
-    )
-
-
-def get_spm_home() -> Path:
-    """Return the path to the home directory of SPM."""
-    return check_environment_variable(
-        SoftwareEnvironmentVariable("SPM_HOME", ThirdPartySoftware.SPM)
     )
 
 
@@ -381,16 +371,11 @@ def _check_spm() -> ThirdPartySoftware:
     try:
         _check_spm_standalone()
     except ClinicaMissingDependencyError as e1:
-        try:
-            _check_spm_alone()
-            return ThirdPartySoftware.SPM
-        except ClinicaMissingDependencyError as e2:
-            raise ClinicaMissingDependencyError(
-                "Clinica could not find the SPM software (regular or standalone).\n"
-                "Please make sure you have installed SPM in one of these two ways "
-                "and have set the required environment variables.\n"
-                f"Full list of errors: \n- {e1}\n- {e2}"
-            )
+        raise ClinicaMissingDependencyError(
+            "Clinica could not find the SPM standalone software.\n"
+            "Please make sure you have set the required environment variables.\n"
+            f"Full list of errors: \n- {e1}"
+        )
     return ThirdPartySoftware.SPMSTANDALONE
 
 
@@ -405,20 +390,6 @@ _check_spm_standalone = functools.partial(
     ),
 )
 
-_check_spm_alone = functools.partial(
-    _check_software,
-    name=ThirdPartySoftware.SPM,
-    environment_variables=(
-        SoftwareEnvironmentVariable("SPM_HOME", ThirdPartySoftware.SPM),
-    ),
-    binaries=("matlab",),
-)
-
-_check_matlab = functools.partial(
-    _check_software,
-    name=ThirdPartySoftware.MATLAB,
-    binaries=("matlab",),
-)
 
 _check_fsl = functools.partial(
     _check_software,
@@ -464,10 +435,6 @@ def get_software_min_version_supported(
         return Version("3.0.3")
     if software == ThirdPartySoftware.CONVERT3D:
         return Version("1.0.0")
-    if software == ThirdPartySoftware.MATLAB:
-        return Version("9.2.0.556344")
-    if software == ThirdPartySoftware.SPM:
-        return Version("12.7219")
     if software == ThirdPartySoftware.MCR:
         return Version("9.0.1")
     if software == ThirdPartySoftware.SPMSTANDALONE:
@@ -514,10 +481,6 @@ def get_software_version(software: Union[str, ThirdPartySoftware]) -> Version:
         return _get_mrtrix_version()
     if software == ThirdPartySoftware.CONVERT3D:
         return _get_convert3d_version()
-    if software == ThirdPartySoftware.MATLAB:
-        return _get_matlab_version()
-    if software == ThirdPartySoftware.SPM:
-        return _get_spm_version()
     if software == ThirdPartySoftware.MCR:
         return _get_mcr_version()
     if software == ThirdPartySoftware.SPMSTANDALONE:
@@ -530,16 +493,6 @@ def _get_freesurfer_version() -> Version:
     from nipype.interfaces import freesurfer
 
     return Version(str(freesurfer.Info.looseversion()))
-
-
-def _get_spm_version() -> Version:
-    from nipype.interfaces import spm
-
-    from .spm import configure_nipype_interface_to_work_with_spm
-
-    configure_nipype_interface_to_work_with_spm()
-
-    return Version(spm.SPMCommand().version)
 
 
 def _get_spm_standalone_version() -> Version:
@@ -613,30 +566,6 @@ _get_convert3d_version = partial(
     prepend_with_v=False,
     two_dashes=False,
 )
-
-
-def _get_matlab_version() -> Version:
-    import re
-
-    from clinica.utils.stream import log_and_raise
-
-    try:
-        return Version(
-            re.search(r"\(\s*([\d.]+)\)", _get_matlab_start_session_message())
-            .group(1)
-            .strip(".")
-        )
-    except Exception as e:
-        log_and_raise(str(e), RuntimeError)
-
-
-def _get_matlab_start_session_message() -> str:
-    """Start Matlab, get the message displayed at the beginning of the session, and quit."""
-    import subprocess
-
-    return subprocess.run(
-        ["matlab", "-r", "quit", "-nojvm"], stdout=subprocess.PIPE
-    ).stdout.decode("utf-8")
 
 
 def _get_mcr_version() -> Version:
@@ -769,14 +698,11 @@ def check_software(
         _check_freesurfer()
         log_level = LoggingLevel.ERROR
     if (
-        software == ThirdPartySoftware.SPM
-        or software == ThirdPartySoftware.SPMSTANDALONE
+        software == ThirdPartySoftware.SPMSTANDALONE
         or software == ThirdPartySoftware.MCR
     ):
         software = _check_spm()
         log_level = LoggingLevel.ERROR
-    if software == ThirdPartySoftware.MATLAB:
-        _check_matlab()
     if software == ThirdPartySoftware.DCM2NIIX:
         _check_dcm2niix()
     if software == ThirdPartySoftware.PETPVC:

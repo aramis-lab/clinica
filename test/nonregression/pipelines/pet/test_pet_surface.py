@@ -12,6 +12,7 @@ from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
 
 @pytest.mark.slow
+@pytest.mark.xdist_group(name="test-group-using-spm")
 def test_pet_surface(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])
@@ -80,6 +81,7 @@ def run_pet_surface(
 
 
 @pytest.mark.slow
+@pytest.mark.xdist_group(name="test-group-using-spm")
 def test_run_pet_surface_longitudinal(cmdopt, tmp_path):
     base_dir = Path(cmdopt["input"])
     working_dir = Path(cmdopt["wd"])

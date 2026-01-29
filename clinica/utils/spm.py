@@ -9,7 +9,6 @@ __all__ = [
     "get_spm_tissue_from_index",
     "get_tpm",
     "use_spm_standalone_if_available",
-    "configure_nipype_interface_to_work_with_spm",
     "configure_nipype_interface_to_work_with_spm_standalone",
 ]
 
@@ -48,9 +47,9 @@ def get_tpm() -> PathLike:
     """
     from glob import glob
 
-    from .check_dependency import get_spm_home
+    from .check_dependency import get_spm_standalone_home
 
-    spm_home = get_spm_home()
+    spm_home = get_spm_standalone_home()
     tpm_file_glob = glob(str(spm_home / "**/TPM.nii"), recursive=True)
     if len(tpm_file_glob) == 0:
         raise RuntimeError(f"No file found for TPM.nii in your $SPM_HOME in {spm_home}")
@@ -92,26 +91,12 @@ def use_spm_standalone_if_available() -> bool:
         log_and_warn(
             (
                 "SPM standalone is not available on this system. "
-                "The pipeline will try to use SPM and Matlab instead. "
-                "If you want to rely on spm standalone, please make sure "
-                "to set the following environment variables: "
+                "Please make sure to set the following environment variables: "
                 "$SPMSTANDALONE_HOME, and $MCR_HOME"
             ),
             UserWarning,
         )
-        configure_nipype_interface_to_work_with_spm()
         return False
-
-
-def configure_nipype_interface_to_work_with_spm() -> None:
-    import nipype.interfaces.matlab as mlab
-
-    from clinica.utils.stream import cprint
-
-    from .check_dependency import get_spm_home
-
-    cprint(f"Setting SPM path to {get_spm_home()}", lvl="info")
-    mlab.MatlabCommand.set_default_paths(f"{get_spm_home()}")
 
 
 def _get_real_spm_standalone_file(spm_standalone_home: Path) -> str:
