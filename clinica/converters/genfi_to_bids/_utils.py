@@ -131,7 +131,7 @@ def _check_file(directory: Path, pattern: str) -> Path:
         raise FileNotFoundError("Clinical data not found or incomplete. Aborting")
     if len(data_file) > 1:
         raise ValueError("Too many data files found, expected one. Aborting.")
-    return data_file[0]
+    return data_file[0], pattern
 
 
 def parse_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
@@ -163,21 +163,73 @@ def _find_clinical_data(
             "FINAL*CLINICAL*.xlsx",
             "FINAL*BIOSAMPLES*.xlsx",
             "FINAL*NEUROPSYCH*.xlsx",
+            "FINAL*GENETICS*.xlsx",
         )
     )
 
 
-def _read_file(data_file: Path) -> pd.DataFrame:
+def _read_file(data_file_pattern: tuple[Path, str]) -> pd.DataFrame:
+    data_file = data_file_pattern[0]
+    pattern = data_file_pattern[1]
+
+    df_genfi_1 = pd.read_excel(data_file)
+    df_genfi_2 = pd.DataFrame()
+
+    if pattern != "FINAL*GENETICS*.xlsx":
+        df_genfi_2 = pd.read_excel(data_file, sheet_name=1)
+
     return (
         pd.concat(
             [
-                pd.read_excel(data_file),
-                pd.read_excel(data_file, sheet_name=1),
+                df_genfi_1,
+                df_genfi_2,
             ]
         )
         .convert_dtypes()
         .rename(columns=lambda x: x.lower().replace(" ", "_"))
     )
+
+
+def _merge_and_coalesce(
+    left_df: pd.DataFrame,
+    right_df: pd.DataFrame,
+    on: List[str],
+) -> pd.DataFrame:
+    """
+    Sub-function to outer merge and coalesce duplicates :
+    - Keeps all keys from left_df OR right_df
+    - For overlapping non-key columns, fills left_df n/a values with right_df actual values
+    """
+    left_df = left_df.copy()
+    right_df = right_df.copy()
+
+    # Drops rows without keys
+    left_df = left_df.dropna(subset=on)
+    right_df = right_df.dropna(subset=on)
+
+    # Outer merge dfs
+    merged_df = left_df.merge(
+        right_df,
+        how="outer",
+        on=on,
+        suffixes=("", "_duplicate"),
+        indicator=False,
+    )
+
+    # Coalesces overlapping columns
+    right_cols = {c for c in right_df.columns if c not in on}
+    for c in right_cols:
+        dup_col = f"{c}_duplicate"
+        if dup_col in merged_df.columns:
+            if c in merged_df.columns:
+                merged_df[c] = merged_df[c].combine_first(
+                    merged_df[dup_col]
+                )  # Fills n/a in left_df with right_df values
+                merged_df.drop(columns=[dup_col], inplace=True)
+            else:
+                merged_df.rename(columns={dup_col: c}, inplace=True)
+
+    return merged_df
 
 
 def _complete_clinical_data(
@@ -186,6 +238,7 @@ def _complete_clinical_data(
     df_clinical: pd.DataFrame,
     df_biosamples: pd.DataFrame,
     df_neuropsych: pd.DataFrame,
+    df_genetics: pd.DataFrame,
 ) -> pd.DataFrame:
     """Merges the different clincal dataframes into one.
 
@@ -206,28 +259,37 @@ def _complete_clinical_data(
     df_neuropsych: pd.DataFrame
         Dataframe containing the neuropsych data
 
+    df_genetics: pd.DataFrame
+        Dataframe containing the genetics data
+
     Returns
     -------
     df_clinical_complete: pd.DataFrame
         Dataframe with the data of the 3 input dataframes
     """
     merge_key = ["blinded_code", "blinded_site", "visit"]
-    df_clinical_complete = df_imaging.merge(
-        df_demographics, how="inner", on=merge_key
-    ).drop(columns="diagnosis")
-    df_clinical_complete = df_clinical_complete.merge(
-        df_biosamples, how="inner", on=merge_key
-    )
-    df_clinical_complete = df_clinical_complete.merge(
-        df_neuropsych, how="inner", on=merge_key
-    )
-    df_clinical = df_clinical.dropna(subset=merge_key)
-    return df_clinical_complete.merge(df_clinical, how="inner", on=merge_key)
+
+    df_clinical_list = [
+        df_demographics,
+        df_biosamples,
+        df_neuropsych,
+        df_genetics,
+        df_clinical,
+    ]
+
+    df_clinical_complete = df_imaging.copy()
+
+    for df in df_clinical_list:
+        df_clinical_complete = _merge_and_coalesce(
+            df_clinical_complete, df, on=merge_key
+        )
+
+    return df_clinical_complete
 
 
 def prepare_dataset_to_bids_format(
     complete_data_df: pd.DataFrame,
-    gif: bool,
+    full: bool,
     path_to_clinical_tsv: Path,
 ) -> Dict[str, pd.DataFrame]:
     """Selects the data needed to write the participants, sessions, and scans tsvs.
@@ -237,8 +299,8 @@ def prepare_dataset_to_bids_format(
     complete_data_df: pd.DataFrame
         Dataframe containing the merged data extracted from the raw images and the clinical data
 
-    gif: bool
-        If True, indicates the user wants to have the values of the gif parcellation
+    full: bool
+        If True, indicates the user wants to get all clinical data fields
 
     path_to_clinical_tsv: Path
         TSV file containing the data fields the user wishes to have from the excel spreadsheets
@@ -248,15 +310,21 @@ def prepare_dataset_to_bids_format(
     Dict[str, pd.DataFrame]
         Dictionary containing as key participants, sessions and scans, and the values wanted for each tsv
     """
+
     complete_data_df = complete_data_df.drop_duplicates(
         subset=["participant_id", "session_id", "modality", "run_num", "bids_filename"]
     ).set_index(
         ["participant_id", "session_id", "modality", "run_num", "bids_filename"],
         verify_integrity=True,
     )
-    specifications = pd.read_csv(Path(__file__).parent / "specifications.csv", sep=";")
-    if not gif:
-        specifications = specifications.head(8)
+
+    spec_filename = "mandatory_specs"
+    if full:
+        spec_filename = "full_specs"
+    specifications = pd.read_csv(
+        Path(__file__).parent / "specifications" / (spec_filename + ".csv"), sep=";"
+    )
+
     # add additional data through csv
     if path_to_clinical_tsv:
         additional_data_df = pd.read_csv(path_to_clinical_tsv, sep="\t")
