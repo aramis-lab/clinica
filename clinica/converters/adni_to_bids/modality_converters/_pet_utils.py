@@ -1,8 +1,32 @@
+from pathlib import Path
+
 import pandas as pd
 
 from clinica.utils.stream import cprint
 
-__all__ = ["get_images_pet"]
+__all__ = ["load_all_images", "get_images_pet"]
+
+
+def load_all_images(csv_dir: Path) -> pd.DataFrame:
+    """All Images and Manifest csv files are loaded. Columns from Manifest file are merged into All Images.
+
+    Parameters
+    ----------
+    csv_dir : PathLike
+        Path to the clinical data directory.
+
+    Returns: DataFrame containing main clinical data for PET images.
+    """
+    from clinica.converters._utils import load_clinical_csv
+
+    all_images = load_clinical_csv(csv_dir, "All_Images")
+    manifest = load_clinical_csv(csv_dir, "Manifest")
+
+    all_images = all_images.merge(
+        manifest[["image_id", "series_id"]], on="image_id", how="left"
+    )
+
+    return all_images
 
 
 def get_images_pet(

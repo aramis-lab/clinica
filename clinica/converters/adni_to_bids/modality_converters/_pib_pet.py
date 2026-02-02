@@ -102,17 +102,12 @@ def _compute_pib_pet_paths(
     from clinica.utils.pet import Tracer
 
     from ._image_path_utils import find_image_path
-    from ._pet_utils import get_images_pet
+    from ._pet_utils import get_images_pet, load_all_images
 
     pet_pib_dfs_list = []
     pet_pib_df = pd.DataFrame(columns=_get_pib_pet_columns())
     pibqc = load_clinical_csv(csv_dir, "PIBQC")
-    all_images = load_clinical_csv(csv_dir, "All_Images")
-    manifest = load_clinical_csv(csv_dir, "Manifest")
-
-    all_images = all_images.merge(
-        manifest[["image_id", "series_id"]], on="image_id", how="left"
-    )
+    all_images = load_all_images(csv_dir)
 
     for subject in subjects:
         # PET images metadata for subject

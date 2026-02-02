@@ -153,6 +153,7 @@ def _compute_fdg_pet_paths(
             - PETQC.csv
             - PETC3.csv
             - [PREFIX]_All_Images_[DATE].csv
+            - [PREFIX]_Manifest_[DATE].csv
 
     subjects : list of str
         List of subjects.
@@ -191,6 +192,7 @@ def _get_pet_fdg_df(
     for subject in subjects:
         dfs.extend(
             _get_images_pet_for_subject(
+                csv_dir,
                 subject,
                 _get_csv_data(Path(csv_dir)),
                 preprocessing_step,
@@ -222,8 +224,6 @@ def _get_csv_data(csv_dir: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFra
     return (
         _get_pet_qc_df(csv_dir),
         _get_qc_adni_3_df(csv_dir),
-        _get_all_images_df(csv_dir),
-        _get_manifest_df(csv_dir),
     )
 
 
@@ -252,31 +252,20 @@ _get_qc_adni_3_df = partial(
     filename="PETC3",
     required_columns={"SCANQLTY", "RID", "SCANDATE"},
 )
-_get_all_images_df = partial(
-    _load_df_with_column_check,
-    filename="All_Images",
-    required_columns={"subject_id"},
-)
-_get_manifest_df = partial(
-    _load_df_with_column_check,
-    filename="Manifest",
-    required_columns={"series_id"},
-)
 
 
 def _get_images_pet_for_subject(
+    csv_dir: Path,
     subject: str,
     csv_data: Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame],
     preprocessing_step: ADNIPreprocessingStep,
 ) -> List[pd.DataFrame]:
     """Filter the PET images' QC dataframes for the given subject."""
-    from ._pet_utils import get_images_pet
+    from ._pet_utils import get_images_pet, load_all_images
 
-    pet_qc_df, pet_qc_adni_3_df, all_images_df, manifest_df = csv_data
+    pet_qc_df, pet_qc_adni_3_df = csv_data
 
-    all_images_df = all_images_df.merge(
-        manifest_df[["image_id", "series_id"]], on="image_id", how="left"
-    )
+    all_images_df = load_all_images(csv_dir)
 
     subject_pet_metadata = all_images_df[all_images_df["subject_id"] == subject]
 
