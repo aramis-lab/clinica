@@ -102,12 +102,12 @@ def _compute_tau_pet_paths(
     from clinica.utils.pet import Tracer
 
     from ._image_path_utils import find_image_path
-    from ._pet_utils import get_images_pet, load_all_images
+    from ._pet_utils import get_images_pet, load_all_images_metadata
 
     pet_tau_df = pd.DataFrame(columns=_get_tau_pet_df_columns())
     pet_tau_dfs_list = []
     tauqc = load_clinical_csv(csv_dir, "TAUQC")
-    all_images = load_all_images(csv_dir)
+    all_images = load_all_images_metadata(csv_dir)
 
     for subject in subjects:
         # PET images metadata for subject
