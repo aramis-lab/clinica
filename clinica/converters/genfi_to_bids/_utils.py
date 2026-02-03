@@ -131,7 +131,7 @@ def _check_file(directory: Path, pattern: str) -> Path:
         raise FileNotFoundError("Clinical data not found or incomplete. Aborting")
     if len(data_file) > 1:
         raise ValueError("Too many data files found, expected one. Aborting.")
-    return data_file[0], pattern
+    return data_file[0]
 
 
 def parse_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
@@ -168,15 +168,13 @@ def _find_clinical_data(
     )
 
 
-def _read_file(data_file_pattern: tuple[Path, str]) -> pd.DataFrame:
-    data_file = data_file_pattern[0]
-    pattern = data_file_pattern[1]
-
+def _read_file(data_file: Path) -> pd.DataFrame:
     df_genfi_1 = pd.read_excel(data_file)
-    df_genfi_2 = pd.DataFrame()
-
-    if pattern != "FINAL*GENETICS*.xlsx":
-        df_genfi_2 = pd.read_excel(data_file, sheet_name=1)
+    df_genfi_2 = (
+        pd.read_excel(data_file, sheet_name=1)
+        if "GENETICS" not in data_file.name
+        else pd.DataFrame()
+    )
 
     return (
         pd.concat(
@@ -200,12 +198,9 @@ def _merge_and_coalesce(
     - Keeps all keys from left_df OR right_df
     - For overlapping non-key columns, fills left_df n/a values with right_df actual values
     """
-    left_df = left_df.copy()
-    right_df = right_df.copy()
-
     # Drops rows without keys
-    left_df = left_df.dropna(subset=on)
-    right_df = right_df.dropna(subset=on)
+    left_df = left_df.copy().dropna(subset=on)
+    right_df = right_df.copy().dropna(subset=on)
 
     # Outer merge dfs
     merged_df = left_df.merge(
@@ -318,11 +313,11 @@ def prepare_dataset_to_bids_format(
         verify_integrity=True,
     )
 
-    spec_filename = "mandatory_specs"
-    if full:
-        spec_filename = "full_specs"
     specifications = pd.read_csv(
-        Path(__file__).parent / "specifications" / (spec_filename + ".csv"), sep=";"
+        Path(__file__).parent
+        / "specifications"
+        / f"{'full_specs' if full else 'mandatory_specs'}.csv",
+        sep=";",
     )
 
     # add additional data through csv
