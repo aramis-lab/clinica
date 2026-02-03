@@ -1,7 +1,5 @@
 <!-- markdownlint-disable MD046 -->
 
---8<-- "snippets/spm_banner.md"
-
 # Third-party software
 
 ## Environment variables set-up
@@ -65,20 +63,19 @@ Specific dependencies are described in the table below (1) :
 
 <div markdown="1" class="third_party_table">
 
-|                     | ANTs | Convert3D | FreeSurfer | FSL | ITK | Matlab | MRtrix3 | PETPVC | SPM |
-|:-------------------:|:----:|:---------:|:----------:|:---:|:---:|:------:|:-------:|:------:|:---:|
-|    Anat > Linear    |  ✓∘  |           |            |     |     |        |         |        |     |
-|    Anat > Volume    |      |           |            |     |     |   ✓    |         |        |  ✓  |
-|  Anat > FreeSurfer  |      |           |     ✓      |     |     |        |         |        |     |
-| DWI > Preprocessing |  ✓   |     ✓     |            |  ✓  |     |        |    ✓    |        |     |
-|      DWI > DTI      |  ✓   |           |            |  ✓  |     |        |    ✓    |        |     |
-|  DWI > Connectome   |      |           |     ✓      |  ✓  |     |        |    ✓    |        |     |
-|    PET > Linear     |  ✓   |           |            |     |     |        |         |        |     |
-|    PET > Surface    |      |           |     ✓      |  ✓  | ✓⟡  |   ✓    |         |   ✓⟡   |  ✓  |
-|    PET > Volume     |      |           |            |     | ✓⟡  |   ✓    |         |   ✓⟡   |  ✓  |
-|   Stats > Surface   |      |           |     ✓      |     |     |        |         |        |     |
-|   Stats > Volume    |      |           |            |     |     |   ✓    |         |        |  ✓  |
-
+|                     | ANTs  | Convert3D | FreeSurfer | FSL | ITK | MRtrix3 | PETPVC | SPM |
+|:-------------------:|:-----:|:---------:|:----------:|:---:|:---:|:-------:|:------:|:---:|
+|    Anat > Linear    |  ✓∘   |           |            |     |     |         |        |     |
+|    Anat > Volume    |       |           |            |     |     |         |        |  ✓  |
+|  Anat > FreeSurfer  |       |           |     ✓      |     |     |         |        |     |
+| DWI > Preprocessing |   ✓   |     ✓     |            |  ✓  |     |    ✓    |        |     |
+|      DWI > DTI      |   ✓   |           |            |  ✓  |     |    ✓    |        |     |
+|  DWI > Connectome   |       |           |     ✓      |  ✓  |     |    ✓    |        |     |
+|    PET > Linear     |   ✓   |           |            |     |     |         |        |     |
+|    PET > Surface    |       |           |     ✓      |  ✓  | ✓⟡  |         |   ✓⟡   |  ✓  |
+|    PET > Volume     |       |           |            |     | ✓⟡  |         |   ✓⟡   |  ✓  |
+|   Stats > Surface   |       |           |     ✓      |     |     |         |        |     |
+|   Stats > Volume    |       |           |            |     |     |         |        |  ✓  |
 </div>
 
 - *✓∘ : for anatomical linear pipelines there is also the possibility to use ANTsPy instead of ANTs since Clinica `v0.9.0`* 
@@ -202,23 +199,6 @@ official instructions for [downloading](https://www.mrtrix.org/download/).
 
 ___
 
-### Matlab
-
-You can find more details about `Matlab` on their [website](https://fr.mathworks.com/products/matlab/).
-
-!!! warning
-    Note that using `Matlab` requires having a **valid license** which might be available through your university or institution.
-
-Make sure to have the following environment variables defined:
-
-```{ .bash .copy }
-export MATLAB_HOME="/path/to/your/matlab/bin/"
-export PATH=${MATLAB_HOME}:${PATH}
-export MATLABCMD="${MATLAB_HOME}/matlab"
-```
-
-___
-
 ### PETPVC
 
 You can find more details about `PETPVC` on their [website](https://github.com/UCL/PETPVC),
@@ -235,59 +215,16 @@ You have basically three options:
 
 ___
 
-### SPM12
+### SPM Standalone
 
-!!! warning "SPM12 and Matlab"
-    Note that `SPM12` works with [Matlab](#matlab) such that Clinica pipelines which require `SPM12`, will also need a `Matlab` installation.
-    If you cannot install `Matlab`, you can install [SPM standalone](#spm12-standalone).
+!!! danger "Set-up MATLAB + SPM"
+    Clinica now only supports SPM standalone, which functions without MATLAB.
 
-You can find more details about `SPM12` on their [website](http://www.fil.ion.ucl.ac.uk/spm/). To install it :
+To use SPM standalone, you will need to install two things:
 
-=== "Linux"
-    Download the latest version [here](http://www.fil.ion.ucl.ac.uk/spm/download/restricted/eldorado/spm12.zip) and follow the instructions on the [SPM wiki](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Linux).
-
-=== "MacOS"
-    Download the latest version [here](http://www.fil.ion.ucl.ac.uk/spm/download/restricted/eldorado/spm12.zip) and follow the instructions on the [SPM wiki](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)).
-
-    ??? warning "MacOS Big Sur"
-        For systems running on MacOS Big Sur, a [development version of SPM12](https://www.fil.ion.ucl.ac.uk/spm/download/restricted/utopia/dev/) as well as a more recent release of the MCR (minimum 2019a) are required.
-
-Then :
-
-1. Make sure to have the following environment variable defined:
-    ```{ .bash .copy }
-    export SPM_HOME="/path/to/your/spm12"
-    ```
-
-   2. You must also add `SPM` to the `MATLAB` path variable if you installed it as a toolbox.
-      - First, verify a `startup.m` file exists in your *initial working folder*, by default `~/Documents/MATLAB` (see [here](https://fr.mathworks.com/help/matlab/ref/startup.html) for more details). 
-        If the file does not exist, you can create it.
-      - Then, type inside:
-       ```matlab
-       addpath('/path/to/your/spm12');
-       ```
-       **OR**, assuming the `$SPM_HOME` environment variable is set in your `~/.bashrc` file :
-       ```matlab
-       [~, spmhome] = system('source ~/.bashrc > /dev/null; echo $SPM_HOME;');
-       spmhome = strsplit(spmhome,'\n');
-       addpath(spmhome{end-1});
-       ```
-
-    !!! warning
-        `zsh` shell users will have to replace `~/.bashrc` by `~/.zshrc`.
-
-___
-
-### SPM12 standalone
-
-If you want to install `SPM12` without installing [Matlab](#matlab), you will need to install two things:
-
-- The Matlab runtime (often abbreviated into MCR), for which no license is required.
+- The Matlab Runtime (often abbreviated into MCR), for which no license is required.
 - The SPM standalone itself.
 
-!!! danger "Which version to use ?"
-    SPM has recently released a version `SPM25` on Github for which the installation is described [here](https://www.fil.ion.ucl.ac.uk/spm/docs/installation/standalone/).
-    Clinica does support this version for both `t1-volume` and `pet-volume`
 
 !!! tip "Verify your environment variables"
     If you followed the installation instructions, you should have set the environment variable `$LD_LIBRARY_PATH` on Linux, or `$DYLD_LIBRARY_PATH` on MacOS.
@@ -297,11 +234,9 @@ In addition, you need to define the following environment variables:
 ```bash
 export MCR_HOME="/path/to/your/MCR/"
 export SPMSTANDALONE_HOME="/path/to/your/spmstandalone/home/"
-export SPM_HOME="/path/to/your/spmstandalone/home/"
 ```
 
-!!! tip "Which paths to use ?"
-    - `SPM_HOME` is not actually used with this set-up but it still needs to be defined
+!!! tip "What are these paths ?"
     - `SPMSTANDALONE_HOME` should indicate the directory containing the `run_spmxx.sh` file.
     - `MCR_HOME` should indicate the directory containing the `bin`, `runtime`... folders
 
@@ -321,6 +256,3 @@ eval "$(register-python-argcomplete clinica)"
     bashcompinit
     source ~/.bash_completion.d/python-argcomplete.sh
     ```
-
-
---8<-- "snippets/known_issues.md:matlab"

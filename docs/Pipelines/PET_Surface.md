@@ -1,7 +1,5 @@
 <!-- markdownlint-disable MD033 MD046 -->
 
---8<-- "snippets/spm_banner.md"
-
 # `pet-surface` - Surface-based processing of PET images
 
 This pipeline performs several processing steps for the analysis of PET data on the cortical surface [[Marcoux et al., 2018](https://doi.org/10.3389/fninf.2018.00094)]:
@@ -25,9 +23,7 @@ You need to have performed the [`t1-freesurfer`](./T1_FreeSurfer.md) pipeline on
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of [FreeSurfer 6.0](../Software/Third-party.md#freesurfer), [FSL 6.0](../Software/Third-party.md#fsl), and [PETPVC 1.2.4](../Software/Third-party.md#petpvc) (which depends on [ITK 4](../Software/Third-party.md#itk)) on your computer.
-
-In addition, you also need to either install [SPM12](../Software/Third-party.md#spm12) and [Matlab](../Software/Third-party.md#matlab), or [spm standalone](../Software/Third-party.md#spm12-standalone).
+If you only installed the core of Clinica, this pipeline needs the installation of [FreeSurfer 6.0](../Software/Third-party.md#freesurfer), [FSL 6.0](../Software/Third-party.md#fsl), and [PETPVC 1.2.4](../Software/Third-party.md#petpvc) (which depends on [ITK 4](../Software/Third-party.md#itk)) on your computer. In addition, you also need to install [spm standalone](../Software/Third-party.md#spm-standalone).
 
 ## Running the pipeline
 
