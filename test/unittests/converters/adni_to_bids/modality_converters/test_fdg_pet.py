@@ -319,7 +319,12 @@ def test_compute_fdg_pet_paths(tmp_path, expected_images_df_columns: list[str]):
             "study_id": [2815] * 4,
             "image_type": ["Original"] * 4,
             "image_date": ["2018-01-01", "2018-01-06", "2018-01-01", "2020-06-11"],
-            "image_description": ["ADNI Brain PET: Raw"] * 4,
+            "image_description": [
+                "ADNI Brain PET: Raw",
+                "Co-registered, Avereged",
+                "Co-registered Dynamic",
+                "Coreg, Avg, Standardized Image and Voxel Size",
+            ],
         }
     ).to_csv(csv_dir / "Cohort_1_All_Images_27Jan2026.csv")
     pd.DataFrame(
@@ -330,7 +335,12 @@ def test_compute_fdg_pet_paths(tmp_path, expected_images_df_columns: list[str]):
             "series_id": [10601, 10602, 10603, 10604],
             "image_type": ["Original"] * 4,
             "image_date": ["2018-01-01", "2018-01-06", "2018-01-01", "2020-06-11"],
-            "image_description": ["ADNI Brain PET: Raw"] * 4,
+            "image_description": [
+                "ADNI Brain PET: Raw",
+                "Co-registered, Avereged",
+                "Co-registered Dynamic",
+                "Coreg, Avg, Standardized Image and Voxel Size",
+            ],
         }
     ).to_csv(csv_dir / "Cohort_1_Manifest_27Jan2026.csv")
 

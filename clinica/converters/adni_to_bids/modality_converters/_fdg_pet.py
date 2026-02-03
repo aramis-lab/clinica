@@ -218,7 +218,7 @@ def _get_pet_fdg_columns() -> List[str]:
     ]
 
 
-def _get_csv_data(csv_dir: Path) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def _get_csv_data(csv_dir: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Load needed data from .csv files in csv_dir folder."""
     return (
         _get_pet_qc_df(csv_dir),
@@ -256,15 +256,15 @@ _get_qc_adni_3_df = partial(
 def _get_images_pet_for_subject(
     csv_dir: Path,
     subject: str,
-    csv_data: Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame],
+    csv_data: Tuple[pd.DataFrame, pd.DataFrame],
     preprocessing_step: ADNIPreprocessingStep,
 ) -> List[pd.DataFrame]:
     """Filter the PET images' QC dataframes for the given subject."""
-    from ._pet_utils import get_images_pet, load_all_images
+    from ._pet_utils import get_images_pet, load_all_images_metadata
 
     pet_qc_df, pet_qc_adni_3_df = csv_data
 
-    all_images_df = load_all_images(csv_dir)
+    all_images_df = load_all_images_metadata(csv_dir)
 
     subject_pet_metadata = all_images_df[all_images_df["subject_id"] == subject]
 

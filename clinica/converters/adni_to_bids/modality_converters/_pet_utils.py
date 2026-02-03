@@ -4,10 +4,10 @@ import pandas as pd
 
 from clinica.utils.stream import cprint
 
-__all__ = ["load_all_images", "get_images_pet"]
+__all__ = ["load_all_images_metadata", "get_images_pet"]
 
 
-def load_all_images(csv_dir: Path) -> pd.DataFrame:
+def load_all_images_metadata(csv_dir: Path) -> pd.DataFrame:
     """All Images and Manifest csv files are loaded. Columns from Manifest file are merged into All Images.
 
     Parameters
