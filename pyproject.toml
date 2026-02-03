@@ -14,7 +14,7 @@ maintainers = [
     { name = "Clinica developers", email = "clinica.run@gmail.com>" },
 ]
 readme = "README.md"
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.10,<3.13"
 keywords = [
     "bids",
     "image processing",
@@ -91,7 +91,7 @@ mkdocs-material = ">=7.1.8"
 pymdown-extensions = "*"
 
 [tool.poetry.group.optional.dependencies]
-brainstat = "^0.4.2"
+brainstat = ">=0.5.2"
 
 [project.scripts]
 clinica = "clinica.cmdline:main"
