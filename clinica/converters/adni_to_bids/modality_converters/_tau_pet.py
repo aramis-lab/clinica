@@ -158,7 +158,6 @@ def _get_tau_pet_df_columns() -> list[str]:
         "Phase",
         "Subject_ID",
         "VISCODE",
-        "Visit",
         "Sequence",
         "Scan_Date",
         "Study_ID",

@@ -154,7 +154,6 @@ def _get_pib_pet_columns() -> list[str]:
         "Phase",
         "Subject_ID",
         "VISCODE",
-        "Visit",
         "Sequence",
         "Scan_Date",
         "Study_ID",

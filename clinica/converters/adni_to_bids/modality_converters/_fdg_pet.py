@@ -209,7 +209,6 @@ def _get_pet_fdg_columns() -> List[str]:
         "Phase",
         "Subject_ID",
         "VISCODE",
-        "Visit",
         "Sequence",
         "Scan_Date",
         "Study_ID",

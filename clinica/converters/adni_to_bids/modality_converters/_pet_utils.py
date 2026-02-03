@@ -111,7 +111,6 @@ def get_images_pet(
             original = False
 
         phase = "ADNI1" if modality == "PIB-PET" else qc_visit.Phase
-        visit = sel_image.Visit
         sequence = replace_special_characters_with_symbol(
             sel_image.image_description, symbol="_"
         )
@@ -141,7 +140,6 @@ def get_images_pet(
                     phase,
                     subject,
                     qc_visit[viscode_field],
-                    str(visit),
                     sequence,
                     date,
                     str(study_id),
@@ -157,7 +155,6 @@ def get_images_pet(
                     phase,
                     subject,
                     qc_visit[viscode_field],
-                    str(visit),
                     sequence,
                     date,
                     str(study_id),

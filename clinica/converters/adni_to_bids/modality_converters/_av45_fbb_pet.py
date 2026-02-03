@@ -102,7 +102,6 @@ def _compute_av45_fbb_pet_paths(
         "Phase",
         "Subject_ID",
         "VISCODE",
-        "Visit",
         "Sequence",
         "Scan_Date",
         "Study_ID",

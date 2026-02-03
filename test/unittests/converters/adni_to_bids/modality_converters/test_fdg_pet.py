@@ -102,7 +102,6 @@ EXPECTED_FDG_DF_COLUMNS = [
     "Phase",
     "Subject_ID",
     "VISCODE",
-    "Visit",
     "Sequence",
     "Scan_Date",
     "Study_ID",
