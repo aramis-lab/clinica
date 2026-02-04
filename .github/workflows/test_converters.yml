@@ -48,6 +48,7 @@ jobs:
           source /builds/miniconda/etc/profile.d/conda.sh
           conda activate "${{ github.workspace }}"/env
           make install
+          pip freeze | grep "dcm"
           cd test
           poetry run pytest --verbose \
           --working_directory=/mnt/data/ci/working_dir_linux \
