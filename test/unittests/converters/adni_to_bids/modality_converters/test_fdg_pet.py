@@ -288,6 +288,11 @@ def test_build_pet_qc_all_studies_for_subject():
 
 
 def test_compute_fdg_pet_paths(tmp_path, expected_images_df_columns: list[str]):
+    from test_adni_pet_utils import (
+        _build_all_images_df,
+        _build_manifest_df,
+    )
+
     from clinica.converters.adni_to_bids.modality_converters._fdg_pet import (
         ADNIPreprocessingStep,
         _compute_fdg_pet_paths,
@@ -311,38 +316,9 @@ def test_compute_fdg_pet_paths(tmp_path, expected_images_df_columns: list[str]):
             "LONIUID": ["I1234", "I1234", "I2345", "I3456"],
         }
     ).to_csv(csv_dir / "PETQC.csv")
-    pd.DataFrame(
-        {
-            "image_id": [10, 11, 12, 13],
-            "subject_id": ["123_S_0001", "123_S_0002", "123_S_0003", "123_S_0004"],
-            "phase": ["ADNI 1", "ADNI 1", "ADNI 1", "ADNI 1"],
-            "study_id": [2815] * 4,
-            "image_type": ["Original"] * 4,
-            "image_date": ["2018-01-01", "2018-01-06", "2018-01-01", "2020-06-11"],
-            "image_description": [
-                "ADNI Brain PET: Raw",
-                "Co-registered, Avereged",
-                "Co-registered Dynamic",
-                "Coreg, Avg, Standardized Image and Voxel Size",
-            ],
-        }
-    ).to_csv(csv_dir / "Cohort_1_All_Images_27Jan2026.csv")
-    pd.DataFrame(
-        {
-            "image_id": [10, 11, 12, 13],
-            "subject_id": ["123_S_0001", "123_S_0002", "123_S_0003", "123_S_0004"],
-            "study_id": [2815] * 4,
-            "series_id": [10601, 10602, 10603, 10604],
-            "image_type": ["Original"] * 4,
-            "image_date": ["2018-01-01", "2018-01-06", "2018-01-01", "2020-06-11"],
-            "image_description": [
-                "ADNI Brain PET: Raw",
-                "Co-registered, Avereged",
-                "Co-registered Dynamic",
-                "Coreg, Avg, Standardized Image and Voxel Size",
-            ],
-        }
-    ).to_csv(csv_dir / "Cohort_1_Manifest_27Jan2026.csv")
+
+    _build_all_images_df().to_csv(csv_dir / "Cohort_1_All_Images_27Jan2026.csv")
+    _build_manifest_df().to_csv(csv_dir / "Cohort_1_Manifest_27Jan2026.csv")
 
     images = _compute_fdg_pet_paths(
         tmp_path,
