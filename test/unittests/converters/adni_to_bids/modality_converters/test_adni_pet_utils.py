@@ -1,10 +1,10 @@
-from typing import Tuple
+from pathlib import Path
 
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
 
-def _build_all_images_df() -> pd.DataFrame:
+def _build_all_images_df(csv_path: Path) -> Path:
     all_images_df = pd.DataFrame(
         {
             "image_id": [10, 11, 12, 13],
@@ -25,17 +25,21 @@ def _build_all_images_df() -> pd.DataFrame:
             ],
             "image_description": [
                 "ADNI Brain PET: Raw",
-                "Co-registered, Avereged",
+                "Co-registered, Averaged",
                 "Co-registered Dynamic",
                 "Coreg, Avg, Standardized Image and Voxel Size",
             ],
         }
     )
 
-    return all_images_df
+    file_path = csv_path / "cohort_1_All_Images_27Jan2026.csv"
+
+    all_images_df.to_csv(file_path, index=False)
+
+    return file_path
 
 
-def _build_manifest_df() -> pd.DataFrame:
+def _build_manifest_df(csv_path: Path) -> Path:
     manifest_df = pd.DataFrame(
         {
             "image_id": [10, 11, 12, 13],
@@ -43,7 +47,11 @@ def _build_manifest_df() -> pd.DataFrame:
         }
     )
 
-    return manifest_df
+    file_path = csv_path / "cohort_1_Manifest_27Jan2026.csv"
+
+    manifest_df.to_csv(file_path, index=False)
+
+    return file_path
 
 
 def _build_expected_df() -> pd.DataFrame:
@@ -67,7 +75,7 @@ def _build_expected_df() -> pd.DataFrame:
             ],
             "image_description": [
                 "ADNI Brain PET: Raw",
-                "Co-registered, Avereged",
+                "Co-registered, Averaged",
                 "Co-registered Dynamic",
                 "Coreg, Avg, Standardized Image and Voxel Size",
             ],
@@ -83,12 +91,9 @@ def test_load_all_images_metadata(tmp_path):
         load_all_images_metadata,
     )
 
-    all_images_df = _build_all_images_df()
-    manifest_df = _build_manifest_df()
+    _build_all_images_df(tmp_path)
+    _build_manifest_df(tmp_path)
     expected_df = _build_expected_df()
-
-    all_images_df.to_csv(tmp_path / "All_Images.csv", index=False)
-    manifest_df.to_csv(tmp_path / "Manifest.csv", index=False)
 
     result = load_all_images_metadata(tmp_path)
 

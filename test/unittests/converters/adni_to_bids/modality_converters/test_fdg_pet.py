@@ -317,8 +317,8 @@ def test_compute_fdg_pet_paths(tmp_path, expected_images_df_columns: list[str]):
         }
     ).to_csv(csv_dir / "PETQC.csv")
 
-    _build_all_images_df().to_csv(csv_dir / "Cohort_1_All_Images_27Jan2026.csv")
-    _build_manifest_df().to_csv(csv_dir / "Cohort_1_Manifest_27Jan2026.csv")
+    _build_all_images_df(csv_dir)
+    _build_manifest_df(csv_dir)
 
     images = _compute_fdg_pet_paths(
         tmp_path,
