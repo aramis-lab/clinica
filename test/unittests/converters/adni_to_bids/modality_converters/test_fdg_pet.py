@@ -102,7 +102,6 @@ EXPECTED_FDG_DF_COLUMNS = [
     "Phase",
     "Subject_ID",
     "VISCODE",
-    "Visit",
     "Sequence",
     "Scan_Date",
     "Study_ID",
@@ -289,6 +288,11 @@ def test_build_pet_qc_all_studies_for_subject():
 
 
 def test_compute_fdg_pet_paths(tmp_path, expected_images_df_columns: list[str]):
+    from test_adni_pet_utils import (
+        _build_all_images_df,
+        _build_manifest_df,
+    )
+
     from clinica.converters.adni_to_bids.modality_converters._fdg_pet import (
         ADNIPreprocessingStep,
         _compute_fdg_pet_paths,
@@ -312,15 +316,9 @@ def test_compute_fdg_pet_paths(tmp_path, expected_images_df_columns: list[str]):
             "LONIUID": ["I1234", "I1234", "I2345", "I3456"],
         }
     ).to_csv(csv_dir / "PETQC.csv")
-    pd.DataFrame(
-        {
-            "Subject": ["123_S_0001", "123_S_0002", "123_S_0003", "123_S_0004"],
-            "Orig/Proc": ["Original"] * 4,
-            "Image ID": [10, 11, 12, 13],
-            "Scan Date": ["01/01/2018", "01/06/2018", "01/01/2018", "06/11/2020"],
-            "Sequence": ["ADNI Brain PET: Raw"] * 4,
-        }
-    ).to_csv(csv_dir / "PET_META_LIST.csv")
+
+    _build_all_images_df(csv_dir)
+    _build_manifest_df(csv_dir)
 
     images = _compute_fdg_pet_paths(
         tmp_path,

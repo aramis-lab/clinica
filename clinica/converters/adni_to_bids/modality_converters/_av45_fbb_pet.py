@@ -96,13 +96,12 @@ def _compute_av45_fbb_pet_paths(
     from clinica.converters._utils import load_clinical_csv
 
     from ._image_path_utils import find_image_path
-    from ._pet_utils import get_images_pet
+    from ._pet_utils import get_images_pet, load_all_images_metadata
 
     pet_amyloid_col = [
         "Phase",
         "Subject_ID",
         "VISCODE",
-        "Visit",
         "Sequence",
         "Scan_Date",
         "Study_ID",
@@ -117,11 +116,11 @@ def _compute_av45_fbb_pet_paths(
     # Loading needed .csv files
     av45qc = load_clinical_csv(csv_dir, "AV45QC")
     amyqc = load_clinical_csv(csv_dir, "AMYQC")
-    pet_meta_list = load_clinical_csv(csv_dir, "PET_META_LIST")
+    all_images = load_all_images_metadata(csv_dir)
 
     for subject in subjects:
         # PET images metadata for subject
-        subject_pet_meta = pet_meta_list[pet_meta_list["Subject"] == subject]
+        subject_pet_meta = all_images[all_images["subject_id"] == subject]
 
         if subject_pet_meta.empty:
             continue

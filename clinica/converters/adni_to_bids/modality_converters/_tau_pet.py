@@ -102,16 +102,16 @@ def _compute_tau_pet_paths(
     from clinica.utils.pet import Tracer
 
     from ._image_path_utils import find_image_path
-    from ._pet_utils import get_images_pet
+    from ._pet_utils import get_images_pet, load_all_images_metadata
 
     pet_tau_df = pd.DataFrame(columns=_get_tau_pet_df_columns())
     pet_tau_dfs_list = []
     tauqc = load_clinical_csv(csv_dir, "TAUQC")
-    pet_meta_list = load_clinical_csv(csv_dir, "PET_META_LIST")
+    all_images = load_all_images_metadata(csv_dir)
 
     for subject in subjects:
         # PET images metadata for subject
-        subject_pet_meta = pet_meta_list[pet_meta_list["Subject"] == subject]
+        subject_pet_meta = all_images[all_images["subject_id"] == subject]
         if subject_pet_meta.empty:
             continue
         # QC for TAU PET images for ADNI 2 and 3
@@ -158,7 +158,6 @@ def _get_tau_pet_df_columns() -> list[str]:
         "Phase",
         "Subject_ID",
         "VISCODE",
-        "Visit",
         "Sequence",
         "Scan_Date",
         "Study_ID",

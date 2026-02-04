@@ -1,8 +1,32 @@
+from pathlib import Path
+
 import pandas as pd
 
 from clinica.utils.stream import cprint
 
-__all__ = ["get_images_pet"]
+__all__ = ["load_all_images_metadata", "get_images_pet"]
+
+
+def load_all_images_metadata(csv_dir: Path) -> pd.DataFrame:
+    """All Images and Manifest csv files are loaded. Columns from Manifest file are merged into All Images.
+
+    Parameters
+    ----------
+    csv_dir : PathLike
+        Path to the clinical data directory.
+
+    Returns: DataFrame containing main clinical data for PET images.
+    """
+    from clinica.converters._utils import load_clinical_csv
+
+    all_images = load_clinical_csv(csv_dir, "All_Images")
+    manifest = load_clinical_csv(csv_dir, "Manifest")
+
+    all_images = all_images.merge(
+        manifest[["image_id", "series_id"]], on="image_id", how="left"
+    )
+
+    return all_images
 
 
 def get_images_pet(
@@ -50,10 +74,12 @@ def get_images_pet(
             # not containing ‘early’ in the sequence name
 
             original_pet_meta = subject_pet_meta[
-                (subject_pet_meta["Orig/Proc"] == "Original")
-                & (subject_pet_meta["Image ID"] == int(qc_visit.LONIUID[1:]))
-                & (subject_pet_meta["Scan Date"] == qc_visit.EXAMDATE)
-                & ~subject_pet_meta.Sequence.str.contains("early", case=False, na=False)
+                (subject_pet_meta["image_type"] == "Original")
+                & (subject_pet_meta["image_id"] == int(qc_visit.LONIUID[1:]))
+                & (subject_pet_meta["image_date"] == qc_visit.EXAMDATE)
+                & ~subject_pet_meta.image_description.str.contains(
+                    "early", case=False, na=False
+                )
             ]
             # Check if we found a matching image. If yes, we stop looking for it.
             if not original_pet_meta.empty:
@@ -68,10 +94,10 @@ def get_images_pet(
 
         original_image = original_pet_meta.iloc[0]
 
-        # Co-registered and Averaged image with the same Series ID of the original image
+        # Co-registered and Averaged image with the same series_id of the original image
         averaged_pet_meta = subject_pet_meta[
-            subject_pet_meta["Sequence"].isin(sequences_preprocessing_step)
-            & (subject_pet_meta["Series ID"] == original_image["Series ID"])
+            subject_pet_meta["image_description"].isin(sequences_preprocessing_step)
+            & (subject_pet_meta["series_id"] == original_image["series_id"])
         ]
 
         # If an explicit Co-registered, Averaged image does not exist,
@@ -85,20 +111,19 @@ def get_images_pet(
             original = False
 
         phase = "ADNI1" if modality == "PIB-PET" else qc_visit.Phase
-        visit = sel_image.Visit
         sequence = replace_special_characters_with_symbol(
-            sel_image.Sequence, symbol="_"
+            sel_image.image_description, symbol="_"
         )
-        date = sel_image["Scan Date"]
-        study_id = sel_image["Study ID"]
-        series_id = sel_image["Series ID"]
-        image_id = sel_image["Image ID"]
+        date = sel_image["image_date"]
+        study_id = sel_image["study_id"]
+        series_id = sel_image["series_id"]
+        image_id = sel_image["image_id"]
 
         # If it is an amyloid PET we need to find which is the tracer of the scan and add it to the
         if modality == "Amyloid-PET":
-            if "av45" in sel_image.Sequence.lower():
+            if "av45" in sel_image.image_description.lower():
                 tracer = Tracer.AV45.value
-            elif "fbb" in sel_image.Sequence.lower():
+            elif "fbb" in sel_image.image_description.lower():
                 tracer = Tracer.FBB.value
             else:
                 cprint(
@@ -115,7 +140,6 @@ def get_images_pet(
                     phase,
                     subject,
                     qc_visit[viscode_field],
-                    str(visit),
                     sequence,
                     date,
                     str(study_id),
@@ -131,7 +155,6 @@ def get_images_pet(
                     phase,
                     subject,
                     qc_visit[viscode_field],
-                    str(visit),
                     sequence,
                     date,
                     str(study_id),
