@@ -135,37 +135,46 @@ def _check_file(directory: Path, pattern: str) -> Path:
 
 
 def parse_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
-    return _complete_clinical_data(*_find_clinical_data(clinical_data_directory))
+    return _complete_clinical_data(
+        _find_clinical_data(
+            clinical_data_directory,
+            "FINAL*IMAGING*.xlsx",
+        ),
+        [
+            _find_clinical_data(clinical_data_directory, pattern)
+            for pattern in (
+                "FINAL*DEMOGRAPHICS*.xlsx",
+                "FINAL*CLINICAL*.xlsx",
+                "FINAL*BIOSAMPLES*.xlsx",
+                "FINAL*NEUROPSYCH*.xlsx",
+                "FINAL*GENETICS*.xlsx",
+            )
+        ],
+    )
 
 
 def _find_clinical_data(
     clinical_data_directory: Path,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Finds the clinical data associated with the dataset.
+    pattern: str,
+) -> pd.DataFrame:
+    """Finds the clinical data associated with the pattern in the cdd.
 
     Parameters
     ----------
     clinical_data_directory: Path
         The path to the clinical data.
 
+    pattern : str
+        Pattern to find the clinical data
+
     Returns
     -------
-    List[pd.DataFrame]
-        Dataframes containing the clinical data
+    pd.DataFrame
+        Dataframe containing the clinical data
     """
-    cprint("Looking for clinical data.", lvl="info")
+    cprint("Looking for clinical data...", lvl="info")
 
-    return tuple(
-        _read_file(_check_file(clinical_data_directory, pattern))
-        for pattern in (
-            "FINAL*DEMOGRAPHICS*.xlsx",
-            "FINAL*IMAGING*.xlsx",
-            "FINAL*CLINICAL*.xlsx",
-            "FINAL*BIOSAMPLES*.xlsx",
-            "FINAL*NEUROPSYCH*.xlsx",
-            "FINAL*GENETICS*.xlsx",
-        )
-    )
+    return _read_file(_check_file(clinical_data_directory, pattern))
 
 
 def _read_file(data_file: Path) -> pd.DataFrame:
@@ -208,69 +217,41 @@ def _merge_and_coalesce(
         how="outer",
         on=on,
         suffixes=("", "_duplicate"),
-        indicator=False,
     )
 
     # Coalesces overlapping columns
-    right_cols = {c for c in right_df.columns if c not in on}
-    for c in right_cols:
-        dup_col = f"{c}_duplicate"
-        if dup_col in merged_df.columns:
-            if c in merged_df.columns:
-                merged_df[c] = merged_df[c].combine_first(
-                    merged_df[dup_col]
-                )  # Fills n/a in left_df with right_df values
-                merged_df.drop(columns=[dup_col], inplace=True)
-            else:
-                merged_df.rename(columns={dup_col: c}, inplace=True)
+    for col in right_df.columns:
+        if (dup_col := f"{col}_duplicate") in merged_df.columns:
+            merged_df[col] = merged_df[col].combine_first(
+                merged_df[dup_col]
+            )  # Fills n/a in left_df with right_df values
+            merged_df.drop(columns=[dup_col], inplace=True)
+        else:
+            merged_df.rename(columns={dup_col: col}, inplace=True)
 
     return merged_df
 
 
 def _complete_clinical_data(
-    df_demographics: pd.DataFrame,
     df_imaging: pd.DataFrame,
-    df_clinical: pd.DataFrame,
-    df_biosamples: pd.DataFrame,
-    df_neuropsych: pd.DataFrame,
-    df_genetics: pd.DataFrame,
+    df_clinical_list: List[pd.DataFrame],
 ) -> pd.DataFrame:
     """Merges the different clincal dataframes into one.
 
     Parameters
     ----------
-    df_demographics: pd.DataFrame
-        Dataframe containing the demographic data
-
     df_imaging: pd.DataFrame
         Dataframe containing the imaging data
 
-    df_clinical: pd.DataFrame
-        Dataframe containing the clinical data
-
-    df_biosamples: pd.DataFrame
-        Dataframe containing the biosample data
-
-    df_neuropsych: pd.DataFrame
-        Dataframe containing the neuropsych data
-
-    df_genetics: pd.DataFrame
-        Dataframe containing the genetics data
+    df_clinical_list: List[pd.DataFrame]
+        List of dataframes containing the remaining clinical data
 
     Returns
     -------
     df_clinical_complete: pd.DataFrame
-        Dataframe with the data of the 3 input dataframes
+        Dataframe with the data from the input dataframes
     """
     merge_key = ["blinded_code", "blinded_site", "visit"]
-
-    df_clinical_list = [
-        df_demographics,
-        df_biosamples,
-        df_neuropsych,
-        df_genetics,
-        df_clinical,
-    ]
 
     df_clinical_complete = df_imaging.copy()
 
