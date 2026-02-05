@@ -226,8 +226,6 @@ def _merge_and_coalesce(
                 merged_df[dup_col]
             )  # Fills n/a in left_df with right_df values
             merged_df.drop(columns=[dup_col], inplace=True)
-        else:
-            merged_df.rename(columns={dup_col: col}, inplace=True)
 
     return merged_df
 

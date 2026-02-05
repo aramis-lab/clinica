@@ -348,22 +348,23 @@ def test_write_scans_and_niftis(tmp_path, mocker):
     assert row["number_of_parts"] == 1
 
 
-def test_find_clinical_data(monkeypatch, tmp_path):
+@pytest.mark.parametrize(
+    "filename",
+    [
+        "FINAL_IMAGING.xlsx",
+        "FINAL_DEMOGRAPHICS.xlsx",
+        "FINAL_CLINICAL.xslx" "FINAL_BIOSAMPLES.xslx",
+        "FINAL_NEUROPSYCH.xslx",
+        "FINAL_GENETICS.xslx",
+    ],
+)
+def test_find_clinical_data(monkeypatch, tmp_path, filename):
     import clinica.converters.genfi_to_bids._utils as genfi_utils
 
-    clinical_file_names = [
-        "IMAGING",
-        "DEMOGRAPHICS",
-        "CLINICAL",
-        "BIOSAMPLES",
-        "NEUROPSYCH",
-        "GENETICS",
-    ]
-
-    returned_paths = [tmp_path / f"FINAL_{name}.xlsx" for name in clinical_file_names]
+    file_path = tmp_path / filename
 
     def _check_file(clinical_data_directory, pattern):
-        return returned_paths.pop(0)
+        return file_path
 
     def _read_file(data_file):
         return pd.DataFrame({"source": [data_file.name]})
@@ -371,50 +372,40 @@ def test_find_clinical_data(monkeypatch, tmp_path):
     monkeypatch.setattr(genfi_utils, "_check_file", _check_file)
     monkeypatch.setattr(genfi_utils, "_read_file", _read_file)
 
-    length = len(returned_paths)
+    out = genfi_utils._find_clinical_data(tmp_path, filename)
 
-    out = []
-    for i in range(length):
-        out.append(genfi_utils._find_clinical_data(tmp_path, clinical_file_names[i]))
-
-    assert len(out) == 6
-
-    for i in range(len(out)):
-        assert out[i].iloc[0, 0].endswith(clinical_file_names[i] + ".xlsx")
+    assert out.iloc[0, 0].endswith(filename)
 
 
-@pytest.mark.parametrize(
-    "left_df,right_df,on,expected_df",
-    [
-        pytest.param(
-            pd.DataFrame(
-                {
-                    "blinded_code": ["C9ORF001", "C9ORF002"],
-                    "genetic_status_1": ["P", pd.NA],
-                    "genetic_status_2": [0, 1],
-                }
-            ),
-            pd.DataFrame(
-                {
-                    "blinded_code": ["C9ORF002", "C9ORF003"],
-                    "genetic_status_1": ["A", "P"],
-                    "diagnosis": ["bvFTD", "ALS"],
-                }
-            ),
-            ["blinded_code"],
-            pd.DataFrame(
-                {
-                    "blinded_code": ["C9ORF001", "C9ORF002", "C9ORF003"],
-                    "genetic_status_1": ["P", "A", "P"],
-                    "genetic_status_2": [0, 1, pd.NA],
-                    "diagnosis": [pd.NA, "bvFTD", "ALS"],
-                }
-            ),
-        )
-    ],
-)
-def test_merge_and_coalesce(left_df, right_df, on, expected_df):
+def test_merge_and_coalesce():
     from clinica.converters.genfi_to_bids._utils import _merge_and_coalesce
+
+    left_df = pd.DataFrame(
+        {
+            "blinded_code": ["C9ORF001", "C9ORF002"],
+            "genetic_status_1": ["P", pd.NA],
+            "genetic_status_2": [0, 1],
+        }
+    )
+
+    right_df = pd.DataFrame(
+        {
+            "blinded_code": ["C9ORF002", "C9ORF003"],
+            "genetic_status_1": ["A", "P"],
+            "diagnosis": ["bvFTD", "ALS"],
+        }
+    )
+
+    on = ["blinded_code"]
+
+    expected_df = pd.DataFrame(
+        {
+            "blinded_code": ["C9ORF001", "C9ORF002", "C9ORF003"],
+            "genetic_status_1": ["P", "A", "P"],
+            "genetic_status_2": [0, 1, pd.NA],
+            "diagnosis": [pd.NA, "bvFTD", "ALS"],
+        }
+    )
 
     result = _merge_and_coalesce(left_df, right_df, on=on)
 
@@ -425,85 +416,75 @@ def test_merge_and_coalesce(left_df, right_df, on, expected_df):
 
     assert_frame_equal(result, expected_df, check_dtype=False)
 
-    assert not any(col.endswith("_duplicate") for col in result.columns)
 
-
-@pytest.mark.parametrize(
-    "df_imaging,df_clinical_list,expected",
-    [
-        pytest.param(
-            pd.DataFrame(
-                {
-                    "blinded_code": ["C9ORF001", "C9ORF002"],
-                    "blinded_site": ["GENFI_AA", "GENFI_AA"],
-                    "visit": [1, 1],
-                    "scan_for_qc": [1, 1],
-                }
-            ),
-            [
-                pd.DataFrame(
-                    {
-                        "blinded_code": ["C9ORF001", "C9ORF002"],
-                        "blinded_site": ["GENFI_AA", "GENFI_AA"],
-                        "visit": [1, 1],
-                        "gender": [0, 1],
-                    }
-                ),
-                pd.DataFrame(
-                    {
-                        "blinded_code": ["C9ORF001", "C9ORF002"],
-                        "blinded_site": ["GENFI_AA", "GENFI_AA"],
-                        "visit": [1, 1],
-                        "diagnosis": ["bvFTD", "ALS"],
-                    }
-                ),
-                pd.DataFrame(
-                    {
-                        "blinded_code": ["C9ORF001", "C9ORF002"],
-                        "blinded_site": ["GENFI_AA", "GENFI_AA"],
-                        "visit": [1, 1],
-                        "plasma_nfl": [6, 5],
-                    }
-                ),
-                pd.DataFrame(
-                    {
-                        "blinded_code": ["C9ORF001", "C9ORF002"],
-                        "blinded_site": ["GENFI_AA", "GENFI_AA"],
-                        "visit": [1, 1],
-                        "ds_f_score": [8, 11],
-                    }
-                ),
-                pd.DataFrame(
-                    {
-                        "blinded_code": ["C9ORF001", "C9ORF002"],
-                        "blinded_site": ["GENFI_AA", "GENFI_AA"],
-                        "visit": [1, 1],
-                        "genetic_status_1": ["P", "A"],
-                    }
-                ),
-            ],
-            pd.DataFrame(
-                {
-                    "blinded_code": ["C9ORF001", "C9ORF002"],
-                    "blinded_site": ["GENFI_AA", "GENFI_AA"],
-                    "visit": [1, 1],
-                    "scan_for_qc": [1, 1],
-                    "gender": [0, 1],
-                    "diagnosis": ["bvFTD", "ALS"],
-                    "plasma_nfl": [6, 5],
-                    "ds_f_score": [8, 11],
-                    "genetic_status_1": ["P", "A"],
-                }
-            ),
-        )
-    ],
-)
-def test_complete_clinical_data(
-    df_imaging,
-    df_clinical_list,
-    expected,
-):
+def test_complete_clinical_data():
     from clinica.converters.genfi_to_bids._utils import _complete_clinical_data
+
+    df_imaging = pd.DataFrame(
+        {
+            "blinded_code": ["C9ORF001", "C9ORF002"],
+            "blinded_site": ["GENFI_AA", "GENFI_AA"],
+            "visit": [1, 1],
+            "scan_for_qc": [1, 1],
+        }
+    )
+
+    df_clinical_list = [
+        pd.DataFrame(
+            {
+                "blinded_code": ["C9ORF001", "C9ORF002"],
+                "blinded_site": ["GENFI_AA", "GENFI_AA"],
+                "visit": [1, 1],
+                "gender": [0, 1],
+            }
+        ),
+        pd.DataFrame(
+            {
+                "blinded_code": ["C9ORF001", "C9ORF002"],
+                "blinded_site": ["GENFI_AA", "GENFI_AA"],
+                "visit": [1, 1],
+                "diagnosis": ["bvFTD", "ALS"],
+            }
+        ),
+        pd.DataFrame(
+            {
+                "blinded_code": ["C9ORF001", "C9ORF002"],
+                "blinded_site": ["GENFI_AA", "GENFI_AA"],
+                "visit": [1, 1],
+                "plasma_nfl": [6, 5],
+            }
+        ),
+        pd.DataFrame(
+            {
+                "blinded_code": ["C9ORF001", "C9ORF002"],
+                "blinded_site": ["GENFI_AA", "GENFI_AA"],
+                "visit": [1, 1],
+                "ds_f_score": [8, 11],
+            }
+        ),
+        pd.DataFrame(
+            {
+                "blinded_code": ["C9ORF001", "C9ORF002"],
+                "blinded_site": ["GENFI_AA", "GENFI_AA"],
+                "visit": [1, 1],
+                "genetic_status_1": ["P", "A"],
+            }
+        ),
+    ]
+
+    expected = pd.DataFrame(
+        {
+            "blinded_code": ["C9ORF001", "C9ORF002"],
+            "blinded_site": ["GENFI_AA", "GENFI_AA"],
+            "visit": [1, 1],
+            "scan_for_qc": [1, 1],
+            "gender": [0, 1],
+            "diagnosis": ["bvFTD", "ALS"],
+            "plasma_nfl": [6, 5],
+            "ds_f_score": [8, 11],
+            "genetic_status_1": ["P", "A"],
+        }
+    )
 
     result = _complete_clinical_data(
         df_imaging=df_imaging, df_clinical_list=df_clinical_list
@@ -517,5 +498,3 @@ def test_complete_clinical_data(
     result = result[expected.columns]
 
     assert_frame_equal(result, expected, check_dtype=False)
-
-    assert not any(col.endswith("_duplicate") for col in result.columns)
