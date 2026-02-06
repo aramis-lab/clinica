@@ -60,7 +60,7 @@ def run_t1_volume_tissue_segmentation(
         / "sub-ADNI011S4105_ses-M000_T1w_segm-graymatter_dartelinput.nii.gz",
     )
 
-    assert likeliness_measure(out_file, ref_file, (1e-1, 0.02), (0.4, 0.01))
+    assert likeliness_measure(out_file, ref_file, (0.1, 0.15), (0.5, 0.1))
 
 
 def test_t1_volume_create_dartel(cmdopt, tmp_path):

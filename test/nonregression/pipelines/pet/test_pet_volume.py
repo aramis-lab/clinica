@@ -58,6 +58,6 @@ def run_pet_volume(
             / f"{subject}_ses-M000_trc-{tracer.value}_pet_space-Ixi549Space_suvr-{region.value}{suffix}",
             ref_dir
             / f"{subject}_ses-M000_trc-{tracer.value}_pet_space-Ixi549Space_suvr-{region.value}{suffix}",
-            (1e-2, 0.25),
-            (1e-1, 0.001),
+            (0.1, 1e-4),
+            (0.15, 1e-10),
         )
