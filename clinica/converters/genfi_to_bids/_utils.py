@@ -204,7 +204,7 @@ def _merge_and_coalesce(
 ) -> pd.DataFrame:
     """
     Sub-function to outer merge and coalesce duplicates :
-    - Keeps all keys from left_df OR right_df
+    - Keeps all keys from both left_df and right_df
     - For overlapping non-key columns, fills left_df n/a values with right_df actual values
     """
     # Drops rows without keys

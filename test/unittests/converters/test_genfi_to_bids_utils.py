@@ -353,7 +353,8 @@ def test_write_scans_and_niftis(tmp_path, mocker):
     [
         "FINAL_IMAGING.xlsx",
         "FINAL_DEMOGRAPHICS.xlsx",
-        "FINAL_CLINICAL.xslx" "FINAL_BIOSAMPLES.xslx",
+        "FINAL_CLINICAL.xslx",
+        "FINAL_BIOSAMPLES.xslx",
         "FINAL_NEUROPSYCH.xslx",
         "FINAL_GENETICS.xslx",
     ],
@@ -374,6 +375,7 @@ def test_find_clinical_data(monkeypatch, tmp_path, filename):
 
     out = genfi_utils._find_clinical_data(tmp_path, filename)
 
+    assert len(out) == 1
     assert out.iloc[0, 0].endswith(filename)
 
 
@@ -409,12 +411,7 @@ def test_merge_and_coalesce():
 
     result = _merge_and_coalesce(left_df, right_df, on=on)
 
-    # sort and normalize to properly compare
-    result = result.sort_values(by=on).reset_index(drop=True)
-    expected_df = expected_df.sort_values(by=on).reset_index(drop=True)
-    result = result[expected_df.columns]
-
-    assert_frame_equal(result, expected_df, check_dtype=False)
+    assert_frame_equal(result, expected_df, check_like=True, check_dtype=False)
 
 
 def test_complete_clinical_data():
@@ -426,6 +423,8 @@ def test_complete_clinical_data():
             "blinded_site": ["GENFI_AA", "GENFI_AA"],
             "visit": [1, 1],
             "scan_for_qc": [1, 1],
+            "diagnosis": ["bvFTD", pd.NA],
+            "plasma_nfl": [pd.NA, pd.NA],
         }
     )
 
@@ -492,9 +491,4 @@ def test_complete_clinical_data():
 
     MERGE_KEY = ["blinded_code", "blinded_site", "visit"]
 
-    # sort and normalize to properly compare
-    result = result.sort_values(by=MERGE_KEY).reset_index(drop=True)
-    expected = expected.sort_values(by=MERGE_KEY).reset_index(drop=True)
-    result = result[expected.columns]
-
-    assert_frame_equal(result, expected, check_dtype=False)
+    assert_frame_equal(result, expected, check_like=True, check_dtype=False)
