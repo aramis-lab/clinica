@@ -13,7 +13,7 @@ clinical_data_directory = click.option(
     help="Path to the clinical data directory.",
 )
 
-gif = click.option("-gif", is_flag=True, help="Add values from gif to session.tsv")
+gif = click.option("-gif", is_flag=True, help="Add values from gif to session.tsv.")
 
 full = click.option(
     "-full",
