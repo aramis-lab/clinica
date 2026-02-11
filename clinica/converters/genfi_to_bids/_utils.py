@@ -331,7 +331,7 @@ def prepare_dataset_to_bids_format(
     # add additional data through csv
     if path_to_clinical_tsv:
         additional_data_df = pd.read_csv(path_to_clinical_tsv, sep="\t")
-        data_mapping = pd.read_csv(Path(__file__) / "data_mapping.tsv", sep="\t")
+        data_mapping = pd.read_csv(Path(__file__).parent / "data_mapping.tsv", sep="\t")
         pre_addi_df = data_mapping.merge(additional_data_df, how="inner", on="data")
         addi_df = pd.DataFrame(
             [
