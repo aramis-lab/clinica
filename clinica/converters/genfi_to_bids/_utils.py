@@ -263,6 +263,7 @@ def _complete_clinical_data(
 
 def prepare_dataset_to_bids_format(
     complete_data_df: pd.DataFrame,
+    gif: bool,
     full: bool,
     path_to_clinical_tsv: Path,
 ) -> Dict[str, pd.DataFrame]:
@@ -295,7 +296,7 @@ def prepare_dataset_to_bids_format(
     specifications = pd.read_csv(
         Path(__file__).parent
         / "specifications"
-        / f"{'full_specs' if full else 'mandatory_specs'}.csv",
+        / f"{'full_specs' if full else ('gif_specs' if gif else 'mandatory_specs')}.csv",
         sep=";",
     )
 

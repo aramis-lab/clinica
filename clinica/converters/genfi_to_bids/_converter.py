@@ -12,6 +12,7 @@ def convert(
     path_to_dataset: UserProvidedPath,
     bids_dir: UserProvidedPath,
     path_to_clinical: Optional[UserProvidedPath] = None,
+    gif: Optional[bool] = False,
     full: Optional[bool] = False,
     path_to_clinical_tsv: Optional[UserProvidedPath] = None,
     subjects: Optional[UserProvidedPath] = None,
@@ -35,6 +36,9 @@ def convert(
     path_to_clinical: Path, optional
         The path to the clinical data associated with the dataset.
         If None, the clinical data won't be converted.
+
+    gif: bool, optional
+        If True, indicates the user wants to have the values of the gif parcellation
 
     full: bool, optional
         If True, indicates the user wants to get all clinical data fields
@@ -91,7 +95,9 @@ def convert(
     if path_to_clinical:
         clinical_data = parse_clinical_data(path_to_clinical)
         imaging_data = merge_imaging_and_clinical_data(imaging_data, clinical_data)
-    results = prepare_dataset_to_bids_format(imaging_data, full, path_to_clinical_tsv)
+    results = prepare_dataset_to_bids_format(
+        imaging_data, gif, full, path_to_clinical_tsv
+    )
     write_bids(
         to=bids_dir,
         participants=results["participants"],
