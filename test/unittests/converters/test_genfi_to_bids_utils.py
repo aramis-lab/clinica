@@ -490,28 +490,19 @@ def test_complete_clinical_data():
         df_imaging=df_imaging, df_clinical_list=df_clinical_list
     )
 
-    MERGE_KEY = ["blinded_code", "blinded_site", "visit"]
-
     assert_frame_equal(result, expected, check_like=True, check_dtype=False)
 
 
 @pytest.mark.parametrize(
-    ("full", "gif"),
+    ("full", "gif", "expected"),
     [
-        (False, False),
-        (True, True),
-        (True, False),
-        (False, True),
+        (False, False, "mandatory_specs"),
+        (True, True, "full_specs"),
+        (True, False, "full_specs"),
+        (False, True, "gif_specs"),
     ],
 )
-def test_specs_depending_on_option(full, gif):
+def test_specs_depending_on_option(full, gif, expected):
     from clinica.converters.genfi_to_bids._utils import _specs_depending_on_option
 
-    if full:
-        assert _specs_depending_on_option(full, gif) == "full_specs"
-
-    elif gif:
-        assert _specs_depending_on_option(full, gif) == "gif_specs"
-
-    else:
-        assert _specs_depending_on_option(full, gif) == "mandatory_specs"
+    assert _specs_depending_on_option(full, gif) == expected
