@@ -451,6 +451,7 @@ def test_complete_clinical_data():
                 "blinded_site": ["GENFI_AA", "GENFI_AA"],
                 "visit": [1, 1],
                 "plasma_nfl": [6, 5],
+                "diagnosis": [pd.NA, "ALS"],
             }
         ),
         pd.DataFrame(
@@ -492,3 +493,25 @@ def test_complete_clinical_data():
     MERGE_KEY = ["blinded_code", "blinded_site", "visit"]
 
     assert_frame_equal(result, expected, check_like=True, check_dtype=False)
+
+
+@pytest.mark.parametrize(
+    ("full", "gif"),
+    [
+        (False, False),
+        (True, True),
+        (True, False),
+        (False, True),
+    ],
+)
+def test_specs_depending_on_option(full, gif):
+    from clinica.converters.genfi_to_bids._utils import _specs_depending_on_option
+
+    if full:
+        assert _specs_depending_on_option(full, gif) == "full_specs"
+
+    elif gif:
+        assert _specs_depending_on_option(full, gif) == "gif_specs"
+
+    else:
+        assert _specs_depending_on_option(full, gif) == "mandatory_specs"

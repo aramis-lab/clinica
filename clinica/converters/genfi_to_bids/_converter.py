@@ -96,7 +96,7 @@ def convert(
         clinical_data = parse_clinical_data(path_to_clinical)
         imaging_data = merge_imaging_and_clinical_data(imaging_data, clinical_data)
     results = prepare_dataset_to_bids_format(
-        imaging_data, gif, full, path_to_clinical_tsv
+        imaging_data, path_to_clinical_tsv, gif, full
     )
     write_bids(
         to=bids_dir,

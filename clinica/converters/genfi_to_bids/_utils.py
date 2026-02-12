@@ -261,11 +261,36 @@ def _complete_clinical_data(
     return df_clinical_complete
 
 
+def _specs_depending_on_option(full: bool, gif: bool) -> str:
+    """Returns specs filename to use based on optional values.
+
+    Parameters
+    ----------
+    full: bool
+        If True, returns full specs filename
+
+    gif: bool
+        If True, returns gif specs filename
+
+    Returns
+    -------
+    [specs_filename]: str
+        Option-based specs filename
+    """
+    if full:
+        return "full_specs"
+
+    if gif:
+        return "gif_specs"
+
+    return "mandatory_specs"
+
+
 def prepare_dataset_to_bids_format(
     complete_data_df: pd.DataFrame,
-    gif: bool,
-    full: bool,
     path_to_clinical_tsv: Path,
+    gif: bool = False,
+    full: bool = False,
 ) -> Dict[str, pd.DataFrame]:
     """Selects the data needed to write the participants, sessions, and scans tsvs.
 
@@ -274,11 +299,14 @@ def prepare_dataset_to_bids_format(
     complete_data_df: pd.DataFrame
         Dataframe containing the merged data extracted from the raw images and the clinical data
 
-    full: bool
-        If True, indicates the user wants to get all clinical data fields
-
     path_to_clinical_tsv: Path
         TSV file containing the data fields the user wishes to have from the excel spreadsheets
+
+    gif: bool
+        False by default. If True, indicates the user wants to get all clinical data fields
+
+    full: bool
+        False by default. If True, indicates the user wants to get all clinical data fields
 
     Returns
     -------
@@ -296,7 +324,7 @@ def prepare_dataset_to_bids_format(
     specifications = pd.read_csv(
         Path(__file__).parent
         / "specifications"
-        / f"{'full_specs' if full else ('gif_specs' if gif else 'mandatory_specs')}.csv",
+        / f"{_specs_depending_on_option(full, gif)}.csv",
         sep=";",
     )
 
