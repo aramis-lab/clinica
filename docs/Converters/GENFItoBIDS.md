@@ -95,9 +95,15 @@ where:
     Sessions respect the naming convention used in GENFI clinical data. In particular, for `ses-XY`, `X` represents the GENFI phase, and `Y` represents the visit number.
 
 - `OPTIONS`:
-    - `--clinical-data-dir/-cdd` is the path to the clinical data directory.
+    - `--clinical-data-dir/-cdd` is the path to the clinical data directory. Allows the user to add mandatory clinical data to `participants.tsv` and `sessions.tsv`. Mandatory clinical data are the following :
+        - For `participants.tsv` : `blinded_code`, `blinded_family`, `blinded_site`, `gender`.
+        - For `sessions.tsv` : `age_at_visit`, `date_of_assessment`, `diagnosis`, `education`, `ftld-cdr-nm-global`, `genetic_group`, `genetic_status_1`, `genetic_status_2`, `visit`. 
+        <br> All the remaining clinical data is optional and added through the use of the `-full` flag.
     - `--clinical-data-tsv/-cdt` is a tsv file containing the additional fields the user wants. The available data can be retrieved inside the installation of clincia at this location `your_path_to_clinica/clinica/iotools/data/genfi_data.tsv`.
-    - `-gif` Allows the user to add the value from gif to the session.tsv.
+    - `-gif` allows the user to add all the clinical data related to the imaging volumes (GIF, Geodesic Information Flow) to `session.tsv`. The added clinical data also contain the mandatory ones.
+    - `-full` allows the user to add all clinical data (mandatory, GIF, and the remaining optional ones) to `sessions.tsv`.
+
+
 
 !!! note
     In order to improve the readability, the BIDS subject ID is the genetic group concatenated with the original GENFI ID and is defined as follows:

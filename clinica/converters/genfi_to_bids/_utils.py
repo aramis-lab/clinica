@@ -135,44 +135,61 @@ def _check_file(directory: Path, pattern: str) -> Path:
 
 
 def parse_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
-    return _complete_clinical_data(*_find_clinical_data(clinical_data_directory))
+    return _complete_clinical_data(
+        _find_clinical_data(
+            clinical_data_directory,
+            "FINAL*IMAGING*.xlsx",
+        ),
+        [
+            _find_clinical_data(clinical_data_directory, pattern)
+            for pattern in (
+                "FINAL*DEMOGRAPHICS*.xlsx",
+                "FINAL*CLINICAL*.xlsx",
+                "FINAL*BIOSAMPLES*.xlsx",
+                "FINAL*NEUROPSYCH*.xlsx",
+                "FINAL*GENETICS*.xlsx",
+            )
+        ],
+    )
 
 
 def _find_clinical_data(
     clinical_data_directory: Path,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Finds the clinical data associated with the dataset.
+    pattern: str,
+) -> pd.DataFrame:
+    """Finds the clinical data associated with the pattern in the cdd.
 
     Parameters
     ----------
     clinical_data_directory: Path
         The path to the clinical data.
 
+    pattern : str
+        Pattern to find the clinical data
+
     Returns
     -------
-    List[pd.DataFrame]
-        Dataframes containing the clinical data
+    pd.DataFrame
+        Dataframe containing the clinical data
     """
-    cprint("Looking for clinical data.", lvl="info")
+    cprint("Looking for clinical data...", lvl="info")
 
-    return tuple(
-        _read_file(_check_file(clinical_data_directory, pattern))
-        for pattern in (
-            "FINAL*DEMOGRAPHICS*.xlsx",
-            "FINAL*IMAGING*.xlsx",
-            "FINAL*CLINICAL*.xlsx",
-            "FINAL*BIOSAMPLES*.xlsx",
-            "FINAL*NEUROPSYCH*.xlsx",
-        )
-    )
+    return _read_file(_check_file(clinical_data_directory, pattern))
 
 
 def _read_file(data_file: Path) -> pd.DataFrame:
+    df_genfi_1 = pd.read_excel(data_file)
+    df_genfi_2 = (
+        pd.read_excel(data_file, sheet_name=1)
+        if "GENETICS" not in data_file.name
+        else pd.DataFrame()
+    )
+
     return (
         pd.concat(
             [
-                pd.read_excel(data_file),
-                pd.read_excel(data_file, sheet_name=1),
+                df_genfi_1,
+                df_genfi_2,
             ]
         )
         .convert_dtypes()
@@ -180,55 +197,100 @@ def _read_file(data_file: Path) -> pd.DataFrame:
     )
 
 
+def _merge_and_coalesce(
+    left_df: pd.DataFrame,
+    right_df: pd.DataFrame,
+    on: List[str],
+) -> pd.DataFrame:
+    """
+    Sub-function to outer merge and coalesce duplicates :
+    - Keeps all keys from both left_df and right_df
+    - For overlapping non-key columns, fills left_df n/a values with right_df actual values
+    """
+    # Drops rows without keys
+    left_df = left_df.copy().dropna(subset=on)
+    right_df = right_df.copy().dropna(subset=on)
+
+    # Outer merge dfs
+    merged_df = left_df.merge(
+        right_df,
+        how="outer",
+        on=on,
+        suffixes=("", "_duplicate"),
+    )
+
+    # Coalesces overlapping columns
+    for col in right_df.columns:
+        if (dup_col := f"{col}_duplicate") in merged_df.columns:
+            merged_df[col] = merged_df[col].combine_first(
+                merged_df[dup_col]
+            )  # Fills n/a in left_df with right_df values
+            merged_df.drop(columns=[dup_col], inplace=True)
+
+    return merged_df
+
+
 def _complete_clinical_data(
-    df_demographics: pd.DataFrame,
     df_imaging: pd.DataFrame,
-    df_clinical: pd.DataFrame,
-    df_biosamples: pd.DataFrame,
-    df_neuropsych: pd.DataFrame,
+    df_clinical_list: List[pd.DataFrame],
 ) -> pd.DataFrame:
     """Merges the different clincal dataframes into one.
 
     Parameters
     ----------
-    df_demographics: pd.DataFrame
-        Dataframe containing the demographic data
-
     df_imaging: pd.DataFrame
         Dataframe containing the imaging data
 
-    df_clinical: pd.DataFrame
-        Dataframe containing the clinical data
-
-    df_biosamples: pd.DataFrame
-        Dataframe containing the biosample data
-
-    df_neuropsych: pd.DataFrame
-        Dataframe containing the neuropsych data
+    df_clinical_list: List[pd.DataFrame]
+        List of dataframes containing the remaining clinical data
 
     Returns
     -------
     df_clinical_complete: pd.DataFrame
-        Dataframe with the data of the 3 input dataframes
+        Dataframe with the data from the input dataframes
     """
     merge_key = ["blinded_code", "blinded_site", "visit"]
-    df_clinical_complete = df_imaging.merge(
-        df_demographics, how="inner", on=merge_key
-    ).drop(columns="diagnosis")
-    df_clinical_complete = df_clinical_complete.merge(
-        df_biosamples, how="inner", on=merge_key
-    )
-    df_clinical_complete = df_clinical_complete.merge(
-        df_neuropsych, how="inner", on=merge_key
-    )
-    df_clinical = df_clinical.dropna(subset=merge_key)
-    return df_clinical_complete.merge(df_clinical, how="inner", on=merge_key)
+
+    df_clinical_complete = df_imaging.copy()
+
+    for df in df_clinical_list:
+        df_clinical_complete = _merge_and_coalesce(
+            df_clinical_complete, df, on=merge_key
+        )
+
+    return df_clinical_complete
+
+
+def _specs_depending_on_option(full: bool, gif: bool) -> str:
+    """Returns specs filename to use based on optional values.
+
+    Parameters
+    ----------
+    full: bool
+        If True, returns full specs filename
+
+    gif: bool
+        If True, returns gif specs filename
+
+    Returns
+    -------
+    [specs_filename]: str
+        Option-based specs filename
+    """
+    if full:
+        return "full_specs"
+
+    if gif:
+        return "gif_specs"
+
+    return "mandatory_specs"
 
 
 def prepare_dataset_to_bids_format(
     complete_data_df: pd.DataFrame,
-    gif: bool,
     path_to_clinical_tsv: Path,
+    gif: bool = False,
+    full: bool = False,
 ) -> Dict[str, pd.DataFrame]:
     """Selects the data needed to write the participants, sessions, and scans tsvs.
 
@@ -237,26 +299,35 @@ def prepare_dataset_to_bids_format(
     complete_data_df: pd.DataFrame
         Dataframe containing the merged data extracted from the raw images and the clinical data
 
-    gif: bool
-        If True, indicates the user wants to have the values of the gif parcellation
-
     path_to_clinical_tsv: Path
         TSV file containing the data fields the user wishes to have from the excel spreadsheets
+
+    gif: bool
+        False by default. If True, indicates the user wants to get all clinical data fields
+
+    full: bool
+        False by default. If True, indicates the user wants to get all clinical data fields
 
     Returns
     -------
     Dict[str, pd.DataFrame]
         Dictionary containing as key participants, sessions and scans, and the values wanted for each tsv
     """
+
     complete_data_df = complete_data_df.drop_duplicates(
         subset=["participant_id", "session_id", "modality", "run_num", "bids_filename"]
     ).set_index(
         ["participant_id", "session_id", "modality", "run_num", "bids_filename"],
         verify_integrity=True,
     )
-    specifications = pd.read_csv(Path(__file__).parent / "specifications.csv", sep=";")
-    if not gif:
-        specifications = specifications.head(8)
+
+    specifications = pd.read_csv(
+        Path(__file__).parent
+        / "specifications"
+        / f"{_specs_depending_on_option(full, gif)}.csv",
+        sep=";",
+    )
+
     # add additional data through csv
     if path_to_clinical_tsv:
         additional_data_df = pd.read_csv(path_to_clinical_tsv, sep="\t")

@@ -10,10 +10,17 @@ clinical_data_directory = click.option(
     "--clinical-data-dir",
     "clinical_data_directory",
     type=click.Path(exists=True, file_okay=False, resolve_path=True),
-    help="Path to the clinical data directory",
+    help="Path to the clinical data directory.",
 )
 
-gif = click.option("-gif", is_flag=True, help="Add values from gif to session.tsv")
+gif = click.option("-gif", is_flag=True, help="Add values from gif to session.tsv.")
+
+full = click.option(
+    "-full",
+    is_flag=True,
+    help="Add all clinical data (mandatory + optional) to sessions.tsv.",
+)
+
 clinical_data_tsv = click.option(
     "-cdt",
     "--clinical-data-tsv",
@@ -28,6 +35,7 @@ clinical_data_tsv = click.option(
 @cli_param.bids_directory
 @clinical_data_directory
 @gif
+@full
 @clinical_data_tsv
 def cli(
     dataset_directory: PathLike,
@@ -35,6 +43,7 @@ def cli(
     clinical_data_directory: Optional[PathLike] = None,
     clinical_data_tsv: Optional[PathLike] = None,
     gif: Optional[bool] = False,
+    full: Optional[bool] = False,
 ) -> None:
     """GENFI to BIDS converter.
 
@@ -48,6 +57,7 @@ def cli(
         bids_directory,
         clinical_data_directory,
         gif=gif,
+        full=full,
         path_to_clinical_tsv=clinical_data_tsv,
     )
 

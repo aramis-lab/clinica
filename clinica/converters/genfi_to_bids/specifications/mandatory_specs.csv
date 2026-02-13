@@ -1,0 +1,13 @@
+participants;sessions;scans
+participant_id;participant_id;participant_id
+source;session_id;session_id
+blinded_code;genfi_version;genfi_version
+blinded_family;age_at_visit;bids_filename
+blinded_site;date_of_assessment;bids_full_path
+gender;diagnosis;manufacturer
+;education;number_of_parts
+;ftld-cdr-nm-global;run_num
+;genetic_group;source_path
+;genetic_status_1;
+;genetic_status_2;
+;visit;

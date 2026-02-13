@@ -13,6 +13,7 @@ repos:
     rev: v2.3.0
     hooks:
       - id: codespell
+        args: ["--ignore-words-list=ALS"]
         additional_dependencies:
           - tomli
   - repo: https://github.com/python-poetry/poetry

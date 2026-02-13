@@ -346,3 +346,163 @@ def test_write_scans_and_niftis(tmp_path, mocker):
     assert not str(row["source_path"]).startswith(str(source))
     assert row["manufacturer"] == "SIEMENS"
     assert row["number_of_parts"] == 1
+
+
+@pytest.mark.parametrize(
+    "filename",
+    [
+        "FINAL_IMAGING.xlsx",
+        "FINAL_DEMOGRAPHICS.xlsx",
+        "FINAL_CLINICAL.xslx",
+        "FINAL_BIOSAMPLES.xslx",
+        "FINAL_NEUROPSYCH.xslx",
+        "FINAL_GENETICS.xslx",
+    ],
+)
+def test_find_clinical_data(monkeypatch, tmp_path, filename):
+    import clinica.converters.genfi_to_bids._utils as genfi_utils
+
+    file_path = tmp_path / filename
+
+    def _check_file(clinical_data_directory, pattern):
+        return file_path
+
+    def _read_file(data_file):
+        return pd.DataFrame({"source": [data_file.name]})
+
+    monkeypatch.setattr(genfi_utils, "_check_file", _check_file)
+    monkeypatch.setattr(genfi_utils, "_read_file", _read_file)
+
+    out = genfi_utils._find_clinical_data(tmp_path, filename)
+
+    assert len(out) == 1
+    assert out.iloc[0, 0].endswith(filename)
+
+
+def test_merge_and_coalesce():
+    from clinica.converters.genfi_to_bids._utils import _merge_and_coalesce
+
+    left_df = pd.DataFrame(
+        {
+            "blinded_code": ["C9ORF001", "C9ORF002"],
+            "genetic_status_1": ["P", pd.NA],
+            "genetic_status_2": [0, 1],
+        }
+    )
+
+    right_df = pd.DataFrame(
+        {
+            "blinded_code": ["C9ORF002", "C9ORF003"],
+            "genetic_status_1": ["A", "P"],
+            "diagnosis": ["bvFTD", "ALS"],
+        }
+    )
+
+    on = ["blinded_code"]
+
+    expected_df = pd.DataFrame(
+        {
+            "blinded_code": ["C9ORF001", "C9ORF002", "C9ORF003"],
+            "genetic_status_1": ["P", "A", "P"],
+            "genetic_status_2": [0, 1, pd.NA],
+            "diagnosis": [pd.NA, "bvFTD", "ALS"],
+        }
+    )
+
+    result = _merge_and_coalesce(left_df, right_df, on=on)
+
+    assert_frame_equal(result, expected_df, check_like=True, check_dtype=False)
+
+
+def test_complete_clinical_data():
+    from clinica.converters.genfi_to_bids._utils import _complete_clinical_data
+
+    df_imaging = pd.DataFrame(
+        {
+            "blinded_code": ["C9ORF001", "C9ORF002"],
+            "blinded_site": ["GENFI_AA", "GENFI_AA"],
+            "visit": [1, 1],
+            "scan_for_qc": [1, 1],
+            "diagnosis": ["bvFTD", pd.NA],
+            "plasma_nfl": [pd.NA, pd.NA],
+        }
+    )
+
+    df_clinical_list = [
+        pd.DataFrame(
+            {
+                "blinded_code": ["C9ORF001", "C9ORF002"],
+                "blinded_site": ["GENFI_AA", "GENFI_AA"],
+                "visit": [1, 1],
+                "gender": [0, 1],
+            }
+        ),
+        pd.DataFrame(
+            {
+                "blinded_code": ["C9ORF001", "C9ORF002"],
+                "blinded_site": ["GENFI_AA", "GENFI_AA"],
+                "visit": [1, 1],
+                "diagnosis": ["bvFTD", "ALS"],
+            }
+        ),
+        pd.DataFrame(
+            {
+                "blinded_code": ["C9ORF001", "C9ORF002"],
+                "blinded_site": ["GENFI_AA", "GENFI_AA"],
+                "visit": [1, 1],
+                "plasma_nfl": [6, 5],
+                "diagnosis": [pd.NA, "ALS"],
+            }
+        ),
+        pd.DataFrame(
+            {
+                "blinded_code": ["C9ORF001", "C9ORF002"],
+                "blinded_site": ["GENFI_AA", "GENFI_AA"],
+                "visit": [1, 1],
+                "ds_f_score": [8, 11],
+            }
+        ),
+        pd.DataFrame(
+            {
+                "blinded_code": ["C9ORF001", "C9ORF002"],
+                "blinded_site": ["GENFI_AA", "GENFI_AA"],
+                "visit": [1, 1],
+                "genetic_status_1": ["P", "A"],
+            }
+        ),
+    ]
+
+    expected = pd.DataFrame(
+        {
+            "blinded_code": ["C9ORF001", "C9ORF002"],
+            "blinded_site": ["GENFI_AA", "GENFI_AA"],
+            "visit": [1, 1],
+            "scan_for_qc": [1, 1],
+            "gender": [0, 1],
+            "diagnosis": ["bvFTD", "ALS"],
+            "plasma_nfl": [6, 5],
+            "ds_f_score": [8, 11],
+            "genetic_status_1": ["P", "A"],
+        }
+    )
+
+    result = _complete_clinical_data(
+        df_imaging=df_imaging, df_clinical_list=df_clinical_list
+    )
+
+    assert_frame_equal(result, expected, check_like=True, check_dtype=False)
+
+
+@pytest.mark.parametrize(
+    ("full", "gif", "expected"),
+    [
+        (False, False, "mandatory_specs"),
+        (True, True, "full_specs"),
+        (True, False, "full_specs"),
+        (False, True, "gif_specs"),
+    ],
+)
+def test_specs_depending_on_option(full, gif, expected):
+    from clinica.converters.genfi_to_bids._utils import _specs_depending_on_option
+
+    assert _specs_depending_on_option(full, gif) == expected
