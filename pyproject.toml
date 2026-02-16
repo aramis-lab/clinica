@@ -65,6 +65,7 @@ dependencies = [
     "pydra-fsl (>=0.0.22)",
     "antspyx (>=0.4.2)",
     "rich (>=13.8.0)",
+    "brainstat (>=0.5.2)",
 ]
 
 [project.urls]
@@ -89,9 +90,6 @@ optional = true
 mkdocs = "^1.1"
 mkdocs-material = ">=7.1.8"
 pymdown-extensions = "*"
-
-[tool.poetry.group.optional.dependencies]
-brainstat = ">=0.5.2"
 
 [project.scripts]
 clinica = "clinica.cmdline:main"
