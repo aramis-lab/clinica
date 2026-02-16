@@ -39,7 +39,7 @@ env: env.dev
 
 .PHONY: env.conda
 env.conda:
-	@$(CONDA) env create -p $(CONDA_ENV)
+	@$(CONDA) env create -p $(CONDA_ENV) -f environment.yml
 
 .PHONY: env.dev
 env.dev: install
