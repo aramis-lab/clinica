@@ -16,7 +16,6 @@ __all__ = [
     "compute_aggregated_volume",
     "get_new_image_like",
     "merge_nifti_images_in_time_dimension",
-    "remove_dummy_dimension_from_image",
     "crop_nifti",
     "clip_nifti",
     "crop_nifti_using_t1_mni_template",
@@ -218,31 +217,6 @@ def _check_volumes_from_images(images: Tuple[Path, ...]) -> Tuple[np.ndarray, ..
             )
 
     return tuple(four_dimensional_volumes)
-
-
-def remove_dummy_dimension_from_image(image: str, output: str) -> str:
-    """Remove all dummy dimensions (i.e. equal to 1) from an image.
-
-    Parameters
-    ----------
-    image : str
-        Path to the input image.
-
-    output : str
-        Path to the desired output image.
-
-    Returns
-    -------
-    str :
-        The path to the output image.
-    """
-    import nibabel as nib
-    from nilearn.image import new_img_like
-
-    img = new_img_like(image, nib.load(image).get_fdata().squeeze())
-    nib.save(img, output)
-
-    return output
 
 
 @dataclass
