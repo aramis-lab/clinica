@@ -579,7 +579,7 @@ def test_load_clinical_data_list_empty(tmp_path, clinical_data_list, expected):
     cdt_path = tmp_path / "additional_clinical_data.txt"
     cdt_path.write_text("".join(clinical_data_list), encoding="utf-8")
 
-    with pytest.raises(ValueError, match=re.escape(expected)):
+    with pytest.warns(UserWarning, match=re.escape(expected)):
         _load_clinical_data_list(cdt_path, FULL_SPECS_DF)
 
 
@@ -589,9 +589,9 @@ def test_load_clinical_data_list_unknown_field(tmp_path):
     cdt_path = tmp_path / "additional_clinical_data.txt"
     cdt_path.write_text("blinded_family\nfalse_field\naad\n", encoding="utf-8")
 
-    expected = "Error at line 2: 'false_field' not found in specifications."
+    expected = "Line 2: 'false_field' not found in specifications."
 
-    with pytest.raises(ValueError, match=re.escape(expected)):
+    with pytest.warns(UserWarning, match=re.escape(expected)):
         _load_clinical_data_list(cdt_path, FULL_SPECS_DF)
 
 
