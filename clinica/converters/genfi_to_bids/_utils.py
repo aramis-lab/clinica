@@ -7,7 +7,7 @@ import pandas as pd
 import pydicom as pdcm
 from fsspec.implementations.local import LocalFileSystem
 
-from clinica.utils.stream import cprint
+from clinica.utils.stream import cprint, log_and_warn
 
 __all__ = [
     "merge_imaging_and_clinical_data",
@@ -316,14 +316,18 @@ def _load_clinical_data_list(cdt_path: Path, specs_df: pd.DataFrame) -> List[str
                 continue  # Skip empty lines
 
             if data not in specs_values:
-                raise ValueError(
-                    f"Error at line {i}: '{data}' not found in specifications."
+                log_and_warn(
+                    f"Line {i}: '{data}' not found in specifications. It will be ignored.",
+                    UserWarning,
                 )
+                continue
 
             clinical_data_list.append(data)
 
     if not clinical_data_list:
-        raise ValueError("'-clinical_data_txt/cdt' is empty (no valid entries found).")
+        log_and_warn(
+            "'-clinical_data_txt/cdt' is empty (no valid entries found).", UserWarning
+        )
 
     return clinical_data_list
 
@@ -414,12 +418,10 @@ def prepare_dataset_to_bids_format(
 
     if path_to_clinical_txt:
         if full:
-            cprint(
-                msg=(
-                    "The '-full' flag is being used, "
-                    "using the '-clinical_data_txt/-cdt' option is redundant and will be ignored."
-                ),
-                lvl="warning",
+            log_and_warn(
+                "The '-full' flag is being used, "
+                "using the '-clinical_data_txt/-cdt' option is redundant and will be ignored.",
+                UserWarning,
             )
 
         else:
