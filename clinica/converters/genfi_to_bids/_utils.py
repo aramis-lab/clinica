@@ -286,9 +286,93 @@ def _specs_depending_on_option(full: bool, gif: bool) -> str:
     return "mandatory_specs"
 
 
+def _load_clinical_data_list(cdt_path: Path, specs_df: pd.DataFrame) -> List[str]:
+    """Load the list of clinical data fields selected by the user from a txt file.
+
+    Parameters
+    ----------
+    cdt_path: Path
+        TXT file containing the data fields the user wishes to have from the excel spreadsheets
+
+    specs_df: pd.DataFrame
+        Dataframe loaded from the specifications
+
+    Returns
+    -------
+    List[str]
+        List of selected clinical data fields
+    """
+    clinical_data_list = []
+
+    specs_values = {
+        str(value).strip() for value in specs_df.to_numpy().ravel() if value != ""
+    }
+
+    with open(cdt_path, "r", encoding="utf-8") as f:
+        for i, line in enumerate(f, start=1):
+            data = line.strip()
+
+            if not data:
+                continue  # Skip empty lines
+
+            if data not in specs_values:
+                raise ValueError(
+                    f"Error at line {i}: '{data}' not found in specifications."
+                )
+
+            clinical_data_list.append(data)
+
+    if not clinical_data_list:
+        raise ValueError("`-clinical_data_txt/cdt` is empty (no valid entries found).")
+
+    return clinical_data_list
+
+
+def _merge_clinical_data_list_into_df(
+    clinical_data_list: List[str], specs_df: pd.DataFrame, df_to_complete: pd.DataFrame
+) -> pd.DataFrame:
+    """Merge clinical data list into a specs like dataframe to complete.
+
+    Parameters
+    ----------
+    clinical_data_list: List[str]
+        List of selected clinical data fields
+
+    specs_df: Path
+        Dataframe loaded from the specifications
+
+    df_to_complete: pd.DataFrame
+        Specs like dataframe to complete
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe to complete
+    """
+    for value in clinical_data_list:
+        for column_name in df_to_complete.columns:
+            column_values = df_to_complete[column_name].astype(str).tolist()
+
+            if value in column_values:
+                break
+
+            if value in specs_df[column_name].values:
+                last_valid_idx = df_to_complete[column_name].last_valid_index()
+
+                next_idx = last_valid_idx + 1
+
+                if next_idx < len(df_to_complete):
+                    df_to_complete.loc[next_idx, column_name] = value
+
+                else:
+                    df_to_complete.loc[len(df_to_complete), column_name] = value
+
+    return df_to_complete
+
+
 def prepare_dataset_to_bids_format(
     complete_data_df: pd.DataFrame,
-    path_to_clinical_tsv: Path,
+    path_to_clinical_txt: Path,
     gif: bool = False,
     full: bool = False,
 ) -> Dict[str, pd.DataFrame]:
@@ -299,8 +383,8 @@ def prepare_dataset_to_bids_format(
     complete_data_df: pd.DataFrame
         Dataframe containing the merged data extracted from the raw images and the clinical data
 
-    path_to_clinical_tsv: Path
-        TSV file containing the data fields the user wishes to have from the excel spreadsheets
+    path_to_clinical_txt: Path
+        TXT file containing the data fields the user wishes to have from the excel spreadsheets
 
     gif: bool
         False by default. If True, indicates the user wants to get all clinical data fields
@@ -328,23 +412,30 @@ def prepare_dataset_to_bids_format(
         sep=";",
     )
 
-    # add additional data through csv
-    if path_to_clinical_tsv:
-        additional_data_df = pd.read_csv(path_to_clinical_tsv, sep="\t")
-        data_mapping = pd.read_csv(Path(__file__).parent / "data_mapping.tsv", sep="\t")
-        pre_addi_df = data_mapping.merge(additional_data_df, how="inner", on="data")
-        addi_df = pd.DataFrame(
-            [
-                pre_addi_df["data"][pre_addi_df["dest"] == x].values.tolist()
-                for x in ("participants", "sessions", "scans")
-            ]
-        ).transpose()
-        addi_df.columns = ["participants", "sessions", "scans"]
-        df_to_write = pd.concat([specifications, addi_df])
-    else:
-        df_to_write = specifications
+    if path_to_clinical_txt:
+        if full:
+            cprint(
+                msg=(
+                    "The `-full` flag is being used, "
+                    "using the `-clinical_data_txt/-cdt` option is redundant and will be ignored."
+                ),
+                lvl="warning",
+            )
+
+        else:
+            full_specs = pd.read_csv(
+                Path(__file__).parent / "specifications/full_specs.csv",
+                sep=";",
+            )
+
+            specifications = _merge_clinical_data_list_into_df(
+                _load_clinical_data_list(path_to_clinical_txt, full_specs),
+                full_specs,
+                specifications.copy(),
+            )
+
     return {
-        col: complete_data_df.filter(items=list(df_to_write[col]))
+        col: complete_data_df.filter(items=list(specifications[col]))
         for col in ["participants", "sessions", "scans"]
     }
 

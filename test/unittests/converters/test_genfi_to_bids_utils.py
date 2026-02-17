@@ -1,4 +1,5 @@
 import math
+import re
 
 import numpy as np
 import pandas as pd
@@ -506,3 +507,151 @@ def test_specs_depending_on_option(full, gif, expected):
     from clinica.converters.genfi_to_bids._utils import _specs_depending_on_option
 
     assert _specs_depending_on_option(full, gif) == expected
+
+
+TO_COMPLETE_SPECS_DF = pd.DataFrame(
+    {
+        "participants": ["participant_id", "source", "blinded_code"],
+        "sessions": ["participant_id", "session_id", "genfi_version"],
+        "scans": ["participant_id", "session_id", "genfi_version"],
+    }
+)
+
+
+FULL_SPECS_DF = pd.DataFrame(
+    {
+        "participants": [
+            "participant_id",
+            "source",
+            "blinded_code",
+            "blinded_family",
+            "blinded_site",
+        ],
+        "sessions": ["participant_id", "session_id", "genfi_version", "aad", "aad_1"],
+        "scans": [
+            "participant_id",
+            "session_id",
+            "genfi_version",
+            "bids_filename",
+            "bids_full_path",
+        ],
+    }
+)
+
+
+@pytest.mark.parametrize(
+    ("clinical_data_list", "expected"),
+    [
+        (
+            ["blinded_family\n", "aad_1\n", "bids_filename"],
+            ["blinded_family", "aad_1", "bids_filename"],
+        ),
+        (
+            ["  blinded_site  \n", "\n", "aad\n", "\tbids_full_path\n"],
+            ["blinded_site", "aad", "bids_full_path"],
+        ),  # whitespaces + empty lines
+    ],
+)
+def test_load_clinical_data_list_success(tmp_path, clinical_data_list, expected):
+    from clinica.converters.genfi_to_bids._utils import _load_clinical_data_list
+
+    cdt_path = tmp_path / "additional_clinical_data.txt"
+    cdt_path.write_text("".join(clinical_data_list), encoding="utf-8")
+
+    out = _load_clinical_data_list(cdt_path, FULL_SPECS_DF)
+
+    assert out == expected
+
+
+@pytest.mark.parametrize(
+    ("clinical_data_list", "expected"),
+    [
+        ([], "`-clinical_data_txt/cdt` is empty (no valid entries found)."),
+        (
+            ["\n", "   \n", "\t\n"],
+            "`-clinical_data_txt/cdt` is empty (no valid entries found).",
+        ),
+    ],
+)
+def test_load_clinical_data_list_empty(tmp_path, clinical_data_list, expected):
+    from clinica.converters.genfi_to_bids._utils import _load_clinical_data_list
+
+    cdt_path = tmp_path / "additional_clinical_data.txt"
+    cdt_path.write_text("".join(clinical_data_list), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=re.escape(expected)):
+        _load_clinical_data_list(cdt_path, FULL_SPECS_DF)
+
+
+def test_load_clinical_data_list_unknown_field(tmp_path):
+    from clinica.converters.genfi_to_bids._utils import _load_clinical_data_list
+
+    cdt_path = tmp_path / "additional_clinical_data.txt"
+    cdt_path.write_text("blinded_family\nfalse_field\naad\n", encoding="utf-8")
+
+    expected = "Error at line 2: 'false_field' not found in specifications."
+
+    with pytest.raises(ValueError, match=re.escape(expected)):
+        _load_clinical_data_list(cdt_path, FULL_SPECS_DF)
+
+
+def test_merge_clinical_data_list_into_df_in_matching_columns():
+    from clinica.converters.genfi_to_bids._utils import (
+        _merge_clinical_data_list_into_df,
+    )
+
+    clinical_data_list = ["blinded_family", "aad", "bids_filename", "aad_1"]
+
+    out = _merge_clinical_data_list_into_df(
+        clinical_data_list, FULL_SPECS_DF, TO_COMPLETE_SPECS_DF.copy()
+    )
+
+    expected = pd.DataFrame(
+        {
+            "participants": [
+                "participant_id",
+                "source",
+                "blinded_code",
+                "blinded_family",
+                pd.NA,
+            ],
+            "sessions": [
+                "participant_id",
+                "session_id",
+                "genfi_version",
+                "aad",
+                "aad_1",
+            ],
+            "scans": [
+                "participant_id",
+                "session_id",
+                "genfi_version",
+                "bids_filename",
+                pd.NA,
+            ],
+        }
+    )
+
+    assert_frame_equal(out, expected)
+
+
+def test_merge_clinical_data_list_into_df_no_duplicate():
+    from clinica.converters.genfi_to_bids._utils import (
+        _merge_clinical_data_list_into_df,
+    )
+
+    clinical_data_list = ["participant_id", "session_id"]
+
+    out = _merge_clinical_data_list_into_df(
+        clinical_data_list, FULL_SPECS_DF, TO_COMPLETE_SPECS_DF.copy()
+    )
+
+    expected = pd.DataFrame(
+        {
+            "participants": ["participant_id", "source", "blinded_code"],
+            "sessions": ["participant_id", "session_id", "genfi_version"],
+            "scans": ["participant_id", "session_id", "genfi_version"],
+        }
+    )
+
+    assert_frame_equal(out, expected)
