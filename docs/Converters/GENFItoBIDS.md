@@ -99,7 +99,7 @@ where:
         - For `participants.tsv` : `blinded_code`, `blinded_family`, `blinded_site`, `gender`.
         - For `sessions.tsv` : `age_at_visit`, `date_of_assessment`, `diagnosis`, `education`, `ftld-cdr-nm-global`, `genetic_group`, `genetic_status_1`, `genetic_status_2`, `visit`. 
         <br> All the remaining clinical data is optional and added through the use of the `-full` flag.
-    - `--clinical-data-tsv/-cdt` is a tsv file containing the additional fields the user wants. The available data can be retrieved inside the installation of clincia at this location `your_path_to_clinica/clinica/iotools/data/genfi_data.tsv`.
+    - `--clinical-data-txt/-cdt` is a txt file containing the additional fields the user wants, written one field per line. The available data can be retrieved inside the installation of clinica at this location : `your_path_to_clinica/clinica/converters/genfi_to_bids/specifications/full_specs.csv`.
     - `-gif` allows the user to add all the clinical data related to the imaging volumes (GIF, Geodesic Information Flow) to `session.tsv`. The added clinical data also contain the mandatory ones.
     - `-full` allows the user to add all clinical data (mandatory, GIF, and the remaining optional ones) to `sessions.tsv`.
 
