@@ -566,10 +566,10 @@ def test_load_clinical_data_list_success(tmp_path, clinical_data_list, expected)
 @pytest.mark.parametrize(
     ("clinical_data_list", "expected"),
     [
-        ([], "`-clinical_data_txt/cdt` is empty (no valid entries found)."),
+        ([], "'-clinical_data_txt/cdt' is empty (no valid entries found)."),
         (
             ["\n", "   \n", "\t\n"],
-            "`-clinical_data_txt/cdt` is empty (no valid entries found).",
+            "'-clinical_data_txt/cdt' is empty (no valid entries found).",
         ),
     ],
 )

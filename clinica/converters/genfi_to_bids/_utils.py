@@ -323,7 +323,7 @@ def _load_clinical_data_list(cdt_path: Path, specs_df: pd.DataFrame) -> List[str
             clinical_data_list.append(data)
 
     if not clinical_data_list:
-        raise ValueError("`-clinical_data_txt/cdt` is empty (no valid entries found).")
+        raise ValueError("'-clinical_data_txt/cdt' is empty (no valid entries found).")
 
     return clinical_data_list
 
@@ -416,8 +416,8 @@ def prepare_dataset_to_bids_format(
         if full:
             cprint(
                 msg=(
-                    "The `-full` flag is being used, "
-                    "using the `-clinical_data_txt/-cdt` option is redundant and will be ignored."
+                    "The '-full' flag is being used, "
+                    "using the '-clinical_data_txt/-cdt' option is redundant and will be ignored."
                 ),
                 lvl="warning",
             )
