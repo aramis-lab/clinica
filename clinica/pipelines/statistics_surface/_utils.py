@@ -158,12 +158,12 @@ def build_design_matrix(contrast: str, covariates: Optional[str] = None) -> str:
 
     Example
     -------
-    >>> from clinica.pipelines.statistics_surface.statistics_surface_utils import _build_design_matrix
-    >>> _build_design_matrix('group', 'age sex group')
+    >>> from clinica.pipelines.statistics_surface._utils import build_design_matrix
+    >>> build_design_matrix('group', 'age sex group')
     1 + group + age + sex
-    >>> _build_design_matrix('group', 'age')
+    >>> build_design_matrix('group', 'age')
     1 + group + age
-    >>> _build_design_matrix('group', None)
+    >>> build_design_matrix('group', None)
     1 + group
     """
     if covariates:
