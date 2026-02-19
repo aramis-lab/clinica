@@ -305,7 +305,9 @@ def _load_clinical_data_list(cdt_path: Path, specs_df: pd.DataFrame) -> List[str
     clinical_data_list = []
 
     specs_values = {
-        str(value).strip() for value in specs_df.to_numpy().ravel() if value != ""
+        str(value).strip()
+        for value in specs_df.to_numpy().ravel()
+        if pd.notna(value) and str(value).strip() != ""
     }
 
     with open(cdt_path, "r", encoding="utf-8") as f:
@@ -335,7 +337,7 @@ def _load_clinical_data_list(cdt_path: Path, specs_df: pd.DataFrame) -> List[str
 def _merge_clinical_data_list_into_df(
     clinical_data_list: List[str], specs_df: pd.DataFrame, df_to_complete: pd.DataFrame
 ) -> pd.DataFrame:
-    """Merge clinical data list into a specs like dataframe to complete.
+    """Merge clinical data list into the 'sessions' column of a specs like dataframe to complete.
 
     Parameters
     ----------
@@ -354,22 +356,21 @@ def _merge_clinical_data_list_into_df(
         Dataframe to complete
     """
     for value in clinical_data_list:
-        for column_name in df_to_complete.columns:
-            column_values = df_to_complete[column_name].astype(str).tolist()
+        sessions_values = df_to_complete["sessions"].astype(str).tolist()
 
-            if value in column_values:
-                break
+        if value in sessions_values:
+            continue
 
-            if value in specs_df[column_name].values:
-                last_valid_idx = df_to_complete[column_name].last_valid_index()
+        if value in specs_df["sessions"].values:
+            last_valid_idx = df_to_complete["sessions"].last_valid_index()
 
-                next_idx = last_valid_idx + 1
+            next_idx = last_valid_idx + 1
 
-                if next_idx < len(df_to_complete):
-                    df_to_complete.loc[next_idx, column_name] = value
+            if next_idx < len(df_to_complete):
+                df_to_complete.loc[next_idx, "sessions"] = value
 
-                else:
-                    df_to_complete.loc[len(df_to_complete), column_name] = value
+            else:
+                df_to_complete.loc[len(df_to_complete), "sessions"] = value
 
     return df_to_complete
 

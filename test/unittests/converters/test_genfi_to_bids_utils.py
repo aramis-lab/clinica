@@ -511,9 +511,21 @@ def test_specs_depending_on_option(full, gif, expected):
 
 TO_COMPLETE_SPECS_DF = pd.DataFrame(
     {
-        "participants": ["participant_id", "source", "blinded_code"],
-        "sessions": ["participant_id", "session_id", "genfi_version"],
-        "scans": ["participant_id", "session_id", "genfi_version"],
+        "participants": [
+            "participant_id",
+            "source",
+            "blinded_code",
+            "blinded_family",
+            "blinded_site",
+        ],
+        "sessions": ["participant_id", "session_id", "genfi_version", pd.NA, pd.NA],
+        "scans": [
+            "participant_id",
+            "session_id",
+            "genfi_version",
+            "bids_filename",
+            "bids_full_path",
+        ],
     }
 )
 
@@ -526,14 +538,23 @@ FULL_SPECS_DF = pd.DataFrame(
             "blinded_code",
             "blinded_family",
             "blinded_site",
+            pd.NA,
         ],
-        "sessions": ["participant_id", "session_id", "genfi_version", "aad", "aad_1"],
+        "sessions": [
+            "participant_id",
+            "session_id",
+            "genfi_version",
+            "aad",
+            "aad_1",
+            "aad_2",
+        ],
         "scans": [
             "participant_id",
             "session_id",
             "genfi_version",
             "bids_filename",
             "bids_full_path",
+            pd.NA,
         ],
     }
 )
@@ -595,12 +616,12 @@ def test_load_clinical_data_list_unknown_field(tmp_path):
         _load_clinical_data_list(cdt_path, FULL_SPECS_DF)
 
 
-def test_merge_clinical_data_list_into_df_in_matching_columns():
+def test_merge_clinical_data_list_into_df_in_sessions():
     from clinica.converters.genfi_to_bids._utils import (
         _merge_clinical_data_list_into_df,
     )
 
-    clinical_data_list = ["blinded_family", "aad", "bids_filename", "aad_1"]
+    clinical_data_list = ["aad", "aad_1", "aad_2"]
 
     out = _merge_clinical_data_list_into_df(
         clinical_data_list, FULL_SPECS_DF, TO_COMPLETE_SPECS_DF.copy()
@@ -613,6 +634,7 @@ def test_merge_clinical_data_list_into_df_in_matching_columns():
                 "source",
                 "blinded_code",
                 "blinded_family",
+                "blinded_site",
                 pd.NA,
             ],
             "sessions": [
@@ -621,12 +643,14 @@ def test_merge_clinical_data_list_into_df_in_matching_columns():
                 "genfi_version",
                 "aad",
                 "aad_1",
+                "aad_2",
             ],
             "scans": [
                 "participant_id",
                 "session_id",
                 "genfi_version",
                 "bids_filename",
+                "bids_full_path",
                 pd.NA,
             ],
         }
@@ -648,9 +672,21 @@ def test_merge_clinical_data_list_into_df_no_duplicate():
 
     expected = pd.DataFrame(
         {
-            "participants": ["participant_id", "source", "blinded_code"],
-            "sessions": ["participant_id", "session_id", "genfi_version"],
-            "scans": ["participant_id", "session_id", "genfi_version"],
+            "participants": [
+                "participant_id",
+                "source",
+                "blinded_code",
+                "blinded_family",
+                "blinded_site",
+            ],
+            "sessions": ["participant_id", "session_id", "genfi_version", pd.NA, pd.NA],
+            "scans": [
+                "participant_id",
+                "session_id",
+                "genfi_version",
+                "bids_filename",
+                "bids_full_path",
+            ],
         }
     )
 
