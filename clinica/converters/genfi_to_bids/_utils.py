@@ -286,16 +286,56 @@ def _specs_depending_on_option(full: bool, gif: bool) -> str:
     return "mandatory_specs"
 
 
-def _load_clinical_data_list(cdt_path: Path, specs_df: pd.DataFrame) -> List[str]:
+def _filter_invalid_data(
+    data: str, index: int, specs_values: set, specs_df: pd.DataFrame
+) -> bool:
+    """Filter invalid (empty, unknown and not present in 'sessions') data from the user txt file.
+
+    Parameters
+    ----------
+    data: str
+        Stripped line from the user txt file.
+
+    index: int
+        Index of the line.
+
+    specs_values: Dict
+        Data set loaded from the specifications.
+
+    specs_df: pd.DataFrame
+        Dataframe loaded from the specifications.
+
+    Returns
+    -------
+    bool
+        Filtering result. True if the data line should be skipped. False otherwise.
+    """
+    # Skip empty lines
+    if not data:
+        return True
+
+    # Skip unknown lines in specs
+    if data not in specs_values:
+        log_and_warn(
+            f"Line {index}: '{data}' not found in specifications. It will be ignored.",
+            UserWarning,
+        )
+        return True
+
+    # Skip lines not in 'sessions'
+    if data not in specs_df["sessions"].values:
+        return True
+
+    return False
+
+
+def _load_clinical_data_list(cdt_path: Path) -> List[str]:
     """Load the list of clinical data fields selected by the user from a txt file.
 
     Parameters
     ----------
     cdt_path: Path
         TXT file containing the data fields the user wishes to have from the excel spreadsheets
-
-    specs_df: pd.DataFrame
-        Dataframe loaded from the specifications
 
     Returns
     -------
@@ -304,38 +344,33 @@ def _load_clinical_data_list(cdt_path: Path, specs_df: pd.DataFrame) -> List[str
     """
     clinical_data_list = []
 
-    specs_values = {
-        str(value).strip()
-        for value in specs_df.to_numpy().ravel()
-        if pd.notna(value) and str(value).strip() != ""
-    }
+    full_specs = pd.read_csv(
+        Path(__file__).parent / "specifications/full_specs.csv",
+        sep=";",
+    )
+
+    specs_values = {value for value in full_specs.to_numpy().ravel() if pd.notna(value)}
 
     with open(cdt_path, "r", encoding="utf-8") as f:
         for i, line in enumerate(f, start=1):
             data = line.strip()
 
-            if not data:
-                continue  # Skip empty lines
-
-            if data not in specs_values:
-                log_and_warn(
-                    f"Line {i}: '{data}' not found in specifications. It will be ignored.",
-                    UserWarning,
-                )
+            if _filter_invalid_data(data, i, specs_values, full_specs):
                 continue
 
             clinical_data_list.append(data)
 
     if not clinical_data_list:
         log_and_warn(
-            "'-clinical_data_txt/cdt' is empty (no valid entries found).", UserWarning
+            f"File for option '-clinical_data_txt/cdt' at location {cdt_path} does not contain any valid entry.",
+            UserWarning,
         )
 
     return clinical_data_list
 
 
 def _merge_clinical_data_list_into_df(
-    clinical_data_list: List[str], specs_df: pd.DataFrame, df_to_complete: pd.DataFrame
+    clinical_data_list: List[str], df_to_complete: pd.DataFrame
 ) -> pd.DataFrame:
     """Merge clinical data list into the 'sessions' column of a specs like dataframe to complete.
 
@@ -343,9 +378,6 @@ def _merge_clinical_data_list_into_df(
     ----------
     clinical_data_list: List[str]
         List of selected clinical data fields
-
-    specs_df: Path
-        Dataframe loaded from the specifications
 
     df_to_complete: pd.DataFrame
         Specs like dataframe to complete
@@ -361,16 +393,15 @@ def _merge_clinical_data_list_into_df(
         if value in sessions_values:
             continue
 
-        if value in specs_df["sessions"].values:
-            last_valid_idx = df_to_complete["sessions"].last_valid_index()
+        last_valid_idx = df_to_complete["sessions"].last_valid_index()
 
-            next_idx = last_valid_idx + 1
+        next_idx = last_valid_idx + 1
 
-            if next_idx < len(df_to_complete):
-                df_to_complete.loc[next_idx, "sessions"] = value
+        if next_idx < len(df_to_complete):
+            df_to_complete.loc[next_idx, "sessions"] = value
 
-            else:
-                df_to_complete.loc[len(df_to_complete), "sessions"] = value
+        else:
+            df_to_complete.loc[len(df_to_complete), "sessions"] = value
 
     return df_to_complete
 
@@ -426,14 +457,8 @@ def prepare_dataset_to_bids_format(
             )
 
         else:
-            full_specs = pd.read_csv(
-                Path(__file__).parent / "specifications/full_specs.csv",
-                sep=";",
-            )
-
             specifications = _merge_clinical_data_list_into_df(
-                _load_clinical_data_list(path_to_clinical_txt, full_specs),
-                full_specs,
+                _load_clinical_data_list(path_to_clinical_txt),
                 specifications.copy(),
             )
 

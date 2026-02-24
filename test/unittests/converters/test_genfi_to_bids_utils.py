@@ -560,16 +560,90 @@ FULL_SPECS_DF = pd.DataFrame(
 )
 
 
+SPECS_VALUES = {value for value in FULL_SPECS_DF.to_numpy().ravel() if pd.notna(value)}
+
+
+def test_filter_empty_data():
+    from clinica.converters.genfi_to_bids._utils import _filter_invalid_data
+
+    assert _filter_invalid_data("", 0, SPECS_VALUES, FULL_SPECS_DF)
+
+
+def test_filter_unknown_data():
+    from clinica.converters.genfi_to_bids._utils import _filter_invalid_data
+
+    data = "invalid_data_0"
+
+    expected = f"Line {0}: '{data}' not found in specifications. It will be ignored."
+
+    with pytest.warns(UserWarning, match=re.escape(expected)):
+        assert _filter_invalid_data(data, 0, SPECS_VALUES, FULL_SPECS_DF)
+
+
+@pytest.mark.parametrize(
+    ("data", "index"),
+    [
+        (
+            "source",
+            0,
+        ),
+        (
+            "blinded_code",
+            1,
+        ),
+        (
+            "bids_filename",
+            2,
+        ),
+        (
+            "bids_full_path",
+            3,
+        ),
+    ],
+)
+def test_filter_no_in_sessions_data(data, index):
+    from clinica.converters.genfi_to_bids._utils import _filter_invalid_data
+
+    assert _filter_invalid_data(data, index, SPECS_VALUES, FULL_SPECS_DF)
+
+
+@pytest.mark.parametrize(
+    ("data", "index"),
+    [
+        (
+            "genfi_version",
+            0,
+        ),
+        (
+            "aad",
+            1,
+        ),
+        (
+            "aad_1",
+            2,
+        ),
+        (
+            "aad_2",
+            3,
+        ),
+    ],
+)
+def test_filter_valid_data(data, index):
+    from clinica.converters.genfi_to_bids._utils import _filter_invalid_data
+
+    assert not _filter_invalid_data(data, index, SPECS_VALUES, FULL_SPECS_DF)
+
+
 @pytest.mark.parametrize(
     ("clinical_data_list", "expected"),
     [
         (
             ["blinded_family\n", "aad_1\n", "bids_filename"],
-            ["blinded_family", "aad_1", "bids_filename"],
+            ["aad_1"],
         ),
         (
             ["  blinded_site  \n", "\n", "aad\n", "\tbids_full_path\n"],
-            ["blinded_site", "aad", "bids_full_path"],
+            ["aad"],
         ),  # whitespaces + empty lines
     ],
 )
@@ -579,29 +653,31 @@ def test_load_clinical_data_list_success(tmp_path, clinical_data_list, expected)
     cdt_path = tmp_path / "additional_clinical_data.txt"
     cdt_path.write_text("".join(clinical_data_list), encoding="utf-8")
 
-    out = _load_clinical_data_list(cdt_path, FULL_SPECS_DF)
+    out = _load_clinical_data_list(cdt_path)
 
     assert out == expected
 
 
 @pytest.mark.parametrize(
-    ("clinical_data_list", "expected"),
+    "clinical_data_list",
     [
-        ([], "'-clinical_data_txt/cdt' is empty (no valid entries found)."),
-        (
-            ["\n", "   \n", "\t\n"],
-            "'-clinical_data_txt/cdt' is empty (no valid entries found).",
-        ),
+        [],
+        ["\n", "   \n", "\t\n"],
     ],
 )
-def test_load_clinical_data_list_empty(tmp_path, clinical_data_list, expected):
+def test_load_clinical_data_list_empty(tmp_path, clinical_data_list):
     from clinica.converters.genfi_to_bids._utils import _load_clinical_data_list
 
     cdt_path = tmp_path / "additional_clinical_data.txt"
     cdt_path.write_text("".join(clinical_data_list), encoding="utf-8")
 
+    expected = (
+        f"File for option '-clinical_data_txt/cdt' at location {cdt_path} "
+        "does not contain any valid entry."
+    )
+
     with pytest.warns(UserWarning, match=re.escape(expected)):
-        _load_clinical_data_list(cdt_path, FULL_SPECS_DF)
+        _load_clinical_data_list(cdt_path)
 
 
 def test_load_clinical_data_list_unknown_field(tmp_path):
@@ -613,7 +689,7 @@ def test_load_clinical_data_list_unknown_field(tmp_path):
     expected = "Line 2: 'false_field' not found in specifications."
 
     with pytest.warns(UserWarning, match=re.escape(expected)):
-        _load_clinical_data_list(cdt_path, FULL_SPECS_DF)
+        _load_clinical_data_list(cdt_path)
 
 
 def test_merge_clinical_data_list_into_df_in_sessions():
@@ -624,7 +700,7 @@ def test_merge_clinical_data_list_into_df_in_sessions():
     clinical_data_list = ["aad", "aad_1", "aad_2"]
 
     out = _merge_clinical_data_list_into_df(
-        clinical_data_list, FULL_SPECS_DF, TO_COMPLETE_SPECS_DF.copy()
+        clinical_data_list, TO_COMPLETE_SPECS_DF.copy()
     )
 
     expected = pd.DataFrame(
@@ -667,7 +743,7 @@ def test_merge_clinical_data_list_into_df_no_duplicate():
     clinical_data_list = ["participant_id", "session_id"]
 
     out = _merge_clinical_data_list_into_df(
-        clinical_data_list, FULL_SPECS_DF, TO_COMPLETE_SPECS_DF.copy()
+        clinical_data_list, TO_COMPLETE_SPECS_DF.copy()
     )
 
     expected = pd.DataFrame(
