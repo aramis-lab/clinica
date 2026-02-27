@@ -559,7 +559,7 @@ FULL_SPECS_DF = pd.DataFrame(
 FULL_SPECS_VALUES = FULL_SPECS_DF["sessions"].tolist()
 
 
-def test_invalidate_empy_data_from_user():
+def test_invalidate_empty_data_from_user():
     from clinica.converters.genfi_to_bids._utils import _validate_data_from_user
 
     assert not _validate_data_from_user("", 0, FULL_SPECS_VALUES)
