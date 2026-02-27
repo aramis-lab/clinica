@@ -135,6 +135,8 @@ def _check_file(directory: Path, pattern: str) -> Path:
 
 
 def parse_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
+    cprint("Looking for clinical data...", lvl="info")
+
     return _complete_clinical_data(
         _find_clinical_data(
             clinical_data_directory,
@@ -172,7 +174,6 @@ def _find_clinical_data(
     pd.DataFrame
         Dataframe containing the clinical data
     """
-    cprint("Looking for clinical data...", lvl="info")
 
     return _read_file(_check_file(clinical_data_directory, pattern))
 
