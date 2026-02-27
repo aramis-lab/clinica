@@ -515,16 +515,12 @@ TO_COMPLETE_SPECS_DF = pd.DataFrame(
             "participant_id",
             "source",
             "blinded_code",
-            "blinded_family",
-            "blinded_site",
         ],
-        "sessions": ["participant_id", "session_id", "genfi_version", pd.NA, pd.NA],
+        "sessions": ["participant_id", "session_id", "genfi_version"],
         "scans": [
             "participant_id",
             "session_id",
             "genfi_version",
-            "bids_filename",
-            "bids_full_path",
         ],
     }
 )
@@ -536,8 +532,8 @@ FULL_SPECS_DF = pd.DataFrame(
             "participant_id",
             "source",
             "blinded_code",
-            "blinded_family",
-            "blinded_site",
+            pd.NA,
+            pd.NA,
             pd.NA,
         ],
         "sessions": [
@@ -552,32 +548,32 @@ FULL_SPECS_DF = pd.DataFrame(
             "participant_id",
             "session_id",
             "genfi_version",
-            "bids_filename",
-            "bids_full_path",
+            pd.NA,
+            pd.NA,
             pd.NA,
         ],
     }
 )
 
 
-SPECS_VALUES = {value for value in FULL_SPECS_DF.to_numpy().ravel() if pd.notna(value)}
+FULL_SPECS_VALUES = FULL_SPECS_DF["sessions"].tolist()
 
 
-def test_filter_empty_data():
-    from clinica.converters.genfi_to_bids._utils import _filter_invalid_data
+def test_invalidate_empy_data_from_user():
+    from clinica.converters.genfi_to_bids._utils import _validate_data_from_user
 
-    assert _filter_invalid_data("", 0, SPECS_VALUES, FULL_SPECS_DF)
+    assert not _validate_data_from_user("", 0, FULL_SPECS_VALUES)
 
 
-def test_filter_unknown_data():
-    from clinica.converters.genfi_to_bids._utils import _filter_invalid_data
+def test_invalidate_unknown_data_from_user():
+    from clinica.converters.genfi_to_bids._utils import _validate_data_from_user
 
     data = "invalid_data_0"
 
-    expected = f"Line {0}: '{data}' not found in specifications. It will be ignored."
+    expected = f"Line {0}: '{data}' not found in 'full_specs[\"sessions\"]'. It will be ignored."
 
     with pytest.warns(UserWarning, match=re.escape(expected)):
-        assert _filter_invalid_data(data, 0, SPECS_VALUES, FULL_SPECS_DF)
+        assert not _validate_data_from_user(data, 0, FULL_SPECS_VALUES)
 
 
 @pytest.mark.parametrize(
@@ -601,10 +597,13 @@ def test_filter_unknown_data():
         ),
     ],
 )
-def test_filter_no_in_sessions_data(data, index):
-    from clinica.converters.genfi_to_bids._utils import _filter_invalid_data
+def test_invalidate_not_in_sessions_data_from_user(data, index):
+    from clinica.converters.genfi_to_bids._utils import _validate_data_from_user
 
-    assert _filter_invalid_data(data, index, SPECS_VALUES, FULL_SPECS_DF)
+    expected = f"Line {index}: '{data}' not found in 'full_specs[\"sessions\"]'. It will be ignored."
+
+    with pytest.warns(UserWarning, match=re.escape(expected)):
+        assert not _validate_data_from_user(data, index, FULL_SPECS_VALUES)
 
 
 @pytest.mark.parametrize(
@@ -628,10 +627,10 @@ def test_filter_no_in_sessions_data(data, index):
         ),
     ],
 )
-def test_filter_valid_data(data, index):
-    from clinica.converters.genfi_to_bids._utils import _filter_invalid_data
+def test_validate_data_from_user(data, index):
+    from clinica.converters.genfi_to_bids._utils import _validate_data_from_user
 
-    assert not _filter_invalid_data(data, index, SPECS_VALUES, FULL_SPECS_DF)
+    assert _validate_data_from_user(data, index, FULL_SPECS_VALUES)
 
 
 @pytest.mark.parametrize(
@@ -684,9 +683,9 @@ def test_load_clinical_data_list_unknown_field(tmp_path):
     from clinica.converters.genfi_to_bids._utils import _load_clinical_data_list
 
     cdt_path = tmp_path / "additional_clinical_data.txt"
-    cdt_path.write_text("blinded_family\nfalse_field\naad\n", encoding="utf-8")
+    cdt_path.write_text("aad\nfalse_field\naad_1\n", encoding="utf-8")
 
-    expected = "Line 2: 'false_field' not found in specifications."
+    expected = "Line 2: 'false_field' not found in 'full_specs[\"sessions\"]'. It will be ignored."
 
     with pytest.warns(UserWarning, match=re.escape(expected)):
         _load_clinical_data_list(cdt_path)
@@ -703,36 +702,7 @@ def test_merge_clinical_data_list_into_df_in_sessions():
         clinical_data_list, TO_COMPLETE_SPECS_DF.copy()
     )
 
-    expected = pd.DataFrame(
-        {
-            "participants": [
-                "participant_id",
-                "source",
-                "blinded_code",
-                "blinded_family",
-                "blinded_site",
-                pd.NA,
-            ],
-            "sessions": [
-                "participant_id",
-                "session_id",
-                "genfi_version",
-                "aad",
-                "aad_1",
-                "aad_2",
-            ],
-            "scans": [
-                "participant_id",
-                "session_id",
-                "genfi_version",
-                "bids_filename",
-                "bids_full_path",
-                pd.NA,
-            ],
-        }
-    )
-
-    assert_frame_equal(out, expected)
+    assert_frame_equal(out, FULL_SPECS_DF)
 
 
 def test_merge_clinical_data_list_into_df_no_duplicate():
@@ -740,30 +710,10 @@ def test_merge_clinical_data_list_into_df_no_duplicate():
         _merge_clinical_data_list_into_df,
     )
 
-    clinical_data_list = ["participant_id", "session_id"]
+    clinical_data_list = ["session_id", "genfi_version"]
 
     out = _merge_clinical_data_list_into_df(
         clinical_data_list, TO_COMPLETE_SPECS_DF.copy()
     )
 
-    expected = pd.DataFrame(
-        {
-            "participants": [
-                "participant_id",
-                "source",
-                "blinded_code",
-                "blinded_family",
-                "blinded_site",
-            ],
-            "sessions": ["participant_id", "session_id", "genfi_version", pd.NA, pd.NA],
-            "scans": [
-                "participant_id",
-                "session_id",
-                "genfi_version",
-                "bids_filename",
-                "bids_full_path",
-            ],
-        }
-    )
-
-    assert_frame_equal(out, expected)
+    assert_frame_equal(out, TO_COMPLETE_SPECS_DF)

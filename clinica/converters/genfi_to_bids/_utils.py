@@ -286,47 +286,40 @@ def _specs_depending_on_option(full: bool, gif: bool) -> str:
     return "mandatory_specs"
 
 
-def _filter_invalid_data(
-    data: str, index: int, specs_values: set, specs_df: pd.DataFrame
+def _validate_data_from_user(
+    data: str, index: int, full_specs_values: List[str]
 ) -> bool:
     """Filter invalid (empty, unknown and not present in 'sessions') data from the user txt file.
 
     Parameters
     ----------
     data: str
-        Stripped line from the user txt file.
+        Stripped line from the user txt file
 
     index: int
-        Index of the line.
+        Index of the line
 
-    specs_values: Dict
-        Data set loaded from the specifications.
-
-    specs_df: pd.DataFrame
-        Dataframe loaded from the specifications.
+    full_specs_values: List[str]
+        List of values loaded from the full specifications
 
     Returns
     -------
     bool
-        Filtering result. True if the data line should be skipped. False otherwise.
+        Filtering result. False if the data line should be skipped. True otherwise.
     """
     # Skip empty lines
     if not data:
-        return True
+        return False
 
-    # Skip unknown lines in specs
-    if data not in specs_values:
+    # Skip unknown lines in full_specs.sessions
+    if data not in full_specs_values:
         log_and_warn(
-            f"Line {index}: '{data}' not found in specifications. It will be ignored.",
+            f"Line {index}: '{data}' not found in 'full_specs[\"sessions\"]'. It will be ignored.",
             UserWarning,
         )
-        return True
+        return False
 
-    # Skip lines not in 'sessions'
-    if data not in specs_df["sessions"].values:
-        return True
-
-    return False
+    return True
 
 
 def _load_clinical_data_list(cdt_path: Path) -> List[str]:
@@ -344,21 +337,17 @@ def _load_clinical_data_list(cdt_path: Path) -> List[str]:
     """
     clinical_data_list = []
 
-    full_specs = pd.read_csv(
+    full_specs_values = pd.read_csv(
         Path(__file__).parent / "specifications/full_specs.csv",
         sep=";",
-    )
-
-    specs_values = {value for value in full_specs.to_numpy().ravel() if pd.notna(value)}
+    )["sessions"].tolist()
 
     with open(cdt_path, "r", encoding="utf-8") as f:
         for i, line in enumerate(f, start=1):
             data = line.strip()
 
-            if _filter_invalid_data(data, i, specs_values, full_specs):
-                continue
-
-            clinical_data_list.append(data)
+            if _validate_data_from_user(data, i, full_specs_values):
+                clinical_data_list.append(data)
 
     if not clinical_data_list:
         log_and_warn(
@@ -387,20 +376,10 @@ def _merge_clinical_data_list_into_df(
     pd.DataFrame
         Dataframe to complete
     """
+    sessions_values = df_to_complete["sessions"].astype(str).tolist()
+
     for value in clinical_data_list:
-        sessions_values = df_to_complete["sessions"].astype(str).tolist()
-
-        if value in sessions_values:
-            continue
-
-        last_valid_idx = df_to_complete["sessions"].last_valid_index()
-
-        next_idx = last_valid_idx + 1
-
-        if next_idx < len(df_to_complete):
-            df_to_complete.loc[next_idx, "sessions"] = value
-
-        else:
+        if value not in sessions_values:
             df_to_complete.loc[len(df_to_complete), "sessions"] = value
 
     return df_to_complete
