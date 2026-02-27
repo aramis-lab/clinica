@@ -381,7 +381,7 @@ def _merge_clinical_data_list_into_df(
     """
 
     for value in clinical_data_list:
-        if value not in df_to_complete["sessions"].to_list():
+        if value not in df_to_complete["sessions"].tolist():
             df_to_complete.loc[len(df_to_complete), "sessions"] = value
 
     return df_to_complete
