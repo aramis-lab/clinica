@@ -99,7 +99,9 @@ where:
         - For `participants.tsv` : `blinded_code`, `blinded_family`, `blinded_site`, `gender`.
         - For `sessions.tsv` : `age_at_visit`, `date_of_assessment`, `diagnosis`, `education`, `ftld-cdr-nm-global`, `genetic_group`, `genetic_status_1`, `genetic_status_2`, `visit`. 
         <br> All the remaining clinical data is optional and added through the use of the `-full` flag.
-    - `--clinical-data-txt/-cdt` is a txt file containing the additional fields the user wants. The available data can be retrieved from the specification file `full_specs.csv`, located in the Clinica installation directory at:  `your_path_to_clinica/clinica/converters/genfi_to_bids/specifications/full_specs.csv`. The txt file should be written one field per line such as in the example below :
+    - `--clinical-data-txt/-cdt` is a txt file containing the additional fields the user wants. The available data can be retrieved from the specification file `full_specs.csv`, located in the Clinica installation directory at: <br>
+    `your_path_to_clinica/clinica/converters/genfi_to_bids/specifications/full_specs.csv`. <br>
+    The txt file should be written one field per line such as in the example below :
         ```text
         diagnosis_1
         diagnosis_1.1
