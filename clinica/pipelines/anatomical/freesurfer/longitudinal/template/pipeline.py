@@ -35,7 +35,7 @@ class T1FreeSurferTemplate(Pipeline):
                 list_participant_id, list_long_id, caps_directory, T1_FS_T_DESTRIEUX
             )
             image_ids = [
-                re.search(r"(sub-[a-zA-Z0-9]+)_(long-[a-zA-Z0-9]+)", file).group()
+                re.search(r"(sub-[a-zA-Z0-9]+)_(long-[a-zA-Z0-9+]+)", file).group()
                 for file in t1_freesurfer_files
             ]
         return image_ids
