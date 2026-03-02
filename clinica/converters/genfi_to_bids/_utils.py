@@ -287,29 +287,6 @@ def _specs_depending_on_option(full: bool, gif: bool) -> str:
     return "mandatory_specs"
 
 
-def _validate_data_from_user(data: str, full_specs_values: list[str]) -> bool:
-    """Filter invalid (unknown and not present in 'sessions') data from the user txt file.
-
-    Parameters
-    ----------
-    data: str
-        Stripped line from the user txt file
-
-    full_specs_values: list[str]
-        List of values loaded from the full specifications
-
-    Returns
-    -------
-    bool
-        Filtering result. False if the data line should be skipped. True otherwise.
-    """
-    # Skip unknown lines in full_specs.sessions
-    if data not in full_specs_values:
-        return False
-
-    return True
-
-
 def _load_clinical_data_list(cdt_path: Path) -> list[str]:
     """Load the list of clinical data fields selected by the user from a txt file.
 
@@ -327,17 +304,17 @@ def _load_clinical_data_list(cdt_path: Path) -> list[str]:
 
     index_data_list = []
 
+    full_specs_path = Path(__file__).parent / "specifications/full_specs.csv"
+
     full_specs_values = pd.read_csv(
-        Path(__file__).parent / "specifications/full_specs.csv",
+        full_specs_path,
         sep=";",
     )["sessions"].tolist()
 
     with open(cdt_path, "r", encoding="utf-8") as f:
         for index, line in enumerate(f, start=1):
-            data = line.strip()
-
-            if data:
-                if _validate_data_from_user(data, full_specs_values):
+            if data := line.strip():
+                if data in full_specs_values:
                     clinical_data_list.append(data)
 
                 else:
@@ -351,9 +328,12 @@ def _load_clinical_data_list(cdt_path: Path) -> list[str]:
 
     if index_data_list:
         message = (
-            "Some data have not been found in 'full_specs[\"sessions\"]':\n"
+            f"Some data listed in the option file '-clinical_data_txt/cdt' at location {cdt_path} "
+            + "are not found within the column 'sessions' of the specification file 'full_specs.csv':\n"
             + "\n".join(f"- Line {index}: '{data}'" for index, data in index_data_list)
-            + "\nThey will be ignored."
+            + "\nThey will be ignored.\n"
+            + "Every available data options are written within the column 'sessions' "
+            + f"of the specification file 'full_specs.csv' at location {full_specs_path}."
         )
 
         log_and_warn(message, UserWarning)
