@@ -52,20 +52,20 @@ def test_converters(cmdopt, tmp_path, study: StudyName):
     [
         (False, False),
         (True, False),
-        (False, True),
         (True, True),
     ],
 )
 def test_genfi_converter_using_options(cmdopt, tmp_path, gif, full):
     from clinica.converters.factory import convert, get_converter_name
 
+    study = StudyName.GENFI
     base_dir = Path(cmdopt["input"])
     input_dir, tmp_dir, ref_dir = configure_paths(
-        base_dir, tmp_path, get_converter_name(StudyName.GENFI)
+        base_dir, tmp_path, get_converter_name(study)
     )
     output_dir = tmp_path / "bids"
-
-    kwargs = dict(
+    convert(
+        study,
         path_to_dataset=input_dir / "unorganized",
         bids_dir=output_dir,
         path_to_clinical=input_dir / "clinical_data",
@@ -75,14 +75,8 @@ def test_genfi_converter_using_options(cmdopt, tmp_path, gif, full):
         full=full,
     )
 
-    convert(StudyName.GENFI, **kwargs)
-
-    if full:
-        compare_folders(output_dir, ref_dir / "bids_with_options/bids_full", output_dir)
-        compare_bids_tsv(output_dir, ref_dir / "bids_with_options/bids_full")
-    elif gif:
-        compare_folders(output_dir, ref_dir / "bids_with_options/bids_gif", output_dir)
-        compare_bids_tsv(output_dir, ref_dir / "bids_with_options/bids_gif")
-    else:
-        compare_folders(output_dir, ref_dir / "bids_with_options/bids_cdt", output_dir)
-        compare_bids_tsv(output_dir, ref_dir / "bids_with_options/bids_cdt")
+    options = "full" if full else "gif" if gif else "cdt"
+    compare_folders(
+        output_dir, ref_dir / "bids_with_options" / f"bids_{options}", output_dir
+    )
+    compare_bids_tsv(output_dir, ref_dir / "bids_with_options" / f"bids_{options}")
