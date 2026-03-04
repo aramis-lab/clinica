@@ -104,7 +104,10 @@ def _compute_flair_paths(
     flair_dfs_list = []
     # Loading needed .csv files
     adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
-    mayo_mri_qc = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_IMAGEQC_05_07_15")
+    mayo_mri_qc = load_clinical_csv(
+        csv_dir, "MAYOADIRL_MRI_IMAGEQC_12_08_15"
+    )  # TODO : remove with v>0.11
+    # mayo_mri_qc = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_IMAGEQC_05_07_15") # PR 1627
     mri_list = load_clinical_csv(csv_dir, "MRILIST")
 
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == "AFL"]
