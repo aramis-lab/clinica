@@ -143,9 +143,23 @@ def correct_diagnosis_sc_adni3(
         Corrected participants_df.
     """
     diagnosis_dict = {1: "CN", 2: "MCI", 3: "AD"}
-    dxsum_df = load_clinical_csv(clinical_data_dir, "DXSUM").set_index(
-        ["PTID", "VISCODE2"]
-    )
+
+    ### PR 1617
+    # dxsum_df = load_clinical_csv(clinical_data_dir, "DXSUM").set_index(
+    #     ["PTID", "VISCODE2"]
+    # )
+
+    ### TODO : remove next release (>0.11)
+    try:
+        dxsum_df = load_clinical_csv(
+            clinical_data_dir, "DXSUM_PDXCONV_ADNIALL"
+        ).set_index(["PTID", "VISCODE2"])
+    except OSError:
+        dxsum_df = load_clinical_csv(clinical_data_dir, "DXSUM_PDXCONV").set_index(
+            ["PTID", "VISCODE2"]
+        )
+    ###
+
     missing_sc = participants_df[
         participants_df.original_study == ADNIStudy.ADNI3.value
     ]
@@ -329,7 +343,9 @@ def _get_visit_code_column_name(csv_filename: str) -> str:
 def _is_a_visit_code_2_type(csv_filename: str) -> bool:
     """If the csv file is among these files, then the visit code column is 'VISCODE2'."""
     return csv_filename in {
-        "DXSUM.csv",
+        # "DXSUM.csv", PR 1617
+        "DXSUM_PDXCONV.csv",  # TODO : remove next release (>0.11)
+        "DXSUM_PDXCONV_ADNIALL.csv",  # TODO : remove next release (>0.11)
         "CDR.csv",
         "NEUROBAT.csv",
         "GDSCALE.csv",
