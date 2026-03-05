@@ -6,6 +6,35 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## Clinica 0.11.0
+
+### Fixed
+- [Pipelines] SPM pipelines : fix command setting with Mac (PR[#1608](https://github.com/aramis-lab/clinica/pull/1608))
+- [Pipelines] PET-Volume : fix field to allow for completion (PR[#1543](https://github.com/aramis-lab/clinica/pull/1543))
+- [Pipelines] PET-Volume computes 4 atlases statistics as expected (PR[#1578](https://github.com/aramis-lab/clinica/pull/1578))
+- [Pipelines] PET-Surface : fix missing argument (PR[#1639](https://github.com/aramis-lab/clinica/pull/1639))
+- [Dependencies] Update dependencies (BrainStat) and perform associated fixes (PR[#1643](https://github.com/aramis-lab/clinica/pull/1643))
+- [Converters] IXI-to-bids now follows latest BIDS specifications (PR[#1563](https://github.com/aramis-lab/clinica/pull/1563), PR[#1564](https://github.com/aramis-lab/clinica/pull/1564), PR[#1565](https://github.com/aramis-lab/clinica/pull/1565))
+- [Converters] ADNI-to-bids : fix to handle case where empty sessions dataframe (PR[#1625](https://github.com/aramis-lab/clinica/pull/1625/changes))
+
+### Enhanced
+- [Pipelines] PET-Volume function ApplySegmentationDeformation now inherits from Nipype class (PR[#1548](https://github.com/aramis-lab/clinica/pull/1548))
+- [Converters] GENFI-to-bids : `ses-M[months]` replaced with `ses-visit` (PR[#1607](https://github.com/aramis-lab/clinica/pull/1607))
+- [Converters] GENFI-to-bids : fix option `-cdt` (PR[#1647](https://github.com/aramis-lab/clinica/pull/1647))
+- [Other] Adaptation of user id retrieval for docker processes (PR[#1606](https://github.com/aramis-lab/clinica/pull/1606))
+
+### Added
+- [Pipelines] Support SPM25 for **T1-Volume** (PR[#1542](https://github.com/aramis-lab/clinica/pull/1542))
+- [Pipelines] Support SPM25 for **PET-Volume** (PR[#1547](https://github.com/aramis-lab/clinica/pull/1547))
+- [Pipelines] Support SPM25 for **PET-Surface** (PR[#1609](https://github.com/aramis-lab/clinica/pull/1609))
+- [Pipelines] Support SPM25 for **Stat-Volume** (PR[#1626](https://github.com/aramis-lab/clinica/pull/1626))
+- [Converters] GENFI-to-bids : allow for more mandatory clinical data (PR[#1641](https://github.com/aramis-lab/clinica/pull/1641))
+
+### Deleted
+- [Pipelines] Dropping support for SPM + MATLAB set-up (now only standalone) (PR[#1624](https://github.com/aramis-lab/clinica/pull/1624))
+
+
 ## Clinica 0.10.1
 
 ### Fixed
