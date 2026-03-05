@@ -7,7 +7,7 @@ import pandas as pd
 import pydicom as pdcm
 from fsspec.implementations.local import LocalFileSystem
 
-from clinica.utils.stream import cprint
+from clinica.utils.stream import cprint, log_and_warn
 
 __all__ = [
     "merge_imaging_and_clinical_data",
@@ -135,6 +135,8 @@ def _check_file(directory: Path, pattern: str) -> Path:
 
 
 def parse_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
+    cprint("Looking for clinical data...", lvl="info")
+
     return _complete_clinical_data(
         _find_clinical_data(
             clinical_data_directory,
@@ -172,7 +174,6 @@ def _find_clinical_data(
     pd.DataFrame
         Dataframe containing the clinical data
     """
-    cprint("Looking for clinical data...", lvl="info")
 
     return _read_file(_check_file(clinical_data_directory, pattern))
 
@@ -286,9 +287,89 @@ def _specs_depending_on_option(full: bool, gif: bool) -> str:
     return "mandatory_specs"
 
 
+def _load_clinical_data_list(cdt_path: Path) -> list[str]:
+    """Load the list of clinical data fields selected by the user from a txt file.
+
+    Parameters
+    ----------
+    cdt_path: Path
+        TXT file containing the data fields the user wishes to have from the excel spreadsheets
+
+    Returns
+    -------
+    list[str]
+        List of selected clinical data fields
+    """
+    clinical_data_list = []
+
+    index_data_list = []
+
+    full_specs_path = Path(__file__).parent / "specifications/full_specs.csv"
+
+    full_specs_values = pd.read_csv(
+        full_specs_path,
+        sep=";",
+    )["sessions"].tolist()
+
+    with open(cdt_path, "r", encoding="utf-8") as f:
+        for index, line in enumerate(f, start=1):
+            if data := line.strip():
+                if data in full_specs_values:
+                    clinical_data_list.append(data)
+
+                else:
+                    index_data_list.append((index, data))
+
+    if not clinical_data_list:
+        log_and_warn(
+            f"File for option '-clinical_data_txt/cdt' at location {cdt_path} does not contain any valid entry.",
+            UserWarning,
+        )
+
+    if index_data_list:
+        message = (
+            f"Some data listed in the option file '-clinical_data_txt/cdt' at location {cdt_path} "
+            + "are not found within the column 'sessions' of the specification file 'full_specs.csv':\n"
+            + "\n".join(f"- Line {index}: '{data}'" for index, data in index_data_list)
+            + "\nThey will be ignored.\n"
+            + "Every available data options are written within the column 'sessions' "
+            + f"of the specification file 'full_specs.csv' at location {full_specs_path}."
+        )
+
+        log_and_warn(message, UserWarning)
+
+    return clinical_data_list
+
+
+def _merge_clinical_data_list_into_df(
+    clinical_data_list: list[str], df_to_complete: pd.DataFrame
+) -> pd.DataFrame:
+    """Merge clinical data list into the 'sessions' column of a specs like dataframe to complete.
+
+    Parameters
+    ----------
+    clinical_data_list: list[str]
+        List of selected clinical data fields
+
+    df_to_complete: pd.DataFrame
+        Specs like dataframe to complete
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe to complete
+    """
+
+    for value in clinical_data_list:
+        if value not in df_to_complete["sessions"].tolist():
+            df_to_complete.loc[len(df_to_complete), "sessions"] = value
+
+    return df_to_complete
+
+
 def prepare_dataset_to_bids_format(
     complete_data_df: pd.DataFrame,
-    path_to_clinical_tsv: Path,
+    path_to_clinical_txt: Path,
     gif: bool = False,
     full: bool = False,
 ) -> Dict[str, pd.DataFrame]:
@@ -299,8 +380,8 @@ def prepare_dataset_to_bids_format(
     complete_data_df: pd.DataFrame
         Dataframe containing the merged data extracted from the raw images and the clinical data
 
-    path_to_clinical_tsv: Path
-        TSV file containing the data fields the user wishes to have from the excel spreadsheets
+    path_to_clinical_txt: Path
+        TXT file containing the data fields the user wishes to have from the excel spreadsheets
 
     gif: bool
         False by default. If True, indicates the user wants to get all clinical data fields
@@ -328,23 +409,22 @@ def prepare_dataset_to_bids_format(
         sep=";",
     )
 
-    # add additional data through csv
-    if path_to_clinical_tsv:
-        additional_data_df = pd.read_csv(path_to_clinical_tsv, sep="\t")
-        data_mapping = pd.read_csv(Path(__file__) / "data_mapping.tsv", sep="\t")
-        pre_addi_df = data_mapping.merge(additional_data_df, how="inner", on="data")
-        addi_df = pd.DataFrame(
-            [
-                pre_addi_df["data"][pre_addi_df["dest"] == x].values.tolist()
-                for x in ("participants", "sessions", "scans")
-            ]
-        ).transpose()
-        addi_df.columns = ["participants", "sessions", "scans"]
-        df_to_write = pd.concat([specifications, addi_df])
-    else:
-        df_to_write = specifications
+    if path_to_clinical_txt:
+        if full:
+            log_and_warn(
+                "The '-full' flag is being used, "
+                "using the '-clinical_data_txt/-cdt' option is redundant and will be ignored.",
+                UserWarning,
+            )
+
+        else:
+            specifications = _merge_clinical_data_list_into_df(
+                _load_clinical_data_list(path_to_clinical_txt),
+                specifications.copy(),
+            )
+
     return {
-        col: complete_data_df.filter(items=list(df_to_write[col]))
+        col: complete_data_df.filter(items=list(specifications[col]))
         for col in ["participants", "sessions", "scans"]
     }
 

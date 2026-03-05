@@ -1,4 +1,5 @@
 import math
+import re
 
 import numpy as np
 import pandas as pd
@@ -506,3 +507,130 @@ def test_specs_depending_on_option(full, gif, expected):
     from clinica.converters.genfi_to_bids._utils import _specs_depending_on_option
 
     assert _specs_depending_on_option(full, gif) == expected
+
+
+def test_load_clinical_data_list_success(tmp_path):
+    from clinica.converters.genfi_to_bids._utils import _load_clinical_data_list
+
+    clinical_data_list = [
+        "  aad  \n",
+        "\n",
+        "  blinded_code  \n",
+        "\taad_1\n",
+        "blinded_family\n",
+    ]
+
+    expected = ["aad", "aad_1"]
+
+    cdt_path = tmp_path / "additional_clinical_data.txt"
+    cdt_path.write_text("".join(clinical_data_list), encoding="utf-8")
+
+    assert _load_clinical_data_list(cdt_path) == expected
+
+
+@pytest.mark.parametrize(
+    "clinical_data_list",
+    [
+        [],
+        ["\n", "   \n", "\t\n"],
+    ],
+)
+def test_load_clinical_data_list_empty(tmp_path, clinical_data_list):
+    from clinica.converters.genfi_to_bids._utils import _load_clinical_data_list
+
+    cdt_path = tmp_path / "additional_clinical_data.txt"
+    cdt_path.write_text("".join(clinical_data_list), encoding="utf-8")
+
+    expected = (
+        f"File for option '-clinical_data_txt/cdt' at location {cdt_path} "
+        "does not contain any valid entry."
+    )
+
+    with pytest.warns(UserWarning, match=re.escape(expected)):
+        assert not _load_clinical_data_list(cdt_path)
+
+
+def test_load_clinical_data_list_unknown_fields(tmp_path):
+    from pathlib import Path
+
+    import clinica
+    from clinica.converters.genfi_to_bids._utils import _load_clinical_data_list
+
+    cdt_path = tmp_path / "additional_clinical_data.txt"
+    cdt_path.write_text("aad\nfalse_field_1\nfalse_field_2\naad_1\n", encoding="utf-8")
+
+    full_specs_path = (
+        Path(clinica.__file__).parent
+        / "converters/genfi_to_bids/specifications/full_specs.csv"
+    )
+
+    expected = (
+        f"Some data listed in the option file '-clinical_data_txt/cdt' at location {cdt_path} "
+        "are not found within the column 'sessions' of the specification file 'full_specs.csv':\n"
+        "- Line 2: 'false_field_1'\n"
+        "- Line 3: 'false_field_2'\n"
+        "They will be ignored.\n"
+        "Every available data options are written within the column 'sessions' "
+        f"of the specification file 'full_specs.csv' at location {full_specs_path}."
+    )
+
+    with pytest.warns(UserWarning, match=re.escape(expected)):
+        assert _load_clinical_data_list(cdt_path) == ["aad", "aad_1"]
+
+
+def test_merge_clinical_data_list_into_df_in_sessions():
+    from clinica.converters.genfi_to_bids._utils import (
+        _merge_clinical_data_list_into_df,
+    )
+
+    FULL_SPECS_DF = pd.DataFrame(
+        {
+            "participants": [
+                "participant_id",
+                "source",
+                "blinded_code",
+                pd.NA,
+                pd.NA,
+                pd.NA,
+            ],
+            "sessions": [
+                "participant_id",
+                "session_id",
+                "genfi_version",
+                "aad",
+                "aad_1",
+                "aad_2",
+            ],
+            "scans": [
+                "participant_id",
+                "session_id",
+                "genfi_version",
+                pd.NA,
+                pd.NA,
+                pd.NA,
+            ],
+        }
+    )
+
+    TO_COMPLETE_SPECS_DF = pd.DataFrame(
+        {
+            "participants": [
+                "participant_id",
+                "source",
+                "blinded_code",
+            ],
+            "sessions": ["participant_id", "session_id", "genfi_version"],
+            "scans": [
+                "participant_id",
+                "session_id",
+                "genfi_version",
+            ],
+        }
+    )
+
+    out = _merge_clinical_data_list_into_df(
+        ["aad", "session_id", "aad_1", "aad_2", "genfi_version"],
+        TO_COMPLETE_SPECS_DF.copy(),
+    )
+
+    assert_frame_equal(out, FULL_SPECS_DF)

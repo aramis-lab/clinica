@@ -14,7 +14,7 @@ def convert(
     path_to_clinical: Optional[UserProvidedPath] = None,
     gif: Optional[bool] = False,
     full: Optional[bool] = False,
-    path_to_clinical_tsv: Optional[UserProvidedPath] = None,
+    path_to_clinical_txt: Optional[UserProvidedPath] = None,
     subjects: Optional[UserProvidedPath] = None,
     n_procs: Optional[int] = 1,
     **kwargs,
@@ -43,8 +43,8 @@ def convert(
     full: bool, optional
         If True, indicates the user wants to get all clinical data fields
 
-    path_to_clinical_tsv: Path, optional
-        The path to a TSV file containing the additional data the user wants to have in the BIDS output.
+    path_to_clinical_txt: Path, optional
+        The path to a TXT file containing the additional data the user wants to have in the BIDS output.
         If None, no additional data will be added.
 
     subjects : str or Path, optional
@@ -74,10 +74,10 @@ def convert(
     bids_dir = validate_input_path(bids_dir, check_exist=False)
     if path_to_clinical:
         path_to_clinical = validate_input_path(path_to_clinical)
-    if path_to_clinical_tsv:
-        path_to_clinical_tsv = validate_input_path(path_to_clinical_tsv)
+    if path_to_clinical_txt:
+        path_to_clinical_txt = validate_input_path(path_to_clinical_txt)
     check_software(ThirdPartySoftware.DCM2NIIX)
-    _check_clinical_path_inputs(path_to_clinical_tsv, path_to_clinical)
+    _check_clinical_path_inputs(path_to_clinical_txt, path_to_clinical)
     if subjects:
         cprint(
             (
@@ -96,7 +96,7 @@ def convert(
         clinical_data = parse_clinical_data(path_to_clinical)
         imaging_data = merge_imaging_and_clinical_data(imaging_data, clinical_data)
     results = prepare_dataset_to_bids_format(
-        imaging_data, path_to_clinical_tsv, gif, full
+        imaging_data, path_to_clinical_txt, gif, full
     )
     write_bids(
         to=bids_dir,
@@ -116,17 +116,17 @@ def convert(
     cprint("Conversion to BIDS succeeded.", lvl="info")
 
 
-def _check_clinical_path_inputs(path_to_clinical_tsv: Path, path_to_clinical: Path):
-    """Check that if a clinical tsv is given, a path to the clinical data is given as well."""
+def _check_clinical_path_inputs(path_to_clinical_txt: Path, path_to_clinical: Path):
+    """Check that if a clinical txt is given, a path to the clinical data is given as well."""
     from clinica.converters.factory import get_converter_name
     from clinica.converters.study_models import StudyName
     from clinica.utils.stream import cprint
 
-    if path_to_clinical_tsv and not path_to_clinical:
+    if path_to_clinical_txt and not path_to_clinical:
         msg = (
             f"The {get_converter_name(StudyName.GENFI)} converter is unable to convert the clinical data because "
-            "the path to these data was not provided while a TSV file with additional "
-            f"data was given ({path_to_clinical_tsv}). You can either use the appropriate "
+            "the path to these data was not provided while a TXT file with additional "
+            f"data was given ({path_to_clinical_txt}). You can either use the appropriate "
             "option from the clinica command line interface to provide the missing path, "
             "or chose to not convert clinical data at all."
         )

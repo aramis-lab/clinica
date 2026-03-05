@@ -21,12 +21,12 @@ full = click.option(
     help="Add all clinical data (mandatory + optional) to sessions.tsv.",
 )
 
-clinical_data_tsv = click.option(
+clinical_data_txt = click.option(
     "-cdt",
-    "--clinical-data-tsv",
-    "clinical_data_tsv",
+    "--clinical-data-txt",
+    "clinical_data_txt",
     type=click.Path(exists=True, file_okay=True, resolve_path=True),
-    help="Path to a tsv file containing additional clinical data you want to have in the BIDS output.",
+    help="Path to a txt file containing additional clinical data you want to have in the BIDS output.",
 )
 
 
@@ -36,12 +36,12 @@ clinical_data_tsv = click.option(
 @clinical_data_directory
 @gif
 @full
-@clinical_data_tsv
+@clinical_data_txt
 def cli(
     dataset_directory: PathLike,
     bids_directory: PathLike,
     clinical_data_directory: Optional[PathLike] = None,
-    clinical_data_tsv: Optional[PathLike] = None,
+    clinical_data_txt: Optional[PathLike] = None,
     gif: Optional[bool] = False,
     full: Optional[bool] = False,
 ) -> None:
@@ -58,7 +58,7 @@ def cli(
         clinical_data_directory,
         gif=gif,
         full=full,
-        path_to_clinical_tsv=clinical_data_tsv,
+        path_to_clinical_txt=clinical_data_txt,
     )
 
 
