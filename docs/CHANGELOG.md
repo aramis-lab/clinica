@@ -30,10 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Pipelines] Support SPM25 for **PET-Surface** (PR[#1609](https://github.com/aramis-lab/clinica/pull/1609))
 - [Pipelines] Support SPM25 for **Stat-Volume** (PR[#1626](https://github.com/aramis-lab/clinica/pull/1626))
 - [Converters] GENFI-to-bids : allow for more mandatory clinical data (PR[#1641](https://github.com/aramis-lab/clinica/pull/1641))
+- Python 3.13 is officially supported (PR[#1643](https://github.com/aramis-lab/clinica/pull/1643))
 
 ### Deleted
 - [Pipelines] Dropping support for SPM + MATLAB set-up (now only standalone) (PR[#1624](https://github.com/aramis-lab/clinica/pull/1624))
-
+- Python 3.9 is not supported anymore (PR[#1643](https://github.com/aramis-lab/clinica/pull/1643))
 
 ## Clinica 0.10.1
 
