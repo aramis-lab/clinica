@@ -66,7 +66,7 @@ def test_genfi_converter_using_options(cmdopt, tmp_path, gif, full):
     output_dir = tmp_path / "bids"
     convert(
         study,
-        path_to_dataset=input_dir / "unorganized",
+        path_to_dataset=input_dir / "unorganized_for_options",
         bids_dir=output_dir,
         path_to_clinical=input_dir / "clinical_data",
         subjects=input_dir / "subjects.txt",
