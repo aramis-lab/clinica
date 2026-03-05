@@ -372,17 +372,20 @@ def mris_expand(in_surface):
     Returns:
         (list of strings) List of path to the generated surfaces
     """
+    # TODO : test
     import os
-    import shutil
     import subprocess
     import sys
+    from pathlib import Path
 
-    # bug in mris_expand : you are not allowed to write the surfaces elsewhere than in the surf folder
-    # -N is a hidden parameter (not documented) that allows the user to specify the number of surface generated between
+    from clinica.utils.stream import cprint
+
+    # RQ 1 : mris_expand write results where the script is executed
+    # RQ 2 : -N is a hidden parameter (not documented) that allows the user to specify the number of surface generated between
     # source and final target surface. Here target is 65% of thickness, with 13 surfaces. Then we only keep the surfaces
     # we are interested in.
 
-    out_file = in_surface + "_exp-"
+    out_file = Path(in_surface).name + "_exp-"
     cmd = "mris_expand -thickness -N 13 " + in_surface + " 0.65 " + out_file
     # If system is MacOS, this export command must be run just before the mri_vol2surf command to bypass MacOs security
     if sys.platform == "darwin":
@@ -397,34 +400,17 @@ def mris_expand(in_surface):
     if subprocess_mris_expand.returncode != 0:
         raise ValueError("mris_expand failed, returned non-zero code")
 
-    # Move surface file to the current directory
-    out_filelist = [
-        out_file + "007",
-        out_file + "008",
-        out_file + "009",
-        out_file + "010",
-        out_file + "011",
-        out_file + "012",
-        out_file + "013",
-    ]
-    out_in_node = [os.path.abspath("./" + os.path.basename(x)) for x in out_filelist]
-    for i in range(len(out_filelist)):
-        shutil.move(out_filelist[i], out_in_node[i])
-
     # Remove useless surfaces (0%, 5%, 10%, 15%, 20%, 25% and 30% of thickness)
-    to_remove = [
-        out_file + "000",
-        out_file + "001",
-        out_file + "002",
-        out_file + "003",
-        out_file + "004",
-        out_file + "005",
-        out_file + "006",
-    ]
-    for i in range(len(to_remove)):
-        os.remove(to_remove[i])
+    cprint(msg="Removing unnecessary mris_expands outputs (000 to 007)", level="debug")
+    for file in [
+        out_file + x for x in ("000", "001", "002", "003", "004", "005", "006")
+    ]:
+        os.remove(file)
 
-    return out_in_node
+    return [
+        os.path.abspath(out_file + x)
+        for x in ("007", "008", "009", "010", "011", "012", "013")
+    ]
 
 
 def surf2surf(
@@ -779,8 +765,6 @@ def produce_tsv(pet, atlas_files):
     import nibabel as nib
     import numpy as np
     import pandas as pds
-
-    from clinica.utils.stream import cprint
 
     # Extract data from projected PET data
     lh_pet_mgh = np.squeeze(nib.load(pet[0]).get_fdata(dtype="float32"))
