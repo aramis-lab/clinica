@@ -409,6 +409,7 @@ def mris_expand(in_surface):
     for file in [
         out_file + x for x in ("000", "001", "002", "003", "004", "005", "006")
     ]:
+        cprint(f"{os.getcwd()}")
         os.remove(file)
 
     return [
