@@ -361,6 +361,19 @@ def suvr_normalization(pet_path, mask):
     return suvr_filename
 
 
+def _running_mris_expand_with_subprocess(cmd: str) -> None:
+    import subprocess
+
+    subprocess_mris_expand = subprocess.run(
+        cmd,
+        shell=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if subprocess_mris_expand.returncode != 0:
+        raise ValueError("mris_expand failed, returned non-zero code")
+
+
 def mris_expand(in_surface):
     """mris_expand is using the freesurfer function of the same name. It expands the white input surface toward the pial,
     generating 7 surfaces at 35%, 40%, 45%, 50%, 55%, 60%, 65% of thickness.
@@ -372,9 +385,7 @@ def mris_expand(in_surface):
     Returns:
         (list of strings) List of path to the generated surfaces
     """
-    # TODO : test
     import os
-    import subprocess
     import sys
     from pathlib import Path
 
@@ -391,17 +402,10 @@ def mris_expand(in_surface):
     if sys.platform == "darwin":
         cmd = "export DYLD_LIBRARY_PATH=$FREESURFER_HOME/lib/gcc/lib && " + cmd
 
-    subprocess_mris_expand = subprocess.run(
-        cmd,
-        shell=True,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    if subprocess_mris_expand.returncode != 0:
-        raise ValueError("mris_expand failed, returned non-zero code")
+    _running_mris_expand_with_subprocess(cmd)
 
     # Remove useless surfaces (0%, 5%, 10%, 15%, 20%, 25% and 30% of thickness)
-    cprint(msg="Removing unnecessary mris_expands outputs (000 to 007)", level="debug")
+    cprint(msg="Removing unnecessary mris_expands outputs (000 to 007)", lvl="debug")
     for file in [
         out_file + x for x in ("000", "001", "002", "003", "004", "005", "006")
     ]:
