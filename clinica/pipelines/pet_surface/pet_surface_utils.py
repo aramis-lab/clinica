@@ -389,7 +389,7 @@ def mris_expand(in_surface):
     import sys
     from pathlib import Path
 
-    from clinica.utils.stream import cprint
+    from clinica.utils.stream import cprint, log_and_raise
 
     # RQ 1 : mris_expand write results where the script is executed
     # RQ 2 : -N is a hidden parameter (not documented) that allows the user to specify the number of surface generated between
@@ -409,8 +409,10 @@ def mris_expand(in_surface):
     for file in [
         out_file + x for x in ("000", "001", "002", "003", "004", "005", "006")
     ]:
-        cprint(f"{os.getcwd()}")
-        os.remove(file)
+        try:
+            os.remove(file)
+        except FileNotFoundError:
+            log_and_raise(f"{os.getcwd()}", FileNotFoundError)
 
     return [
         os.path.abspath(out_file + x)
