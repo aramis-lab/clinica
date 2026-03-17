@@ -406,6 +406,10 @@ def mris_expand(in_surface):
     import os
     from pathlib import Path
 
+    from clinica.pipelines.pet_surface.pet_surface_utils import (  # noqa
+        _running_mris_expand_with_subprocess,
+        _setting_mris_expand_cmd,
+    )
     from clinica.utils.stream import cprint, log_and_raise
 
     # RQ 1 : mris_expand write results where the script is executed
