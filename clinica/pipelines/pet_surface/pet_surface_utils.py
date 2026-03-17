@@ -361,6 +361,24 @@ def suvr_normalization(pet_path, mask):
     return suvr_filename
 
 
+def _setting_mris_expand_cmd(in_surface) -> str:
+    from pathlib import Path
+    from sys import platform
+
+    cmd = (
+        "mris_expand -thickness -N 13 "
+        + in_surface
+        + " 0.65 "
+        + Path(in_surface).name
+        + "_exp-"
+    )
+    # If system is MacOS, this export command must be run just before the mri_vol2surf command to bypass MacOs security
+    if platform == "darwin":
+        cmd = "export DYLD_LIBRARY_PATH=$FREESURFER_HOME/lib/gcc/lib && " + cmd
+
+    return cmd
+
+
 def _running_mris_expand_with_subprocess(cmd: str) -> None:
     import subprocess
 
@@ -386,7 +404,6 @@ def mris_expand(in_surface):
         (list of strings) List of path to the generated surfaces
     """
     import os
-    import sys
     from pathlib import Path
 
     from clinica.utils.stream import cprint, log_and_raise
@@ -397,12 +414,8 @@ def mris_expand(in_surface):
     # we are interested in.
 
     out_file = Path(in_surface).name + "_exp-"
-    cmd = "mris_expand -thickness -N 13 " + in_surface + " 0.65 " + out_file
-    # If system is MacOS, this export command must be run just before the mri_vol2surf command to bypass MacOs security
-    if sys.platform == "darwin":
-        cmd = "export DYLD_LIBRARY_PATH=$FREESURFER_HOME/lib/gcc/lib && " + cmd
 
-    _running_mris_expand_with_subprocess(cmd)
+    _running_mris_expand_with_subprocess(_setting_mris_expand_cmd(in_surface))
 
     # Remove useless surfaces (0%, 5%, 10%, 15%, 20%, 25% and 30% of thickness)
     cprint(msg="Removing unnecessary mris_expands outputs (000 to 007)", lvl="debug")

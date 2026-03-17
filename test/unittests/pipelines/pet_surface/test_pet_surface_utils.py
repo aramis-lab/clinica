@@ -16,6 +16,22 @@ def _running_mris_expand_with_subprocess_mock(cmd: str):
         (Path(cmd_parts[-3]).parent / (cmd_parts[-1] + _padding_to_3(n))).touch()
 
 
+@pytest.mark.parametrize("platform", ["darwin", "linux"])
+def test_setting_mris_expand_cmd(tmp_path, platform):
+    import sys
+
+    from clinica.pipelines.pet_surface.pet_surface_utils import _setting_mris_expand_cmd
+
+    path_as_str = str(tmp_path / "lh.white")
+    with mock.patch.object(sys, "platform", platform):
+        result = _setting_mris_expand_cmd(path_as_str)
+        assert (
+            f"mris_expand -thickness -N 13 {path_as_str} 0.65 lh.white_exp-" in result
+        )
+        if platform == "darwin":
+            assert "export" in result
+
+
 def test_mris_expand(tmp_path):
     from clinica.pipelines.pet_surface.pet_surface_utils import mris_expand
 
