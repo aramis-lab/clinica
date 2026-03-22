@@ -293,7 +293,7 @@ def dataset_to_bids(
 
 def _build_participants_df(df_small: pd.DataFrame) -> pd.DataFrame:
     df_participants = (
-        df_small[["participant_id", "ageAtEntry", "M/F", "Hand", "Education"]]
+        df_small[["participant_id", "ageAtEntry", "M/F", "Hand", "Education", "apoe"]]
         .rename(
             columns={
                 "ageAtEntry": "age",
@@ -324,7 +324,6 @@ def _build_sessions_df(df_source: pd.DataFrame) -> pd.DataFrame:
                 "orient",
                 "perscare",
                 "sumbox",
-                "apoe",
             ]
         ]
         .rename(
