@@ -11,40 +11,50 @@ __all__ = [
     "write_bids",
 ]
 
+# Hardcode relevant .csv filenames, OASIS3_data_files is a standardized dir
+CLINICAL_FILES = {
+    "pet": ["OASIS3_PET_json", "OASIS3_AV1451_PET_json", "OASIS3_AV1451L_json"],
+    "mri":  ["OASIS3_MR_json"],
+    "clinical": ["OASIS3_UDSb1_physical_eval", "OASIS3_UDSb4_cdr"],
+    "demo": ["OASIS3_demographics"],
+}
+
 
 def read_clinical_data(clinical_data_directory: Path) -> dict[str, pd.DataFrame]:
+    """Reads clinical data from directory"""
     try:
-        image_data_files = [f for f in clinical_data_directory.glob("*.csv")]
+        csv_files = list(clinical_data_directory.rglob("*.csv"))
     except StopIteration:
         raise FileNotFoundError("Imaging collection file not found.")
-    image_metadata = [pd.read_csv(image_path) for image_path in image_data_files]
-    for i, df in enumerate(image_metadata):
-        image_metadata[i] = df.set_index(df.axes[1][0])
 
-    return {
-        k: _get_df_based_on_index_name(image_metadata, index_name)
-        for k, index_name in zip(
-            ["pet", "mri", "subject", "pup", "adrc"],
-            [
-                "XNAT_PETSESSIONDATA ID",
-                "MR ID",
-                "Subject",
-                "PUP_PUPTIMECOURSEDATA ID",
-                "ADRC_ADRCCLINICALDATA ID",
-            ],
-        )
-    }
+    file_map: dict[str, pd.DataFrame] = {f.stem: pd.read_csv(f) for f in csv_files}
 
+    dict_df: dict[str, pd.DataFrame] = {}
+    for category, filenames in CLINICAL_FILES.items():
+        if category == "pet":
+            # Concatenate all PET files (different tracers/visits → add rows)
+            dfs = [file_map[name] for name in filenames if name in file_map]
+            if dfs:
+                dict_df["pet"] = pd.concat(dfs, ignore_index=True)
+        elif category == "clinical":
+            # Merge clinical files on OASIS_session_label
+            shared_cols = ["OASISID", "days_to_visit", "age at visit"]
+            dfs = [file_map[name] for name in filenames if name in file_map]
+            if len(dfs) >= 2:
+                merged = dfs[0]
+                for df in dfs[1:]:
+                    merged = merged.merge(df, on=shared_cols, how="outer")
+                dict_df["clinical"] = merged
+            elif len(dfs) == 1:
+                dict_df["clinical"] = dfs[0]
+        else:
+            # "mri" and "demo": single file per category
+            for name in filenames:
+                if name in file_map:
+                    dict_df[category] = file_map[name]
+                    break
 
-def _get_df_based_on_index_name(
-    image_metadata: list[pd.DataFrame], index_name: str
-) -> pd.DataFrame:
-    matching_dfs = [df for df in image_metadata if df.index.name == index_name]
-    if len(matching_dfs) == 0:
-        raise FileNotFoundError(f"Clinical data not found for {index_name}.")
-    if len(matching_dfs) > 1:
-        raise ValueError(f"Multiple data found for {index_name}.")
-    return matching_dfs[0]
+    return dict_df
 
 
 def read_imaging_data(imaging_data_directory: Path) -> pd.DataFrame:
