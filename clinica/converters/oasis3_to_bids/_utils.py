@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Iterable
+from clinica.utils.stream import cprint
 
 import pandas as pd
 
@@ -11,44 +12,56 @@ __all__ = [
     "write_bids",
 ]
 
-# Hardcode relevant .csv filenames, OASIS3_data_files is a standardized dir
-CLINICAL_FILES = {
+# Hardcode relevant .csv filenames from the standardized OASIS3_data_files directory.
+# Each key maps to the stem(s) of the expected CSV file(s) within that subdirectory.
+_CLINICAL_FILES = {
     "pet": ["OASIS3_PET_json", "OASIS3_AV1451_PET_json", "OASIS3_AV1451L_json"],
-    "mri":  ["OASIS3_MR_json"],
+    "mri": ["OASIS3_MR_json"],
     "clinical": ["OASIS3_UDSb1_physical_eval", "OASIS3_UDSb4_cdr"],
     "demo": ["OASIS3_demographics"],
 }
 
+# Columns shared across the UDS clinical sub-files used to join visits.
+_CLINICAL_MERGE_KEYS = ["OASISID", "days_to_visit", "age at visit"]
+
 
 def read_clinical_data(clinical_data_directory: Path) -> dict[str, pd.DataFrame]:
-    """Reads clinical data from directory"""
-    try:
-        csv_files = list(clinical_data_directory.rglob("*.csv"))
-    except StopIteration:
-        raise FileNotFoundError("Imaging collection file not found.")
-
+    """Read clinical data from the OASIS3_data_files FTP directory structure."""
+    csv_files = list(clinical_data_directory.rglob("*.csv"))
+    if not csv_files:
+        cprint(f"No CSV files found under {clinical_data_directory}.", lvl="error")
     file_map: dict[str, pd.DataFrame] = {f.stem: pd.read_csv(f) for f in csv_files}
 
     dict_df: dict[str, pd.DataFrame] = {}
-    for category, filenames in CLINICAL_FILES.items():
+    for category, filenames in _CLINICAL_FILES.items():
         if category == "pet":
-            # Concatenate all PET files (different tracers/visits → add rows)
+            # Concatenate all PET files (different tracers → add rows).
             dfs = [file_map[name] for name in filenames if name in file_map]
             if dfs:
                 dict_df["pet"] = pd.concat(dfs, ignore_index=True)
         elif category == "clinical":
-            # Merge clinical files on OASIS_session_label
-            shared_cols = ["OASISID", "days_to_visit", "age at visit"]
-            dfs = [file_map[name] for name in filenames if name in file_map]
+            # Merge UDS sub-files side-by-side on shared visit keys.
+            # Normalise days_to_visit to int first: UDSb1 stores it as a
+            # zero-padded string (e.g. "0339") while UDSb4 stores it as int.
+            dfs = []
+            for name in filenames:
+                if name in file_map:
+                    df = file_map[name].copy()
+                    df["days_to_visit"] = (
+                        pd.to_numeric(df["days_to_visit"], errors="coerce")
+                        .fillna(0)
+                        .astype(int)
+                    )
+                    dfs.append(df)
             if len(dfs) >= 2:
                 merged = dfs[0]
                 for df in dfs[1:]:
-                    merged = merged.merge(df, on=shared_cols, how="outer")
+                    merged = merged.merge(df, on=_CLINICAL_MERGE_KEYS, how="outer")
                 dict_df["clinical"] = merged
             elif len(dfs) == 1:
                 dict_df["clinical"] = dfs[0]
         else:
-            # "mri" and "demo": single file per category
+            # "mri" and "demo": single file per category.
             for name in filenames:
                 if name in file_map:
                     dict_df[category] = file_map[name]
@@ -124,35 +137,74 @@ def _find_imaging_data(path_to_source_data: Path) -> Iterable[Path]:
 def intersect_data(
     df_source: pd.DataFrame, dict_df: dict
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    df_adrc = dict_df["adrc"].assign(
-        session_id=lambda df: df.index.map(lambda x: x.split("_")[2])
+    # Rename new-schema columns to the names expected by downstream functions.
+    df_clinical = dict_df["clinical"].rename(
+        columns={
+            "OASISID": "Subject",
+            "MMSE": "mmse",
+            "CDRTOT": "cdr",
+            "CDRSUM": "sumbox",
+        }
     )
-    df_adrc_small = df_adrc[df_adrc.session_id == "d0000"]
-    df_adrc_small = df_adrc_small.merge(
+    df_demo = dict_df["demo"].rename(
+        columns={
+            "OASISID": "Subject",
+            "AgeatEntry": "ageAtEntry",
+            "GENDER": "M/F",
+            "HAND": "Hand",
+            "EDUC": "Education",
+            "APOE": "apoe",
+        }
+    )
+
+    # Derive a d0000-style session_id from days_to_visit so we can identify the
+    # baseline visit and compute session bins consistently with the imaging data.
+    df_clinical = df_clinical.assign(
+        session_id=lambda df: pd.to_numeric(df["days_to_visit"], errors="coerce")
+        .fillna(0)
+        .astype(int)
+        .apply(lambda x: f"d{x:04d}")
+    )
+
+    # Baseline visit (d0000) per subject.
+    df_clinical_small = df_clinical[df_clinical.session_id == "d0000"]
+    df_clinical_small = df_clinical_small.merge(
         df_source["Subject"], how="inner", on="Subject"
     ).drop_duplicates()
+
+    # Age at entry and APOE come from demographics (one row per subject).
     df_source = df_source.merge(
-        df_adrc_small[["Subject", "ageAtEntry"]], how="inner", on="Subject"
+        df_demo[["Subject", "ageAtEntry", "apoe"]], how="inner", on="Subject"
     )
     df_source = df_source.assign(
-        age=lambda df: (df["ageAtEntry"]) + df["Date"].str[1:].astype("float") / 365.25
+        age=lambda df: df["ageAtEntry"] + df["Date"].str[1:].astype("float") / 365.25
     )
+
+    # Subject-level demographics filtered to subjects present in the imaging data.
     df_subject_small = (
-        dict_df["subject"]
-        .merge(df_source["Subject"], how="inner", on="Subject")
-        .drop_duplicates()
+        df_demo.merge(df_source["Subject"], how="inner", on="Subject").drop_duplicates()
+    )
+
+    # Add MRI acquisition metadata (scanner manufacturer) to imaging sessions.
+    mri_scanner = (
+        dict_df["mri"][["label", "Manufacturer", "ManufacturersModelName"]]
+        .drop_duplicates(subset=["label"])
     )
     df_source = df_source.merge(
-        dict_df["mri"]["Scanner"], how="left", left_on="path", right_on="MR ID"
+        mri_scanner, how="left", left_on="path", right_on="label"
     )
-    df_small = df_subject_small.merge(df_adrc_small, how="inner", on="Subject")
+
+    # Merge demographics baseline + clinical baseline for the participants file.
+    df_small = df_subject_small.merge(df_clinical_small, how="inner", on="Subject")
     df_small = df_small.assign(participant_id=lambda df: "sub-" + df.Subject)
+
+    # Convert imaging session date (dXXXX days) to a 6-month BIDS session bin.
     df_source = df_source.assign(
         session=lambda df: (round(df["Date"].str[1:].astype("int") / (365.25 / 2)) * 6)
     )
     df_source = df_source.assign(
         ses=lambda df: df.session.apply(
-            lambda x: f"ses-M{(5 - (len(str(x)))) * '0' + str(int(x))}"
+            lambda x: f"ses-M{str(int(x)).zfill(3)}"
         )
     )
     df_source = df_source.join(
@@ -168,6 +220,11 @@ def intersect_data(
                     "datatype": "pet",
                     "suffix": "pet",
                     "trc_label": "18FAV45",
+                },
+                "pet_AV1451": {
+                    "datatype": "pet",
+                    "suffix": "pet",
+                    "trc_label": "18FAV1451",
                 },
             }
         ).apply(pd.Series)
@@ -191,14 +248,19 @@ def intersect_data(
                 axis=1,
             )
         )
-    df_adrc = df_adrc.merge(df_source["Subject"], how="inner", on="Subject")
-    df_adrc = df_adrc.assign(
-        session=lambda df: round(df["session_id"].str[1:].astype("int") / (364.25 / 2))
+
+    # Convert clinical visit days to session bins and merge onto imaging sessions.
+    df_clinical = df_clinical.merge(df_source["Subject"], how="inner", on="Subject")
+    df_clinical = df_clinical.assign(
+        session=lambda df: round(
+            pd.to_numeric(df["days_to_visit"], errors="coerce").fillna(0)
+            / (364.25 / 2)
+        )
         * 6
     )
-    df_adrc = df_adrc.drop_duplicates().set_index(["Subject", "session_id"])
+    df_clinical = df_clinical.drop_duplicates().set_index(["Subject", "session_id"])
     df_source = df_source.merge(
-        df_adrc[
+        df_clinical[
             [
                 "session",
                 "mmse",
@@ -211,7 +273,6 @@ def intersect_data(
                 "orient",
                 "perscare",
                 "sumbox",
-                "apoe",
             ]
         ],
         how="left",
