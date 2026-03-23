@@ -12,6 +12,7 @@ def convert(
     path_to_dataset: UserProvidedPath,
     bids_dir: UserProvidedPath,
     path_to_clinical: Optional[UserProvidedPath] = None,
+    df6: Optional[bool] = False,
     gif: Optional[bool] = False,
     full: Optional[bool] = False,
     path_to_clinical_txt: Optional[UserProvidedPath] = None,
@@ -36,6 +37,9 @@ def convert(
     path_to_clinical: Path, optional
         The path to the clinical data associated with the dataset.
         If None, the clinical data won't be converted.
+
+    df6: bool, optional
+        If True, indicates the user wants to use DF6 clinical data
 
     gif: bool, optional
         If True, indicates the user wants to have the values of the gif parcellation
@@ -93,7 +97,7 @@ def convert(
         )
     imaging_data = parse_imaging_data(path_to_dataset)
     if path_to_clinical:
-        clinical_data = parse_clinical_data(path_to_clinical)
+        clinical_data = parse_clinical_data(path_to_clinical, df6)
         imaging_data = merge_imaging_and_clinical_data(imaging_data, clinical_data)
     results = prepare_dataset_to_bids_format(
         imaging_data, path_to_clinical_txt, gif, full

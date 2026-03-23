@@ -126,32 +126,50 @@ def _check_file(directory: Path, pattern: str) -> Path:
     try:
         data_file = [f for f in directory.glob(pattern)]
     except StopIteration:
-        raise FileNotFoundError("Clinical data file not found.")
+        raise FileNotFoundError(f"'{pattern}' clinical data file not found.")
     if len(data_file) == 0:
-        raise FileNotFoundError("Clinical data not found or incomplete. Aborting")
+        raise FileNotFoundError(
+            f"'{pattern}' clinical data not found or incomplete. Aborting"
+        )
     if len(data_file) > 1:
-        raise ValueError("Too many data files found, expected one. Aborting.")
+        raise ValueError(
+            f"Too many data files found matching '{pattern}', expected one. Aborting."
+        )
     return data_file[0]
 
 
-def parse_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
+def parse_clinical_data(clinical_data_directory: Path, df6: bool) -> pd.DataFrame:
     cprint("Looking for clinical data...", lvl="info")
+
+    patterns = (
+        [
+            "FINAL*IMAGING*DF6*.xlsx",
+            "FINAL*DEMOGRAPHICS*DF6*.xlsx",
+            "FINAL*CLINICAL*DF6*.xlsx",
+            "FINAL*BIOSAMPLES*MASTER*.xlsx",
+            "FINAL*NEUROPSYCH*DF6*.xlsx",
+        ]
+        if df6
+        else [
+            "FINAL*IMAGING*DF7*.xlsx",
+            "FINAL*DEMOGRAPHICS*DF7*.xlsx",
+            "FINAL*CLINICAL*DF7*.xlsx",
+            "FINAL*BIOSAMPLES*DF7*.xlsx",
+            "FINAL*NEUROPSYCH*DF7*.xlsx",
+            "FINAL*GENETICS*DF7*.xlsx",
+        ]
+    )
 
     return _complete_clinical_data(
         _find_clinical_data(
             clinical_data_directory,
-            "FINAL*IMAGING*.xlsx",
+            patterns[0],
         ),
         [
             _find_clinical_data(clinical_data_directory, pattern)
-            for pattern in (
-                "FINAL*DEMOGRAPHICS*.xlsx",
-                "FINAL*CLINICAL*.xlsx",
-                "FINAL*BIOSAMPLES*.xlsx",
-                "FINAL*NEUROPSYCH*.xlsx",
-                "FINAL*GENETICS*.xlsx",
-            )
+            for pattern in patterns[1:]
         ],
+        df6,
     )
 
 
@@ -234,6 +252,7 @@ def _merge_and_coalesce(
 def _complete_clinical_data(
     df_imaging: pd.DataFrame,
     df_clinical_list: List[pd.DataFrame],
+    df6: bool,
 ) -> pd.DataFrame:
     """Merges the different clincal dataframes into one.
 
@@ -245,6 +264,9 @@ def _complete_clinical_data(
     df_clinical_list: List[pd.DataFrame]
         List of dataframes containing the remaining clinical data
 
+    df6: bool
+        Boolean indicating if DF6 clinical data are used
+
     Returns
     -------
     df_clinical_complete: pd.DataFrame
@@ -253,6 +275,13 @@ def _complete_clinical_data(
     merge_key = ["blinded_code", "blinded_site", "visit"]
 
     df_clinical_complete = df_imaging.copy()
+
+    # A non coherent datetime value is found in the 'visit' column of the DEMOGRAPHICS clinical data in DF6
+    # The column is thus casted into Int64 and the associated problematic row is removed
+    if df6:
+        df_clinical_list[0] = df_clinical_list[0][
+            pd.to_numeric(df_clinical_list[0]["visit"], errors="coerce").notna()
+        ]
 
     for df in df_clinical_list:
         df_clinical_complete = _merge_and_coalesce(

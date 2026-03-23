@@ -488,7 +488,7 @@ def test_complete_clinical_data():
     )
 
     result = _complete_clinical_data(
-        df_imaging=df_imaging, df_clinical_list=df_clinical_list
+        df_imaging=df_imaging, df_clinical_list=df_clinical_list, df6=False
     )
 
     assert_frame_equal(result, expected, check_like=True, check_dtype=False)
