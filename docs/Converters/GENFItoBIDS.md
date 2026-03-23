@@ -101,8 +101,8 @@ where:
     - `--clinical-data-dir/-cdd` is the path to the directory containing the clinical data files (tabular `.xlsx` files). These files are distinct from the clinical data fields, which correspond to the column names defined within the tabular files. Allows the user to automatically extract mandatory clinical data fields from the tabular files and add them to `participants.tsv` and `sessions.tsv`. Mandatory clinical data fields are the following :
         - For `participants.tsv` : `blinded_code`, `blinded_family`, `blinded_site`, `gender`.
         - For `sessions.tsv` : `age_at_visit`, `date_of_assessment`, `diagnosis`, `education`, `ftld-cdr-nm-global`, `genetic_group`, `genetic_status_1`, `genetic_status_2`, `visit`.
-        <br> All the remaining clinical data fields are optional and automatically added through the use of the `-full` flag.
-    - `-df6` allows the user to use the clinical data files from GENFI Data Freeze 6 (DF6) instead of the default processed version, being as of now GENFI Data Freeze 7 (DF7).
+    <br> All the remaining clinical data fields are optional and automatically added through the use of the `-full` flag.
+    - `-df6` allows the user to use the clinical data files from GENFI Data Freeze 6 (DF6) instead of the default processed version. Currently, the default processed version is GENFI Data Freeze 7 (DF7).
     - `--clinical-data-txt/-cdt` is a txt file containing the additional clinical data fields the user wants. The available data can be retrieved from the specification file `full_specs.csv`, located in the Clinica installation directory at :<br>`clinica_path/clinica/converters/genfi_to_bids/specifications/full_specs.csv`.<br>The `.txt` file should be written one field per line such as in the example below :
         ```text
         diagnosis_1
