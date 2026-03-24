@@ -1,8 +1,9 @@
 from pathlib import Path
 from typing import Iterable
-from clinica.utils.stream import cprint
 
 import pandas as pd
+
+from clinica.utils.stream import cprint
 
 __all__ = [
     "read_clinical_data",
@@ -27,10 +28,14 @@ _CLINICAL_MERGE_KEYS = ["OASISID", "days_to_visit", "age at visit"]
 
 def read_clinical_data(clinical_data_directory: Path) -> dict[str, pd.DataFrame]:
     """Read clinical data from the OASIS3_data_files FTP directory structure."""
+    cprint(f"Reading clinical data from {clinical_data_directory}", lvl="info")
     csv_files = list(clinical_data_directory.rglob("*.csv"))
     if not csv_files:
         cprint(f"No CSV files found under {clinical_data_directory}.", lvl="error")
-    file_map: dict[str, pd.DataFrame] = {f.stem: pd.read_csv(f) for f in csv_files}
+    file_map: dict[str, pd.DataFrame] = {}
+    for f in csv_files:
+        cprint(f"  Loading {f.name}", lvl="debug")
+        file_map[f.stem] = pd.read_csv(f)
 
     dict_df: dict[str, pd.DataFrame] = {}
     for category, filenames in _CLINICAL_FILES.items():
@@ -181,15 +186,14 @@ def intersect_data(
     )
 
     # Subject-level demographics filtered to subjects present in the imaging data.
-    df_subject_small = (
-        df_demo.merge(df_source["Subject"], how="inner", on="Subject").drop_duplicates()
-    )
+    df_subject_small = df_demo.merge(
+        df_source["Subject"], how="inner", on="Subject"
+    ).drop_duplicates()
 
     # Add MRI acquisition metadata (scanner manufacturer) to imaging sessions.
-    mri_scanner = (
-        dict_df["mri"][["label", "Manufacturer", "ManufacturersModelName"]]
-        .drop_duplicates(subset=["label"])
-    )
+    mri_scanner = dict_df["mri"][
+        ["label", "Manufacturer", "ManufacturersModelName"]
+    ].drop_duplicates(subset=["label"])
     df_source = df_source.merge(
         mri_scanner, how="left", left_on="path", right_on="label"
     )
@@ -203,9 +207,7 @@ def intersect_data(
         session=lambda df: (round(df["Date"].str[1:].astype("int") / (365.25 / 2)) * 6)
     )
     df_source = df_source.assign(
-        ses=lambda df: df.session.apply(
-            lambda x: f"ses-M{str(int(x)).zfill(3)}"
-        )
+        ses=lambda df: df.session.apply(lambda x: f"ses-M{str(int(x)).zfill(3)}")
     )
     df_source = df_source.join(
         df_source.modality.map(
@@ -253,8 +255,7 @@ def intersect_data(
     df_clinical = df_clinical.merge(df_source["Subject"], how="inner", on="Subject")
     df_clinical = df_clinical.assign(
         session=lambda df: round(
-            pd.to_numeric(df["days_to_visit"], errors="coerce").fillna(0)
-            / (364.25 / 2)
+            pd.to_numeric(df["days_to_visit"], errors="coerce").fillna(0) / (364.25 / 2)
         )
         * 6
     )
@@ -354,6 +355,10 @@ def _install_bids(sourcedata_dir: Path, bids_filename: Path) -> None:
     fs = LocalFileSystem(auto_mkdir=True)
 
     source_file = fs.open(fs.ls(sourcedata_dir)[0], mode="rb")
+    cprint(
+        f"  Copying {fs.ls(sourcedata_dir)[0]} -> {bids_filename}",
+        lvl="debug",
+    )
     target_file = fs.open(bids_filename, mode="wb")
 
     with source_file as sf, target_file as tf:
@@ -398,14 +403,26 @@ def write_bids(
         with fs.open(to / "participants.tsv", "w") as participant_file:
             write_to_tsv(participants, participant_file)
         for participant_id, sessions_group in sessions.groupby("participant_id"):
+            cprint(f"Writing sessions for {participant_id}", lvl="info")
             sessions_group = sessions_group.droplevel("participant_id")
             sessions_filepath = to / participant_id / f"{participant_id}_sessions.tsv"
             with fs.open(sessions_filepath, "w") as sessions_file:
                 write_to_tsv(sessions_group, sessions_file)
 
-    for filename, metadata in scans.iterrows():
+    n_scans = len(scans)
+    cprint(f"Installing {n_scans} scan(s) into BIDS dataset at {to}", lvl="info")
+    for i, (filename, metadata) in enumerate(scans.iterrows(), start=1):
         path = dataset_directory / metadata.source_dir
-        if _extract_suffix_from_filename(str(filename)) != "nan":
+        suffix = _extract_suffix_from_filename(str(filename))
+        if suffix != "nan":
+            # Extract subject and session from the BIDS filename for user-facing log.
+            parts = Path(filename).parts  # e.g. sub-OAS30001/ses-M000/anat/...
+            subject = parts[0] if len(parts) > 0 else "unknown"
+            session = parts[1] if len(parts) > 1 else "unknown"
+            cprint(
+                f"[{i}/{n_scans}] Installing {subject} / {session} : {Path(filename).name}",
+                lvl="info",
+            )
             _install_bids(sourcedata_dir=path, bids_filename=to / filename)
     return scans.index.to_list()
 
