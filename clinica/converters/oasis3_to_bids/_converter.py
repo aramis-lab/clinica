@@ -37,14 +37,6 @@ def convert(
     path_to_dataset = validate_input_path(path_to_dataset)
     bids_dir = validate_input_path(bids_dir, check_exist=False)
     path_to_clinical = validate_input_path(path_to_clinical)
-    if subjects:
-        cprint(
-            (
-                f"Subject filtering is not yet implemented in {get_converter_name(StudyName.OASIS3)} converter. "
-                "All subjects available will be converted."
-            ),
-            lvl="warning",
-        )
     if n_procs != 1:
         cprint(
             f"{get_converter_name(StudyName.OASIS3)} converter does not support multiprocessing yet. n_procs set to 1.",
@@ -52,6 +44,31 @@ def convert(
         )
     dict_df = read_clinical_data(path_to_clinical)
     imaging_data = read_imaging_data(path_to_dataset)
+    if subjects:
+        subjects_path = validate_input_path(subjects)
+        subject_ids = {
+            line.strip()
+            for line in subjects_path.read_text().splitlines()
+            if line.strip()
+        }
+        cprint(f"Loaded {len(subject_ids)} subject(s) from {subjects_path}", lvl="info")
+        found = set(imaging_data["Subject"].unique())
+        for s in sorted(subject_ids - found):
+            cprint(
+                f"Subject {s} not found in imaging data and will be skipped.",
+                lvl="warning",
+            )
+        imaging_data = imaging_data[imaging_data["Subject"].isin(subject_ids)]
+        if imaging_data.empty:
+            cprint(
+                "No imaging data remains after subject filtering. Aborting.",
+                lvl="error",
+            )
+            return
+        cprint(
+            f"Retaining {imaging_data['Subject'].nunique()} subject(s) after filtering.",
+            lvl="info",
+        )
     imaging_data, df_small = intersect_data(imaging_data, dict_df)
     participants, sessions, scans = dataset_to_bids(imaging_data, df_small)
     write_bids(
