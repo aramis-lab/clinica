@@ -269,7 +269,7 @@ def intersect_data(
     # Convert clinical visit days to session bins and merge onto imaging sessions.
     df_clinical = df_clinical.merge(df_source["Subject"], how="inner", on="Subject")
     df_clinical = df_clinical.assign(
-        session=lambda df: round(df["days_to_visit"] / (364.25 / 2)) * 6
+        session=lambda df: round(df["days_to_visit"] / (365.25 / 2)) * 6
     )
     df_clinical = df_clinical.drop_duplicates().set_index(["Subject", "session_id"])
     df_source = df_source.merge(
