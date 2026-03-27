@@ -25,6 +25,33 @@ _CLINICAL_FILES = {
 # Columns shared across the UDS clinical sub-files used to join visits.
 _CLINICAL_MERGE_KEYS = ["OASISID", "days_to_visit", "age at visit"]
 
+# Mapping from OASIS3 modality strings to BIDS datatype / suffix / tracer label.
+_MODALITY_TO_BIDS = {
+    "dwi_MR": {"datatype": "dwi", "suffix": "dwi"},
+    "T1w_MR": {"datatype": "anat", "suffix": "T1w"},
+    "T2star_MR": {"datatype": "anat", "suffix": "T2starw"},
+    "FLAIR_MR": {"datatype": "anat", "suffix": "FLAIR"},
+    "pet_FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
+    "pet_PIB": {"datatype": "pet", "suffix": "pet", "trc_label": "11CPIB"},
+    "pet_AV45": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV45"},
+    "pet_AV1451": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV1451"},
+}
+
+# Clinical Score column names
+_CLINICAL_SCORE_COLUMNS = [
+    "session",
+    "mmse",
+    "cdr",
+    "commun",
+    "dx1",
+    "homehobb",
+    "judgment",
+    "memory",
+    "orient",
+    "perscare",
+    "sumbox",
+]
+
 
 def _build_file_map(data_directory: Path) -> dict[str, pd.DataFrame]:
     """Recursively find all CSVs under data_directory and return {stem: DataFrame}."""
@@ -116,6 +143,27 @@ def read_clinical_data(clinical_data_directory: Path) -> dict[str, pd.DataFrame]
     }
 
 
+def _find_imaging_data(path_to_source_data: Path) -> Iterable[Path]:
+    for image in path_to_source_data.rglob("*.nii.gz"):
+        yield image.relative_to(path_to_source_data)
+
+
+def _identify_modality(source_path: Path) -> str:
+    try:
+        return source_path.name.split(".")[0].split("_")[-1]
+    except Exception:
+        return "nan"
+
+
+def _identify_runs(source_path: Path) -> str:
+    import re
+
+    try:
+        return re.search(r"run-\d+", str(source_path))[0]
+    except Exception:
+        return "run-01"
+
+
 def read_imaging_data(imaging_data_directory: Path) -> pd.DataFrame:
     from clinica.converters.study_models import StudyName, bids_id_factory
 
@@ -159,25 +207,99 @@ def read_imaging_data(imaging_data_directory: Path) -> pd.DataFrame:
     return df_source
 
 
-def _identify_modality(source_path: Path) -> str:
-    try:
-        return source_path.name.split(".")[0].split("_")[-1]
-    except Exception:
-        return "nan"
+def _filter_to_imaging_subjects(
+    df: pd.DataFrame, imaging_subjects: pd.Series
+) -> pd.DataFrame:
+    """Keep only rows for subjects present in the imaging data."""
+    return df.merge(imaging_subjects, how="inner", on="Subject").drop_duplicates()
 
 
-def _identify_runs(source_path: Path) -> str:
-    import re
+def _get_baseline_clinical(
+    df_clinical: pd.DataFrame, imaging_subjects: pd.Series
+) -> pd.DataFrame:
+    """Filter clinical data to the baseline visit (d0000) for imaging subjects only."""
+    return _filter_to_imaging_subjects(
+        df_clinical[df_clinical.session_id == "d0000"], imaging_subjects
+    )
 
-    try:
-        return re.search(r"run-\d+", str(source_path))[0]
-    except Exception:
-        return "run-01"
+
+def _add_demo_and_age_at_scan(
+    df_source: pd.DataFrame, df_demo: pd.DataFrame
+) -> pd.DataFrame:
+    """Merge demographics into imaging data and compute age at each scan."""
+    return df_source.merge(
+        df_demo[["Subject", "ageAtEntry", "apoe"]], how="inner", on="Subject"
+    ).assign(
+        age=lambda df: df["ageAtEntry"] + df["Date"].str[1:].astype("float") / 365.25
+    )
 
 
-def _find_imaging_data(path_to_source_data: Path) -> Iterable[Path]:
-    for image in path_to_source_data.rglob("*.nii.gz"):
-        yield image.relative_to(path_to_source_data)
+def _add_mri_scanner_metadata(
+    df_source: pd.DataFrame, df_mri: pd.DataFrame
+) -> pd.DataFrame:
+    """Left-join MRI scanner metadata (manufacturer, model, field strength) onto imaging sessions."""
+    mri_scanner = df_mri[
+        ["label", "Manufacturer", "ManufacturersModelName", "MagneticFieldStrength"]
+    ].drop_duplicates(subset=["label"])
+    return df_source.merge(mri_scanner, how="left", left_on="path", right_on="label")
+
+
+def _merge_baseline_data(
+    df_subject_small: pd.DataFrame, df_clinical_small: pd.DataFrame
+) -> pd.DataFrame:
+    """Combine subject-level demographics with baseline clinical scores."""
+    return df_subject_small.merge(df_clinical_small, how="inner", on="Subject").assign(
+        participant_id=lambda df: "sub-" + df.Subject
+    )
+
+
+def _days_to_session_bin(days: pd.Series) -> pd.Series:
+    """Convert a Series of days-from-entry to 6-month BIDS session bin integers."""
+    return round(days / (365.25 / 2)) * 6
+
+
+def _compute_session_bins(df_source: pd.DataFrame) -> pd.DataFrame:
+    """Convert image acquisition days to 6-month BIDS session bins (ses-MXXX)."""
+    return df_source.assign(
+        session=lambda df: _days_to_session_bin(df["Date"].str[1:].astype("int"))
+    ).assign(ses=lambda df: df.session.apply(lambda x: f"ses-M{int(x):03d}"))
+
+
+def _map_modality_to_bids(df_source: pd.DataFrame) -> pd.DataFrame:
+    """Expand the modality string into BIDS datatype, suffix, and tracer label columns."""
+    return df_source.join(df_source.modality.map(_MODALITY_TO_BIDS).apply(pd.Series))
+
+
+def _build_bids_filenames(df_source: pd.DataFrame) -> pd.DataFrame:
+    """Construct the BIDS-relative filename for each scan."""
+
+    def _make_filename(x) -> str:
+        trc = (
+            f"_trc-{x.trc_label}"
+            if "trc_label" in x.index and pd.notna(x.trc_label)
+            else ""
+        )
+        return (
+            f"{x.participant_id}/{x.ses}/{x.datatype}/"
+            f"{x.participant_id}_{x.ses}{trc}_{x.run_number}_{x.suffix}.nii.gz"
+        )
+
+    return df_source.assign(filename=lambda df: df.apply(_make_filename, axis=1))
+
+
+def _merge_clinical_scores(
+    df_source: pd.DataFrame, df_clinical: pd.DataFrame
+) -> pd.DataFrame:
+    """Bin clinical visits into session bins and merge scores onto imaging sessions."""
+    df_clinical = (
+        df_clinical.merge(df_source["Subject"], how="inner", on="Subject")
+        .assign(session=lambda df: _days_to_session_bin(df["days_to_visit"]))
+        .drop_duplicates()
+        .set_index(["Subject", "session_id"])
+    )
+    return df_source.merge(
+        df_clinical[_CLINICAL_SCORE_COLUMNS], how="left", on="session"
+    )
 
 
 def intersect_data(
@@ -186,112 +308,16 @@ def intersect_data(
     df_clinical = dict_df["clinical"]
     df_demo = dict_df["demo"]
 
-    # Baseline visit (d0000) per subject.
-    df_clinical_small = df_clinical[df_clinical.session_id == "d0000"]
-    df_clinical_small = df_clinical_small.merge(
-        df_source["Subject"], how="inner", on="Subject"
-    ).drop_duplicates()
-
-    # Age at entry and APOE come from demographics (one row per subject).
-    df_source = df_source.merge(
-        df_demo[["Subject", "ageAtEntry", "apoe"]], how="inner", on="Subject"
-    )
-    df_source = df_source.assign(
-        age=lambda df: df["ageAtEntry"] + df["Date"].str[1:].astype("float") / 365.25
-    )
-
-    # Subject-level demographics filtered to subjects present in the imaging data.
-    df_subject_small = df_demo.merge(
-        df_source["Subject"], how="inner", on="Subject"
-    ).drop_duplicates()
-
-    # Add MRI acquisition metadata (scanner manufacturer) to imaging sessions.
-    mri_scanner = dict_df["mri"][
-        ["label", "Manufacturer", "ManufacturersModelName", "MagneticFieldStrength"]
-    ].drop_duplicates(subset=["label"])
-    df_source = df_source.merge(
-        mri_scanner, how="left", left_on="path", right_on="label"
-    )
-
-    # Merge demographics baseline + clinical baseline for the participants file.
-    df_small = df_subject_small.merge(df_clinical_small, how="inner", on="Subject")
-    df_small = df_small.assign(participant_id=lambda df: "sub-" + df.Subject)
-
-    # Convert imaging session date (dXXXX days) to a 6-month BIDS session bin.
-    df_source = df_source.assign(
-        session=lambda df: (round(df["Date"].str[1:].astype("int") / (365.25 / 2)) * 6)
-    )
-    df_source = df_source.assign(
-        ses=lambda df: df.session.apply(lambda x: f"ses-M{str(int(x)).zfill(3)}")
-    )
-    df_source = df_source.join(
-        df_source.modality.map(
-            {
-                "dwi_MR": {"datatype": "dwi", "suffix": "dwi"},
-                "T1w_MR": {"datatype": "anat", "suffix": "T1w"},
-                "T2star_MR": {"datatype": "anat", "suffix": "T2starw"},
-                "FLAIR_MR": {"datatype": "anat", "suffix": "FLAIR"},
-                "pet_FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
-                "pet_PIB": {"datatype": "pet", "suffix": "pet", "trc_label": "11CPIB"},
-                "pet_AV45": {
-                    "datatype": "pet",
-                    "suffix": "pet",
-                    "trc_label": "18FAV45",
-                },
-                "pet_AV1451": {
-                    "datatype": "pet",
-                    "suffix": "pet",
-                    "trc_label": "18FAV1451",
-                },
-            }
-        ).apply(pd.Series)
-    )
-    if "trc_label" in df_source.columns:
-        df_source = df_source.assign(
-            filename=lambda df: df.apply(
-                lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
-                f"{x.participant_id}_{x.ses}"
-                f"{'_trc-' + x.trc_label if pd.notna(x.trc_label) else ''}"
-                f"_{x.run_number}_{x.suffix}.nii.gz",
-                axis=1,
-            )
-        )
-    else:
-        df_source = df_source.assign(
-            filename=lambda df: df.apply(
-                lambda x: f"{x.participant_id}/{x.ses}/{x.datatype}/"
-                f"{x.participant_id}_{x.ses}"
-                f"_{x.run_number}_{x.suffix}.nii.gz",
-                axis=1,
-            )
-        )
-
-    # Convert clinical visit days to session bins and merge onto imaging sessions.
-    df_clinical = df_clinical.merge(df_source["Subject"], how="inner", on="Subject")
-    df_clinical = df_clinical.assign(
-        session=lambda df: round(df["days_to_visit"] / (365.25 / 2)) * 6
-    )
-    df_clinical = df_clinical.drop_duplicates().set_index(["Subject", "session_id"])
-    df_source = df_source.merge(
-        df_clinical[
-            [
-                "session",
-                "mmse",
-                "cdr",
-                "commun",
-                "dx1",
-                "homehobb",
-                "judgment",
-                "memory",
-                "orient",
-                "perscare",
-                "sumbox",
-            ]
-        ],
-        how="left",
-        on="session",
-    )
-    return df_source, df_small
+    df_clinical_small = _get_baseline_clinical(df_clinical, df_source["Subject"])
+    df_source = _add_demo_and_age_at_scan(df_source, df_demo)
+    df_subject_small = _filter_to_imaging_subjects(df_demo, df_source["Subject"])
+    df_source = _add_mri_scanner_metadata(df_source, dict_df["mri"])
+    df_baseline = _merge_baseline_data(df_subject_small, df_clinical_small)
+    df_source = _compute_session_bins(df_source)
+    df_source = _map_modality_to_bids(df_source)
+    df_source = _build_bids_filenames(df_source)
+    df_source = _merge_clinical_scores(df_source, df_clinical)
+    return df_source, df_baseline
 
 
 def dataset_to_bids(
