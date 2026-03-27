@@ -207,7 +207,7 @@ def intersect_data(
 
     # Add MRI acquisition metadata (scanner manufacturer) to imaging sessions.
     mri_scanner = dict_df["mri"][
-        ["label", "Manufacturer", "ManufacturersModelName"]
+        ["label", "Manufacturer", "ManufacturersModelName", "MagneticFieldStrength"]
     ].drop_duplicates(subset=["label"])
     df_source = df_source.merge(
         mri_scanner, how="left", left_on="path", right_on="label"
