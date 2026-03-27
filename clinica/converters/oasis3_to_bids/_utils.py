@@ -26,53 +26,94 @@ _CLINICAL_FILES = {
 _CLINICAL_MERGE_KEYS = ["OASISID", "days_to_visit", "age at visit"]
 
 
-def read_clinical_data(clinical_data_directory: Path) -> dict[str, pd.DataFrame]:
-    """Read clinical data from the OASIS3_data_files FTP directory structure."""
-    cprint(f"Reading clinical data from {clinical_data_directory}", lvl="info")
-    csv_files = list(clinical_data_directory.rglob("*.csv"))
+def _build_file_map(data_directory: Path) -> dict[str, pd.DataFrame]:
+    """Recursively find all CSVs under data_directory and return {stem: DataFrame}."""
+    csv_files = list(data_directory.rglob("*.csv"))
     if not csv_files:
-        cprint(f"No CSV files found under {clinical_data_directory}.", lvl="error")
-    file_map: dict[str, pd.DataFrame] = {}
+        cprint(f"No CSV files found under {data_directory}.", lvl="error")
+    file_map = {}
     for f in csv_files:
         cprint(f"  Loading {f.name}", lvl="debug")
         file_map[f.stem] = pd.read_csv(f)
+    return file_map
 
-    dict_df: dict[str, pd.DataFrame] = {}
-    for category, filenames in _CLINICAL_FILES.items():
-        if category == "pet":
-            # Concatenate all PET files (different tracers → add rows).
-            dfs = [file_map[name] for name in filenames if name in file_map]
-            if dfs:
-                dict_df["pet"] = pd.concat(dfs, ignore_index=True)
-        elif category == "clinical":
-            # Merge UDS sub-files side-by-side on shared visit keys.
-            # Normalise days_to_visit to int first: UDSb1 stores it as a
-            # zero-padded string (e.g. "0339") while UDSb4 stores it as int.
-            dfs = []
-            for name in filenames:
-                if name in file_map:
-                    df = file_map[name].copy()
-                    df["days_to_visit"] = (
-                        pd.to_numeric(df["days_to_visit"], errors="coerce")
-                        .fillna(0)
-                        .astype(int)
-                    )
-                    dfs.append(df)
-            if len(dfs) >= 2:
-                merged = dfs[0]
-                for df in dfs[1:]:
-                    merged = merged.merge(df, on=_CLINICAL_MERGE_KEYS, how="outer")
-                dict_df["clinical"] = merged
-            elif len(dfs) == 1:
-                dict_df["clinical"] = dfs[0]
-        else:
-            # "mri" and "demo": single file per category.
-            for name in filenames:
-                if name in file_map:
-                    dict_df[category] = file_map[name]
-                    break
 
-    return dict_df
+def _read_clinical_data(
+    file_map: dict[str, pd.DataFrame], filenames: list[str]
+) -> pd.DataFrame:
+    dfs = [file_map[name].copy() for name in filenames if name in file_map]
+    if not dfs:
+        raise FileNotFoundError(f"None of {filenames} found in data directory.")
+
+    df_clinical = _merge_clinical_df(dfs) if len(dfs) > 1 else dfs[0]
+    # Rename new-schema columns to the names expected by downstream functions.
+    df_clinical = df_clinical.rename(
+        columns={
+            "OASISID": "Subject",
+            "MMSE": "mmse",
+            "CDRTOT": "cdr",
+            "CDRSUM": "sumbox",
+        }
+    )
+    # Derive a d0000-style session_id from days_to_visit so we can identify the
+    # baseline visit and compute session bins consistently with the imaging data.
+    df_clinical = df_clinical.assign(
+        session_id=lambda df: "d" + df["days_to_visit"].astype(str).str.zfill(4)
+    )
+    return df_clinical
+
+
+def _read_pet_data(
+    file_map: dict[str, pd.DataFrame], filenames: list[str]
+) -> pd.DataFrame:
+    dfs = [file_map[name] for name in filenames if name in file_map]
+    if not dfs:
+        raise FileNotFoundError(f"None of {filenames} found in data directory.")
+    return pd.concat(dfs, ignore_index=True)
+
+
+def _read_demo_data(file_map: dict[str, pd.DataFrame], filename: str) -> pd.DataFrame:
+    if filename not in file_map:
+        raise FileNotFoundError(f"{filename} not found in data directory.")
+    return (
+        file_map[filename]
+        .copy()
+        .rename(
+            columns={
+                "OASISID": "Subject",
+                "AgeatEntry": "ageAtEntry",
+                "GENDER": "M/F",
+                "HAND": "Hand",
+                "EDUC": "Education",
+                "APOE": "apoe",
+            }
+        )
+    )
+
+
+def _read_mri_data(file_map: dict[str, pd.DataFrame], filename: str) -> pd.DataFrame:
+    if filename not in file_map:
+        raise FileNotFoundError(f"{filename} not found in data directory.")
+    return file_map[filename]
+
+
+def _merge_clinical_df(list_dfs: list) -> pd.DataFrame:
+    merged_df = list_dfs[0]
+    for df in list_dfs[1:]:
+        merged_df = merged_df.merge(df, on=_CLINICAL_MERGE_KEYS, how="outer")
+    return merged_df
+
+
+def read_clinical_data(clinical_data_directory: Path) -> dict[str, pd.DataFrame]:
+    """Read clinical data from the OASIS3_data_files FTP directory structure."""
+    cprint(f"Reading clinical data from {clinical_data_directory}", lvl="info")
+    file_map = _build_file_map(clinical_data_directory)
+    return {
+        "pet": _read_pet_data(file_map, _CLINICAL_FILES["pet"]),
+        "clinical": _read_clinical_data(file_map, _CLINICAL_FILES["clinical"]),
+        "mri": _read_mri_data(file_map, _CLINICAL_FILES["mri"][0]),
+        "demo": _read_demo_data(file_map, _CLINICAL_FILES["demo"][0]),
+    }
 
 
 def read_imaging_data(imaging_data_directory: Path) -> pd.DataFrame:
@@ -142,34 +183,8 @@ def _find_imaging_data(path_to_source_data: Path) -> Iterable[Path]:
 def intersect_data(
     df_source: pd.DataFrame, dict_df: dict
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    # Rename new-schema columns to the names expected by downstream functions.
-    df_clinical = dict_df["clinical"].rename(
-        columns={
-            "OASISID": "Subject",
-            "MMSE": "mmse",
-            "CDRTOT": "cdr",
-            "CDRSUM": "sumbox",
-        }
-    )
-    df_demo = dict_df["demo"].rename(
-        columns={
-            "OASISID": "Subject",
-            "AgeatEntry": "ageAtEntry",
-            "GENDER": "M/F",
-            "HAND": "Hand",
-            "EDUC": "Education",
-            "APOE": "apoe",
-        }
-    )
-
-    # Derive a d0000-style session_id from days_to_visit so we can identify the
-    # baseline visit and compute session bins consistently with the imaging data.
-    df_clinical = df_clinical.assign(
-        session_id=lambda df: pd.to_numeric(df["days_to_visit"], errors="coerce")
-        .fillna(0)
-        .astype(int)
-        .apply(lambda x: f"d{x:04d}")
-    )
+    df_clinical = dict_df["clinical"]
+    df_demo = dict_df["demo"]
 
     # Baseline visit (d0000) per subject.
     df_clinical_small = df_clinical[df_clinical.session_id == "d0000"]
