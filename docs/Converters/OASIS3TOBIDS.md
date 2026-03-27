@@ -25,67 +25,30 @@ If you installed the core of Clinica, this converter needs no further dependenci
 
 ## Downloading OASIS-3
 
-### Clinical data
-
 The OASIS-3 to BIDS converter requires the user to have downloaded the OASIS-3 (also called *Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease*) imaging and clinical data.
 
-To do so, visit the [OASIS website](https://sites.wustl.edu/oasisbrains/), click on `DATASETS` then `OASIS-3`. For the first access, you have to scroll down to click on `Apply To Access OASIS Data` in the bottom of the next "Data Use Agreement" section and follow the procedure. Then, you can download the data via XNAT (if you click on `Browse Data`).
+To do so, visit the [OASIS website](https://sites.wustl.edu/oasisbrains/), click on 
+`DATASETS` then `OASIS-3`. For the first access, you have to scroll down to click on 
+`Apply To Access OASIS Data` in the bottom of the next "Data Use Agreement" section 
+and follow the procedure. Then, you can download the data via the OASIS3 project 
+repository in NITRC.
 
-The data needs to be formatted before downloading by following the step-by-step procedure below.
 
-1. From the menu on the right of the "Subjects" data table, click on the "Edit Columns" option.
-
-![](../img/OASIS3_download/edit_columns.png)
-
-2. Select "Education (Subject)" from the "Available Fields".
-
-![](../img/OASIS3_download/select_education.png)
-
-3. Click on the arrow to send it to the left, to "Current Fields".
-
-![](../img/OASIS3_download/add_education.png)
-
-4. From the menu on the right of the data table, load the "MR sessions" table.
-
-![](../img/OASIS3_download/add_mr_sessions.png)
-
-5. From the menu on the right of the loaded "MR Sessions" data table, click on the "Edit Columns" option, select "Age (MR Sessions)" from the "Available Fields" and click on the arrow to send it to the left, to "Current Fields".
-
-![](../img/OASIS3_download/add_age.png)
-
-6. Select "Age (MR Sessions)" from the "Current Fields" and click on the arrow to send it to the right, to "Available Fields".
-
-![](../img/OASIS3_download/remove_age.png)
-
-7. Check that the Age column in the "MR Sessions" table contains decimal values and not integers.
-
-![](../img/OASIS3_download/check_age.png)
-
-8. From the menu, load the table "ADRC Clinical Data" as well as "PETs" and "PUPs".
-
-9. In the options, export a "Spreadsheet" of the five tables "Subjects, "MR Sessions", "ADRC Clinical Data", "PETs" and "PUPs".
-
-10. Put the spreadsheets in a folder.
-
-11. 
-
-!!! note
-    You do not have to modify the original folder name before using the converter.
-
-!!! warning
-    We do not currently support the conversion of OASIS-2.
-    
 ### Imaging data
 
 To download the images of the OASIS-3 dataset:
 
-1. From the page on which you were to download the clinical date, click on "Download Images" button. You will have a download interface with different options, such as shown below.
+1. Access the [XNAT Imaging Download](https://www.nitrc.org/ir/app/action/ProjectDownloadAction/project/OASIS3)  
+   page after logging in with your OASIS3-accepted NITRC account. You will have a 
+   download interface with different options, such as shown below.
 
 <img width="959" alt="Screenshot 2021-07-15 at 10 48 45" src="https://user-images.githubusercontent.com/85217698/125761542-bfcfb824-af4f-4e0d-b597-510418986313.png">
 
-2. In the "Select Sessions" part, select the sessions you want to work with.
- 
-3. For the "Select Image Data" part:
+2. In the "Select Sessions" part, select the sessions you want to work with. 
+3. **MAKE SURE TO SELECT THE ``OASIS3_data_files`` SESSION, WHICH CONTAINS THE CLINICAL 
+   DATA NECESSARY FOR THE CONVERSION.** 
+
+4. For the "Select Image Data" part:
 
     a. For the "Scan Format" select *both* BIDS and NIFTI. Otherwise, you will be missing data.
     
@@ -96,8 +59,36 @@ To download the images of the OASIS-3 dataset:
     d. For the "Assessments", do not select anything.
 
     e. For the "Download Data", select "Simplify downloaded archive structure" and not the other options.
-    
-4. Click submit to download. We advise that you use the XNAT Desktop Client which will be more efficient than download through your web browser.
+
+5. Click submit to download. We advise that you use the XNAT Desktop Client which will 
+be more efficient than download through your web browser.
+6. After download completion, ensure that the ``OASIS3_data_files`` files are 
+   found in a different directory, which will be your ``CLINICAL_DATA_DIRECTORY``.
+
+#### TAU PET Imaging
+Historically, the Tau PET scans for the OASIS3 longitudinal belonged to a different 
+project, which required additional data request. Nowadays, data usage is granted 
+together with the regular OASIS3 project.
+
+To download Tau PET scans, one must follow the same steps described above (no need 
+to re-download the ``OASIS3_data_files``), on the [OASIS3_AV1451](https://www.nitrc.org/ir/app/action/ProjectDownloadAction/project/OASIS3_AV1451) 
+and [OASIS3_AV1451L]() download pages.
+
+You can access the Tau PET projects directly from the OASIS3 Imaging download window 
+by clicking one of the highlighted elements in the following screenshot:
+![OASIS3_TAU.PNG](../img/OASIS3_download/OASIS3_TAU.PNG)
+
+There, click on ``Download Images``
+![OASIS3_download.PNG](../img/OASIS3_download/OASIS3_download.PNG)
+
+And repeat steps 1 to 5.
+
+!!! note
+    You do not have to modify the original folder name before using the converter.
+
+!!! warning
+    We do not currently support the conversion of OASIS-2.
+
 
 ## Supported modalities
 
