@@ -31,6 +31,7 @@ _MODALITY_TO_BIDS = {
     "T1w_MR": {"datatype": "anat", "suffix": "T1w"},
     "T2star_MR": {"datatype": "anat", "suffix": "T2starw"},
     "FLAIR_MR": {"datatype": "anat", "suffix": "FLAIR"},
+    "bold_MR": {"datatype": "func", "suffix": "bold"},
     "pet_FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
     "pet_PIB": {"datatype": "pet", "suffix": "pet", "trc_label": "11CPIB"},
     "pet_AV45": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV45"},
