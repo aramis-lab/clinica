@@ -269,10 +269,7 @@ def intersect_data(
     # Convert clinical visit days to session bins and merge onto imaging sessions.
     df_clinical = df_clinical.merge(df_source["Subject"], how="inner", on="Subject")
     df_clinical = df_clinical.assign(
-        session=lambda df: round(
-            pd.to_numeric(df["days_to_visit"], errors="coerce").fillna(0) / (364.25 / 2)
-        )
-        * 6
+        session=lambda df: round(df["days_to_visit"] / (364.25 / 2)) * 6
     )
     df_clinical = df_clinical.drop_duplicates().set_index(["Subject", "session_id"])
     df_source = df_source.merge(
@@ -424,18 +421,17 @@ def write_bids(
             with fs.open(sessions_filepath, "w") as sessions_file:
                 write_to_tsv(sessions_group, sessions_file)
 
-    n_scans = len(scans)
-    cprint(f"Installing {n_scans} scan(s) into BIDS dataset at {to}", lvl="info")
-    for i, (filename, metadata) in enumerate(scans.iterrows(), start=1):
+    cprint(f"Installing {len(scans)} scan(s) into BIDS dataset at {to}", lvl="info")
+    for i, (filename, metadata) in enumerate(scans.iterrows()):
         path = dataset_directory / metadata.source_dir
-        suffix = _extract_suffix_from_filename(str(filename))
-        if suffix != "nan":
+        if _extract_suffix_from_filename(str(filename)) != "nan":
             # Extract subject and session from the BIDS filename for user-facing log.
             parts = Path(filename).parts  # e.g. sub-OAS30001/ses-M000/anat/...
             subject = parts[0] if len(parts) > 0 else "unknown"
             session = parts[1] if len(parts) > 1 else "unknown"
             cprint(
-                f"[{i}/{n_scans}] Installing {subject} / {session} : {Path(filename).name}",
+                f"[{i+1}/{len(scans)}] Installing {subject} / {session} :"
+                f" {Path(filename).name}",
                 lvl="info",
             )
             _install_bids(sourcedata_dir=path, bids_filename=to / filename)
