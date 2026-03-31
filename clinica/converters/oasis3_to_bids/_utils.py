@@ -34,6 +34,7 @@ _MODALITY_TO_BIDS = {
     "pet_FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
     "pet_PIB": {"datatype": "pet", "suffix": "pet", "trc_label": "11CPIB"},
     "pet_AV45": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV45"},
+    "pet_AV1451": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV1451"},
 }
 
 # Clinical Score column names
