@@ -222,12 +222,12 @@ def _get_baseline_clinical(
     )
 
 
-def _add_demo_and_age_at_scan(
+def _add_age_at_entry_and_age_at_scan(
     df_source: pd.DataFrame, df_demo: pd.DataFrame
 ) -> pd.DataFrame:
     """Merge demographics into imaging data and compute age at each scan."""
     return df_source.merge(
-        df_demo[["Subject", "ageAtEntry", "apoe"]], how="inner", on="Subject"
+        df_demo[["Subject", "ageAtEntry"]], how="inner", on="Subject"
     ).assign(
         age=lambda df: df["ageAtEntry"] + df["Date"].str[1:].astype("float") / 365.25
     )
@@ -308,7 +308,7 @@ def intersect_data(
     df_demo = dict_df["demo"]
 
     df_clinical_small = _get_baseline_clinical(df_clinical, df_source["Subject"])
-    df_source = _add_demo_and_age_at_scan(df_source, df_demo)
+    df_source = _add_age_at_entry_and_age_at_scan(df_source, df_demo)
     df_subject_small = _filter_to_imaging_subjects(df_demo, df_source["Subject"])
     df_source = _add_mri_scanner_metadata(df_source, dict_df["mri"])
     df_baseline = _merge_baseline_data(df_subject_small, df_clinical_small)
