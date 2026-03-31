@@ -16,7 +16,7 @@ clinical_data_directory = click.option(
 df6 = click.option(
     "-df6",
     is_flag=True,
-    help="Indicate the usage of DF6 clinical data.",
+    help="Specify that DF6 clinical data should be used. If not set, DF7 clinical data are used by default.",
 )
 
 gif = click.option("-gif", is_flag=True, help="Add values from gif to session.tsv.")

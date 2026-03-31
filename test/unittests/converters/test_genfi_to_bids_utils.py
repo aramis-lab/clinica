@@ -350,6 +350,52 @@ def test_write_scans_and_niftis(tmp_path, mocker):
 
 
 @pytest.mark.parametrize(
+    "filename, pattern",
+    [
+        ("FINAL_IMAGING.xlsx", "FINAL_IMAGING.xlsx"),
+        ("FINAL_DEMOGRAPHICS.xlsx", "FINAL_DEMOGRAPHICS.xlsx"),
+    ],
+)
+def test_check_file_success(tmp_path, filename, pattern):
+    from clinica.converters.genfi_to_bids._utils import _check_file
+
+    file_path = tmp_path / filename
+    file_path.touch()
+
+    out = _check_file(tmp_path, pattern)
+
+    assert out == file_path
+
+
+def test_check_file_no_clinical_data(tmp_path):
+    from clinica.converters.genfi_to_bids._utils import _check_file
+
+    pattern = "FINAL_CLINICAL.xlsx"
+
+    with pytest.raises(
+        FileNotFoundError,
+        match=f"'{pattern}' clinical data not found or incomplete. Aborting",
+    ):
+        _check_file(tmp_path, pattern)
+
+
+def test_check_file_too_many_clinical_data(tmp_path):
+    from clinica.converters.genfi_to_bids._utils import _check_file
+
+    pattern = "FINAL_CLINICAL_*.xlsx"
+    (tmp_path / "FINAL_CLINICAL_1.xlsx").touch()
+    (tmp_path / "FINAL_CLINICAL_2.xlsx").touch()
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape(
+            f"Too many data files found matching '{pattern}', expected one. Aborting."
+        ),
+    ):
+        _check_file(tmp_path, pattern)
+
+
+@pytest.mark.parametrize(
     "filename",
     [
         "FINAL_IMAGING.xlsx",
@@ -415,7 +461,8 @@ def test_merge_and_coalesce():
     assert_frame_equal(result, expected_df, check_like=True, check_dtype=False)
 
 
-def test_complete_clinical_data():
+@pytest.mark.parametrize("df6", [False, True])
+def test_complete_clinical_data(df6):
     from clinica.converters.genfi_to_bids._utils import _complete_clinical_data
 
     df_imaging = pd.DataFrame(
@@ -429,12 +476,15 @@ def test_complete_clinical_data():
         }
     )
 
+    # Introduce an invalid visit only relevant when df6=True
+    visit_values = [1, "01-01-2026"] if df6 else [1, 1]
+
     df_clinical_list = [
         pd.DataFrame(
             {
                 "blinded_code": ["C9ORF001", "C9ORF002"],
                 "blinded_site": ["GENFI_AA", "GENFI_AA"],
-                "visit": [1, 1],
+                "visit": visit_values,
                 "gender": [0, 1],
             }
         ),
@@ -473,13 +523,16 @@ def test_complete_clinical_data():
         ),
     ]
 
+    # Expected depends on df6 behavior
+    expected_gender = [0, pd.NA] if df6 else [0, 1]
+
     expected = pd.DataFrame(
         {
             "blinded_code": ["C9ORF001", "C9ORF002"],
             "blinded_site": ["GENFI_AA", "GENFI_AA"],
             "visit": [1, 1],
             "scan_for_qc": [1, 1],
-            "gender": [0, 1],
+            "gender": expected_gender,
             "diagnosis": ["bvFTD", "ALS"],
             "plasma_nfl": [6, 5],
             "ds_f_score": [8, 11],
@@ -488,7 +541,7 @@ def test_complete_clinical_data():
     )
 
     result = _complete_clinical_data(
-        df_imaging=df_imaging, df_clinical_list=df_clinical_list, df6=False
+        df_imaging=df_imaging, df_clinical_list=df_clinical_list, df6=df6
     )
 
     assert_frame_equal(result, expected, check_like=True, check_dtype=False)

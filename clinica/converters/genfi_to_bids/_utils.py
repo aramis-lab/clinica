@@ -123,10 +123,7 @@ def _handle_manufacturer(x: str) -> str:
 
 
 def _check_file(directory: Path, pattern: str) -> Path:
-    try:
-        data_file = [f for f in directory.glob(pattern)]
-    except StopIteration:
-        raise FileNotFoundError(f"'{pattern}' clinical data file not found.")
+    data_file = [f for f in directory.glob(pattern)]
     if len(data_file) == 0:
         raise FileNotFoundError(
             f"'{pattern}' clinical data not found or incomplete. Aborting"
@@ -138,7 +135,9 @@ def _check_file(directory: Path, pattern: str) -> Path:
     return data_file[0]
 
 
-def parse_clinical_data(clinical_data_directory: Path, df6: bool) -> pd.DataFrame:
+def parse_clinical_data(
+    clinical_data_directory: Path, df6: bool = False
+) -> pd.DataFrame:
     cprint("Looking for clinical data...", lvl="info")
 
     patterns = (
@@ -251,8 +250,8 @@ def _merge_and_coalesce(
 
 def _complete_clinical_data(
     df_imaging: pd.DataFrame,
-    df_clinical_list: List[pd.DataFrame],
-    df6: bool,
+    df_clinical_list: list[pd.DataFrame],
+    df6: bool = False,
 ) -> pd.DataFrame:
     """Merges the different clincal dataframes into one.
 
@@ -261,11 +260,11 @@ def _complete_clinical_data(
     df_imaging: pd.DataFrame
         Dataframe containing the imaging data
 
-    df_clinical_list: List[pd.DataFrame]
+    df_clinical_list: list[pd.DataFrame]
         List of dataframes containing the remaining clinical data
 
     df6: bool
-        Boolean indicating if DF6 clinical data are used
+        Boolean indicating if DF6 clinical data are used. By default set to False
 
     Returns
     -------
@@ -277,7 +276,7 @@ def _complete_clinical_data(
     df_clinical_complete = df_imaging.copy()
 
     # A non coherent datetime value is found in the 'visit' column of the DEMOGRAPHICS clinical data in DF6
-    # The column is thus casted into Int64 and the associated problematic row is removed
+    # The column is thus cast into Int64 and the associated problematic row is removed
     if df6:
         df_clinical_list[0] = df_clinical_list[0][
             pd.to_numeric(df_clinical_list[0]["visit"], errors="coerce").notna()
