@@ -114,6 +114,7 @@ def _read_demo_data(file_map: dict[str, pd.DataFrame], filename: str) -> pd.Data
                 "APOE": "apoe",
             }
         )
+        .replace({"M/F": {1: "M", 2: "F"}})
     )
 
 
