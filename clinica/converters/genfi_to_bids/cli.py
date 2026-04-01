@@ -13,12 +13,6 @@ clinical_data_directory = click.option(
     help="Path to the clinical data directory.",
 )
 
-df6 = click.option(
-    "-df6",
-    is_flag=True,
-    help="Specify that DF6 clinical data should be used. If not set, DF7 clinical data are used by default.",
-)
-
 gif = click.option("-gif", is_flag=True, help="Add values from gif to session.tsv.")
 
 full = click.option(
@@ -40,7 +34,6 @@ clinical_data_txt = click.option(
 @cli_param.dataset_directory
 @cli_param.bids_directory
 @clinical_data_directory
-@df6
 @gif
 @full
 @clinical_data_txt
@@ -48,7 +41,6 @@ def cli(
     dataset_directory: PathLike,
     bids_directory: PathLike,
     clinical_data_directory: Optional[PathLike] = None,
-    df6: Optional[bool] = False,
     gif: Optional[bool] = False,
     full: Optional[bool] = False,
     clinical_data_txt: Optional[PathLike] = None,
@@ -64,7 +56,6 @@ def cli(
         dataset_directory,
         bids_directory,
         clinical_data_directory,
-        df6=df6,
         gif=gif,
         full=full,
         path_to_clinical_txt=clinical_data_txt,

@@ -7,6 +7,8 @@ import pytest
 from fsspec.implementations.local import LocalFileSystem
 from pandas.testing import assert_frame_equal
 
+from clinica.converters.genfi_to_bids._utils import GENFIDataVersion
+
 
 @pytest.mark.parametrize(
     "input,expected",
@@ -459,6 +461,72 @@ def test_merge_and_coalesce():
     result = _merge_and_coalesce(left_df, right_df, on=on)
 
     assert_frame_equal(result, expected_df, check_like=True, check_dtype=False)
+
+
+@pytest.mark.parametrize(
+    "filenames,expected_version",
+    [
+        (
+            [
+                "FINAL_IMAGING_DF6.xlsx",
+                "FINAL_DEMOGRAPHICS_DF6.xlsx",
+                "FINAL_CLINICAL_DF6.xlsx",
+                "FINAL_BIOSAMPLES_MASTER.xlsx",
+            ],
+            GENFIDataVersion("DF6"),
+        ),
+        (
+            [
+                "FINAL_IMAGING_DF7.xlsx",
+                "FINAL_DEMOGRAPHICS_DF7.xlsx",
+                "FINAL_CLINICAL_DF7.xlsx",
+                "FINAL_GENETICS_DF7.xlsx",
+            ],
+            GENFIDataVersion("DF7"),
+        ),
+    ],
+)
+def test_check_file_and_version_success(tmp_path, filenames, expected_version):
+    from clinica.converters.genfi_to_bids._utils import _check_file_and_version
+
+    for filename in filenames:
+        path = tmp_path / filename
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+
+    result = _check_file_and_version(tmp_path)
+
+    assert result == expected_version
+
+
+def test_check_file_and_version_no_matching_file(tmp_path):
+    from clinica.converters.genfi_to_bids._utils import _check_file_and_version
+
+    with pytest.raises(
+        FileNotFoundError, match="clinical data not found or incomplete"
+    ):
+        _check_file_and_version(tmp_path)
+
+
+def test_check_file_and_version_multiple_clinical_data(tmp_path):
+    from clinica.converters.genfi_to_bids._utils import _check_file_and_version
+
+    filenames = [
+        "FINAL_IMAGING_DF6.xlsx",
+        "FINAL_DEMOGRAPHICS_DF7.xlsx",
+        "FINAL_CLINICAL_DF6.xlsx",
+        "FINAL_CLINICAL_DF7.xlsx",
+    ]
+
+    for filename in filenames:
+        path = tmp_path / filename
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+
+    with pytest.raises(
+        FileNotFoundError, match="Clinical data of different versions found"
+    ):
+        _check_file_and_version(tmp_path)
 
 
 @pytest.mark.parametrize("df6", [False, True])
