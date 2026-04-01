@@ -29,7 +29,6 @@ def convert(
     from ._utils import (
         dataset_to_bids,
         intersect_data,
-        read_clinical_data,
         read_imaging_data,
         write_bids,
     )
