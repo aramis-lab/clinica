@@ -13,38 +13,6 @@ __all__ = [
 ]
 
 
-# Columns shared across the UDS clinical sub-files used to join visits.
-_CLINICAL_MERGE_KEYS = ["OASISID", "days_to_visit", "age at visit"]
-
-# Mapping from OASIS3 modality strings to BIDS datatype / suffix / tracer label.
-_MODALITY_TO_BIDS = {
-    "dwi_MR": {"datatype": "dwi", "suffix": "dwi"},
-    "T1w_MR": {"datatype": "anat", "suffix": "T1w"},
-    "bold_MR": {"datatype": "func", "suffix": "bold"},
-    "T2star_MR": {"datatype": "anat", "suffix": "T2starw"},
-    "FLAIR_MR": {"datatype": "anat", "suffix": "FLAIR"},
-    "pet_FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
-    "pet_PIB": {"datatype": "pet", "suffix": "pet", "trc_label": "11CPIB"},
-    "pet_AV45": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV45"},
-    "pet_AV1451": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV1451"},
-}
-
-# Clinical Score column names
-_CLINICAL_SCORE_COLUMNS = [
-    "session",
-    "mmse",
-    "cdr",
-    "commun",
-    "dx1",
-    "homehobb",
-    "judgment",
-    "memory",
-    "orient",
-    "perscare",
-    "sumbox",
-]
-
-
 def _find_csv_file_for_pattern(data_directory: Path, pattern: str) -> pd.DataFrame:
     csv_files = list(data_directory.rglob(pattern))
     if not csv_files:
@@ -122,7 +90,9 @@ def _read_mri_data(data_directory: Path) -> pd.DataFrame:
 def _merge_clinical_df(list_dfs: list) -> pd.DataFrame:
     merged_df = list_dfs[0]
     for df in list_dfs[1:]:
-        merged_df = merged_df.merge(df, on=_CLINICAL_MERGE_KEYS, how="outer")
+        merged_df = merged_df.merge(
+            df, on=["OASISID", "days_to_visit", "age at visit"], how="outer"
+        )
     return merged_df
 
 
@@ -250,6 +220,19 @@ def _compute_session_bins(df_source: pd.DataFrame) -> pd.DataFrame:
 
 def _map_modality_to_bids(df_source: pd.DataFrame) -> pd.DataFrame:
     """Expand the modality string into BIDS datatype, suffix, and tracer label columns."""
+    # Mapping from OASIS3 modality strings to BIDS datatype / suffix / tracer label.
+    _MODALITY_TO_BIDS = {
+        "dwi_MR": {"datatype": "dwi", "suffix": "dwi"},
+        "T1w_MR": {"datatype": "anat", "suffix": "T1w"},
+        "bold_MR": {"datatype": "func", "suffix": "bold"},
+        "T2star_MR": {"datatype": "anat", "suffix": "T2starw"},
+        "FLAIR_MR": {"datatype": "anat", "suffix": "FLAIR"},
+        "pet_FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
+        "pet_PIB": {"datatype": "pet", "suffix": "pet", "trc_label": "11CPIB"},
+        "pet_AV45": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV45"},
+        "pet_AV1451": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV1451"},
+    }
+
     return df_source.join(df_source.modality.map(_MODALITY_TO_BIDS).apply(pd.Series))
 
 
@@ -281,7 +264,21 @@ def _merge_clinical_scores(
         .set_index(["Subject", "session_id"])
     )
     return df_source.merge(
-        df_clinical[_CLINICAL_SCORE_COLUMNS], how="left", on="session"
+        df_clinical[
+            "session",
+            "mmse",
+            "cdr",
+            "commun",
+            "dx1",
+            "homehobb",
+            "judgment",
+            "memory",
+            "orient",
+            "perscare",
+            "sumbox",
+        ],
+        how="left",
+        on="session",
     )
 
 
