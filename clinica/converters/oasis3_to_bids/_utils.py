@@ -12,16 +12,18 @@ __all__ = [
     "write_bids",
 ]
 
+# TODO : UNIT TESTS
 
-def _find_csv_file_for_pattern(data_directory: Path, pattern: str) -> pd.DataFrame:
-    csv_files = list(data_directory.rglob(pattern))
+
+def _find_csv_with_filename(data_directory: Path, filename: str) -> pd.DataFrame:
+    csv_files = list(data_directory.rglob(f"*{filename}.csv"))
     if not csv_files:
         log_and_raise(
-            f"No CSV files found under {data_directory} for pattern {pattern}."
+            f"No CSV files found under {data_directory} for filename {filename}.",
+            FileNotFoundError,
         )
     if len(csv_files) > 1:
-        log_and_raise(f"More than one file for pattern {pattern}.")
-    # todo : maybe there is a function in converter utils that already does this
+        log_and_raise(f"More than one file for filename {filename}.", FileNotFoundError)
     return pd.read_csv(csv_files[0])
 
 
@@ -29,8 +31,8 @@ def _read_clinical_data(
     data_directory: Path,
 ) -> pd.DataFrame:
     dfs = [
-        _find_csv_file_for_pattern(data_directory, pattern)
-        for pattern in ("OASIS3_UDSb1_physical_eval", "OASIS3_UDSb4_cdr")
+        _find_csv_with_filename(data_directory, filename)
+        for filename in ("OASIS3_UDSb1_physical_eval*.csv", "OASIS3_UDSb4_cdr*.csv")
     ]
 
     df_clinical = _merge_clinical_df(dfs) if len(dfs) > 1 else dfs[0]
@@ -55,8 +57,8 @@ def _read_pet_data(
     data_directory: Path,
 ) -> pd.DataFrame:
     dfs = [
-        _find_csv_file_for_pattern(data_directory, pattern)
-        for pattern in (
+        _find_csv_with_filename(data_directory, filename)
+        for filename in (
             "OASIS3_PET_json",
             "OASIS3_AV1451_PET_json",
             "OASIS3_AV1451L_json",
@@ -67,7 +69,7 @@ def _read_pet_data(
 
 def _read_demo_data(data_directory: Path) -> pd.DataFrame:
     return (
-        _find_csv_file_for_pattern(data_directory, "OASIS3_demographics")
+        _find_csv_with_filename(data_directory, "OASIS3_demographics")
         .copy()
         .rename(
             columns={
@@ -84,7 +86,7 @@ def _read_demo_data(data_directory: Path) -> pd.DataFrame:
 
 
 def _read_mri_data(data_directory: Path) -> pd.DataFrame:
-    return _find_csv_file_for_pattern(data_directory, "OASIS3_MR_json")
+    return _find_csv_with_filename(data_directory, "OASIS3_MR_json")
 
 
 def _merge_clinical_df(list_dfs: list) -> pd.DataFrame:
