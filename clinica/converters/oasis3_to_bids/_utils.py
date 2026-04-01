@@ -28,12 +28,10 @@ def _find_csv_with_filename(data_directory: Path, filename: str) -> pd.DataFrame
 def _read_clinical_data(
     data_directory: Path,
 ) -> pd.DataFrame:
-    # todo : test
-
     df_clinical = _find_csv_with_filename(
-        data_directory, "OASIS3_UDSb1_physical_eval*.csv"
+        data_directory, "OASIS3_UDSb1_physical_eval"
     ).merge(
-        _find_csv_with_filename(data_directory, "OASIS3_UDSb4_cdr*.csv"),
+        _find_csv_with_filename(data_directory, "OASIS3_UDSb4_cdr"),
         on=["OASISID", "days_to_visit", "age at visit"],
         how="outer",
     )
@@ -60,7 +58,7 @@ def _read_clinical_data(
 def _read_pet_data(
     data_directory: Path,
 ) -> pd.DataFrame:
-    # todo : test
+    # todo : RQ : not used ???
     dfs = [
         _find_csv_with_filename(data_directory, filename)
         for filename in (
@@ -69,28 +67,24 @@ def _read_pet_data(
             "OASIS3_AV1451L_json",
         )
     ]
-    breakpoint()
     return pd.concat(dfs, ignore_index=True)
 
 
 def _read_demo_data(data_directory: Path) -> pd.DataFrame:
-    # todo : test
     df = _find_csv_with_filename(data_directory, "OASIS3_demographics")
-    breakpoint()
     return (
         df.copy()
         .rename(
             columns={
                 "OASISID": "Subject",
-                "AgeatEntry": "ageAtEntry",
-                "GENDER": "M/F",
-                "HAND": "Hand",
-                "EDUC": "Education",
+                "EDUC": "education",
                 "APOE": "apoe",
+                "GENDER": "sex",
+                "HAND": "handedness",
             }
         )
-        .replace({"M/F": {1: "M", 2: "F"}})
-    )  # todo : resolve None issue
+        .replace({"sex": {1: "M", 2: "F"}})
+    )
 
 
 def _read_mri_data(data_directory: Path) -> pd.DataFrame:
@@ -185,9 +179,9 @@ def _add_age_at_entry_and_age_at_scan(
     # todo : test
     """Merge demographics into imaging data and compute age at each scan."""
     return df_source.merge(
-        df_demo[["Subject", "ageAtEntry"]], how="inner", on="Subject"
+        df_demo[["Subject", "AgeAtEntry"]], how="inner", on="Subject"
     ).assign(
-        age=lambda df: df["ageAtEntry"] + df["Date"].str[1:].astype("float") / 365.25
+        age=lambda df: df["AgeAtEntry"] + df["Date"].str[1:].astype("float") / 365.25
     )
 
 
@@ -275,17 +269,19 @@ def _merge_clinical_scores(
     )
     return df_source.merge(
         df_clinical[
-            "session",
-            "mmse",
-            "cdr",
-            "commun",
-            "dx1",
-            "homehobb",
-            "judgment",
-            "memory",
-            "orient",
-            "perscare",
-            "sumbox",
+            [
+                "session",
+                "mmse",
+                "cdr",
+                "commun",
+                "dx1",
+                "homehobb",
+                "judgment",
+                "memory",
+                "orient",
+                "perscare",
+                "sumbox",
+            ]
         ],
         how="left",
         on="session",
@@ -326,12 +322,12 @@ def dataset_to_bids(
 
 def _build_participants_df(df_small: pd.DataFrame) -> pd.DataFrame:
     df_participants = (
-        df_small[["participant_id", "ageAtEntry", "M/F", "Hand", "Education", "apoe"]]
+        df_small[
+            ["participant_id", "AgeAtEntry", "sex", "handedness", "education", "apoe"]
+        ]
         .rename(
             columns={
-                "ageAtEntry": "age",
-                "M/F": "sex",
-                "Hand": "handedness",
+                "AgeAtEntry": "age",  # rq : different from sessions df age
             }
         )
         .set_index("participant_id", verify_integrity=True)
