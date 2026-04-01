@@ -149,7 +149,7 @@ def _check_file_and_version(clinical_data_directory: Path) -> GENFIDataVersion:
     import re
 
     pattern = re.compile(
-        r"^\w*FINAL.*(IMAGING|DEMOGRAPHICS|CLINICAL|BIOSAMPLES|NEUROPSYCH|GENETICS).*(MASTER|DF\d)\.xlsx$"
+        r"^\w*FINAL.*(IMAGING|DEMOGRAPHICS|CLINICAL|BIOSAMPLES|NEUROPSYCH|GENETICS).*(MASTER|DF\d).*\.xlsx$"
     )
 
     version_list = [
