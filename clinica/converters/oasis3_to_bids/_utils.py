@@ -10,6 +10,7 @@ __all__ = [
     "intersect_data",
     "dataset_to_bids",
     "write_bids",
+    "select_data_for_participants",
 ]
 
 
@@ -71,9 +72,9 @@ def _read_pet_data(
 
 
 def _read_demo_data(data_directory: Path) -> pd.DataFrame:
-    df = _find_csv_with_filename(data_directory, "OASIS3_demographics")
     return (
-        df.copy()
+        _find_csv_with_filename(data_directory, "OASIS3_demographics")
+        .copy()
         .rename(
             columns={
                 "OASISID": "Subject",
@@ -163,7 +164,7 @@ def _filter_to_imaging_subjects(
     return df.merge(imaging_subjects, how="inner", on="Subject").drop_duplicates()
 
 
-def _get_baseline_clinical(
+def _get_baseline_visit_clinical(
     df_clinical: pd.DataFrame, imaging_subjects: pd.Series
 ) -> pd.DataFrame:
     # todo : test
@@ -179,9 +180,9 @@ def _add_age_at_entry_and_age_at_scan(
     # todo : test
     """Merge demographics into imaging data and compute age at each scan."""
     return df_source.merge(
-        df_demo[["Subject", "AgeAtEntry"]], how="inner", on="Subject"
+        df_demo[["Subject", "AgeatEntry"]], how="inner", on="Subject"
     ).assign(
-        age=lambda df: df["AgeAtEntry"] + df["Date"].str[1:].astype("float") / 365.25
+        age=lambda df: df["AgeatEntry"] + df["Date"].str[1:].astype("float") / 365.25
     )
 
 
@@ -290,24 +291,32 @@ def _merge_clinical_scores(
 
 def intersect_data(
     df_source: pd.DataFrame, clinical_data_directory: Path
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    # todo : test
+) -> pd.DataFrame:
     df_clinical = _read_clinical_data(clinical_data_directory)
     df_demo = _read_demo_data(clinical_data_directory)
     df_mri = _read_mri_data(clinical_data_directory)
 
-    df_clinical_small = _get_baseline_clinical(df_clinical, df_source["Subject"])
     df_source = _add_age_at_entry_and_age_at_scan(df_source, df_demo)
-    df_subject_small = _filter_to_imaging_subjects(df_demo, df_source["Subject"])
     df_source = _add_mri_scanner_metadata(df_source, df_mri)
-    df_baseline = _merge_baseline_data(df_subject_small, df_clinical_small)
     df_source = _compute_session_bins(df_source)
     df_source = _map_modality_to_bids(df_source)
     df_source = _build_bids_filenames(df_source)
     df_source = _merge_clinical_scores(
         df_source, df_clinical
     )  # todo : reddit with build_session ?
-    return df_source, df_baseline
+    return df_source
+
+
+def select_data_for_participants(
+    df_source_subjects: pd.Series, clinical_data_directory: Path
+) -> pd.DataFrame:
+    df_clinical_small = _get_baseline_visit_clinical(
+        _read_clinical_data(clinical_data_directory), df_source_subjects
+    )
+    df_subject_small = _filter_to_imaging_subjects(
+        _read_demo_data(clinical_data_directory), df_source_subjects
+    )
+    return _merge_baseline_data(df_subject_small, df_clinical_small)
 
 
 def dataset_to_bids(
@@ -323,11 +332,11 @@ def dataset_to_bids(
 def _build_participants_df(df_small: pd.DataFrame) -> pd.DataFrame:
     df_participants = (
         df_small[
-            ["participant_id", "AgeAtEntry", "sex", "handedness", "education", "apoe"]
+            ["participant_id", "AgeatEntry", "sex", "handedness", "education", "apoe"]
         ]
         .rename(
             columns={
-                "AgeAtEntry": "age",  # rq : different from sessions df age
+                "AgeatEntry": "age",  # rq : different from sessions df age
             }
         )
         .set_index("participant_id", verify_integrity=True)
@@ -455,4 +464,5 @@ def write_bids(
 
 
 def _extract_suffix_from_filename(filename: str) -> str:
+    # todo : modality ?
     return filename.split("_")[-1].split(".")[0]

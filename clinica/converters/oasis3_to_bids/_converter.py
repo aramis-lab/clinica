@@ -30,6 +30,7 @@ def convert(
         dataset_to_bids,
         intersect_data,
         read_imaging_data,
+        select_data_for_participants,
         write_bids,
     )
 
@@ -50,7 +51,8 @@ def convert(
             lvl="warning",
         )
     imaging_data = read_imaging_data(path_to_dataset)
-    imaging_data, df_small = intersect_data(imaging_data, path_to_clinical)
+    df_small = select_data_for_participants(imaging_data["Subjects"], path_to_dataset)
+    imaging_data = intersect_data(imaging_data, path_to_clinical)
     participants, sessions, scans = dataset_to_bids(imaging_data, df_small)
     write_bids(
         to=bids_dir,
