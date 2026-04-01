@@ -50,9 +50,8 @@ def convert(
             f"{get_converter_name(StudyName.OASIS3)} converter does not support multiprocessing yet. n_procs set to 1.",
             lvl="warning",
         )
-    dict_df = read_clinical_data(path_to_clinical)
     imaging_data = read_imaging_data(path_to_dataset)
-    imaging_data, df_small = intersect_data(imaging_data, dict_df)
+    imaging_data, df_small = intersect_data(imaging_data, path_to_clinical)
     participants, sessions, scans = dataset_to_bids(imaging_data, df_small)
     write_bids(
         to=bids_dir,

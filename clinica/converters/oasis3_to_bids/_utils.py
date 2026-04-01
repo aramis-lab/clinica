@@ -3,24 +3,15 @@ from typing import Iterable
 
 import pandas as pd
 
-from clinica.utils.stream import cprint
+from clinica.utils.stream import cprint, log_and_raise
 
 __all__ = [
-    "read_clinical_data",
     "read_imaging_data",
     "intersect_data",
     "dataset_to_bids",
     "write_bids",
 ]
 
-# Hardcode relevant .csv filenames from the standardized OASIS3_data_files directory.
-# Each key maps to the stem(s) of the expected CSV file(s) within that subdirectory.
-_CLINICAL_FILES = {
-    "pet": ["OASIS3_PET_json", "OASIS3_AV1451_PET_json", "OASIS3_AV1451L_json"],
-    "mri": ["OASIS3_MR_json"],
-    "clinical": ["OASIS3_UDSb1_physical_eval", "OASIS3_UDSb4_cdr"],
-    "demo": ["OASIS3_demographics"],
-}
 
 # Columns shared across the UDS clinical sub-files used to join visits.
 _CLINICAL_MERGE_KEYS = ["OASISID", "days_to_visit", "age at visit"]
@@ -54,24 +45,25 @@ _CLINICAL_SCORE_COLUMNS = [
 ]
 
 
-def _build_file_map(data_directory: Path) -> dict[str, pd.DataFrame]:
-    """Recursively find all CSVs under data_directory and return {stem: DataFrame}."""
-    csv_files = list(data_directory.rglob("*.csv"))
+def _find_csv_file_for_pattern(data_directory: Path, pattern: str) -> pd.DataFrame:
+    csv_files = list(data_directory.rglob(pattern))
     if not csv_files:
-        cprint(f"No CSV files found under {data_directory}.", lvl="error")
-    file_map = {}
-    for f in csv_files:
-        cprint(f"  Loading {f.name}", lvl="debug")
-        file_map[f.stem] = pd.read_csv(f)
-    return file_map
+        log_and_raise(
+            f"No CSV files found under {data_directory} for pattern {pattern}."
+        )
+    if len(csv_files) > 1:
+        log_and_raise(f"More than one file for pattern {pattern}.")
+    # todo : maybe there is a function in converter utils that already does this
+    return pd.read_csv(csv_files[0])
 
 
 def _read_clinical_data(
-    file_map: dict[str, pd.DataFrame], filenames: list[str]
+    data_directory: Path,
 ) -> pd.DataFrame:
-    dfs = [file_map[name].copy() for name in filenames if name in file_map]
-    if not dfs:
-        raise FileNotFoundError(f"None of {filenames} found in data directory.")
+    dfs = [
+        _find_csv_file_for_pattern(data_directory, pattern)
+        for pattern in ("OASIS3_UDSb1_physical_eval", "OASIS3_UDSb4_cdr")
+    ]
 
     df_clinical = _merge_clinical_df(dfs) if len(dfs) > 1 else dfs[0]
     # Rename new-schema columns to the names expected by downstream functions.
@@ -92,19 +84,22 @@ def _read_clinical_data(
 
 
 def _read_pet_data(
-    file_map: dict[str, pd.DataFrame], filenames: list[str]
+    data_directory: Path,
 ) -> pd.DataFrame:
-    dfs = [file_map[name] for name in filenames if name in file_map]
-    if not dfs:
-        raise FileNotFoundError(f"None of {filenames} found in data directory.")
+    dfs = [
+        _find_csv_file_for_pattern(data_directory, pattern)
+        for pattern in (
+            "OASIS3_PET_json",
+            "OASIS3_AV1451_PET_json",
+            "OASIS3_AV1451L_json",
+        )
+    ]
     return pd.concat(dfs, ignore_index=True)
 
 
-def _read_demo_data(file_map: dict[str, pd.DataFrame], filename: str) -> pd.DataFrame:
-    if filename not in file_map:
-        raise FileNotFoundError(f"{filename} not found in data directory.")
+def _read_demo_data(data_directory: Path) -> pd.DataFrame:
     return (
-        file_map[filename]
+        _find_csv_file_for_pattern(data_directory, "OASIS3_demographics")
         .copy()
         .rename(
             columns={
@@ -117,13 +112,11 @@ def _read_demo_data(file_map: dict[str, pd.DataFrame], filename: str) -> pd.Data
             }
         )
         .replace({"M/F": {1: "M", 2: "F"}})
-    )
+    )  # todo : resolve None issue
 
 
-def _read_mri_data(file_map: dict[str, pd.DataFrame], filename: str) -> pd.DataFrame:
-    if filename not in file_map:
-        raise FileNotFoundError(f"{filename} not found in data directory.")
-    return file_map[filename]
+def _read_mri_data(data_directory: Path) -> pd.DataFrame:
+    return _find_csv_file_for_pattern(data_directory, "OASIS3_MR_json")
 
 
 def _merge_clinical_df(list_dfs: list) -> pd.DataFrame:
@@ -131,18 +124,6 @@ def _merge_clinical_df(list_dfs: list) -> pd.DataFrame:
     for df in list_dfs[1:]:
         merged_df = merged_df.merge(df, on=_CLINICAL_MERGE_KEYS, how="outer")
     return merged_df
-
-
-def read_clinical_data(clinical_data_directory: Path) -> dict[str, pd.DataFrame]:
-    """Read clinical data from the OASIS3_data_files FTP directory structure."""
-    cprint(f"Reading clinical data from {clinical_data_directory}", lvl="info")
-    file_map = _build_file_map(clinical_data_directory)
-    return {
-        "pet": _read_pet_data(file_map, _CLINICAL_FILES["pet"]),
-        "clinical": _read_clinical_data(file_map, _CLINICAL_FILES["clinical"]),
-        "mri": _read_mri_data(file_map, _CLINICAL_FILES["mri"][0]),
-        "demo": _read_demo_data(file_map, _CLINICAL_FILES["demo"][0]),
-    }
 
 
 def _find_imaging_data(path_to_source_data: Path) -> Iterable[Path]:
@@ -305,15 +286,16 @@ def _merge_clinical_scores(
 
 
 def intersect_data(
-    df_source: pd.DataFrame, dict_df: dict
+    df_source: pd.DataFrame, clinical_data_directory: Path
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    df_clinical = dict_df["clinical"]
-    df_demo = dict_df["demo"]
+    df_clinical = _read_clinical_data(clinical_data_directory)
+    df_demo = _read_demo_data(clinical_data_directory)
+    df_mri = _read_mri_data(clinical_data_directory)
 
     df_clinical_small = _get_baseline_clinical(df_clinical, df_source["Subject"])
     df_source = _add_age_at_entry_and_age_at_scan(df_source, df_demo)
     df_subject_small = _filter_to_imaging_subjects(df_demo, df_source["Subject"])
-    df_source = _add_mri_scanner_metadata(df_source, dict_df["mri"])
+    df_source = _add_mri_scanner_metadata(df_source, df_mri)
     df_baseline = _merge_baseline_data(df_subject_small, df_clinical_small)
     df_source = _compute_session_bins(df_source)
     df_source = _map_modality_to_bids(df_source)
