@@ -97,6 +97,9 @@ where:
 
     Sessions respect the naming convention used in GENFI clinical data. In particular, for `ses-XY`, `X` represents the GENFI phase, and `Y` represents the visit number.
 
+!!! info "Data freeze version detection"
+    The data freeze version is automatically detected by the converter.
+
 - `OPTIONS`:
     - `--clinical-data-dir/-cdd` is the path to the directory containing the clinical data files (tabular `.xlsx` files). These files are distinct from the clinical data fields, which correspond to the column names defined within the tabular files. Allows the user to automatically extract mandatory clinical data fields from the tabular files and add them to `participants.tsv` and `sessions.tsv`. Mandatory clinical data fields are the following :
         - For `participants.tsv` : `blinded_code`, `blinded_family`, `blinded_site`, `gender`.

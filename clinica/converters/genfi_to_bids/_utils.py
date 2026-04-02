@@ -127,7 +127,9 @@ class GENFIDataVersion(str, Enum):
     DF7 = "DF7"
 
 
-def _check_file_and_version(clinical_data_directory: Path) -> GENFIDataVersion:
+def _check_version_for_metadata_files(
+    clinical_data_directory: Path,
+) -> GENFIDataVersion:
     """Checks the presence of clinical data files and determines their version.
 
     Parameters
@@ -202,7 +204,7 @@ def _define_clinical_data_list_by_version(data_version: GENFIDataVersion) -> lis
         return base_list + ["FINAL*GENETICS*.xlsx"]
 
 
-def _check_file(directory: Path, pattern: str) -> Path:
+def _find_clinical_file_path(directory: Path, pattern: str) -> Path:
     data_file = [f for f in directory.glob(pattern)]
 
     if len(data_file) == 0:
@@ -221,12 +223,12 @@ def _check_file(directory: Path, pattern: str) -> Path:
 def parse_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
     cprint("Looking for clinical data...", lvl="info")
 
-    clinical_data_version = _check_file_and_version(clinical_data_directory)
+    clinical_data_version = _check_version_for_metadata_files(clinical_data_directory)
 
     df6 = clinical_data_version == GENFIDataVersion.DF6
 
     patterns = _define_clinical_data_list_by_version(
-        _check_file_and_version(clinical_data_directory)
+        _check_version_for_metadata_files(clinical_data_directory)
     )
 
     return _complete_clinical_data(
@@ -262,7 +264,7 @@ def _find_clinical_data(
         Dataframe containing the clinical data
     """
 
-    return _read_file(_check_file(clinical_data_directory, pattern))
+    return _read_file(_find_clinical_file_path(clinical_data_directory, pattern))
 
 
 def _read_file(data_file: Path) -> pd.DataFrame:

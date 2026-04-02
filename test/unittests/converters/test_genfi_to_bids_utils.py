@@ -352,25 +352,25 @@ def test_write_scans_and_niftis(tmp_path, mocker):
 
 
 @pytest.mark.parametrize(
-    "filename, pattern",
+    "pattern",
     [
-        ("FINAL_IMAGING.xlsx", "FINAL_IMAGING.xlsx"),
-        ("FINAL_DEMOGRAPHICS.xlsx", "FINAL_DEMOGRAPHICS.xlsx"),
+        ("FINAL_IMAGING.xlsx"),
+        ("FINAL_DEMOGRAPHICS.xlsx"),
     ],
 )
-def test_check_file_success(tmp_path, filename, pattern):
-    from clinica.converters.genfi_to_bids._utils import _check_file
+def test_find_clinical_file_path_success(tmp_path, pattern):
+    from clinica.converters.genfi_to_bids._utils import _find_clinical_file_path
 
-    file_path = tmp_path / filename
+    file_path = tmp_path / pattern
     file_path.touch()
 
-    out = _check_file(tmp_path, pattern)
+    out = _find_clinical_file_path(tmp_path, pattern)
 
     assert out == file_path
 
 
-def test_check_file_no_clinical_data(tmp_path):
-    from clinica.converters.genfi_to_bids._utils import _check_file
+def test_find_clinical_file_path_no_clinical_data(tmp_path):
+    from clinica.converters.genfi_to_bids._utils import _find_clinical_file_path
 
     pattern = "FINAL_CLINICAL.xlsx"
 
@@ -378,11 +378,11 @@ def test_check_file_no_clinical_data(tmp_path):
         FileNotFoundError,
         match=f"'{pattern}' clinical data not found or incomplete. Aborting",
     ):
-        _check_file(tmp_path, pattern)
+        _find_clinical_file_path(tmp_path, pattern)
 
 
-def test_check_file_too_many_clinical_data(tmp_path):
-    from clinica.converters.genfi_to_bids._utils import _check_file
+def test_find_clinical_file_path_too_many_clinical_data(tmp_path):
+    from clinica.converters.genfi_to_bids._utils import _find_clinical_file_path
 
     pattern = "FINAL_CLINICAL_*.xlsx"
     (tmp_path / "FINAL_CLINICAL_1.xlsx").touch()
@@ -394,7 +394,7 @@ def test_check_file_too_many_clinical_data(tmp_path):
             f"Too many data files found matching '{pattern}', expected one. Aborting."
         ),
     ):
-        _check_file(tmp_path, pattern)
+        _find_clinical_file_path(tmp_path, pattern)
 
 
 @pytest.mark.parametrize(
@@ -413,13 +413,15 @@ def test_find_clinical_data(monkeypatch, tmp_path, filename):
 
     file_path = tmp_path / filename
 
-    def _check_file(clinical_data_directory, pattern):
+    def _find_clinical_file_path(clinical_data_directory, pattern):
         return file_path
 
     def _read_file(data_file):
         return pd.DataFrame({"source": [data_file.name]})
 
-    monkeypatch.setattr(genfi_utils, "_check_file", _check_file)
+    monkeypatch.setattr(
+        genfi_utils, "_find_clinical_file_path", _find_clinical_file_path
+    )
     monkeypatch.setattr(genfi_utils, "_read_file", _read_file)
 
     out = genfi_utils._find_clinical_data(tmp_path, filename)
@@ -486,30 +488,37 @@ def test_merge_and_coalesce():
         ),
     ],
 )
-def test_check_file_and_version_success(tmp_path, filenames, expected_version):
-    from clinica.converters.genfi_to_bids._utils import _check_file_and_version
+def test_check_version_for_metadata_files_success(
+    tmp_path, filenames, expected_version
+):
+    from clinica.converters.genfi_to_bids._utils import (
+        _check_version_for_metadata_files,
+    )
 
     for filename in filenames:
         path = tmp_path / filename
-        path.parent.mkdir(parents=True, exist_ok=True)
         path.touch()
 
-    result = _check_file_and_version(tmp_path)
+    result = _check_version_for_metadata_files(tmp_path)
 
     assert result == expected_version
 
 
-def test_check_file_and_version_no_matching_file(tmp_path):
-    from clinica.converters.genfi_to_bids._utils import _check_file_and_version
+def test_check_version_for_metadata_files_no_matching_file(tmp_path):
+    from clinica.converters.genfi_to_bids._utils import (
+        _check_version_for_metadata_files,
+    )
 
     with pytest.raises(
         FileNotFoundError, match="clinical data not found or incomplete"
     ):
-        _check_file_and_version(tmp_path)
+        _check_version_for_metadata_files(tmp_path)
 
 
-def test_check_file_and_version_multiple_clinical_data(tmp_path):
-    from clinica.converters.genfi_to_bids._utils import _check_file_and_version
+def test_check_version_for_metadata_filesmultiple_clinical_data(tmp_path):
+    from clinica.converters.genfi_to_bids._utils import (
+        _check_version_for_metadata_files,
+    )
 
     filenames = [
         "FINAL_IMAGING_DF6.xlsx",
@@ -520,17 +529,55 @@ def test_check_file_and_version_multiple_clinical_data(tmp_path):
 
     for filename in filenames:
         path = tmp_path / filename
-        path.parent.mkdir(parents=True, exist_ok=True)
         path.touch()
 
     with pytest.raises(
         FileNotFoundError, match="Clinical data of different versions found"
     ):
-        _check_file_and_version(tmp_path)
+        _check_version_for_metadata_files(tmp_path)
 
 
-@pytest.mark.parametrize("df6", [False, True])
-def test_complete_clinical_data(df6):
+@pytest.mark.parametrize(
+    "data_version,expected",
+    [
+        (
+            GENFIDataVersion.DF6,
+            [
+                "FINAL*IMAGING*.xlsx",
+                "FINAL*DEMOGRAPHICS*.xlsx",
+                "FINAL*CLINICAL*.xlsx",
+                "FINAL*BIOSAMPLES*.xlsx",
+                "FINAL*NEUROPSYCH*.xlsx",
+            ],
+        ),
+        (
+            GENFIDataVersion.DF7,
+            [
+                "FINAL*IMAGING*.xlsx",
+                "FINAL*DEMOGRAPHICS*.xlsx",
+                "FINAL*CLINICAL*.xlsx",
+                "FINAL*BIOSAMPLES*.xlsx",
+                "FINAL*NEUROPSYCH*.xlsx",
+                "FINAL*GENETICS*.xlsx",
+            ],
+        ),
+    ],
+)
+def test_define_clinical_data_list_by_version(data_version, expected):
+    from clinica.converters.genfi_to_bids._utils import (
+        _define_clinical_data_list_by_version,
+    )
+
+    result = _define_clinical_data_list_by_version(data_version)
+
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "df6,visit_values,expected_gender",
+    [(False, [1, 1], [0, 1]), (True, [1, "01-01-2026"], [0, pd.NA])],
+)
+def test_complete_clinical_data(df6, visit_values, expected_gender):
     from clinica.converters.genfi_to_bids._utils import _complete_clinical_data
 
     df_imaging = pd.DataFrame(
@@ -543,9 +590,6 @@ def test_complete_clinical_data(df6):
             "plasma_nfl": [pd.NA, pd.NA],
         }
     )
-
-    # Introduce an invalid visit only relevant when df6=True
-    visit_values = [1, "01-01-2026"] if df6 else [1, 1]
 
     df_clinical_list = [
         pd.DataFrame(
@@ -590,9 +634,6 @@ def test_complete_clinical_data(df6):
             }
         ),
     ]
-
-    # Expected depends on df6 behavior
-    expected_gender = [0, pd.NA] if df6 else [0, 1]
 
     expected = pd.DataFrame(
         {
