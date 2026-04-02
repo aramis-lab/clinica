@@ -29,6 +29,7 @@ _CLINICAL_MERGE_KEYS = ["OASISID", "days_to_visit", "age at visit"]
 _MODALITY_TO_BIDS = {
     "dwi_MR": {"datatype": "dwi", "suffix": "dwi"},
     "T1w_MR": {"datatype": "anat", "suffix": "T1w"},
+    "bold_MR": {"datatype": "func", "suffix": "bold"},
     "T2star_MR": {"datatype": "anat", "suffix": "T2starw"},
     "FLAIR_MR": {"datatype": "anat", "suffix": "FLAIR"},
     "pet_FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
