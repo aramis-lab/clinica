@@ -159,7 +159,6 @@ def read_imaging_data(imaging_data_directory: Path) -> pd.DataFrame:
 def _filter_to_imaging_subjects(
     df: pd.DataFrame, imaging_subjects: pd.Series
 ) -> pd.DataFrame:
-    # todo : test
     """Keep only rows for subjects present in the imaging data."""
     return df.merge(imaging_subjects, how="inner", on="Subject").drop_duplicates()
 
@@ -224,7 +223,7 @@ def _compute_session_bins(df_source: pd.DataFrame) -> pd.DataFrame:
 def _map_modality_to_bids(df_source: pd.DataFrame) -> pd.DataFrame:
     """Expand the modality string into BIDS datatype, suffix, and tracer label columns."""
     # Mapping from OASIS3 modality strings to BIDS datatype / suffix / tracer label.
-    # todo : test
+
     _MODALITY_TO_BIDS = {
         "dwi_MR": {"datatype": "dwi", "suffix": "dwi"},
         "T1w_MR": {"datatype": "anat", "suffix": "T1w"},
@@ -237,7 +236,9 @@ def _map_modality_to_bids(df_source: pd.DataFrame) -> pd.DataFrame:
         "pet_AV1451": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV1451"},
     }
 
-    return df_source.join(df_source.modality.map(_MODALITY_TO_BIDS).apply(pd.Series))
+    return df_source.join(
+        df_source.modality.map(_MODALITY_TO_BIDS).apply(pd.Series)
+    ).drop(0, axis=1)
 
 
 def _build_bids_filenames(df_source: pd.DataFrame) -> pd.DataFrame:
