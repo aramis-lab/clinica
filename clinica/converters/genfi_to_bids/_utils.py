@@ -162,7 +162,7 @@ def _check_version_for_metadata_files(
 
     if len(version_list) == 0:
         raise FileNotFoundError(
-            f"'{pattern}' clinical data not found or incomplete. Aborting"
+            f"No known version found. Clinical data should match:\n'{pattern}'\nAborting."
         )
 
     if set(version_list) == {"DF6", "MASTER"}:
@@ -209,7 +209,7 @@ def _find_clinical_file_path(directory: Path, pattern: str) -> Path:
 
     if len(data_file) == 0:
         raise FileNotFoundError(
-            f"'{pattern}' clinical data not found or incomplete. Aborting"
+            f"'{pattern}' clinical data not found or incomplete. Aborting."
         )
 
     if len(data_file) > 1:
@@ -225,11 +225,7 @@ def parse_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
 
     clinical_data_version = _check_version_for_metadata_files(clinical_data_directory)
 
-    df6 = clinical_data_version == GENFIDataVersion.DF6
-
-    patterns = _define_clinical_data_list_by_version(
-        _check_version_for_metadata_files(clinical_data_directory)
-    )
+    patterns = _define_clinical_data_list_by_version(clinical_data_version)
 
     return _complete_clinical_data(
         _find_clinical_data(
@@ -240,7 +236,7 @@ def parse_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
             _find_clinical_data(clinical_data_directory, pattern)
             for pattern in patterns[1:]
         ],
-        df6,
+        clinical_data_version == GENFIDataVersion.DF6,
     )
 
 

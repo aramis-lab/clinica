@@ -376,7 +376,7 @@ def test_find_clinical_file_path_no_clinical_data(tmp_path):
 
     with pytest.raises(
         FileNotFoundError,
-        match=f"'{pattern}' clinical data not found or incomplete. Aborting",
+        match=f"'{pattern}' clinical data not found or incomplete. Aborting.",
     ):
         _find_clinical_file_path(tmp_path, pattern)
 
@@ -509,13 +509,20 @@ def test_check_version_for_metadata_files_no_matching_file(tmp_path):
         _check_version_for_metadata_files,
     )
 
+    pattern = re.compile(
+        r"^\w*FINAL.*(IMAGING|DEMOGRAPHICS|CLINICAL|BIOSAMPLES|NEUROPSYCH|GENETICS).*(MASTER|DF\d).*\.xlsx$"
+    )
+
     with pytest.raises(
-        FileNotFoundError, match="clinical data not found or incomplete"
+        FileNotFoundError,
+        match=re.escape(
+            f"No known version found. Clinical data should match:\n'{pattern}'\nAborting."
+        ),
     ):
         _check_version_for_metadata_files(tmp_path)
 
 
-def test_check_version_for_metadata_filesmultiple_clinical_data(tmp_path):
+def test_check_version_for_metadata_files_multiple_clinical_data(tmp_path):
     from clinica.converters.genfi_to_bids._utils import (
         _check_version_for_metadata_files,
     )
@@ -532,7 +539,8 @@ def test_check_version_for_metadata_filesmultiple_clinical_data(tmp_path):
         path.touch()
 
     with pytest.raises(
-        FileNotFoundError, match="Clinical data of different versions found"
+        FileNotFoundError,
+        match="Clinical data of different versions found, expected one. Aborting.",
     ):
         _check_version_for_metadata_files(tmp_path)
 
