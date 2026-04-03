@@ -2,9 +2,9 @@ name: Non Regression Tests - Converters
 
 on:
   push:
-    branches: ["dev", "maint-*"]
+    branches: ["dev", "maint-*", "oasis3_new_modalities"]
   pull_request:
-    branches: ["dev", "maint-*"]
+    branches: ["dev", "maint-*", "oasis3_new_modalities"]
 
 permissions:
   contents: read
