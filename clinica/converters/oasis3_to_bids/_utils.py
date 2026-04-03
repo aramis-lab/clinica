@@ -166,7 +166,6 @@ def _filter_to_imaging_subjects(
 def _get_baseline_visit_clinical(
     df_clinical: pd.DataFrame, imaging_subjects: pd.Series
 ) -> pd.DataFrame:
-    # todo : test
     """Filter clinical data to the baseline visit (d0000) for imaging subjects only."""
     return _filter_to_imaging_subjects(
         df_clinical[df_clinical.session_id == "d0000"], imaging_subjects
@@ -176,19 +175,20 @@ def _get_baseline_visit_clinical(
 def _add_age_at_entry_and_age_at_scan(
     df_source: pd.DataFrame, df_demo: pd.DataFrame
 ) -> pd.DataFrame:
-    # todo : test
     """Merge demographics into imaging data and compute age at each scan."""
+    import numpy as np
+
     return df_source.merge(
         df_demo[["Subject", "AgeatEntry"]], how="inner", on="Subject"
     ).assign(
-        age=lambda df: df["AgeatEntry"] + df["Date"].str[1:].astype("float") / 365.25
+        age=lambda df: df["AgeatEntry"]
+        + np.round(df["Date"].str[1:].astype("float") / 365.25, decimals=2)
     )
 
 
 def _add_mri_scanner_metadata(
     df_source: pd.DataFrame, df_mri: pd.DataFrame
 ) -> pd.DataFrame:
-    # todo : test
     """Left-join MRI scanner metadata (manufacturer, model, field strength) onto imaging sessions."""
     mri_scanner = df_mri[
         ["label", "Manufacturer", "ManufacturersModelName", "MagneticFieldStrength"]

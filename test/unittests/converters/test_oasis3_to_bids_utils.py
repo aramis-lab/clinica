@@ -1,10 +1,43 @@
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
 from clinica.converters.oasis3_to_bids._utils import _find_csv_with_filename
+
+
+def _get_mri_data() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "OASISID": ["OAS30001", "OAS30002"],
+            "label": ["OAS30001_MR_d0000", "OAS30002_MR_d0101"],
+            "Manufacturer": ["Siemens", "Siemens"],
+            "ManufacturersModelName": ["Biograph_mMR", "Biograph_mMR"],
+            "MagneticFieldStrength": [3, 3],
+        }
+    )
+
+
+def _get_imaging_data() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "Subject": ["OAS30001", "OAS30001"],
+            "Date": ["d0000", "d0200"],
+            "path": ["OAS30001_MR_d0000", "OAS30001_MR_d0200"],
+        }
+    )
+
+
+def _get_demo_data() -> pd.DataFrame:
+    return pd.DataFrame(
+        data={
+            "OASISID": ["OAS30001", "OAS30002"],
+            "AgeatEntry": [62, 45],
+            "GENDER": [2, 1],
+        }
+    )
 
 
 def _build_clinical_data(tmp_path: Path) -> Path:
@@ -15,7 +48,7 @@ def _build_clinical_data(tmp_path: Path) -> Path:
         data={
             "OASISID": ["OAS30001", "OAS30001", "OAS30002"],
             "days_to_visit": ["0000", "0200", "0101"],
-            "age at visit": [62.12, 62.90, 45.67],
+            "age at visit": [62, 62.55, 45.67],
             "WEIGHT": [152, 152, 184.2],
         }
     )
@@ -27,20 +60,15 @@ def _build_clinical_data(tmp_path: Path) -> Path:
         data={
             "OASISID": ["OAS30001", "OAS30001", "OAS30002"],
             "days_to_visit": ["0000", "0200", "0101"],
-            "age at visit": [62.12, 62.90, 45.67],
+            "age at visit": [62, 62.55, 45.67],
             "memory": [0, 0, 1],
         }
     )
     udsb4.to_csv(clinical_data_directory / "OASIS3_UDSb4_cdr.csv", index=False)
 
-    demo = pd.DataFrame(
-        data={
-            "OASISID": ["OAS30001", "OAS30002"],
-            "AgeAtEntry": [62, 45],
-            "GENDER": [2, 1],
-        }
+    _get_demo_data().to_csv(
+        clinical_data_directory / "OASIS3_demographics.csv", index=False
     )
-    demo.to_csv(clinical_data_directory / "OASIS3_demographics.csv", index=False)
 
     return clinical_data_directory
 
@@ -99,7 +127,7 @@ def test_read_clinical_data(tmp_path):
         data={
             "Subject": ["OAS30001", "OAS30001", "OAS30002"],
             "days_to_visit": [0, 200, 101],
-            "age at visit": [62.12, 62.90, 45.67],
+            "age at visit": [62, 62.55, 45.67],
             "WEIGHT": [152, 152, 184.2],
             "memory": [0, 0, 1],
             "session_id": ["d0000", "d0200", "d0101"],
@@ -114,7 +142,7 @@ def test_read_demo_data(tmp_path):
     expected = pd.DataFrame(
         data={
             "Subject": ["OAS30001", "OAS30002"],
-            "AgeAtEntry": [62, 45],
+            "AgeatEntry": [62, 45],
             "sex": ["F", "M"],
         }
     )
@@ -123,8 +151,6 @@ def test_read_demo_data(tmp_path):
 
 
 def test_map_modality_to_bids():
-    import numpy as np
-
     from clinica.converters.oasis3_to_bids._utils import _map_modality_to_bids
 
     input = pd.DataFrame(
@@ -171,23 +197,79 @@ def test_map_modality_to_bids():
     assert_frame_equal(_map_modality_to_bids(input), expected, check_like=True)
 
 
-def test_filter_to_imaging_subjects(tmp_path):
+def test_filter_to_imaging_subjects():
     from clinica.converters.oasis3_to_bids._utils import (
         _filter_to_imaging_subjects,
-        _read_demo_data,
     )
 
-    demo_data = _read_demo_data(_build_clinical_data(tmp_path)).rename(
-        {"OASISID": "Subject"}, axis=1
-    )
-    result = _filter_to_imaging_subjects(
-        demo_data, pd.Series(data="OAS30001", name="Subject")
-    )
+    demo_data = _get_demo_data().rename({"OASISID": "Subject"}, axis=1)
+    result = _filter_to_imaging_subjects(demo_data, _get_imaging_data()["Subject"])
     expected = pd.DataFrame(
         data={
             "Subject": ["OAS30001"],
-            "AgeAtEntry": [62],
-            "sex": ["F"],
+            "AgeatEntry": [62],
+            "GENDER": [2],
+        }
+    )
+    assert_frame_equal(result, expected, check_like=True)
+
+
+def test_get_baseline_visit_clinical(tmp_path):
+    from clinica.converters.oasis3_to_bids._utils import (
+        _get_baseline_visit_clinical,
+        _read_clinical_data,
+    )
+
+    clinical_data = _read_clinical_data(_build_clinical_data(tmp_path)).rename(
+        {"OASISID": "Subject"}, axis=1
+    )
+    expected = pd.DataFrame(
+        {
+            "Subject": ["OAS30001"],
+            "days_to_visit": [0],
+            "age at visit": [62.0],
+            "WEIGHT": [152.0],
+            "memory": [0],
+            "session_id": ["d0000"],
+        }
+    )
+    result = _get_baseline_visit_clinical(clinical_data, _get_imaging_data()["Subject"])
+    assert_frame_equal(result, expected, check_like=True)
+
+
+def test_add_age_at_entry_and_age_at_scan():
+    from clinica.converters.oasis3_to_bids._utils import (
+        _add_age_at_entry_and_age_at_scan,
+    )
+
+    demo_data = _get_demo_data().rename({"OASISID": "Subject"}, axis=1)
+    result = _add_age_at_entry_and_age_at_scan(_get_imaging_data(), demo_data)
+    expected = pd.DataFrame(
+        {
+            "Subject": ["OAS30001", "OAS30001"],
+            "Date": ["d0000", "d0200"],
+            "AgeatEntry": [62, 62],
+            "age": [62, 62.55],
+            "path": ["OAS30001_MR_d0000", "OAS30001_MR_d0200"],
+        }
+    )
+    assert_frame_equal(result, expected, check_like=True)
+
+
+def test_add_mri_scanner_metadata():
+    from clinica.converters.oasis3_to_bids._utils import _add_mri_scanner_metadata
+
+    data = _get_mri_data()
+    result = _add_mri_scanner_metadata(_get_imaging_data(), data)
+    expected = pd.DataFrame(
+        {
+            "Subject": ["OAS30001", "OAS30001"],
+            "Date": ["d0000", "d0200"],
+            "path": ["OAS30001_MR_d0000", "OAS30001_MR_d0200"],
+            "label": ["OAS30001_MR_d0000", np.nan],
+            "Manufacturer": ["Siemens", np.nan],
+            "ManufacturersModelName": ["Biograph_mMR", np.nan],
+            "MagneticFieldStrength": [3, np.nan],
         }
     )
     assert_frame_equal(result, expected, check_like=True)
