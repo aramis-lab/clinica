@@ -53,8 +53,18 @@ def _build_clinical_data(tmp_path: Path) -> Path:
             "days_to_visit": ["0000", "0200", "0101"],
             "age at visit": [62, 62.55, 45.67],
             "WEIGHT": [152, 152, 184.2],
+            "MMSE": [28, 28, 29],
+            "CDRTOT": [0, 0, 1],
+            "commun": [0, 0, 0],
+            "dx1": [1, 1, 1],
+            "homehobb": [0, 0, 0],
+            "judgment": [0, 0, 0],
+            "orient": [0, 0, 0],
+            "perscare": [0, 0, 0],
+            "CDRSUM": [0, 0, 1],
         }
     )
+
     udsb1.to_csv(
         clinical_data_directory / "OASIS3_UDSb1_physical_eval.csv", index=False
     )
@@ -131,10 +141,19 @@ def test_read_clinical_data(tmp_path):
             "age at visit": [62, 62.55, 45.67],
             "WEIGHT": [152, 152, 184.2],
             "memory": [0, 0, 1],
-            "session_id": ["d0000", "d0200", "d0101"],
+            "Date": ["d0000", "d0200", "d0101"],
+            "mmse": [28, 28, 29],
+            "cdr": [0, 0, 1],
+            "commun": [0, 0, 0],
+            "dx1": [1, 1, 1],
+            "homehobb": [0, 0, 0],
+            "judgment": [0, 0, 0],
+            "orient": [0, 0, 0],
+            "perscare": [0, 0, 0],
+            "sumbox": [0, 0, 1],
         }
     )
-    assert_frame_equal(expected, result, check_exact=False)
+    assert_frame_equal(expected, result, check_like=True)
 
 
 def test_read_demo_data(tmp_path):
@@ -165,6 +184,8 @@ def test_map_modality_to_bids():
                 "pet_FDG",
                 "pet_PIB",
                 "pet_AV45",
+                "bold_MR",
+                "pet_AV1451",
             ]
         }
     )
@@ -179,9 +200,33 @@ def test_map_modality_to_bids():
                 "pet_FDG",
                 "pet_PIB",
                 "pet_AV45",
+                "bold_MR",
+                "pet_AV1451",
             ],
-            "datatype": ["dwi", np.nan, "anat", "anat", "anat", "pet", "pet", "pet"],
-            "suffix": ["dwi", np.nan, "T1w", "T2starw", "FLAIR", "pet", "pet", "pet"],
+            "datatype": [
+                "dwi",
+                np.nan,
+                "anat",
+                "anat",
+                "anat",
+                "pet",
+                "pet",
+                "pet",
+                "func",
+                "pet",
+            ],
+            "suffix": [
+                "dwi",
+                np.nan,
+                "T1w",
+                "T2starw",
+                "FLAIR",
+                "pet",
+                "pet",
+                "pet",
+                "bold",
+                "pet",
+            ],
             "trc_label": [
                 np.nan,
                 np.nan,
@@ -191,6 +236,8 @@ def test_map_modality_to_bids():
                 "18FFDG",
                 "11CPIB",
                 "18FAV45",
+                np.nan,
+                "18FAV1451",
             ],
         }
     )
@@ -230,7 +277,16 @@ def test_get_baseline_visit_clinical(tmp_path):
             "age at visit": [62.0],
             "WEIGHT": [152.0],
             "memory": [0],
-            "session_id": ["d0000"],
+            "Date": ["d0000"],
+            "mmse": [28],
+            "cdr": [0],
+            "commun": [0],
+            "dx1": [1],
+            "homehobb": [0],
+            "judgment": [0],
+            "orient": [0],
+            "perscare": [0],
+            "sumbox": [0],
         }
     )
     result = _get_baseline_visit_clinical(clinical_data, _get_imaging_data()["Subject"])
@@ -327,8 +383,32 @@ def test_compute_session_bins():
 
 
 def test_merge_clinical_scores(tmp_path):
-    from clinica.converters.oasis3_to_bids._utils import _merge_clinical_scores
+    from clinica.converters.oasis3_to_bids._utils import (
+        _compute_session_bins,
+        _merge_clinical_scores,
+    )
 
     result = _merge_clinical_scores(
-        _get_imaging_data(), _read_clinical_data(_build_clinical_data(tmp_path))
+        _compute_session_bins(_get_imaging_data()),
+        _read_clinical_data(_build_clinical_data(tmp_path)),
     )
+    expected = pd.DataFrame(
+        data={
+            "Subject": ["OAS30001", "OAS30001"],
+            "Date": ["d0000", "d0200"],
+            "path": ["OAS30001_MR_d0000", "OAS30001_MR_d0200"],
+            "session": [0, 6],
+            "ses": ["ses-M000", "ses-M006"],
+            "memory": [0, 0],
+            "mmse": [28, 28],
+            "cdr": [0, 0],
+            "commun": [0, 0],
+            "dx1": [1, 1],
+            "homehobb": [0, 0],
+            "judgment": [0, 0],
+            "orient": [0, 0],
+            "perscare": [0, 0],
+            "sumbox": [0, 0],
+        }
+    )
+    assert_frame_equal(result, expected, check_like=True)
