@@ -3,9 +3,12 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-from pandas.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 
-from clinica.converters.oasis3_to_bids._utils import _find_csv_with_filename
+from clinica.converters.oasis3_to_bids._utils import (
+    _find_csv_with_filename,
+    _read_clinical_data,
+)
 
 
 def _get_mri_data() -> pd.DataFrame:
@@ -120,8 +123,6 @@ def test_identify_runs(input, expected):
 
 
 def test_read_clinical_data(tmp_path):
-    from clinica.converters.oasis3_to_bids._utils import _read_clinical_data
-
     result = _read_clinical_data(_build_clinical_data(tmp_path))
     expected = pd.DataFrame(
         data={
@@ -217,7 +218,6 @@ def test_filter_to_imaging_subjects():
 def test_get_baseline_visit_clinical(tmp_path):
     from clinica.converters.oasis3_to_bids._utils import (
         _get_baseline_visit_clinical,
-        _read_clinical_data,
     )
 
     clinical_data = _read_clinical_data(_build_clinical_data(tmp_path)).rename(
@@ -259,8 +259,7 @@ def test_add_age_at_entry_and_age_at_scan():
 def test_add_mri_scanner_metadata():
     from clinica.converters.oasis3_to_bids._utils import _add_mri_scanner_metadata
 
-    data = _get_mri_data()
-    result = _add_mri_scanner_metadata(_get_imaging_data(), data)
+    result = _add_mri_scanner_metadata(_get_imaging_data(), _get_mri_data())
     expected = pd.DataFrame(
         {
             "Subject": ["OAS30001", "OAS30001"],
@@ -273,3 +272,63 @@ def test_add_mri_scanner_metadata():
         }
     )
     assert_frame_equal(result, expected, check_like=True)
+
+
+def test_merge_baseline_data():
+    from clinica.converters.oasis3_to_bids._utils import _merge_baseline_data
+
+    input1 = pd.DataFrame(
+        data={
+            "Subject": ["OAS30001", "OAS30002"],
+            "AgeatEntry": [62, 45],
+        }
+    )
+    input2 = pd.DataFrame(
+        data={
+            "Subject": ["OAS30001", "OAS30004"],
+            "sex": ["F", "M"],
+        }
+    )
+    result = _merge_baseline_data(input1, input2)
+    expected = pd.DataFrame(
+        data={
+            "Subject": ["OAS30001"],
+            "AgeatEntry": [62],
+            "sex": ["F"],
+            "participant_id": ["sub-OAS30001"],
+        }
+    )
+    assert_frame_equal(result, expected, check_like=True)
+
+
+def test_days_to_session_bin():
+    from clinica.converters.oasis3_to_bids._utils import _days_to_session_bin
+
+    assert_series_equal(
+        _days_to_session_bin(pd.Series(data=[0, 200, 300, 360])),
+        pd.Series([0, 6, 12, 12]),
+    )
+
+
+def test_compute_session_bins():
+    from clinica.converters.oasis3_to_bids._utils import _compute_session_bins
+
+    result = _compute_session_bins(_get_imaging_data())
+    expected = pd.DataFrame(
+        {
+            "Subject": ["OAS30001", "OAS30001"],
+            "Date": ["d0000", "d0200"],
+            "path": ["OAS30001_MR_d0000", "OAS30001_MR_d0200"],
+            "session": [0, 6],
+            "ses": ["ses-M000", "ses-M006"],
+        }
+    )
+    assert_frame_equal(result, expected, check_like=True)
+
+
+def test_merge_clinical_scores(tmp_path):
+    from clinica.converters.oasis3_to_bids._utils import _merge_clinical_scores
+
+    result = _merge_clinical_scores(
+        _get_imaging_data(), _read_clinical_data(_build_clinical_data(tmp_path))
+    )

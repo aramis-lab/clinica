@@ -51,7 +51,7 @@ def _read_clinical_data(
     # Derive a d0000-style session_id from days_to_visit so we can identify the
     # baseline visit and compute session bins consistently with the imaging data.
     df_clinical = df_clinical.assign(
-        session_id=lambda df: "d" + df["days_to_visit"].astype(str).str.zfill(4)
+        Date=lambda df: "d" + df["days_to_visit"].astype(str).str.zfill(4)
     )
     return df_clinical
 
@@ -166,9 +166,9 @@ def _filter_to_imaging_subjects(
 def _get_baseline_visit_clinical(
     df_clinical: pd.DataFrame, imaging_subjects: pd.Series
 ) -> pd.DataFrame:
-    """Filter clinical data to the baseline visit (d0000) for imaging subjects only."""
+    """Filter clinical data to the baseline visit (days since visit : 0) for imaging subjects only."""
     return _filter_to_imaging_subjects(
-        df_clinical[df_clinical.session_id == "d0000"], imaging_subjects
+        df_clinical[df_clinical.days_to_visit == 0], imaging_subjects
     )
 
 
@@ -199,7 +199,6 @@ def _add_mri_scanner_metadata(
 def _merge_baseline_data(
     df_subject_small: pd.DataFrame, df_clinical_small: pd.DataFrame
 ) -> pd.DataFrame:
-    # todo : test
     """Combine subject-level demographics with baseline clinical scores."""
     return df_subject_small.merge(df_clinical_small, how="inner", on="Subject").assign(
         participant_id=lambda df: "sub-" + df.Subject
@@ -208,13 +207,11 @@ def _merge_baseline_data(
 
 def _days_to_session_bin(days: pd.Series) -> pd.Series:
     """Convert a Series of days-from-entry to 6-month BIDS session bin integers."""
-    # todo : test
-    return round(days / (365.25 / 2)) * 6
+    return (round(days / (365.25 / 2)) * 6).astype(int)
 
 
 def _compute_session_bins(df_source: pd.DataFrame) -> pd.DataFrame:
     """Convert image acquisition days to 6-month BIDS session bins (ses-MXXX)."""
-    # todo : test
     return df_source.assign(
         session=lambda df: _days_to_session_bin(df["Date"].str[1:].astype("int"))
     ).assign(ses=lambda df: df.session.apply(lambda x: f"ses-M{int(x):03d}"))
@@ -261,13 +258,12 @@ def _build_bids_filenames(df_source: pd.DataFrame) -> pd.DataFrame:
 def _merge_clinical_scores(
     df_source: pd.DataFrame, df_clinical: pd.DataFrame
 ) -> pd.DataFrame:
-    # todo : test
     """Bin clinical visits into session bins and merge scores onto imaging sessions."""
+    df_clinical = _compute_session_bins(df_clinical)
     df_clinical = (
         df_clinical.merge(df_source["Subject"], how="inner", on="Subject")
-        .assign(session=lambda df: _days_to_session_bin(df["days_to_visit"]))
         .drop_duplicates()
-        .set_index(["Subject", "session_id"])
+        .set_index(["Subject", "Date"])
     )
     return df_source.merge(
         df_clinical[
@@ -302,9 +298,7 @@ def intersect_data(
     df_source = _compute_session_bins(df_source)
     df_source = _map_modality_to_bids(df_source)
     df_source = _build_bids_filenames(df_source)
-    df_source = _merge_clinical_scores(
-        df_source, df_clinical
-    )  # todo : reddit with build_session ?
+    df_source = _merge_clinical_scores(df_source, df_clinical)
     return df_source
 
 
