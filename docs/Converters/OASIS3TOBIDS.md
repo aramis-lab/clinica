@@ -38,6 +38,8 @@ repository in NITRC.
 
 To download the images of the OASIS-3 dataset:
 
+#### Regular OASIS3 data
+
 1. Access the [XNAT Imaging Download](https://www.nitrc.org/ir/app/action/ProjectDownloadAction/project/OASIS3)  
    page after logging in with your OASIS3-accepted NITRC account. You will have a 
    download interface with different options, such as shown below.
@@ -64,6 +66,12 @@ To download the images of the OASIS-3 dataset:
 be more efficient than download through your web browser.
 6. After download completion, ensure that the ``OASIS3_data_files`` files are 
    found in a different directory, which will be your ``CLINICAL_DATA_DIRECTORY``.
+
+!!! warning
+    In previous versions of clinica (<`v0.12.0`) we used the "ADRC" metadata file which contained slightly different values
+    for the Age at Entry parameter. This might explain slight differences in your results if you try to compare a OASIS3 dataset metadata based
+    on age then versus now.
+
 
 #### TAU PET Imaging
 Historically, the Tau PET scans for the OASIS3 longitudinal belonged to a different 

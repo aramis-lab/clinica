@@ -29,8 +29,8 @@ def convert(
     from ._utils import (
         dataset_to_bids,
         intersect_data,
-        read_clinical_data,
         read_imaging_data,
+        select_data_for_participants,
         write_bids,
     )
 
@@ -50,9 +50,9 @@ def convert(
             f"{get_converter_name(StudyName.OASIS3)} converter does not support multiprocessing yet. n_procs set to 1.",
             lvl="warning",
         )
-    dict_df = read_clinical_data(path_to_clinical)
     imaging_data = read_imaging_data(path_to_dataset)
-    imaging_data, df_small = intersect_data(imaging_data, dict_df)
+    df_small = select_data_for_participants(imaging_data["Subject"], path_to_clinical)
+    imaging_data = intersect_data(imaging_data, path_to_clinical)
     participants, sessions, scans = dataset_to_bids(imaging_data, df_small)
     write_bids(
         to=bids_dir,
