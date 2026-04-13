@@ -3,146 +3,93 @@ from typing import Iterable
 
 import pandas as pd
 
-from clinica.utils.stream import cprint
+from clinica.utils.stream import cprint, log_and_raise
 
 __all__ = [
-    "read_clinical_data",
     "read_imaging_data",
     "intersect_data",
     "dataset_to_bids",
     "write_bids",
-]
-
-# Hardcode relevant .csv filenames from the standardized OASIS3_data_files directory.
-# Each key maps to the stem(s) of the expected CSV file(s) within that subdirectory.
-_CLINICAL_FILES = {
-    "pet": ["OASIS3_PET_json", "OASIS3_AV1451_PET_json", "OASIS3_AV1451L_json"],
-    "mri": ["OASIS3_MR_json"],
-    "clinical": ["OASIS3_UDSb1_physical_eval", "OASIS3_UDSb4_cdr"],
-    "demo": ["OASIS3_demographics"],
-}
-
-# Columns shared across the UDS clinical sub-files used to join visits.
-_CLINICAL_MERGE_KEYS = ["OASISID", "days_to_visit", "age at visit"]
-
-# Mapping from OASIS3 modality strings to BIDS datatype / suffix / tracer label.
-_MODALITY_TO_BIDS = {
-    "dwi_MR": {"datatype": "dwi", "suffix": "dwi"},
-    "T1w_MR": {"datatype": "anat", "suffix": "T1w"},
-    "bold_MR": {"datatype": "func", "suffix": "bold"},
-    "T2star_MR": {"datatype": "anat", "suffix": "T2starw"},
-    "FLAIR_MR": {"datatype": "anat", "suffix": "FLAIR"},
-    "pet_FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
-    "pet_PIB": {"datatype": "pet", "suffix": "pet", "trc_label": "11CPIB"},
-    "pet_AV45": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV45"},
-    "pet_AV1451": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV1451"},
-}
-
-# Clinical Score column names
-_CLINICAL_SCORE_COLUMNS = [
-    "session",
-    "mmse",
-    "cdr",
-    "commun",
-    "dx1",
-    "homehobb",
-    "judgment",
-    "memory",
-    "orient",
-    "perscare",
-    "sumbox",
+    "select_data_for_participants",
 ]
 
 
-def _build_file_map(data_directory: Path) -> dict[str, pd.DataFrame]:
-    """Recursively find all CSVs under data_directory and return {stem: DataFrame}."""
-    csv_files = list(data_directory.rglob("*.csv"))
+def _find_csv_with_filename(data_directory: Path, filename: str) -> pd.DataFrame:
+    csv_files = list(data_directory.rglob(f"*{filename}.csv"))
     if not csv_files:
-        cprint(f"No CSV files found under {data_directory}.", lvl="error")
-    file_map = {}
-    for f in csv_files:
-        cprint(f"  Loading {f.name}", lvl="debug")
-        file_map[f.stem] = pd.read_csv(f)
-    return file_map
+        log_and_raise(
+            f"No CSV files found under {data_directory} for filename {filename}.",
+            FileNotFoundError,
+        )
+    if len(csv_files) > 1:
+        log_and_raise(f"More than one file for filename {filename}.", FileNotFoundError)
+    return pd.read_csv(csv_files[0])
 
 
 def _read_clinical_data(
-    file_map: dict[str, pd.DataFrame], filenames: list[str]
+    data_directory: Path,
 ) -> pd.DataFrame:
-    dfs = [file_map[name].copy() for name in filenames if name in file_map]
-    if not dfs:
-        raise FileNotFoundError(f"None of {filenames} found in data directory.")
+    df_clinical = _find_csv_with_filename(
+        data_directory, "OASIS3_UDSb1_physical_eval"
+    ).merge(
+        _find_csv_with_filename(data_directory, "OASIS3_UDSb4_cdr"),
+        on=["OASISID", "days_to_visit", "age at visit"],
+        how="outer",
+    )
 
-    df_clinical = _merge_clinical_df(dfs) if len(dfs) > 1 else dfs[0]
     # Rename new-schema columns to the names expected by downstream functions.
-    df_clinical = df_clinical.rename(
+    df_clinical.rename(
         columns={
             "OASISID": "Subject",
             "MMSE": "mmse",
             "CDRTOT": "cdr",
             "CDRSUM": "sumbox",
-        }
+        },
+        inplace=True,
     )
+
     # Derive a d0000-style session_id from days_to_visit so we can identify the
     # baseline visit and compute session bins consistently with the imaging data.
     df_clinical = df_clinical.assign(
-        session_id=lambda df: "d" + df["days_to_visit"].astype(str).str.zfill(4)
+        Date=lambda df: "d" + df["days_to_visit"].astype(str).str.zfill(4)
     )
     return df_clinical
 
 
 def _read_pet_data(
-    file_map: dict[str, pd.DataFrame], filenames: list[str]
+    data_directory: Path,
 ) -> pd.DataFrame:
-    dfs = [file_map[name] for name in filenames if name in file_map]
-    if not dfs:
-        raise FileNotFoundError(f"None of {filenames} found in data directory.")
+    # todo : RQ : not used ???
+    dfs = [
+        _find_csv_with_filename(data_directory, filename)
+        for filename in (
+            "OASIS3_PET_json",
+            "OASIS3_AV1451_PET_json",
+            "OASIS3_AV1451L_json",
+        )
+    ]
     return pd.concat(dfs, ignore_index=True)
 
 
-def _read_demo_data(file_map: dict[str, pd.DataFrame], filename: str) -> pd.DataFrame:
-    if filename not in file_map:
-        raise FileNotFoundError(f"{filename} not found in data directory.")
+def _read_demo_data(data_directory: Path) -> pd.DataFrame:
     return (
-        file_map[filename]
+        _find_csv_with_filename(data_directory, "OASIS3_demographics")
         .copy()
         .rename(
             columns={
                 "OASISID": "Subject",
-                "AgeatEntry": "ageAtEntry",
-                "GENDER": "M/F",
-                "HAND": "Hand",
-                "EDUC": "Education",
+                "EDUC": "education",
                 "APOE": "apoe",
+                "GENDER": "sex",
+                "HAND": "handedness",
             }
         )
-        .replace({"M/F": {1: "M", 2: "F"}})
+        .replace({"sex": {1: "M", 2: "F"}})
     )
 
 
-def _read_mri_data(file_map: dict[str, pd.DataFrame], filename: str) -> pd.DataFrame:
-    if filename not in file_map:
-        raise FileNotFoundError(f"{filename} not found in data directory.")
-    return file_map[filename]
-
-
-def _merge_clinical_df(list_dfs: list) -> pd.DataFrame:
-    merged_df = list_dfs[0]
-    for df in list_dfs[1:]:
-        merged_df = merged_df.merge(df, on=_CLINICAL_MERGE_KEYS, how="outer")
-    return merged_df
-
-
-def read_clinical_data(clinical_data_directory: Path) -> dict[str, pd.DataFrame]:
-    """Read clinical data from the OASIS3_data_files FTP directory structure."""
-    cprint(f"Reading clinical data from {clinical_data_directory}", lvl="info")
-    file_map = _build_file_map(clinical_data_directory)
-    return {
-        "pet": _read_pet_data(file_map, _CLINICAL_FILES["pet"]),
-        "clinical": _read_clinical_data(file_map, _CLINICAL_FILES["clinical"]),
-        "mri": _read_mri_data(file_map, _CLINICAL_FILES["mri"][0]),
-        "demo": _read_demo_data(file_map, _CLINICAL_FILES["demo"][0]),
-    }
+def _read_mri_data(data_directory: Path) -> pd.DataFrame:
+    return _find_csv_with_filename(data_directory, "OASIS3_MR_json")
 
 
 def _find_imaging_data(path_to_source_data: Path) -> Iterable[Path]:
@@ -216,12 +163,12 @@ def _filter_to_imaging_subjects(
     return df.merge(imaging_subjects, how="inner", on="Subject").drop_duplicates()
 
 
-def _get_baseline_clinical(
+def _get_baseline_visit_clinical(
     df_clinical: pd.DataFrame, imaging_subjects: pd.Series
 ) -> pd.DataFrame:
-    """Filter clinical data to the baseline visit (d0000) for imaging subjects only."""
+    """Filter clinical data to the baseline visit (days since visit : 0) for imaging subjects only."""
     return _filter_to_imaging_subjects(
-        df_clinical[df_clinical.session_id == "d0000"], imaging_subjects
+        df_clinical[df_clinical.days_to_visit == 0], imaging_subjects
     )
 
 
@@ -229,10 +176,13 @@ def _add_age_at_entry_and_age_at_scan(
     df_source: pd.DataFrame, df_demo: pd.DataFrame
 ) -> pd.DataFrame:
     """Merge demographics into imaging data and compute age at each scan."""
+    import numpy as np
+
     return df_source.merge(
-        df_demo[["Subject", "ageAtEntry"]], how="inner", on="Subject"
+        df_demo[["Subject", "AgeatEntry"]], how="inner", on="Subject"
     ).assign(
-        age=lambda df: df["ageAtEntry"] + df["Date"].str[1:].astype("float") / 365.25
+        age=lambda df: df["AgeatEntry"]
+        + np.round(df["Date"].str[1:].astype("float") / 365.25, decimals=2)
     )
 
 
@@ -257,7 +207,7 @@ def _merge_baseline_data(
 
 def _days_to_session_bin(days: pd.Series) -> pd.Series:
     """Convert a Series of days-from-entry to 6-month BIDS session bin integers."""
-    return round(days / (365.25 / 2)) * 6
+    return (round(days / (365.25 / 2)) * 6).astype(int)
 
 
 def _compute_session_bins(df_source: pd.DataFrame) -> pd.DataFrame:
@@ -269,7 +219,23 @@ def _compute_session_bins(df_source: pd.DataFrame) -> pd.DataFrame:
 
 def _map_modality_to_bids(df_source: pd.DataFrame) -> pd.DataFrame:
     """Expand the modality string into BIDS datatype, suffix, and tracer label columns."""
-    return df_source.join(df_source.modality.map(_MODALITY_TO_BIDS).apply(pd.Series))
+    # Mapping from OASIS3 modality strings to BIDS datatype / suffix / tracer label.
+
+    _MODALITY_TO_BIDS = {
+        "dwi_MR": {"datatype": "dwi", "suffix": "dwi"},
+        "T1w_MR": {"datatype": "anat", "suffix": "T1w"},
+        "bold_MR": {"datatype": "func", "suffix": "bold"},
+        "T2star_MR": {"datatype": "anat", "suffix": "T2starw"},
+        "FLAIR_MR": {"datatype": "anat", "suffix": "FLAIR"},
+        "pet_FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
+        "pet_PIB": {"datatype": "pet", "suffix": "pet", "trc_label": "11CPIB"},
+        "pet_AV45": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV45"},
+        "pet_AV1451": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV1451"},
+    }
+
+    return df_source.join(
+        df_source.modality.map(_MODALITY_TO_BIDS).apply(pd.Series)
+    ).drop(0, axis=1)
 
 
 def _build_bids_filenames(df_source: pd.DataFrame) -> pd.DataFrame:
@@ -293,33 +259,59 @@ def _merge_clinical_scores(
     df_source: pd.DataFrame, df_clinical: pd.DataFrame
 ) -> pd.DataFrame:
     """Bin clinical visits into session bins and merge scores onto imaging sessions."""
+    df_clinical = _compute_session_bins(df_clinical)
     df_clinical = (
         df_clinical.merge(df_source["Subject"], how="inner", on="Subject")
-        .assign(session=lambda df: _days_to_session_bin(df["days_to_visit"]))
         .drop_duplicates()
-        .set_index(["Subject", "session_id"])
+        .set_index(["Subject", "Date"])
     )
     return df_source.merge(
-        df_clinical[_CLINICAL_SCORE_COLUMNS], how="left", on="session"
+        df_clinical[
+            [
+                "session",
+                "mmse",
+                "cdr",
+                "commun",
+                "dx1",
+                "homehobb",
+                "judgment",
+                "memory",
+                "orient",
+                "perscare",
+                "sumbox",
+            ]
+        ],
+        how="left",
+        on="session",
     )
 
 
 def intersect_data(
-    df_source: pd.DataFrame, dict_df: dict
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    df_clinical = dict_df["clinical"]
-    df_demo = dict_df["demo"]
+    df_source: pd.DataFrame, clinical_data_directory: Path
+) -> pd.DataFrame:
+    df_clinical = _read_clinical_data(clinical_data_directory)
+    df_demo = _read_demo_data(clinical_data_directory)
+    df_mri = _read_mri_data(clinical_data_directory)
 
-    df_clinical_small = _get_baseline_clinical(df_clinical, df_source["Subject"])
     df_source = _add_age_at_entry_and_age_at_scan(df_source, df_demo)
-    df_subject_small = _filter_to_imaging_subjects(df_demo, df_source["Subject"])
-    df_source = _add_mri_scanner_metadata(df_source, dict_df["mri"])
-    df_baseline = _merge_baseline_data(df_subject_small, df_clinical_small)
+    df_source = _add_mri_scanner_metadata(df_source, df_mri)
     df_source = _compute_session_bins(df_source)
     df_source = _map_modality_to_bids(df_source)
     df_source = _build_bids_filenames(df_source)
     df_source = _merge_clinical_scores(df_source, df_clinical)
-    return df_source, df_baseline
+    return df_source
+
+
+def select_data_for_participants(
+    df_source_subjects: pd.Series, clinical_data_directory: Path
+) -> pd.DataFrame:
+    df_clinical_small = _get_baseline_visit_clinical(
+        _read_clinical_data(clinical_data_directory), df_source_subjects
+    )
+    df_subject_small = _filter_to_imaging_subjects(
+        _read_demo_data(clinical_data_directory), df_source_subjects
+    )
+    return _merge_baseline_data(df_subject_small, df_clinical_small)
 
 
 def dataset_to_bids(
@@ -334,12 +326,12 @@ def dataset_to_bids(
 
 def _build_participants_df(df_small: pd.DataFrame) -> pd.DataFrame:
     df_participants = (
-        df_small[["participant_id", "ageAtEntry", "M/F", "Hand", "Education", "apoe"]]
+        df_small[
+            ["participant_id", "AgeatEntry", "sex", "handedness", "education", "apoe"]
+        ]
         .rename(
             columns={
-                "ageAtEntry": "age",
-                "M/F": "sex",
-                "Hand": "handedness",
+                "AgeatEntry": "age",  # rq : different from sessions df age
             }
         )
         .set_index("participant_id", verify_integrity=True)
@@ -467,4 +459,5 @@ def write_bids(
 
 
 def _extract_suffix_from_filename(filename: str) -> str:
+    # todo : modality ?
     return filename.split("_")[-1].split(".")[0]
