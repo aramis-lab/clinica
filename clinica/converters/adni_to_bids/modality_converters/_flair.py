@@ -100,7 +100,6 @@ def _compute_flair_paths(
     from ._image_path_utils import find_image_path
     from ._visits_utils import visits_to_timepoints
 
-    flair_df = _initialize_flair_df()
     flair_dfs_list = []
     # Loading needed .csv files
     adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
@@ -140,6 +139,8 @@ def _compute_flair_paths(
             if flair is not None:
                 row_to_append = pd.DataFrame(flair, index=["i"])
                 flair_dfs_list.append(row_to_append)
+
+    flair_df = pd.DataFrame()
     if flair_dfs_list:
         flair_df = pd.concat(flair_dfs_list, ignore_index=True)
 
@@ -158,23 +159,6 @@ def _compute_flair_paths(
     images.to_csv(conversion_dir / "flair_paths.tsv", sep="\t", index=False)
 
     return images
-
-
-def _initialize_flair_df() -> pd.DataFrame:
-    return pd.DataFrame(
-        [
-            "Subject_ID",
-            "VISCODE",
-            "Visit",
-            "Sequence",
-            "Scan_Date",
-            "Study_ID",
-            "Series_ID",
-            "Image_ID",
-            "Field_Strength",
-            "Scanner",
-        ]
-    )
 
 
 def _get_known_conversion_errors() -> Iterable[tuple[str, str]]:

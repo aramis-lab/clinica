@@ -122,36 +122,121 @@ def _handle_manufacturer(x: str) -> str:
         return "Unknown"
 
 
-def _check_file(directory: Path, pattern: str) -> Path:
-    try:
-        data_file = [f for f in directory.glob(pattern)]
-    except StopIteration:
-        raise FileNotFoundError("Clinical data file not found.")
+class GENFIDataVersion(str, Enum):
+    DF6 = "DF6"
+    DF7 = "DF7"
+
+
+def _check_version_for_metadata_files(
+    clinical_data_directory: Path,
+) -> GENFIDataVersion:
+    """Checks the presence of clinical data files and determines their version.
+
+    Parameters
+    ----------
+    clinical_data_directory : Path
+        Path to the directory containing clinical data files.
+
+    Returns
+    -------
+    GENFIDataVersion
+        The detected clinical data version.
+
+    Raises
+    ------
+    FileNotFoundError
+        If no matching clinical data files are found or if multiple
+        incompatible versions are detected.
+    """
+    import re
+
+    pattern = re.compile(
+        r"^\w*FINAL.*(IMAGING|DEMOGRAPHICS|CLINICAL|BIOSAMPLES|NEUROPSYCH|GENETICS).*(MASTER|DF\d).*\.xlsx$"
+    )
+
+    version_list = [
+        match.group(2)
+        for file in clinical_data_directory.rglob("*.xlsx")
+        if (match := pattern.search(file.name))
+    ]
+
+    if len(version_list) == 0:
+        raise FileNotFoundError(
+            f"No known version found. Clinical data should match:\n'{pattern}'\nAborting."
+        )
+
+    if set(version_list) == {"DF6", "MASTER"}:
+        return GENFIDataVersion("DF6")
+
+    if len(list(set(version_list))) > 1:
+        raise FileNotFoundError(
+            f"Clinical data of different versions found, expected one. Aborting."
+        )
+
+    return GENFIDataVersion(version_list[0])
+
+
+def _define_clinical_data_list_by_version(data_version: GENFIDataVersion) -> list[str]:
+    """Defines the list of expected clinical data filenames based on version.
+
+    Parameters
+    ----------
+    data_version : GENFIDataVersion
+        The clinical data version (e.g. DF6 or DF7).
+
+    Returns
+    -------
+    list of str
+        List of filename patterns corresponding to the expected clinical data files.
+    """
+    base_list = [
+        "FINAL*IMAGING*.xlsx",
+        "FINAL*DEMOGRAPHICS*.xlsx",
+        "FINAL*CLINICAL*.xlsx",
+        "FINAL*BIOSAMPLES*.xlsx",
+        "FINAL*NEUROPSYCH*.xlsx",
+    ]
+
+    if data_version == GENFIDataVersion.DF6:
+        return base_list
+
+    if data_version == GENFIDataVersion.DF7:
+        return base_list + ["FINAL*GENETICS*.xlsx"]
+
+
+def _find_clinical_file_path(directory: Path, pattern: str) -> Path:
+    data_file = [f for f in directory.glob(pattern)]
+
     if len(data_file) == 0:
-        raise FileNotFoundError("Clinical data not found or incomplete. Aborting")
+        raise FileNotFoundError(
+            f"'{pattern}' clinical data not found or incomplete. Aborting."
+        )
+
     if len(data_file) > 1:
-        raise ValueError("Too many data files found, expected one. Aborting.")
+        raise ValueError(
+            f"Too many data files found matching '{pattern}', expected one. Aborting."
+        )
+
     return data_file[0]
 
 
 def parse_clinical_data(clinical_data_directory: Path) -> pd.DataFrame:
     cprint("Looking for clinical data...", lvl="info")
 
+    clinical_data_version = _check_version_for_metadata_files(clinical_data_directory)
+
+    patterns = _define_clinical_data_list_by_version(clinical_data_version)
+
     return _complete_clinical_data(
         _find_clinical_data(
             clinical_data_directory,
-            "FINAL*IMAGING*.xlsx",
+            patterns[0],
         ),
         [
             _find_clinical_data(clinical_data_directory, pattern)
-            for pattern in (
-                "FINAL*DEMOGRAPHICS*.xlsx",
-                "FINAL*CLINICAL*.xlsx",
-                "FINAL*BIOSAMPLES*.xlsx",
-                "FINAL*NEUROPSYCH*.xlsx",
-                "FINAL*GENETICS*.xlsx",
-            )
+            for pattern in patterns[1:]
         ],
+        clinical_data_version == GENFIDataVersion.DF6,
     )
 
 
@@ -175,7 +260,7 @@ def _find_clinical_data(
         Dataframe containing the clinical data
     """
 
-    return _read_file(_check_file(clinical_data_directory, pattern))
+    return _read_file(_find_clinical_file_path(clinical_data_directory, pattern))
 
 
 def _read_file(data_file: Path) -> pd.DataFrame:
@@ -233,7 +318,8 @@ def _merge_and_coalesce(
 
 def _complete_clinical_data(
     df_imaging: pd.DataFrame,
-    df_clinical_list: List[pd.DataFrame],
+    df_clinical_list: list[pd.DataFrame],
+    df6: bool = False,
 ) -> pd.DataFrame:
     """Merges the different clincal dataframes into one.
 
@@ -242,8 +328,11 @@ def _complete_clinical_data(
     df_imaging: pd.DataFrame
         Dataframe containing the imaging data
 
-    df_clinical_list: List[pd.DataFrame]
+    df_clinical_list: list[pd.DataFrame]
         List of dataframes containing the remaining clinical data
+
+    df6: bool
+        Boolean indicating if DF6 clinical data are used. By default set to False
 
     Returns
     -------
@@ -253,6 +342,13 @@ def _complete_clinical_data(
     merge_key = ["blinded_code", "blinded_site", "visit"]
 
     df_clinical_complete = df_imaging.copy()
+
+    # A non coherent datetime value is found in the 'visit' column of the DEMOGRAPHICS clinical data in DF6
+    # The column is thus cast into Int64 and the associated problematic row is removed
+    if df6:
+        df_clinical_list[0] = df_clinical_list[0][
+            pd.to_numeric(df_clinical_list[0]["visit"], errors="coerce").notna()
+        ]
 
     for df in df_clinical_list:
         df_clinical_complete = _merge_and_coalesce(
