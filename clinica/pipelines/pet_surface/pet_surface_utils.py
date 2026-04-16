@@ -1,6 +1,3 @@
-from prov.model import PathLike
-
-
 def get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id):
     """Extract SUBJECT_DIR.
 
@@ -395,10 +392,18 @@ def _running_mris_expand_with_subprocess(cmd: str) -> None:
         raise ValueError("mris_expand failed, returned non-zero code")
 
 
-def _check_mri_expand_file_location(expected_location: str) -> str:
-    # todo: check file location ; either working directory or in_surface
+def _check_mri_expand_file_location(
+    working_directory: str, input_file_location: str
+) -> str:
+    from pathlib import Path
 
-    return expected_location
+    filename = Path(input_file_location).name
+
+    if (Path(working_directory) / (filename + "_exp-000")).is_file():
+        return f"{working_directory}/{filename}_exp-"
+
+    if Path(input_file_location + "_exp-000").is_file():
+        return f"{input_file_location}_exp-"
 
 
 def mris_expand(in_surface):
@@ -420,7 +425,7 @@ def mris_expand(in_surface):
         _running_mris_expand_with_subprocess,
         _setting_mris_expand_cmd,
     )
-    from clinica.utils.stream import cprint, log_and_raise
+    from clinica.utils.stream import cprint
 
     # RQ 1 : mris_expand write results where the script is executed
     # RQ 2 : -N is a hidden parameter (not documented) that allows the user to specify the number of surface generated between
@@ -429,19 +434,18 @@ def mris_expand(in_surface):
 
     _running_mris_expand_with_subprocess(_setting_mris_expand_cmd(in_surface))
 
-    # todo : check where file is : either wd node either surf folder. as to why it behaves differently...
-
     # Remove useless surfaces (0%, 5%, 10%, 15%, 20%, 25% and 30% of thickness)
     cprint(msg="Removing unnecessary mris_expands outputs (000 to 007)", lvl="debug")
-    out_file = Path(in_surface).name + "_exp-"
 
-    try:
-        for file in [
-            out_file + x for x in ("000", "001", "002", "003", "004", "005", "006")
-        ]:
-            os.remove(file)
-    except FileNotFoundError:
-        log_and_raise(f"NOT AT THE RIGHT PLACE. CWD : {os.getcwd()}", FileNotFoundError)
+    output_path = _check_mri_expand_file_location(
+        working_directory=os.getcwd(), input_file_location=str(Path(in_surface).parent)
+    )
+    out_file = f"{output_path} / {Path(in_surface).name}_exp-"
+
+    for file in [
+        out_file + x for x in ("000", "001", "002", "003", "004", "005", "006")
+    ]:
+        os.remove(file)
 
     return [
         os.path.abspath(out_file + x)
