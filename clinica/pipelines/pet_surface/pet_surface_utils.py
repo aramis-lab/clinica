@@ -1,3 +1,6 @@
+from prov.model import PathLike
+
+
 def get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id):
     """Extract SUBJECT_DIR.
 
@@ -392,6 +395,12 @@ def _running_mris_expand_with_subprocess(cmd: str) -> None:
         raise ValueError("mris_expand failed, returned non-zero code")
 
 
+def _check_mri_expand_file_location(expected_location: str) -> str:
+    # todo: check file location ; either working directory or in_surface
+
+    return expected_location
+
+
 def mris_expand(in_surface):
     """mris_expand is using the freesurfer function of the same name. It expands the white input surface toward the pial,
     generating 7 surfaces at 35%, 40%, 45%, 50%, 55%, 60%, 65% of thickness.
@@ -407,26 +416,32 @@ def mris_expand(in_surface):
     from pathlib import Path
 
     from clinica.pipelines.pet_surface.pet_surface_utils import (  # noqa
+        _check_mri_expand_file_location,
         _running_mris_expand_with_subprocess,
         _setting_mris_expand_cmd,
     )
-    from clinica.utils.stream import cprint
+    from clinica.utils.stream import cprint, log_and_raise
 
     # RQ 1 : mris_expand write results where the script is executed
     # RQ 2 : -N is a hidden parameter (not documented) that allows the user to specify the number of surface generated between
     # source and final target surface. Here target is 65% of thickness, with 13 surfaces. Then we only keep the surfaces
     # we are interested in.
 
-    out_file = Path(in_surface).name + "_exp-"
-
     _running_mris_expand_with_subprocess(_setting_mris_expand_cmd(in_surface))
+
+    # todo : check where file is : either wd node either surf folder. as to why it behaves differently...
 
     # Remove useless surfaces (0%, 5%, 10%, 15%, 20%, 25% and 30% of thickness)
     cprint(msg="Removing unnecessary mris_expands outputs (000 to 007)", lvl="debug")
-    for file in [
-        out_file + x for x in ("000", "001", "002", "003", "004", "005", "006")
-    ]:
-        os.remove(file)
+    out_file = Path(in_surface).name + "_exp-"
+
+    try:
+        for file in [
+            out_file + x for x in ("000", "001", "002", "003", "004", "005", "006")
+        ]:
+            os.remove(file)
+    except FileNotFoundError:
+        log_and_raise(f"NOT AT THE RIGHT PLACE. CWD : {os.getcwd()}", FileNotFoundError)
 
     return [
         os.path.abspath(out_file + x)
