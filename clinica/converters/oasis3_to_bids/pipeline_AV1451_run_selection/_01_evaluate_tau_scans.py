@@ -9,26 +9,36 @@ Usage:  python 01_evaluate_tau_scans.py
 Output: inventory/oasis3_av1451_inventory.csv
 """
 
-import json
 import csv
+import json
 from collections import Counter
 from pathlib import Path
 
 try:
     import nibabel as nib
+
     HAS_NIBABEL = True
 except ImportError:
     HAS_NIBABEL = False
 
 # --- DEFAULT CONFIGURATION ---
-DEFAULT_DATA_DIR   = Path(r"D:\Oasis3\raw")
-DEFAULT_OUTPUT_DIR = Path(r"D:\Oasis3\inventory")
+DEFAULT_DATA_DIR = Path(r"E:\Oasis3\raw")
+DEFAULT_OUTPUT_DIR = Path(r"E:\Oasis3\inventory")
 
 CSV_FIELDS = [
-    "Subject_ID", "Session_ID", "File_Name", "Run_Number", "Modality",
-    "Frame_Count", "First_Frame_Start_Min", "Last_Frame_End_Min",
-    "Total_Scan_Duration_Min", "Frame_Durations_Summary",
-    "Injection_Time", "Likely_Procedure", "Action",
+    "Subject_ID",
+    "Session_ID",
+    "File_Name",
+    "Run_Number",
+    "Modality",
+    "Frame_Count",
+    "First_Frame_Start_Min",
+    "Last_Frame_End_Min",
+    "Total_Scan_Duration_Min",
+    "Frame_Durations_Summary",
+    "Injection_Time",
+    "Likely_Procedure",
+    "Action",
 ]
 
 
@@ -75,7 +85,12 @@ def parse_frame_times(metadata):
 
 
 def classify_pet_run(frame_info, nii_frames, modality):
-    """Classify the run based on OASIS3 AV1451 protocols."""
+    """
+    Classify the run based on OASIS3 AV1451 protocols.
+
+    Protocols extracted from the OASIS3 Imaging Data Dictionary, accessed 17/04/2026
+    https://bpb-us-e2.wpmucdn.com/sites.wustl.edu/dist/6/4383/files/2024/04/OASIS-3_Imaging_Data_Dictionary_v2.3-a93c947a586e7367.pdf
+    """
     if modality == "CT":
         return "CT Scan", "Ignore"
 
@@ -84,8 +99,12 @@ def classify_pet_run(frame_info, nii_frames, modality):
             return "Unknown (no timing data)", "Check Manually"
         if nii_frames == 1:
             return "Single Frame (pre-summed?)", "Check Manually"
-        if nii_frames <= 6:
+        if nii_frames < 6:
             return "Static (no timing)", "Check Manually"
+        if nii_frames == 6:
+            # Several cases of late recordings with 6 frames of 5min duration
+            return "Proc 2 / Proc 3 Late Static (75-100min)", "USE FOR SUVR"
+
         return f"Multi-frame ({nii_frames}f, no timing)", "Check Manually"
 
     n = frame_info["frame_count"]
@@ -93,19 +112,13 @@ def classify_pet_run(frame_info, nii_frames, modality):
     end = frame_info["last_end_min"]
 
     if start < 2 and n >= 30 and end > 70:
-        return "Proc 3 Full Dynamic (0-100min)", "Extract 75-100min frames for SUVR"
+        return "Proc 1 Full (0-100min)", "Extract 75-100min frames for SUVR"
 
-    if start < 2 and end < 40:
-        if n > 10:
-            return "Proc 1 Early Dynamic (0-25min)", "Ignore for Standard SUVR"
-        else:
-            return "Proc 1 Early Static (0-25min)", "Ignore for Standard SUVR"
+    if start < 2 and end <= 62:
+        return "Proc 3 Early (0-60min)", "Ignore for Standard SUVR"
 
     if start >= 70:
-        return "Proc 2 Late Static (75-100min)", "USE FOR SUVR"
-
-    if start >= 40 and end > 70:
-        return f"Late Scan ({start:.0f}-{end:.0f}min)", "Likely usable for SUVR - verify"
+        return "Proc 2 / Proc 3 Late (75-100min)", "USE FOR SUVR"
 
     return f"Unclassified ({start:.0f}-{end:.0f}min, {n}f)", "Check Manually"
 
@@ -139,8 +152,7 @@ def main(data_dir=None, output_dir=None):
     print(f"Scanning {data_dir} for AV1451 sessions...")
 
     av1451_dirs = sorted(
-        d for d in data_dir.iterdir()
-        if d.is_dir() and "_AV1451_" in d.name
+        d for d in data_dir.iterdir() if d.is_dir() and "_AV1451_" in d.name
     )
     print(f"Found {len(av1451_dirs)} AV1451 session directories.")
 
@@ -151,8 +163,7 @@ def main(data_dir=None, output_dir=None):
         session_day = parts[2] if len(parts) >= 3 else "Unknown"
 
         pet_dirs = sorted(
-            d for d in session_dir.iterdir()
-            if d.is_dir() and d.name.startswith("pet")
+            d for d in session_dir.iterdir() if d.is_dir() and d.name.startswith("pet")
         )
 
         for pet_dir in pet_dirs:
@@ -185,28 +196,45 @@ def main(data_dir=None, output_dir=None):
                 run_id = run_parts[0] if run_parts else "Unknown"
 
                 likely_proc, action = classify_pet_run(frame_info, nii_frames, modality)
-                inj_time = metadata.get("InjectionStart") or metadata.get("TimeZero", "Unknown")
+                inj_time = metadata.get("InjectionStart") or metadata.get(
+                    "TimeZero", "Unknown"
+                )
 
-                results.append({
-                    "Subject_ID": subject_id,
-                    "Session_ID": session_day,
-                    "File_Name": filename,
-                    "Run_Number": run_id,
-                    "Modality": modality,
-                    "Frame_Count": frame_info["frame_count"] if frame_info else (nii_frames or "Unknown"),
-                    "First_Frame_Start_Min": frame_info["first_start_min"] if frame_info else "N/A",
-                    "Last_Frame_End_Min": frame_info["last_end_min"] if frame_info else "N/A",
-                    "Total_Scan_Duration_Min": frame_info["duration_min"] if frame_info else "N/A",
-                    "Frame_Durations_Summary": frame_info["durations_summary"] if frame_info else "N/A",
-                    "Injection_Time": inj_time,
-                    "Likely_Procedure": likely_proc,
-                    "Action": action,
-                })
+                results.append(
+                    {
+                        "Subject_ID": subject_id,
+                        "Session_ID": session_day,
+                        "File_Name": filename,
+                        "Run_Number": run_id,
+                        "Modality": modality,
+                        "Frame_Count": frame_info["frame_count"]
+                        if frame_info
+                        else (nii_frames or "Unknown"),
+                        "First_Frame_Start_Min": frame_info["first_start_min"]
+                        if frame_info
+                        else "N/A",
+                        "Last_Frame_End_Min": frame_info["last_end_min"]
+                        if frame_info
+                        else "N/A",
+                        "Total_Scan_Duration_Min": frame_info["duration_min"]
+                        if frame_info
+                        else "N/A",
+                        "Frame_Durations_Summary": frame_info["durations_summary"]
+                        if frame_info
+                        else "N/A",
+                        "Injection_Time": inj_time,
+                        "Likely_Procedure": likely_proc,
+                        "Action": action,
+                    }
+                )
 
     if not results:
         print("No AV1451 files found. Check your directory path.")
         return
+    import pandas as pd
 
+    df = pd.DataFrame(results)
+    print(df["Likely_Procedure"].unique())
     with open(output_csv, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
         writer.writeheader()
