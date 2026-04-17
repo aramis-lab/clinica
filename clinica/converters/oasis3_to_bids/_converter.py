@@ -28,6 +28,7 @@ def convert(
     from .._utils import validate_input_path, write_modality_agnostic_files
     from ._utils import (
         dataset_to_bids,
+        filter_imaging_data_by_subjects,
         intersect_data,
         read_imaging_data,
         select_data_for_participants,
@@ -42,35 +43,14 @@ def convert(
             f"{get_converter_name(StudyName.OASIS3)} converter does not support multiprocessing yet. n_procs set to 1.",
             lvl="warning",
         )
-        
+
     imaging_data = read_imaging_data(path_to_dataset)
-    
-    if subjects:  # Apply subject subset selection
-        subjects_path = validate_input_path(subjects)
-        subject_ids = {
-            line.strip()
-            for line in subjects_path.read_text().splitlines()
-            if line.strip()
-        }
-        cprint(f"Loaded {len(subject_ids)} subject(s) from {subjects_path}", lvl="info")
-        found = set(imaging_data["Subject"].unique())
-        for s in sorted(subject_ids - found):
-            cprint(
-                f"Subject {s} not found in imaging data and will be skipped.",
-                lvl="warning",
-            )
-        imaging_data = imaging_data[imaging_data["Subject"].isin(subject_ids)]
-        if imaging_data.empty:
-            cprint(
-                "No imaging data remains after subject filtering. Aborting.",
-                lvl="error",
-            )
-            return
-        cprint(
-            f"Retaining {imaging_data['Subject'].nunique()} subject(s) after filtering.",
-            lvl="info",
+
+    if subjects:
+        imaging_data = filter_imaging_data_by_subjects(
+            imaging_data, validate_input_path(subjects)
         )
-        
+
     df_small = select_data_for_participants(imaging_data["Subject"], path_to_clinical)
     imaging_data = intersect_data(imaging_data, path_to_clinical)
     participants, sessions, scans = dataset_to_bids(imaging_data, df_small)

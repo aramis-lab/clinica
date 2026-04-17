@@ -15,7 +15,7 @@ def cli(
     dataset_directory: PathLike,
     clinical_data_directory: PathLike,
     bids_directory: PathLike,
-    subjects_list: Optional[str] = None,
+    subjects_list: Optional[PathLike] = None,
 ) -> None:
     """OASIS3 to BIDS converter.
 
