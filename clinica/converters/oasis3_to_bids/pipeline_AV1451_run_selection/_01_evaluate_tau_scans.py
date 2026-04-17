@@ -115,6 +115,9 @@ def classify_pet_run(frame_info, nii_frames, modality):
         return "Proc 1 Full (0-100min)", "Extract 75-100min frames for SUVR"
 
     if start < 2 and end <= 62:
+        # Some cases, the run contains 6x5mins frames but start at 0 and end in 30mins
+        if frame_info["durations_summary"] == "6x300s" and n == 6:
+            return "Proc 2 / Proc Late Static (75-100min)", "USE FOR SUVR"
         return "Proc 3 Early (0-60min)", "Ignore for Standard SUVR"
 
     if start >= 70:
