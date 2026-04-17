@@ -21,6 +21,8 @@ CSV_FIELDS = [
 
 USABLE_ACTIONS = {"USE FOR SUVR", "Extract 75-100min frames for SUVR"}
 
+AV1451_BIDS_TRACER = "trc-18FAV1451"
+
 
 def parse_frame_times(metadata: dict) -> dict | None:
     """Extract timing info from the FrameTimes JSON structure.
@@ -108,104 +110,93 @@ def classify_pet_run(
             return "Proc 2 / Proc Late Static (75-100min)", "USE FOR SUVR"
         return "Proc 3 Early (0-60min)", "Ignore for Standard SUVR"
 
-    if start >= 70 and n == 6:
+    if start >= 70:
         return "Proc 2 / Proc 3 Late (75-100min)", "USE FOR SUVR"
 
     return f"Unclassified ({start:.0f}-{end:.0f}min, {n}f)", "Check Manually"
 
 
-def evaluate_session_dir(session_dir: Path) -> list[dict]:
-    """Evaluate all PET runs in a single AV1451 session directory.
+def evaluate_bids_pet_dir(
+    pet_dir: Path, subject_id: str, session_id: str
+) -> list[dict]:
+    """Evaluate all AV1451 PET runs in a single BIDS ``pet/`` directory.
 
     Parameters
     ----------
-    session_dir:
-        A directory named like ``OAS30001_AV1451_d0761``.
+    pet_dir:
+        A BIDS ``pet/`` directory, e.g. ``bids_dir/sub-OAS30001/ses-M126/pet``.
+    subject_id:
+        BIDS subject label, e.g. ``sub-OAS30001``.
+    session_id:
+        BIDS session label, e.g. ``ses-M126``.
 
     Returns
     -------
-    List of scan record dicts, one per BIDS JSON sidecar found.
+    List of scan record dicts, one per AV1451 JSON sidecar found.
     """
     from ._nii_reading import get_nii_frame_count
 
-    parts = session_dir.name.split("_")
-    subject_id = parts[0] if parts else "Unknown"
-    session_day = parts[2] if len(parts) >= 3 else "Unknown"
-
     records = []
-    for pet_dir in sorted(
-        d for d in session_dir.iterdir() if d.is_dir() and d.name.startswith("pet")
-    ):
-        bids_dir = pet_dir / "BIDS"
-        if not bids_dir.exists():
-            continue
-
-        for json_path in bids_dir.glob("*.json"):
-            if "dataset_description" in json_path.name:
+    for json_path in sorted(pet_dir.glob(f"*{AV1451_BIDS_TRACER}*_pet.json")):
+        with open(json_path, "r", errors="ignore") as f:
+            try:
+                metadata = json.load(f)
+            except json.JSONDecodeError:
                 continue
 
-            with open(json_path, "r", errors="ignore") as f:
-                try:
-                    metadata = json.load(f)
-                except json.JSONDecodeError:
-                    continue
+        modality = metadata.get("Modality", "PET")
+        frame_info = parse_frame_times(metadata)
+        nii_frames = None if frame_info is not None else get_nii_frame_count(json_path)
 
-            mod_str = metadata.get("Modality", "")
-            modality = "CT" if "CT" in mod_str.upper() else "PET"
+        filename = json_path.name
+        run_parts = [p for p in filename.split("_") if p.startswith("run-")]
+        run_id = run_parts[0] if run_parts else "Unknown"
 
-            frame_info = parse_frame_times(metadata)
-            nii_frames = (
-                None if frame_info is not None else get_nii_frame_count(json_path)
-            )
+        likely_proc, action = classify_pet_run(frame_info, nii_frames, modality)
+        inj_time = metadata.get("InjectionStart") or metadata.get("TimeZero", "Unknown")
 
-            filename = json_path.name
-            run_parts = [p for p in filename.split("_") if p.startswith("run-")]
-            run_id = run_parts[0] if run_parts else "Unknown"
-
-            likely_proc, action = classify_pet_run(frame_info, nii_frames, modality)
-            inj_time = metadata.get("InjectionStart") or metadata.get(
-                "TimeZero", "Unknown"
-            )
-
-            records.append(
-                {
-                    "Subject_ID": subject_id,
-                    "Session_ID": session_day,
-                    "File_Name": filename,
-                    "Run_Number": run_id,
-                    "Modality": modality,
-                    "Frame_Count": frame_info["frame_count"]
-                    if frame_info
-                    else (nii_frames or "Unknown"),
-                    "First_Frame_Start_Min": frame_info["first_start_min"]
-                    if frame_info
-                    else "N/A",
-                    "Last_Frame_End_Min": frame_info["last_end_min"]
-                    if frame_info
-                    else "N/A",
-                    "Total_Scan_Duration_Min": frame_info["duration_min"]
-                    if frame_info
-                    else "N/A",
-                    "Frame_Durations_Summary": frame_info["durations_summary"]
-                    if frame_info
-                    else "N/A",
-                    "Injection_Time": inj_time,
-                    "Likely_Procedure": likely_proc,
-                    "Action": action,
-                }
-            )
+        records.append(
+            {
+                "Subject_ID": subject_id,
+                "Session_ID": session_id,
+                "File_Name": filename,
+                "Run_Number": run_id,
+                "Modality": modality,
+                "Frame_Count": frame_info["frame_count"]
+                if frame_info
+                else (nii_frames or "Unknown"),
+                "First_Frame_Start_Min": frame_info["first_start_min"]
+                if frame_info
+                else "N/A",
+                "Last_Frame_End_Min": frame_info["last_end_min"]
+                if frame_info
+                else "N/A",
+                "Total_Scan_Duration_Min": frame_info["duration_min"]
+                if frame_info
+                else "N/A",
+                "Frame_Durations_Summary": frame_info["durations_summary"]
+                if frame_info
+                else "N/A",
+                "Injection_Time": inj_time,
+                "Likely_Procedure": likely_proc,
+                "Action": action,
+            }
+        )
     return records
 
 
-def scan_all_sessions(data_dir: Path) -> list[dict]:
-    """Scan *data_dir* for all AV1451 session directories and evaluate each one.
+def scan_all_sessions(bids_dir: Path) -> list[dict]:
+    """Scan *bids_dir* for all AV1451 PET sessions and evaluate each one.
 
-    Returns a flat list of scan record dicts across all sessions.
+    Expects a standard BIDS layout: ``bids_dir/sub-*/ses-*/pet/``.
+
+    Returns a flat list of scan record dicts across all subjects and sessions.
     """
-    av1451_dirs = sorted(
-        d for d in data_dir.iterdir() if d.is_dir() and "_AV1451_" in d.name
-    )
     records = []
-    for session_dir in av1451_dirs:
-        records.extend(evaluate_session_dir(session_dir))
+    for pet_dir in sorted(bids_dir.glob("sub-*/ses-*/pet")):
+        if not pet_dir.is_dir():
+            continue
+        subject_id = pet_dir.parts[-3]
+        session_id = pet_dir.parts[-2]
+        records.extend(evaluate_bids_pet_dir(pet_dir, subject_id, session_id))
     return records

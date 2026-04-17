@@ -7,19 +7,13 @@ import numpy as np
 
 
 def get_nii_frame_count(json_path: Path) -> int | None:
-    """Load the NIfTI paired with a BIDS JSON sidecar and return its frame count.
+    """Load the NIfTI co-located with a BIDS JSON sidecar and return its frame count.
 
-    Returns None when nibabel is unavailable or the file cannot be read.
+    In BIDS the NIfTI sits in the same directory as the JSON with the same stem.
+    Returns None when the NIfTI is missing or cannot be read.
     """
-    try:
-        import nibabel as _nib  # noqa: F401 — confirms nibabel is present
-    except ImportError:
-        return None
-
-    pet_dir = json_path.parent.parent
-    nii_dir = pet_dir / "NIFTI"
     for ext in (".nii.gz", ".nii"):
-        nii_path = nii_dir / (json_path.stem + ext)
+        nii_path = json_path.with_suffix(ext)
         if nii_path.exists():
             try:
                 img = nib.load(str(nii_path))
@@ -30,37 +24,21 @@ def get_nii_frame_count(json_path: Path) -> int | None:
     return None
 
 
-def find_nifti(
-    subject_id: str, session_id: str, file_name: str, data_dir: Path
-) -> Path | None:
-    """Return the NIfTI file path for a given scan record, or None if not found."""
-    session_dir = data_dir / f"{subject_id}_AV1451_{session_id}"
-    if not session_dir.is_dir():
-        return None
-
-    stem = Path(file_name).stem
-    for pet_dir in sorted(session_dir.glob("pet*")):
-        nii_dir = pet_dir / "NIFTI"
-        for ext in (".nii.gz", ".nii"):
-            candidate = nii_dir / (stem + ext)
-            if candidate.exists():
-                return candidate
-    return None
-
-
-def find_json(
-    subject_id: str, session_id: str, file_name: str, data_dir: Path
-) -> Path | None:
-    """Return the BIDS JSON sidecar path for a given scan record, or None if not found."""
-    session_dir = data_dir / f"{subject_id}_AV1451_{session_id}"
-    if not session_dir.is_dir():
-        return None
-
-    for pet_dir in sorted(session_dir.glob("pet*")):
-        candidate = pet_dir / "BIDS" / file_name
+def find_bids_nifti(json_path: Path) -> Path | None:
+    """Return the NIfTI file co-located with *json_path*, or None if not found."""
+    for ext in (".nii.gz", ".nii"):
+        candidate = json_path.with_suffix(ext)
         if candidate.exists():
             return candidate
     return None
+
+
+def find_bids_json(
+    bids_dir: Path, subject_id: str, session_id: str, file_name: str
+) -> Path | None:
+    """Return the BIDS JSON sidecar path for a given scan record, or None if not found."""
+    candidate = bids_dir / subject_id / session_id / "pet" / file_name
+    return candidate if candidate.exists() else None
 
 
 def sanitize_nifti_header(nib_img: nib.Nifti1Image) -> nib.Nifti1Image:

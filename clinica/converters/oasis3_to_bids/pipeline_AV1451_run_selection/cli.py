@@ -6,7 +6,7 @@ import click
 
 @click.command(name="av1451-pipeline")
 @click.argument(
-    "data_dir",
+    "bids_dir",
     type=click.Path(exists=True, file_okay=False, resolve_path=True),
 )
 @click.argument(
@@ -23,19 +23,20 @@ import click
     ),
 )
 def cli(
-    data_dir: str,
+    bids_dir: str,
     output_dir: str,
     inventory_dir: Optional[str] = None,
 ) -> None:
     """AV1451 Tau-PET Run Selection Pipeline for OASIS-3.
 
-    Classifies every PET run in DATA_DIR, logs sessions with no usable scan,
-    then coregisters and averages the usable late-phase frames into OUTPUT_DIR.
+    Scans the BIDS dataset at BIDS_DIR, classifies every AV1451 PET run,
+    logs sessions with no usable scan, then coregisters and averages the
+    usable late-phase frames into OUTPUT_DIR.
     """
     from ._pipeline import run_pipeline
 
     run_pipeline(
-        data_dir=Path(data_dir),
+        bids_dir=Path(bids_dir),
         output_dir=Path(output_dir),
         inventory_dir=Path(inventory_dir) if inventory_dir else None,
     )

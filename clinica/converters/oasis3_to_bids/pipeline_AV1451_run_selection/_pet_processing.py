@@ -15,16 +15,10 @@ except ImportError as exc:
         "Install it with:  pip install antspyx"
     ) from exc
 
-from ._nii_reading import find_json, find_nifti, load_frames
+from ._nii_reading import find_bids_json, find_bids_nifti, load_frames
 from ._scan_classification import USABLE_ACTIONS
 
 LATE_PHASE_START_S = 4500.0  # 75 minutes in seconds
-
-# Maps the Action values from step 1 to a human-readable processing label.
-ACTION_TO_PROCESSING = {
-    "USE FOR SUVR": "Coregister and Average",
-    "Extract 75-100min frames for SUVR": "Extract frames then Coregister and Average",
-}
 
 
 def get_late_frame_indices(json_path: Path) -> list[int] | None:
@@ -77,7 +71,7 @@ def coregister_and_average(frames: list[nib.Nifti1Image]) -> nib.Nifti1Image:
     return nib.Nifti1Image(mean_data, fixed_nib.affine, fixed_nib.header)
 
 
-def process_scan(row: pd.Series, data_dir: Path, output_dir: Path) -> bool:
+def process_scan(row: pd.Series, bids_dir: Path, output_dir: Path) -> bool:
     """Process a single scan record: locate, (extract,) coregister, average, save.
 
     Parameters
@@ -85,10 +79,10 @@ def process_scan(row: pd.Series, data_dir: Path, output_dir: Path) -> bool:
     row:
         A row from the usable scan DataFrame.  Must contain Subject_ID,
         Session_ID, File_Name, and Action.
-    data_dir:
-        Root directory of the raw OASIS-3 data.
+    bids_dir:
+        BIDS dataset root directory.
     output_dir:
-        Directory where ``*_AV1451_coreg_avg.nii.gz`` files are written.
+        Directory where ``*_coreg_avg.nii.gz`` files are written.
 
     Returns
     -------
@@ -102,23 +96,24 @@ def process_scan(row: pd.Series, data_dir: Path, output_dir: Path) -> bool:
     action = row["Action"]
     tag = f"{subject_id}/{session_id}/{file_name}"
 
-    out_name = f"{subject_id}_{session_id}_AV1451_coreg_avg.nii.gz"
+    out_name = Path(file_name).stem + "_coreg_avg.nii.gz"
     out_path = output_dir / out_name
     if out_path.exists():
         cprint(f"[EXISTS] Already processed, skipping: {tag}", lvl="debug")
         return True
 
-    nii_path = find_nifti(subject_id, session_id, file_name, data_dir)
+    json_path = find_bids_json(bids_dir, subject_id, session_id, file_name)
+    if json_path is None:
+        cprint(f"[SKIP] JSON not found: {tag}", lvl="warning")
+        return False
+
+    nii_path = find_bids_nifti(json_path)
     if nii_path is None:
         cprint(f"[SKIP] NIfTI not found: {tag}", lvl="warning")
         return False
 
     frame_indices = None
     if action == "Extract 75-100min frames for SUVR":
-        json_path = find_json(subject_id, session_id, file_name, data_dir)
-        if json_path is None:
-            cprint(f"[SKIP] BIDS JSON not found: {tag}", lvl="warning")
-            return False
         frame_indices = get_late_frame_indices(json_path)
         if not frame_indices:
             cprint(f"[SKIP] No late-phase frames found in JSON: {tag}", lvl="warning")
@@ -149,7 +144,7 @@ def process_scan(row: pd.Series, data_dir: Path, output_dir: Path) -> bool:
 
 
 def process_all_scans(
-    usable_df: pd.DataFrame, data_dir: Path, output_dir: Path
+    usable_df: pd.DataFrame, bids_dir: Path, output_dir: Path
 ) -> tuple[int, int]:
     """Process all scans in *usable_df* whose Action is in USABLE_ACTIONS.
 
@@ -162,7 +157,7 @@ def process_all_scans(
     to_process = usable_df[usable_df["Action"].isin(USABLE_ACTIONS)]
     n_ok = n_skip = 0
     for _, row in to_process.iterrows():
-        if process_scan(row, data_dir, output_dir):
+        if process_scan(row, bids_dir, output_dir):
             n_ok += 1
         else:
             n_skip += 1
