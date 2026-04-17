@@ -418,7 +418,6 @@ def mris_expand(in_surface):
         (list of strings) List of path to the generated surfaces
     """
     import os
-    from pathlib import Path
 
     from clinica.pipelines.pet_surface.pet_surface_utils import (  # noqa
         _check_mri_expand_file_location,
@@ -437,10 +436,9 @@ def mris_expand(in_surface):
     # Remove useless surfaces (0%, 5%, 10%, 15%, 20%, 25% and 30% of thickness)
     cprint(msg="Removing unnecessary mris_expands outputs (000 to 007)", lvl="debug")
 
-    output_path = _check_mri_expand_file_location(
-        working_directory=os.getcwd(), input_file_location=str(Path(in_surface).parent)
+    out_file = _check_mri_expand_file_location(
+        working_directory=os.getcwd(), input_file_location=in_surface
     )
-    out_file = f"{output_path} / {Path(in_surface).name}_exp-"
 
     for file in [
         out_file + x for x in ("000", "001", "002", "003", "004", "005", "006")
