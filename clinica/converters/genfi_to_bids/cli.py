@@ -41,9 +41,9 @@ def cli(
     dataset_directory: PathLike,
     bids_directory: PathLike,
     clinical_data_directory: Optional[PathLike] = None,
-    clinical_data_txt: Optional[PathLike] = None,
     gif: Optional[bool] = False,
     full: Optional[bool] = False,
+    clinical_data_txt: Optional[PathLike] = None,
 ) -> None:
     """GENFI to BIDS converter.
 

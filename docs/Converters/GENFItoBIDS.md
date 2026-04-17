@@ -1,7 +1,10 @@
 <!-- markdownlint-disable MD046 -->
 # `genfi-to-bids` – Conversion of the GENFI to BIDS
 
-!!! quote "Description reproduced from the [GENFI webpage](https://www.genfi.org)"
+!!! warning "Current Data Freeze versions processed by the converter"
+    Currently, the converter supports only GENFI Data Freeze 6 (DF6) and Data Freeze 7 (DF7) imaging and clinical data. Support for Data Freeze 8 (DF8) is planned for the next release.
+
+??? quote "Description reproduced from the [GENFI webpage](https://www.genfi.org)"
     The Genetic Frontotemporal dementia Initiative (GENFI) is a group of research centres across Europe and Canada with expertise in familial FTD, and is co-ordinated by Professor Jonathan Rohrer at University College London. GENFI is the largest genetic FTD consortium to date and currently consists of sites across the UK, Netherlands, Belgium, France, Spain, Portugal, Italy, Germany, Sweden, Denmark, Finland and Canada. The aim of the study is to understand more about genetic FTD, particularly in those who have mutations in the progranulin (GRN), microtubule-associated protein tau (MAPT) and chromosome 9 open reading frame 72 (C9orf72) genes. GENFI investigates both people who have developed symptoms and also people who have a risk of developing symptoms in the future because they carry an abnormal genetic mutation. By studying these individuals who are destined to develop the disease later in life we can understand the development from the very earliest changes. The key objectives of GENFI are therefore to develop markers which help identify the disease at its earliest stage as well as markers that allow the progression of the disease to be tracked. We are now collaborating closely with other similar studies around the world through the FTD Prevention Initiative. Through this worldwide initiative we are working with pharmaceutical companies to help design clinical trials for genetic FTD.
 
 ## Dependencies
@@ -94,12 +97,15 @@ where:
 
     Sessions respect the naming convention used in GENFI clinical data. In particular, for `ses-XY`, `X` represents the GENFI phase, and `Y` represents the visit number.
 
+!!! info "Data freeze version detection"
+    The data freeze version is automatically detected by the converter.
+
 - `OPTIONS`:
-    - `--clinical-data-dir/-cdd` is the path to the clinical data directory. Allows the user to add mandatory clinical data to `participants.tsv` and `sessions.tsv`. Mandatory clinical data are the following :
+    - `--clinical-data-dir/-cdd` is the path to the directory containing the clinical data files (tabular `.xlsx` files). These files are distinct from the clinical data fields, which correspond to the column names defined within the tabular files. Allows the user to automatically extract mandatory clinical data fields from the tabular files and add them to `participants.tsv` and `sessions.tsv`. Mandatory clinical data fields are the following :
         - For `participants.tsv` : `blinded_code`, `blinded_family`, `blinded_site`, `gender`.
-        - For `sessions.tsv` : `age_at_visit`, `date_of_assessment`, `diagnosis`, `education`, `ftld-cdr-nm-global`, `genetic_group`, `genetic_status_1`, `genetic_status_2`, `visit`. 
-        <br> All the remaining clinical data is optional and added through the use of the `-full` flag.
-    - `--clinical-data-txt/-cdt` is a txt file containing the additional fields the user wants. The available data can be retrieved from the specification file `full_specs.csv`, located in the Clinica installation directory at :<br>`clinica_path/clinica/converters/genfi_to_bids/specifications/full_specs.csv`.<br>The txt file should be written one field per line such as in the example below :
+        - For `sessions.tsv` : `age_at_visit`, `date_of_assessment`, `diagnosis`, `education`, `ftld-cdr-nm-global`, `genetic_group`, `genetic_status_1`, `genetic_status_2`, `visit`.
+        <br> All the remaining clinical data fields are optional and automatically added through the use of the `-full` flag.
+    - `--clinical-data-txt/-cdt` is a txt file containing the additional clinical data fields the user wants. The available data can be retrieved from the specification file `full_specs.csv`, located in the Clinica installation directory at :<br>`clinica_path/clinica/converters/genfi_to_bids/specifications/full_specs.csv`.<br>The `.txt` file should be written one field per line such as in the example below :
         ```text
         diagnosis_1
         diagnosis_1.1
@@ -117,8 +123,8 @@ where:
         ...
         ```
     If the `-full` flag is used, this option is considered redundant and will be ignored.
-    - `-gif` allows the user to add all the clinical data related to the imaging volumes (GIF, Geodesic Information Flow) to `session.tsv`. The added clinical data also contain the mandatory ones.
-    - `-full` allows the user to add all clinical data (mandatory, GIF, and the remaining optional ones) to `sessions.tsv`.
+    - `-gif` allows the user to add all the clinical data fields related to the imaging volumes (GIF, Geodesic Information Flow) to `session.tsv`. The added clinical data fields also include the mandatory ones.
+    - `-full` allows the user to add all clinical data fields (mandatory, GIF, and the remaining optional ones) to `sessions.tsv`.
 
 
 
