@@ -34,15 +34,15 @@ def get_late_frame_indices(
     with open(json_path, "r", errors="ignore") as f:
         metadata = json.load(f)
 
-    ft = metadata.get("FrameTimes")
-    if not ft or not isinstance(ft, dict):
-        return None
-
-    inner = ft.get("FrameTimes")
-    if not inner or not isinstance(inner, dict):
-        return None
-
-    values = inner.get("Values")
+    values = None
+    for parent_key in ("FrameTimes", "Time"):
+        ft = metadata.get(parent_key)
+        if ft and isinstance(ft, dict):
+            inner = ft.get("FrameTimes")
+            if inner and isinstance(inner, dict):
+                values = inner.get("Values")
+                if values:
+                    break
     if not values:
         return None
 
