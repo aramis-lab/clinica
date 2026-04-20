@@ -90,6 +90,7 @@ optional = true
 mkdocs = "^1.1"
 mkdocs-material = ">=7.1.8"
 pymdown-extensions = "*"
+markdown = "<3.10"
 
 [project.scripts]
 clinica = "clinica.cmdline:main"
