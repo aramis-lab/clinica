@@ -42,15 +42,15 @@ def run_pipeline(
         cprint("No AV1451 files found. Check the bids_dir argument.", lvl="warning")
         return
 
-    df = pd.DataFrame(records)
+    df_records = pd.DataFrame(records)
 
-    usable_df, unusable_df = split_usable_sessions(df)
+    usable_df, unusable_df = split_usable_sessions(df_records)
     log_session_summary(usable_df, unusable_df)
 
     if inventory_dir is not None:
         inventory_dir = Path(inventory_dir)
         inventory_dir.mkdir(parents=True, exist_ok=True)
-        df.to_csv(inventory_dir / "oasis3_av1451_inventory.csv", index=False)
+        df_records.to_csv(inventory_dir / "oasis3_av1451_inventory.csv", index=False)
         unusable_df.to_csv(
             inventory_dir / "oasis3_av1451_no_usable_session.csv", index=False
         )
