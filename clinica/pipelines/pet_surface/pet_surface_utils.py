@@ -392,18 +392,24 @@ def _running_mris_expand_with_subprocess(cmd: str) -> None:
         raise ValueError("mris_expand failed, returned non-zero code")
 
 
-def _check_mri_expand_file_location(
+def _check_mri_expand_file_location_then_move(
     working_directory: str, input_file_location: str
 ) -> str:
+    import shutil
     from pathlib import Path
 
     filename = Path(input_file_location).name
-
-    if (Path(working_directory) / (filename + "_exp-000")).is_file():
-        return f"{working_directory}/{filename}_exp-"
+    expected_location = f"{working_directory}/{filename}_exp-"
 
     if Path(input_file_location + "_exp-000").is_file():
-        return f"{input_file_location}_exp-"
+        for i in range(0, 14):
+            identifier = str(i).zfill(3)
+            shutil.move(
+                f"{input_file_location}_exp-" + identifier,
+                expected_location + identifier,
+            )
+
+    return expected_location
 
 
 def mris_expand(in_surface):
@@ -420,7 +426,7 @@ def mris_expand(in_surface):
     import os
 
     from clinica.pipelines.pet_surface.pet_surface_utils import (  # noqa
-        _check_mri_expand_file_location,
+        _check_mri_expand_file_location_then_move,
         _running_mris_expand_with_subprocess,
         _setting_mris_expand_cmd,
     )
@@ -436,19 +442,14 @@ def mris_expand(in_surface):
     # Remove useless surfaces (0%, 5%, 10%, 15%, 20%, 25% and 30% of thickness)
     cprint(msg="Removing unnecessary mris_expands outputs (000 to 007)", lvl="debug")
 
-    out_file = _check_mri_expand_file_location(
+    out_file = _check_mri_expand_file_location_then_move(
         working_directory=os.getcwd(), input_file_location=in_surface
     )
 
-    for file in [
-        out_file + x for x in ("000", "001", "002", "003", "004", "005", "006")
-    ]:
+    for file in [out_file + str(x).zfill(3) for x in range(0, 7)]:
         os.remove(file)
 
-    return [
-        os.path.abspath(out_file + x)
-        for x in ("007", "008", "009", "010", "011", "012", "013")
-    ]
+    return [os.path.abspath(out_file + str(x).zfill(3)) for x in range(7, 14)]
 
 
 def surf2surf(
