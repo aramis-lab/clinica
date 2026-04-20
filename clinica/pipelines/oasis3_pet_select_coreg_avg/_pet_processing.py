@@ -1,7 +1,10 @@
 """PET image processing: late-frame extraction, coregistration, and averaging."""
 
+from __future__ import annotations
+
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import nibabel as nib
 import numpy as np
@@ -16,13 +19,15 @@ except ImportError as exc:
     ) from exc
 
 from ._nii_reading import find_bids_json, find_bids_nifti, load_frames
-from ._scan_classification import USABLE_ACTIONS
 
-LATE_PHASE_START_S = 4500.0  # 75 minutes in seconds
+if TYPE_CHECKING:
+    from ._tracer_config import TracerConfig
 
 
-def get_late_frame_indices(json_path: Path) -> list[int] | None:
-    """Return 0-based indices of frames starting at or after 75 min post-injection.
+def get_late_frame_indices(
+    json_path: Path, late_phase_start_s: float
+) -> list[int] | None:
+    """Return 0-based indices of frames starting at or after the late-phase threshold.
 
     Returns None when the FrameTimes structure is absent or no late frames exist.
     """
@@ -41,7 +46,7 @@ def get_late_frame_indices(json_path: Path) -> list[int] | None:
     if not values:
         return None
 
-    indices = [i for i, v in enumerate(values) if v[0] >= LATE_PHASE_START_S]
+    indices = [i for i, v in enumerate(values) if v[0] >= late_phase_start_s]
     return indices if indices else None
 
 
@@ -71,7 +76,9 @@ def coregister_and_average(frames: list[nib.Nifti1Image]) -> nib.Nifti1Image:
     return nib.Nifti1Image(mean_data, fixed_nib.affine, fixed_nib.header)
 
 
-def process_scan(row: pd.Series, bids_dir: Path, output_dir: Path) -> bool:
+def process_scan(
+    row: pd.Series, bids_dir: Path, output_dir: Path, tracer_cfg: TracerConfig
+) -> bool:
     """Process a single scan record: locate, (extract,) coregister, average, save.
 
     Parameters
@@ -83,6 +90,8 @@ def process_scan(row: pd.Series, bids_dir: Path, output_dir: Path) -> bool:
         BIDS dataset root directory.
     output_dir:
         Directory where ``*_coreg_avg.nii.gz`` files are written.
+    tracer_cfg:
+        Tracer-specific configuration.
 
     Returns
     -------
@@ -113,8 +122,10 @@ def process_scan(row: pd.Series, bids_dir: Path, output_dir: Path) -> bool:
         return False
 
     frame_indices = None
-    if action == "Extract 75-100min frames for SUVR":
-        frame_indices = get_late_frame_indices(json_path)
+    if action == tracer_cfg.extract_action:
+        frame_indices = get_late_frame_indices(
+            json_path, tracer_cfg.late_phase_start_s
+        )
         if not frame_indices:
             cprint(f"[SKIP] No late-phase frames found in JSON: {tag}", lvl="warning")
             return False
@@ -144,9 +155,12 @@ def process_scan(row: pd.Series, bids_dir: Path, output_dir: Path) -> bool:
 
 
 def process_all_scans(
-    usable_df: pd.DataFrame, bids_dir: Path, output_dir: Path
+    usable_df: pd.DataFrame,
+    bids_dir: Path,
+    output_dir: Path,
+    tracer_cfg: TracerConfig,
 ) -> tuple[int, int]:
-    """Process all scans in *usable_df* whose Action is in USABLE_ACTIONS.
+    """Process all scans in *usable_df* whose Action is in the tracer's usable set.
 
     Returns
     -------
@@ -154,10 +168,10 @@ def process_all_scans(
         n_ok   — number of scans successfully processed (or already done)
         n_skip — number of scans skipped due to missing files or errors
     """
-    to_process = usable_df[usable_df["Action"].isin(USABLE_ACTIONS)]
+    to_process = usable_df[usable_df["Action"].isin(tracer_cfg.usable_actions)]
     n_ok = n_skip = 0
     for _, row in to_process.iterrows():
-        if process_scan(row, bids_dir, output_dir):
+        if process_scan(row, bids_dir, output_dir, tracer_cfg):
             n_ok += 1
         else:
             n_skip += 1

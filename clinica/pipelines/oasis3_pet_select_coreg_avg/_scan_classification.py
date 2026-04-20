@@ -1,7 +1,13 @@
-"""AV1451 scan classification: frame-timing parsing and protocol classification."""
+"""PET scan classification: frame-timing parsing and protocol classification."""
+
+from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ._tracer_config import TracerConfig
 
 CSV_FIELDS = [
     "Subject_ID",
@@ -18,10 +24,6 @@ CSV_FIELDS = [
     "Likely_Procedure",
     "Action",
 ]
-
-USABLE_ACTIONS = {"USE FOR SUVR", "Extract 75-100min frames for SUVR"}
-
-AV1451_BIDS_TRACER = "trc-18FAV1451"
 
 
 def parse_frame_times(metadata: dict) -> dict | None:
@@ -71,55 +73,10 @@ def parse_frame_times(metadata: dict) -> dict | None:
     }
 
 
-def classify_pet_run(
-    frame_info: dict | None, nii_frames: int | None, modality: str
-) -> tuple[str, str]:
-    """Classify a PET run against the known OASIS-3 AV1451 acquisition protocols.
-
-    Protocols sourced from the OASIS-3 Imaging Data Dictionary v2.3 (p.22).
-    https://bpb-us-e2.wpmucdn.com/sites.wustl.edu/dist/6/4383/files/2024/04/
-    OASIS-3_Imaging_Data_Dictionary_v2.3-a93c947a586e7367.pdf
-
-    Returns
-    -------
-    (likely_procedure, action)
-    """
-    if modality == "CT":
-        return "CT Scan", "Ignore"
-
-    if frame_info is None:
-        if nii_frames is None:
-            return "Unknown (no timing data)", "Check Manually"
-        if nii_frames == 1:
-            return "Single Frame (pre-summed?)", "Check Manually"
-        if nii_frames < 6:
-            return "Static (no timing)", "Check Manually"
-        if nii_frames == 6:
-            return "Proc 2 / Proc 3 Late Static (75-100min)", "USE FOR SUVR"
-        return f"Multi-frame ({nii_frames}f, no timing)", "Check Manually"
-
-    n = frame_info["frame_count"]
-    start = frame_info["first_start_min"]
-    end = frame_info["last_end_min"]
-
-    if start < 2 and n >= 30 and end > 70:
-        return "Proc 1 Full (0-100min)", "Extract 75-100min frames for SUVR"
-
-    if start < 2 and end <= 62:
-        if frame_info["durations_summary"] == "6x300s" and n == 6:
-            return "Proc 2 / Proc Late Static (75-100min)", "USE FOR SUVR"
-        return "Proc 3 Early (0-60min)", "Ignore for Standard SUVR"
-
-    if start >= 70:
-        return "Proc 2 / Proc 3 Late (75-100min)", "USE FOR SUVR"
-
-    return f"Unclassified ({start:.0f}-{end:.0f}min, {n}f)", "Check Manually"
-
-
 def evaluate_bids_pet_dir(
-    pet_dir: Path, subject_id: str, session_id: str
+    pet_dir: Path, subject_id: str, session_id: str, tracer_cfg: TracerConfig
 ) -> list[dict]:
-    """Evaluate all AV1451 PET runs in a single BIDS ``pet/`` directory.
+    """Evaluate all PET runs for a given tracer in a single BIDS ``pet/`` directory.
 
     Parameters
     ----------
@@ -129,15 +86,19 @@ def evaluate_bids_pet_dir(
         BIDS subject label, e.g. ``sub-OAS30001``.
     session_id:
         BIDS session label, e.g. ``ses-M126``.
+    tracer_cfg:
+        Tracer-specific configuration.
 
     Returns
     -------
-    List of scan record dicts, one per AV1451 JSON sidecar found.
+    List of scan record dicts, one per matching JSON sidecar found.
     """
     from ._nii_reading import get_nii_frame_count
 
     records = []
-    for json_path in sorted(pet_dir.glob(f"*{AV1451_BIDS_TRACER}*_pet.json")):
+    for json_path in sorted(
+        pet_dir.glob(f"*{tracer_cfg.bids_tracer_tag}*_pet.json")
+    ):
         with open(json_path, "r", errors="ignore") as f:
             try:
                 metadata = json.load(f)
@@ -152,7 +113,7 @@ def evaluate_bids_pet_dir(
         run_parts = [p for p in filename.split("_") if p.startswith("run-")]
         run_id = run_parts[0] if run_parts else "Unknown"
 
-        likely_proc, action = classify_pet_run(frame_info, nii_frames, modality)
+        likely_proc, action = tracer_cfg.classify_fn(frame_info, nii_frames, modality)
         inj_time = metadata.get("InjectionStart") or metadata.get("TimeZero", "Unknown")
 
         records.append(
@@ -185,8 +146,8 @@ def evaluate_bids_pet_dir(
     return records
 
 
-def scan_all_sessions(bids_dir: Path) -> list[dict]:
-    """Scan *bids_dir* for all AV1451 PET sessions and evaluate each one.
+def scan_all_sessions(bids_dir: Path, tracer_cfg: TracerConfig) -> list[dict]:
+    """Scan *bids_dir* for all PET sessions of the given tracer and evaluate each one.
 
     Expects a standard BIDS layout: ``bids_dir/sub-*/ses-*/pet/``.
 
@@ -198,5 +159,7 @@ def scan_all_sessions(bids_dir: Path) -> list[dict]:
             continue
         subject_id = pet_dir.parts[-3]
         session_id = pet_dir.parts[-2]
-        records.extend(evaluate_bids_pet_dir(pet_dir, subject_id, session_id))
+        records.extend(
+            evaluate_bids_pet_dir(pet_dir, subject_id, session_id, tracer_cfg)
+        )
     return records
