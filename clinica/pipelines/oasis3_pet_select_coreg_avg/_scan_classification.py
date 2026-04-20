@@ -33,15 +33,15 @@ def parse_frame_times(metadata: dict) -> dict | None:
         frame_count, first_start_min, last_end_min, duration_min, durations_summary
     or None when the structure is absent or malformed.
     """
-    ft = metadata.get("FrameTimes")
-    if not ft or not isinstance(ft, dict):
-        return None
-
-    inner = ft.get("FrameTimes")
-    if not inner or not isinstance(inner, dict):
-        return None
-
-    values = inner.get("Values")
+    values = None
+    for parent_key in ("FrameTimes", "Time"):
+        ft = metadata.get(parent_key)
+        if ft and isinstance(ft, dict):
+            inner = ft.get("FrameTimes")
+            if inner and isinstance(inner, dict):
+                values = inner.get("Values")
+                if values:
+                    break
     if not values or not isinstance(values, list) or len(values) == 0:
         return None
 
