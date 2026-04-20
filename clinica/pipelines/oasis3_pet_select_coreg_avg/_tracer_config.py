@@ -152,8 +152,8 @@ AV45_CONFIG = TracerConfig(
 # ---------------------------------------------------------------------------
 # PIB (Pittsburgh Compound B — Amyloid)
 # ---------------------------------------------------------------------------
-# Single protocol: 60-min dynamic scan
-# Frame structure: 24x5s + 9x20s + 10x1min + 9x5min
+# Proc 1: 60-min dynamic scan (24x5s + 9x20s + 10x1min + 9x5min)
+# Proc 2: 30-min dynamic starting at ~30 min (6x300s) → extract 40-60 min
 # SUVR window: 40-60 min
 
 
@@ -179,6 +179,10 @@ def _classify_pib(
     # Standard 60-min dynamic scan
     if start < 2 and n >= 20 and end > 50:
         return "60min Dynamic (0-60min)", "Extract 40-60min frames for SUVR"
+
+    # 30-min dynamic starting at ~30 min (covers 35-60 min SUVR window)
+    if 25 <= start <= 35 and end >= 55:
+        return "30min Dynamic (30-60min)", "Extract 40-60min frames for SUVR"
 
     # Late-phase only (if a subset was acquired separately)
     if start >= 35:
