@@ -10,6 +10,7 @@ def run_pipeline(
     output_dir: Path,
     tracer: str = "AV1451",
     inventory_dir: Path | None = None,
+    bids_output: bool = False,
 ) -> None:
     """Run the full PET processing pipeline on a BIDS dataset.
 
@@ -31,6 +32,10 @@ def run_pipeline(
         When provided, saves two CSVs (named after the tracer):
         - ``oasis3_<tracer>_inventory.csv``         — full per-run inventory
         - ``oasis3_<tracer>_no_usable_session.csv`` — unusable sessions only
+    bids_output:
+        When True, averaged images are saved back into the BIDS session ``pet/``
+        directory with a BIDS-compliant name (no ``run`` entity, no ``coreg_avg``
+        suffix).  *output_dir* is ignored for NIfTI outputs in this mode.
     """
     from clinica.utils.stream import cprint
 
@@ -71,5 +76,7 @@ def run_pipeline(
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    n_ok, n_skip = process_all_scans(usable_df, bids_dir, output_dir, tracer_cfg)
+    n_ok, n_skip = process_all_scans(
+        usable_df, bids_dir, output_dir, tracer_cfg, bids_output=bids_output
+    )
     cprint(f"Pipeline complete: {n_ok} processed, {n_skip} skipped.", lvl="info")

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -76,8 +77,29 @@ def coregister_and_average(frames: list[nib.Nifti1Image]) -> nib.Nifti1Image:
     return nib.Nifti1Image(mean_data, fixed_nib.affine, fixed_nib.header)
 
 
+def _bids_output_path(
+    bids_dir: Path, subject_id: str, session_id: str, file_name: str
+) -> Path:
+    """Build a BIDS-compliant output path without run entity or coreg_avg suffix.
+
+    Example: ``sub-OAS30001_ses-M126_trc-PIB_run-01_pet.json``
+    becomes  ``bids_dir/sub-OAS30001/ses-M126/pet/sub-OAS30001_ses-M126_trc-PIB_pet.nii.gz``
+    """
+    stem = Path(file_name).stem
+    # Remove _run-XX entity
+    stem = re.sub(r"_run-[^_]+", "", stem)
+    # Remove .nii if the stem came from .nii.gz
+    if stem.endswith(".nii"):
+        stem = stem[: -len(".nii")]
+    return bids_dir / subject_id / session_id / "pet" / (stem + ".nii.gz")
+
+
 def process_scan(
-    row: pd.Series, bids_dir: Path, output_dir: Path, tracer_cfg: TracerConfig
+    row: pd.Series,
+    bids_dir: Path,
+    output_dir: Path,
+    tracer_cfg: TracerConfig,
+    bids_output: bool = False,
 ) -> bool:
     """Process a single scan record: locate, (extract,) coregister, average, save.
 
@@ -92,6 +114,9 @@ def process_scan(
         Directory where ``*_coreg_avg.nii.gz`` files are written.
     tracer_cfg:
         Tracer-specific configuration.
+    bids_output:
+        When True, save into the BIDS session ``pet/`` directory with a
+        BIDS-compliant name (no run entity, no coreg_avg suffix).
 
     Returns
     -------
@@ -105,8 +130,11 @@ def process_scan(
     action = row["Action"]
     tag = f"{subject_id}/{session_id}/{file_name}"
 
-    out_name = Path(file_name).stem + "_coreg_avg.nii.gz"
-    out_path = output_dir / out_name
+    if bids_output:
+        out_path = _bids_output_path(bids_dir, subject_id, session_id, file_name)
+    else:
+        out_name = Path(file_name).stem + "_coreg_avg.nii.gz"
+        out_path = output_dir / out_name
     if out_path.exists():
         cprint(f"[EXISTS] Already processed, skipping: {tag}", lvl="debug")
         return True
@@ -159,6 +187,7 @@ def process_all_scans(
     bids_dir: Path,
     output_dir: Path,
     tracer_cfg: TracerConfig,
+    bids_output: bool = False,
 ) -> tuple[int, int]:
     """Process all scans in *usable_df* whose Action is in the tracer's usable set.
 
@@ -171,7 +200,7 @@ def process_all_scans(
     to_process = usable_df[usable_df["Action"].isin(tracer_cfg.usable_actions)]
     n_ok = n_skip = 0
     for _, row in to_process.iterrows():
-        if process_scan(row, bids_dir, output_dir, tracer_cfg):
+        if process_scan(row, bids_dir, output_dir, tracer_cfg, bids_output):
             n_ok += 1
         else:
             n_skip += 1

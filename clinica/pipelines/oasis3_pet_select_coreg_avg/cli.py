@@ -30,11 +30,22 @@ from ._tracer_config import SUPPORTED_TRACERS
         "no-usable-session CSVs to this directory."
     ),
 )
+@click.option(
+    "--bids-output",
+    is_flag=True,
+    default=False,
+    help=(
+        "Save averaged images back into the BIDS session pet/ directory "
+        "with a BIDS-compliant name (no run entity, no coreg_avg suffix). "
+        "When set, OUTPUT_DIR is ignored for NIfTI outputs."
+    ),
+)
 def cli(
     bids_dir: str,
     output_dir: str,
     tracer: str,
     inventory_dir: Optional[str] = None,
+    bids_output: bool = False,
 ) -> None:
     """OASIS-3 PET Run Selection Pipeline.
 
@@ -49,6 +60,7 @@ def cli(
         output_dir=Path(output_dir),
         tracer=tracer,
         inventory_dir=Path(inventory_dir) if inventory_dir else None,
+        bids_output=bids_output,
     )
 
 
