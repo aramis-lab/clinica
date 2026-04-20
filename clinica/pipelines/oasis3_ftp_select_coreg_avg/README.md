@@ -1,40 +1,97 @@
-# AV1451 Tau-PET Run Selection Pipeline — Process Report
+# AV1451 Tau-PET Run Selection Pipeline
 
 ## Overview
 
-The AV1451 Run Selection Pipeline systematically evaluates, classifies, and (after 
-a manual revision step) process AV1451 (flortaucipir) tau-PET scans from the OASIS-3. 
-The core challenge it addresses is that OASIS-3 tau-PET sessions frequently contain 
-multiple runs acquired under different protocols (documented in p.22 in the [OASIS-3 
-Imaging Methods and Data Dictionary](https://bpb-us-e2.wpmucdn.com/sites.wustl.edu/dist/6/4383/files/2024/04/OASIS-3_Imaging_Data_Dictionary_v2.3-a93c947a586e7367.pdf)), 
-where only the late-phase (75–100 min post-injection) data is suitable for computing 
-Standardized Uptake Value Ratios (SUVR). 
-The pipeline ensures that, independently of the recording protocol, only the 
+The AV1451 Run Selection Pipeline evaluates, classifies, and processes AV1451
+(flortaucipir) tau-PET scans from the OASIS-3 dataset in BIDS format.
+The core challenge it addresses is that OASIS-3 tau-PET sessions frequently
+contain multiple runs acquired under different protocols (documented in p.22 of
+the [OASIS-3 Imaging Data Dictionary](https://bpb-us-e2.wpmucdn.com/sites.wustl.edu/dist/6/4383/files/2024/04/OASIS-3_Imaging_Data_Dictionary_v2.3-a93c947a586e7367.pdf)),
+where only the late-phase (75-100 min post-injection) data is suitable for
+computing Standardized Uptake Value Ratios (SUVR).
+The pipeline ensures that, independently of the recording protocol, only the
 late-phase images are selected for processing.
 
-## Step 1 — Evaluate Tau Scans
+## Pipeline Steps
 
-The pipeline begins by scanning the raw data directory for all session folders containing `AV1451` in their name. For each session, it locates BIDS JSON sidecar files and parses the `FrameTimes` metadata structure to extract timing information: frame count, first frame start time, last frame end time, total scan duration, and a human-readable summary of frame durations. When timing metadata is unavailable, it falls back to reading the NIfTI header via `nibabel` to determine the number of frames.
+### Step 1 — Scan Classification (`_scan_classification.py`)
 
-Each run is then classified against known OASIS-3 AV1451 acquisition protocols. Runs starting near time zero with more than 30 frames spanning over 70 minutes are identified as **Procedure 3** (full dynamic 0–100 min), from which late-phase frames can be extracted. Runs starting at or after 70 minutes are classified as **Procedure 2** (late static, directly usable for SUVR). Early acquisitions (0–25 min) are labeled **Procedure 1** and marked to be ignored. CT scans are also excluded. The output is a comprehensive inventory CSV with one row per run.
+The pipeline scans the BIDS dataset (`sub-*/ses-*/pet/`) for all JSON sidecars
+matching the `trc-18FAV1451` tracer tag. For each run it parses the `FrameTimes`
+metadata to extract timing information: frame count, first frame start time,
+last frame end time, total scan duration, and a human-readable summary of frame
+durations. When timing metadata is unavailable, it falls back to reading the
+NIfTI header via `nibabel` to determine the number of frames.
 
-## Step 2 — Filter and Flag for Manual Review
+Each run is classified against the known OASIS-3 AV1451 acquisition protocols:
 
-The second step reads the inventory and groups runs by session. Sessions that already have a directly usable Procedure 2 scan are marked as ready. The remaining sessions are flagged for review under two filtering levels: a standard filter (no direct SUVR scan) and a strict filter (no direct or extractable scan). A review decisions template CSV is generated, containing columns for the reviewer to specify a `Reviewed_Action`, notes, and date.
+| Classification | Criteria | Action |
+|---|---|---|
+| **Proc 1 Full (0-100 min)** | Start near 0, >30 frames, end >70 min | Extract 75-100 min frames for SUVR |
+| **Proc 2 / Proc 3 Late (75-100 min)** | Start >= 70 min | USE FOR SUVR |
+| **Proc 3 Early (0-60 min)** | Start near 0, end <= 62 min | Ignore for Standard SUVR |
+| **CT Scan** | Modality = CT | Ignore |
 
-Only ~50 sessions require manual revision. The manual revision has already been 
-performed. However, sharing of the manually filled ``*_reviewed.csv`` table is 
-currently kept private to comply with the Data Usage Agreement. There should be a 
-discussion on how is this managed by the clinica pipeline.
+### Step 2 — Session Filtering (`_session_filtering.py`)
 
-## Step 3 — Build Master Inventory
+Sessions are split into usable and unusable groups. A session is **usable** when
+at least one of its runs has an action in `{"USE FOR SUVR", "Extract 75-100min
+frames for SUVR"}`. Sessions where no run qualifies are flagged as unusable and
+logged as warnings.
 
-After manual review, the third step merges the original automated inventory with the reviewed decisions file (semicolon-delimited). It computes session-level flags — whether any run is directly usable, extractable, or was approved during manual review — and derives a `Final_Status` and `Processing_Action` for every run. Scans are categorized as Included, Excluded (with reason), Superseded, or Pending Review. The output is a single master CSV that serves as the definitive record for downstream processing.
+When an `inventory_dir` is provided, two CSVs are saved:
 
-## Step 4 — Coregister and Average
+- `oasis3_av1451_inventory.csv` — full per-run inventory with classification
+- `oasis3_av1451_no_usable_session.csv` — unusable sessions only
 
-The final step processes all included scans. For each scan marked as "Coregister and Average", it loads the 4-D NIfTI, splits it into individual 3-D frames, and performs rigid-body coregistration to the first frame using ANTs (`antspyx`). For full-dynamic scans requiring frame extraction, it first selects only frames acquired at or after 75 minutes post-injection. All aligned frames are then averaged into a single 3-D volume and saved as a compressed NIfTI file. Already-processed scans are automatically skipped on re-runs, making the pipeline idempotent.
+### Step 3 — Coregister and Average (`_pet_processing.py`)
 
-## Summary
+All usable scans are processed:
 
-This pipeline transforms an unstructured collection of multi-protocol tau-PET acquisitions into a curated, analysis-ready dataset by combining automated protocol classification, structured manual review, and robust image processing.
+1. For full-dynamic scans (Proc 1), only frames starting at >= 75 min
+   post-injection are extracted.
+2. The selected frames are split into individual 3-D volumes.
+3. Rigid-body (affine) coregistration to the first frame is performed using
+   ANTs (`antspyx`).
+4. All aligned frames are averaged into a single 3-D volume and saved as a
+   compressed NIfTI (`*_coreg_avg.nii.gz`).
+
+Already-processed scans are automatically skipped on re-runs, making the
+pipeline idempotent.
+
+## Usage
+
+### Python API
+
+```python
+from clinica.pipelines.oasis3_ftp_select_coreg_avg import run_pipeline
+
+run_pipeline(
+    bids_dir="path/to/bids",
+    output_dir="path/to/output",
+    inventory_dir="path/to/inventory",  # optional
+)
+```
+
+### CLI
+
+```bash
+python -m clinica.pipelines.oasis3_ftp_select_coreg_avg BIDS_DIR OUTPUT_DIR [--inventory-dir DIR]
+```
+
+## Module Structure
+
+| Module | Responsibility |
+|---|---|
+| `_pipeline.py` | Top-level orchestration |
+| `_scan_classification.py` | Frame-timing parsing and protocol classification |
+| `_session_filtering.py` | Session-level usability filtering and logging |
+| `_pet_processing.py` | Late-frame extraction, coregistration, and averaging |
+| `_nii_reading.py` | NIfTI and BIDS JSON I/O helpers |
+| `cli.py` | Click CLI entry point |
+
+## Dependencies
+
+- `pandas` — tabular data handling
+- `nibabel` — NIfTI I/O
+- `antspyx` — rigid-body coregistration
