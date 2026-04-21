@@ -6,6 +6,14 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Clinica 0.11.1
+
+### Fixed
+- [Documentation] Retrograde to pygments previous version (PR[#1678](https://github.com/aramis-lab/clinica/pull/1678))
+- [Pipelines] PET-Surface : fix paths in mris_expand (PR[#1651](https://github.com/aramis-lab/clinica/pull/1651), PR[#1675](https://github.com/aramis-lab/clinica/pull/1675))
+- [Converters] Genfi-to-Bids : Ensure compatibility with DF6 (PR[#1661](https://github.com/aramis-lab/clinica/pull/1661))
+- [Converters] Adni-to-Bids : Fix for case where no FLAIR images (PR[#1672](https://github.com/aramis-lab/clinica/pull/1672))
+
 
 ## Clinica 0.11.0
 
