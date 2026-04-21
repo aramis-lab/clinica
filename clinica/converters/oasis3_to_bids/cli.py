@@ -1,4 +1,5 @@
 from os import PathLike
+from typing import Optional
 
 import click
 
@@ -9,10 +10,12 @@ from clinica.converters import cli_param
 @cli_param.dataset_directory
 @cli_param.clinical_data_directory
 @cli_param.bids_directory
+@cli_param.subjects_list
 def cli(
     dataset_directory: PathLike,
     clinical_data_directory: PathLike,
     bids_directory: PathLike,
+    subjects_list: Optional[PathLike] = None,
 ) -> None:
     """OASIS3 to BIDS converter.
 
@@ -22,7 +25,12 @@ def cli(
     """
     from ._converter import convert
 
-    convert(dataset_directory, bids_directory, clinical_data_directory)
+    convert(
+        dataset_directory,
+        bids_directory,
+        clinical_data_directory,
+        subjects=subjects_list,
+    )
 
 
 if __name__ == "__main__":

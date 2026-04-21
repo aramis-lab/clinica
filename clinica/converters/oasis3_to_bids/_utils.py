@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Optional
 
 import pandas as pd
 
@@ -7,6 +7,7 @@ from clinica.utils.stream import cprint, log_and_raise
 
 __all__ = [
     "read_imaging_data",
+    "filter_imaging_data_by_subjects",
     "intersect_data",
     "dataset_to_bids",
     "write_bids",
@@ -284,6 +285,38 @@ def _merge_clinical_scores(
         how="left",
         on="session",
     )
+
+
+def filter_imaging_data_by_subjects(
+    imaging_data: pd.DataFrame, subjects_path: Path
+) -> Optional[pd.DataFrame]:
+    """Filter imaging data to the subjects listed in *subjects_path*.
+
+    Returns the filtered DataFrame, or ``None`` when no subjects remain
+    (signalling the caller should abort conversion).
+    """
+    subject_ids = {
+        line.strip() for line in subjects_path.read_text().splitlines() if line.strip()
+    }
+    cprint(f"Loaded {len(subject_ids)} subject(s) from {subjects_path}", lvl="info")
+    found = set(imaging_data["Subject"].unique())
+    for s in sorted(subject_ids - found):
+        cprint(
+            f"Subject {s} not found in imaging data and will be skipped.",
+            lvl="warning",
+        )
+    imaging_data = imaging_data[imaging_data["Subject"].isin(subject_ids)]
+    if imaging_data.empty:
+        log_and_raise(
+            "No imaging data remains after subject filtering.",
+            ValueError,
+        )
+
+    cprint(
+        f"Retaining {imaging_data['Subject'].nunique()} subject(s) after filtering.",
+        lvl="info",
+    )
+    return imaging_data
 
 
 def intersect_data(
