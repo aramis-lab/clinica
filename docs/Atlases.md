@@ -81,20 +81,17 @@ To do so:
 - Install Clinica following the [developer instructions](../Installation/#install-clinica).
 
 - In the `<clinica>/clinica/utils/atlas.py` file, modify the following two elements:
-      - The label of the volume atlas that will be stored in CAPS filename(s):
+  - The label of the volume atlas that will be stored in CAPS filename(s):
 
-      ```python
-      class T1AndPetVolumeAtlasName(str, Enum):
-          """Possible names for T1 / PET atlases."""
-
-          AAL2 = "AAL2"
-          AICHA = "AICHA"
-          HAMMERS = "Hammers"
-          LPBA40 = "LPBA40"
-          NEUROMORPHOMETRICS = "Neuromorphometrics"
-      ```
-
-      Simply define a new label by adding a new variant to this enumeration.
-      The `T1AndPetVolumeAtlasName` enumeration is used by all the command-line interfaces using atlases from the [`t1-volume`](../T1_Volume) and [`pet-volume`](../PET_Volume) pipelines, so you do not need to modify the pipelines' CLI to make this new region appear.
-    
-      - Create a new class inheriting from `BaseAtlas` and implementing the required interface.
+    ``` python
+        class T1AndPetVolumeAtlasName(str, Enum):
+            """Possible names for T1 / PET atlases."""
+            AAL2 = "AAL2"
+            AICHA = "AICHA"
+            HAMMERS = "Hammers"
+            LPBA40 = "LPBA40"
+            NEUROMORPHOMETRICS = "Neuromorphometrics"
+    ```
+      
+    Simply define a new label by adding a new variant to this enumeration. The `T1AndPetVolumeAtlasName` enumeration is used by all the command-line interfaces using atlases from the [`t1-volume`](../T1_Volume) and [`pet-volume`](../PET_Volume) pipelines, so you do not need to modify the pipelines' CLI to make this new region appear.
+  - Create a new class inheriting from `BaseAtlas` and implementing the required interface.

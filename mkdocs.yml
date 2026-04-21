@@ -27,6 +27,7 @@ theme:
   features:
     - content.tooltips
     - content.tabs.link
+    - content.code.copy
     - navigation.top
 
 # Version panel
