@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD046 -->
 # `oasis3-to-bids` – Conversion of the Open Access Series of Imaging Studies (OASIS-3) to BIDS
 
-!!! quote "Description reproduced from the [OASIS' webpage](https://sites.wustl.edu/oasisbrains/)"
+??? quote "Description reproduced from the [OASIS' webpage](https://sites.wustl.edu/oasisbrains/)"
     The Open Access Series of Imaging Studies (OASIS) is a project aimed at making MRI data sets of the brain freely available to the scientific community.
     By compiling and freely distributing MRI data sets, we hope to facilitate future discoveries in basic and clinical neuroscience.
     OASIS is made available by the Washington University Alzheimer’s Disease Research Center, Dr. Randy Buckner at the Howard Hughes Medical Institute (HHMI) at Harvard University, the Neuroinformatics Research Group (NRG) at Washington University School of Medicine, and the Biomedical Informatics Research Network (BIRN).
@@ -19,6 +19,9 @@
 
   For more information about the images and the dataset you can read the [OASIS-3: Imaging Methods and Data Dictionary](https://bpb-us-w2.wpmucdn.com/sites.wustl.edu/dist/6/4383/files/2024/04/OASIS-3_Imaging_Data_Dictionary_v2.3-a93c947a586e7367.pdf).
 
+!!! warning "OASIS 2"
+    We do not currently support the conversion of OASIS-2.
+
 ## Dependencies
 
 If you installed the core of Clinica, this converter needs no further dependencies.
@@ -34,46 +37,48 @@ and follow the procedure. Then, you can download the data via the OASIS3 project
 repository in NITRC.
 
 
-### Imaging data
+### Regular OASIS3 data
 
-To download the images of the OASIS-3 dataset:
-
-#### Regular OASIS3 data
-
-1. Access the [XNAT Imaging Download](https://www.nitrc.org/ir/app/action/ProjectDownloadAction/project/OASIS3)  
-   page after logging in with your OASIS3-accepted NITRC account. You will have a 
-   download interface with different options, such as shown below.
+Access the [XNAT Imaging Download](https://www.nitrc.org/ir/app/action/ProjectDownloadAction/project/OASIS3) page after logging in with your OASIS3-accepted NITRC account. You will find a download interface with different options, such as shown below.
 
 <img width="959" alt="Screenshot 2021-07-15 at 10 48 45" src="https://user-images.githubusercontent.com/85217698/125761542-bfcfb824-af4f-4e0d-b597-510418986313.png">
 
-2. In the "Select Sessions" part, select the sessions you want to work with. 
-3. **MAKE SURE TO SELECT THE ``OASIS3_data_files`` SESSION, WHICH CONTAINS THE CLINICAL 
-   DATA NECESSARY FOR THE CONVERSION.** 
+1. **Select Sessions** : select the sessions you want to work with. 
 
-4. For the "Select Image Data" part:
+    !!! danger ""
+        **MAKE SURE TO SELECT THE ``OASIS3_data_files`` SESSION, WHICH CONTAINS THE CLINICAL 
+        DATA NECESSARY FOR THE CONVERSION.**
 
-    a. For the "Scan Format" select *both* BIDS and NIFTI. Otherwise, you will be missing data.
+2. **Select Image Data** :
+
+    a. _Scan Format_ : select *both* BIDS and NIFTI. Otherwise, you will be missing data.
     
-    b. For the "Scan Types", select only the modalities you desire. Do note that if it is not amongst the modality handled by this converter, it will not be converted.
+    b. _Scan Types_ : select only the modalities you desire. Do note that if it is not amongst the modality handled by this converter, it will not be converted.
     
-    c. For the "Additional Resources", select BIDS.
+    c. _Additional Resources_ : select BIDS.
     
-    d. For the "Assessments", do not select anything.
+    d. _Assessments_ : do not select anything.
 
-    e. For the "Download Data", select "Simplify downloaded archive structure" and not the other options.
+3. **Download Data** :
 
-5. Click submit to download. We advise that you use the XNAT Desktop Client which will 
-be more efficient than download through your web browser.
-6. After download completion, ensure that the ``OASIS3_data_files`` files are 
-   found in a different directory, which will be your ``CLINICAL_DATA_DIRECTORY``.
+    a. :warning: select "**Simplify downloaded archive structure**" and **not** the other options.
 
-!!! warning
+    b. Use the XNAT Desktop Client if you can to be more efficient than downloading through the web browser.
+
+    c. Click "Submit" to download. 
+
+4. After download completion, ensure that the ``OASIS3_data_files`` files are in a separate directory which will be your ``CLINICAL_DATA_DIRECTORY``.
+
+    !!! tip 
+        You do not have to modify the original folder name before using the converter.
+
+!!! warning "ADRC Clinical Data"
     In previous versions of clinica (<`v0.12.0`) we used the "ADRC" metadata file which contained slightly different values
     for the Age at Entry parameter. This might explain slight differences in your results if you try to compare a OASIS3 dataset metadata based
     on age then versus now.
 
 
-#### TAU PET Imaging
+### TAU PET Imaging
 Historically, the Tau PET scans for the OASIS3 longitudinal belonged to a different 
 project, which required additional data request. Nowadays, data usage is granted 
 together with the regular OASIS3 project.
@@ -89,23 +94,13 @@ by clicking one of the highlighted elements in the following screenshot:
 There, click on ``Download Images``
 ![OASIS3_download.PNG](../img/OASIS3_download/OASIS3_download.PNG)
 
-And repeat steps 1 to 5.
-
-!!! note
-    You do not have to modify the original folder name before using the converter.
-
-!!! warning
-    We do not currently support the conversion of OASIS-2.
+And repeat steps 1 to 4.
 
 
 ## Supported modalities
 
-Please note that this converter currently processes the clinical data and the following modalities : 
-- T1W
-- T2star
-- Flair
-- DWI
-- [PET](../glossary.md#pet) 
+Please note that the converter currently processes the clinical data and the following modalities : 
+T1W / T2star / Flair / DWI / fMRI / [PET](../glossary.md#pet) : FDG, PIB, TAU
 
 Support for additional modalities may be implemented later.
 
