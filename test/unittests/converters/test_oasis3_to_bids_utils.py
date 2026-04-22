@@ -171,7 +171,7 @@ def test_read_demo_data(tmp_path):
 
 
 def test_map_modality_to_bids():
-    from clinica.converters.oasis3_to_bids._utils import _map_modality_to_bids
+    from clinica.converters.oasis3_to_bids._utils import _map_supported_modality_to_bids
 
     input = pd.DataFrame(
         {
@@ -242,7 +242,9 @@ def test_map_modality_to_bids():
         }
     )
 
-    assert_frame_equal(_map_modality_to_bids(input), expected, check_like=True)
+    assert_frame_equal(
+        _map_supported_modality_to_bids(input), expected, check_like=True
+    )
 
 
 def test_filter_to_imaging_subjects():
@@ -412,3 +414,26 @@ def test_merge_clinical_scores(tmp_path):
         }
     )
     assert_frame_equal(result, expected, check_like=True)
+
+
+def test_filter_imaging_data_by_subjects(tmp_path):
+    from clinica.converters.oasis3_to_bids._utils import filter_imaging_data_by_subjects
+
+    imaging_data = pd.concat(
+        [
+            _get_imaging_data(),
+            pd.DataFrame(
+                {
+                    "Subject": ["OAS30002"],
+                    "Date": ["d0000"],
+                    "path": ["OAS30002_MR_d0000"],
+                }
+            ),
+        ]
+    )
+    with open(tmp_path / "subjects.txt", "w") as f:
+        f.write("OAS30001\nfoo\n")
+
+    output = filter_imaging_data_by_subjects(imaging_data, tmp_path / "subjects.txt")
+    assert len(output) == 2
+    assert output.Subject.unique()[0] == "OAS30001"
