@@ -173,6 +173,10 @@ where:
     !!! example
         If the original subject ID is `OAS30001`, since the numerical ID is `0001`, the final BIDS ID will be `sub-OASIS30001`.
 
+
+--8<-- "snippets/converters_options.md"
+
+
 ## Citing this converter in your paper
 
 !!! cite "Example of paragraph:"
