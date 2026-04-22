@@ -218,7 +218,7 @@ def _compute_session_bins(df_source: pd.DataFrame) -> pd.DataFrame:
     ).assign(ses=lambda df: df.session.apply(lambda x: f"ses-M{int(x):03d}"))
 
 
-def _map_modality_to_bids(df_source: pd.DataFrame) -> pd.DataFrame:
+def _map_supported_modality_to_bids(df_source: pd.DataFrame) -> pd.DataFrame:
     """Expand the modality string into BIDS datatype, suffix, and tracer label columns."""
     # Mapping from OASIS3 modality strings to BIDS datatype / suffix / tracer label.
 
@@ -235,8 +235,10 @@ def _map_modality_to_bids(df_source: pd.DataFrame) -> pd.DataFrame:
     }
 
     return df_source.join(
-        df_source.modality.map(_MODALITY_TO_BIDS).apply(pd.Series)
-    ).drop(0, axis=1)
+        df_source.modality.map(_MODALITY_TO_BIDS).apply(pd.Series)[
+            ["datatype", "suffix", "trc_label"]
+        ]
+    )
 
 
 def _build_bids_filenames(df_source: pd.DataFrame) -> pd.DataFrame:
@@ -329,7 +331,7 @@ def intersect_data(
     df_source = _add_age_at_entry_and_age_at_scan(df_source, df_demo)
     df_source = _add_mri_scanner_metadata(df_source, df_mri)
     df_source = _compute_session_bins(df_source)
-    df_source = _map_modality_to_bids(df_source)
+    df_source = _map_supported_modality_to_bids(df_source)
     df_source = _build_bids_filenames(df_source)
     df_source = _merge_clinical_scores(df_source, df_clinical)
     return df_source
