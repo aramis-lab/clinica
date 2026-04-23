@@ -92,12 +92,12 @@ pipeline idempotent.
 ### Python API
 
 ```python
-from clinica.pipelines.oasis3_pet_select_coreg_avg._pipeline import run_pipeline
+from clinica.iotools.oasis3_pet_select_coreg_avg._pipeline import run_pipeline
 
 run_pipeline(
     bids_dir="path/to/bids",
     output_dir="path/to/output",
-    tracer="AV1451",              # or "AV45" or "PIB"
+    tracer="AV1451",  # or "AV45" or "PIB"
     inventory_dir="path/to/inventory",  # optional
 )
 ```

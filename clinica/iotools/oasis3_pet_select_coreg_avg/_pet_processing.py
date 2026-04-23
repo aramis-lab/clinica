@@ -151,9 +151,7 @@ def process_scan(
 
     frame_indices = None
     if action == tracer_cfg.extract_action:
-        frame_indices = get_late_frame_indices(
-            json_path, tracer_cfg.late_phase_start_s
-        )
+        frame_indices = get_late_frame_indices(json_path, tracer_cfg.late_phase_start_s)
         if not frame_indices:
             cprint(f"[SKIP] No late-phase frames found in JSON: {tag}", lvl="warning")
             return False

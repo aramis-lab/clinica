@@ -65,12 +65,8 @@ def run_pipeline(
     if inventory_dir is not None:
         inventory_dir = Path(inventory_dir)
         inventory_dir.mkdir(parents=True, exist_ok=True)
-        df_records.to_csv(
-            inventory_dir / tracer_cfg.inventory_csv_name, index=False
-        )
-        unusable_df.to_csv(
-            inventory_dir / tracer_cfg.no_usable_csv_name, index=False
-        )
+        df_records.to_csv(inventory_dir / tracer_cfg.inventory_csv_name, index=False)
+        unusable_df.to_csv(inventory_dir / tracer_cfg.no_usable_csv_name, index=False)
         cprint(f"Inventory CSVs saved to {inventory_dir}", lvl="info")
 
     output_dir = Path(output_dir)

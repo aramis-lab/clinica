@@ -96,9 +96,7 @@ def evaluate_bids_pet_dir(
     from ._nii_reading import get_nii_frame_count
 
     records = []
-    for json_path in sorted(
-        pet_dir.glob(f"*{tracer_cfg.bids_tracer_tag}*_pet.json")
-    ):
+    for json_path in sorted(pet_dir.glob(f"*{tracer_cfg.bids_tracer_tag}*_pet.json")):
         with open(json_path, "r", errors="ignore") as f:
             try:
                 metadata = json.load(f)
