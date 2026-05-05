@@ -221,13 +221,14 @@ def _compute_session_bins(df_source: pd.DataFrame) -> pd.DataFrame:
 def _map_supported_modality_to_bids(df_source: pd.DataFrame) -> pd.DataFrame:
     """Expand the modality string into BIDS datatype, suffix, and tracer label columns."""
     # Mapping from OASIS3 modality strings to BIDS datatype / suffix / tracer label.
+    import numpy as np
 
     _MODALITY_TO_BIDS = {
-        "dwi_MR": {"datatype": "dwi", "suffix": "dwi"},
-        "T1w_MR": {"datatype": "anat", "suffix": "T1w"},
-        "bold_MR": {"datatype": "func", "suffix": "bold"},
-        "T2star_MR": {"datatype": "anat", "suffix": "T2starw"},
-        "FLAIR_MR": {"datatype": "anat", "suffix": "FLAIR"},
+        "dwi_MR": {"datatype": "dwi", "suffix": "dwi", "trc_label": np.nan},
+        "T1w_MR": {"datatype": "anat", "suffix": "T1w", "trc_label": np.nan},
+        "bold_MR": {"datatype": "func", "suffix": "bold", "trc_label": np.nan},
+        "T2star_MR": {"datatype": "anat", "suffix": "T2starw", "trc_label": np.nan},
+        "FLAIR_MR": {"datatype": "anat", "suffix": "FLAIR", "trc_label": np.nan},
         "pet_FDG": {"datatype": "pet", "suffix": "pet", "trc_label": "18FFDG"},
         "pet_PIB": {"datatype": "pet", "suffix": "pet", "trc_label": "11CPIB"},
         "pet_AV45": {"datatype": "pet", "suffix": "pet", "trc_label": "18FAV45"},
