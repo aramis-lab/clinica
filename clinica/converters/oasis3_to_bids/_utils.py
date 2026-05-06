@@ -418,34 +418,55 @@ def _build_scans_df(df_source: pd.DataFrame) -> pd.DataFrame:
 
 
 def _install_bids(sourcedata_dir: Path, bids_filename: Path) -> None:
+    """Should account for all downloading procedures :
+    - Official : everything in the same folder
+        └─ <participant_id>/
+            └─ <session_id>/
+              └─ <modality>/
+                 ├─ ... .tsv
+                 ├─ ... .nii.gz
+                 └─ ... .json
+    - Documentated : sidecar separated from nifti
+            └─ <participant_id>/
+            └─ <session_id>/
+              └─ <modality>/
+                └─ BIDS/
+                 ├─ ... .tsv
+                 └─ ... .json
+                └─ NIFTI/
+                 └─ ... .nii.gz
+
+    """
     from fsspec.implementations.local import LocalFileSystem
+
+    if bids_filename.stem == "NIFTI":
+        bids_filename = bids_filename.parent
 
     fs = LocalFileSystem(auto_mkdir=True)
 
-    source_file = fs.open(fs.ls(sourcedata_dir)[0], mode="rb")
+    if len(source_nifti := fs.glob(rf"{sourcedata_dir}/**/*nii.gz")) != 1:
+        raise (
+            FileNotFoundError,
+            f"Too many or missing source image for folder {sourcedata_dir}.",
+        )
+
+    source_nifti = source_nifti[0]
+
+    fs.copy(source_nifti, str(bids_filename), on_error="raise")
     cprint(
-        f"  Copying {fs.ls(sourcedata_dir)[0]} -> {bids_filename}",
+        f"  Copying {source_nifti} -> {bids_filename}",
         lvl="debug",
     )
-    target_file = fs.open(bids_filename, mode="wb")
-
-    with source_file as sf, target_file as tf:
-        tf.write(sf.read())
-
-    source_basename = Path(Path(Path(fs.ls(sourcedata_dir)[0]).stem).stem)
-    target_basename = Path(bids_filename.stem).stem
 
     # The following part adds the sidecar files related to the nifti with the same name: it can be tsv or json files.
     # It may or may not be used, since there might not be any sidecars.
-    sidecar_dir = sourcedata_dir.parent / "BIDS"
-    for source_sidecar in sidecar_dir.rglob(f"{source_basename}*"):
-        target_sidecar = (bids_filename.parent / target_basename).with_name(
-            f"{target_basename}{source_sidecar.suffix}"
+    source_basename = Path(source_nifti).with_suffix("").stem
+
+    for source_sidecar in fs.glob(rf"{sourcedata_dir}/**/{source_basename}.[!nii.gz]*"):
+        target_sidecar = bids_filename.with_suffix("").with_suffix(
+            Path(source_sidecar).suffix
         )
-        source_file = fs.open(source_sidecar, mode="rb")
-        target_file = fs.open(target_sidecar, mode="wb")
-        with source_file as sf, target_file as tf:
-            tf.write(sf.read())
+        fs.copy(source_sidecar, str(target_sidecar), on_error="raise")
 
 
 def write_bids(
