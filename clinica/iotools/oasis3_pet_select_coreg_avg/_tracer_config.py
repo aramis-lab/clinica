@@ -182,11 +182,11 @@ def _classify_pib(
 
     # 30-min dynamic starting at ~30 min (covers 35-60 min SUVR window)
     if 25 <= start <= 35 and end >= 55:
-        return "30min Dynamic (30-60min)", "Extract 40-60min frames for SUVR"
+        return "30min Dynamic (30-60min)", "Extract 30-60min frames for SUVR"
 
     # Late-phase only (if a subset was acquired separately)
-    if start >= 35:
-        return "Late Phase (40-60min)", "USE FOR SUVR"
+    if start >= 30:
+        return "Late Phase (30-60min)", "USE FOR SUVR"
 
     # Early-only acquisition
     if start < 2 and end <= 35:
@@ -198,7 +198,7 @@ def _classify_pib(
 PIB_CONFIG = TracerConfig(
     tracer=Tracer.PIB,
     bids_tracer_tag=f"trc-{Tracer.PIB.value}",
-    late_phase_start_min=40.0,
+    late_phase_start_min=30.0,
     late_phase_end_min=60.0,
     classify_fn=_classify_pib,
 )
