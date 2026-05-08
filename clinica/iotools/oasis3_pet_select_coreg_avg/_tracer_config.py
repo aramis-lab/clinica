@@ -178,9 +178,10 @@ def _classify_pib(
 
     # Standard 60-min dynamic scan
     if start < 2 and n >= 20 and end > 50:
-        return "60min Dynamic (0-60min)", "Extract 40-60min frames for SUVR"
+        return "60min Dynamic (0-60min)", "Extract 30-60min frames for SUVR"
 
-    # 30-min dynamic starting at ~30 min (covers 35-60 min SUVR window)
+    # 30-min dynamic starting at ~30 min (covers 30-60 min SUVR window)
+    # 30-min dynamic starting at ~30 min (covers 30-60 min SUVR window)
     if 25 <= start <= 35 and end >= 55:
         return "30min Dynamic (30-60min)", "Extract 30-60min frames for SUVR"
 
