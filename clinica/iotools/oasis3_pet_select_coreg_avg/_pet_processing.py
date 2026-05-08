@@ -60,17 +60,17 @@ def coregister_and_average(frames: list[nib.Nifti1Image]) -> nib.Nifti1Image:
         return frames[0]
 
     fixed_nib = frames[0]
-    fixed_ants = ants.from_nibabel(fixed_nib)
+    fixed_ants = ants.from_nibabel_nifti(fixed_nib)
 
     aligned_data = [np.asarray(fixed_nib.dataobj, dtype=np.float32)]
     for frame_nib in frames[1:]:
-        moving_ants = ants.from_nibabel(frame_nib)
+        moving_ants = ants.from_nibabel_nifti(frame_nib)
         result = ants.registration(
             fixed=fixed_ants,
             moving=moving_ants,
             type_of_transform="Affine",
         )
-        warped_nib = ants.to_nibabel(result["warpedmovout"])
+        warped_nib = ants.to_nibabel_nifti(result["warpedmovout"])
         aligned_data.append(np.asarray(warped_nib.dataobj, dtype=np.float32))
 
     mean_data = np.mean(np.stack(aligned_data, axis=-1), axis=-1).astype(np.float32)
