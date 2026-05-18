@@ -34,7 +34,7 @@ You will find this notion when working on longitudinal datasets.
 This is simply a label that will define the set of sessions considered.
 Unlike group, longitudinal template is dedicated to intra-subject analysis.
 Besides, the longitudinal label for a participant is defined concatenating the different session labels in alphabetical order so that the longitudinal label will be unique.
-For instance, if the intra-subject template is computed on `M018` and `M000` sessions, the longitudinal ID will be `long-M000M018`.
+For instance, if the intra-subject template is computed on `M018` and `M000` sessions, the longitudinal ID will be `long-M000+M018`.
 
 ## Differences with BIDS
 
@@ -123,8 +123,8 @@ groups/
 
 This CAPS folder contains the outputs of longitudinal segmentations performed with [FreeSurfer](../Software/Third-party.md#freesurfer) for a fictional participant `CLNC01` at sessions `M000` and `M018`.
 First, the [`t1-freesurfer` pipeline](../Pipelines/T1_FreeSurfer.md) is run on the two sessions.
-Then, the [`t1-freesurfer-longitudinal` pipeline](../Pipelines/T1_FreeSurfer_Longitudinal.md) will compute the intra-subject template `sub-CLNC01_long-M000M018` using the `M000` and `M018` sessions.
-This template is finally used to longitudinally correct the segmentations, whose results are stored in the `sub-CLNC01_ses-M000.long.sub-CLNC01_long-M000M018` and `sub-CLNC01_ses-M018.long.sub-CLNC01_long-M000M018` folders.
+Then, the [`t1-freesurfer-longitudinal` pipeline](../Pipelines/T1_FreeSurfer_Longitudinal.md) will compute the intra-subject template `sub-CLNC01_long-M000+M018` using the `M000` and `M018` sessions.
+This template is finally used to longitudinally correct the segmentations, whose results are stored in the `sub-CLNC01_ses-M000.long.sub-CLNC01_long-M000+M018` and `sub-CLNC01_ses-M018.long.sub-CLNC01_long-M000+M018` folders.
 
 Of note, the `<time_point_id>.long.<template_id>` naming comes from [FreeSurfer](../Software/Third-party.md#freesurfer) when running the longitudinal `recon-all` command.
 
@@ -132,10 +132,10 @@ Of note, the `<time_point_id>.long.<template_id>` naming comes from [FreeSurfer]
 dataset_description.json
 subjects/
 ├── sub-CLNC01/
-│   ├── long-M000M018/
-│   │   ├── long-M000M018_sessions.tsv
+│   ├── long-M000+M018/
+│   │   ├── long-M000+M018_sessions.tsv
 │   │   └── freesurfer_unbiased_template/
-│   │       └── sub-CLNC01_long-M000M018/
+│   │       └── sub-CLNC01_long-M000+M018/
 │   │           ├── base-tps/
 │   │           ├── label/
 │   │           ├── mri/
@@ -150,10 +150,10 @@ subjects/
 │   │       │       ├── mri/
 │   │       │       ├── stats/
 │   │       │       └── surf/
-│   │       └── long-M000M018/
+│   │       └── long-M000+M018/
 │   │           └── freesurfer_longitudinal/
 │   │               ├── regional_measures/
-│   │               └── sub-CLNC01_ses-M000.long.sub-CLNC01_long-M000M018/
+│   │               └── sub-CLNC01_ses-M000.long.sub-CLNC01_long-M000+M018/
 │   │                   ├── label/
 │   │                   ├── mri/
 │   │                   ├── stats/
@@ -167,10 +167,10 @@ subjects/
 │           │       ├── mri/
 │           │       ├── stats/
 │           │       └── surf/
-│           └── long-M000M018
+│           └── long-M000+M018
 │               └── freesurfer_longitudinal
 │                   ├── regional_measures
-│                   └── sub-CLNC01_ses-M018.long.sub-CLNC01_long-M000M018/
+│                   └── sub-CLNC01_ses-M018.long.sub-CLNC01_long-M000+M018/
 │                       ├── label/
 │                       ├── mri/
 │                       ├── stats/
