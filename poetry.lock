@@ -3365,14 +3365,14 @@ tests = ["codecov", "coverage", "coveralls", "flake8", "flake8-black", "flake8-d
 
 [[package]]
 name = "pymdown-extensions"
-version = "10.21.2"
+version = "10.21.3"
 description = "Extension pack for Python Markdown."
 optional = false
 python-versions = ">=3.9"
 groups = ["docs"]
 files = [
-    {file = "pymdown_extensions-10.21.2-py3-none-any.whl", hash = "sha256:5c0fd2a2bea14eb39af8ff284f1066d898ab2187d81b889b75d46d4348c01638"},
-    {file = "pymdown_extensions-10.21.2.tar.gz", hash = "sha256:c3f55a5b8a1d0edf6699e35dcbea71d978d34ff3fa79f3d807b8a5b3fa90fbdc"},
+    {file = "pymdown_extensions-10.21.3-py3-none-any.whl", hash = "sha256:d7a5d08014fc571e80ca21dd6f854e31f94c489800350564d55d15b3c41e76b6"},
+    {file = "pymdown_extensions-10.21.3.tar.gz", hash = "sha256:72cfcf55f07aea0d4af2c4f11dd4e52466ddfb1bb819673146398e0bd3a77354"},
 ]
 
 [package.dependencies]
@@ -4847,4 +4847,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.14"
-content-hash = "094b92a7685e904d0d57f188e0843da7e22e5bcf9abbce76a43f61f6bb385dc3"
+content-hash = "8680bb693dfe2e9c7967879ff743353b9fea852e7c5eedb3e7ae0a8754a9c359"
