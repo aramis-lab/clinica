@@ -19,7 +19,7 @@ def convert(
     xml_path: Optional[UserProvidedPath] = None,
     force_new_extraction: bool = False,
     n_procs: Optional[int] = 1,
-    pet_preprocessing_step: Optional[int] = 2,
+    pet_preprocessing_step: Optional[int] = None,
 ):
     from .._utils import validate_input_path
 
@@ -44,9 +44,7 @@ def convert(
             subjects=subjects,
             force_new_extraction=force_new_extraction,
             n_procs=n_procs,
-            pet_preprocessing_step=ADNIPETPreprocessingStep.from_step_value(
-                pet_preprocessing_step
-            ),
+            pet_preprocessing_step=pet_preprocessing_step,
         )
     adni_to_bids.convert_clinical_data(
         clinical_data_dir=path_to_clinical,
@@ -194,7 +192,7 @@ class AdniToBids(Converter):
         subjects: Optional[Path] = None,
         force_new_extraction: bool = False,
         n_procs: Optional[int] = 1,
-        pet_preprocessing_step: int = 2,
+        pet_preprocessing_step: Optional[int] = None,
     ):
         """Convert the images of ADNI.
 

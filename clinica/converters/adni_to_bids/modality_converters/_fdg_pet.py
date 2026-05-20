@@ -26,7 +26,7 @@ def convert_fdg_pet(
     subjects: Iterable[str],
     force_new_extraction: bool = False,
     n_procs: int = 1,
-    pet_preprocessing_step: ADNIPETPreprocessingStep = ADNIPETPreprocessingStep.STEP2,
+    pet_preprocessing_step: int = 4,
 ):
     """Convert FDG PET images of ADNI into BIDS format.
 
@@ -44,8 +44,8 @@ def convert_fdg_pet(
     conversion_dir : PathLike
         Path to the TSV files including the paths to original images.
 
-    pet_preprocessing_step : ADNIPreprocessingStep
-        ADNI processing step.
+    pet_preprocessing_step : int, optional
+        ADNI processing step. Default = 4
 
     subjects : List of str, optional
         List of subjects.
@@ -67,6 +67,11 @@ def convert_fdg_pet(
         "Calculating paths of FDG PET images. "
         f"Output will be stored in {conversion_dir}."
     )
+
+    pet_preprocessing_step = ADNIPETPreprocessingStep.from_step_value(
+        pet_preprocessing_step
+    )
+
     images = _compute_fdg_pet_paths(
         source_dir, csv_dir, subjects, conversion_dir, pet_preprocessing_step
     )
@@ -89,7 +94,7 @@ def _compute_fdg_pet_paths(
     csv_dir: Path,
     subjects: Iterable[str],
     conversion_dir: Path,
-    pet_preprocessing_step: ADNIPETPreprocessingStep = ADNIPETPreprocessingStep.STEP2,
+    pet_preprocessing_step: ADNIPETPreprocessingStep = ADNIPETPreprocessingStep.STEP4_8MM,
 ) -> pd.DataFrame:
     """Compute the paths to the FDG PET images and store them in a TSV file.
 

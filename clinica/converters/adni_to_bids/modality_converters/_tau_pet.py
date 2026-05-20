@@ -22,7 +22,7 @@ def convert_tau_pet(
     subjects: Iterable[str],
     force_new_extraction: bool = False,
     n_procs: int = 1,
-    pet_preprocessing_step: ADNIPETPreprocessingStep = ADNIPETPreprocessingStep.STEP2,
+    pet_preprocessing_step: int = 5,
 ):
     """Convert Tau PET images of ADNI into BIDS format.
 
@@ -52,9 +52,9 @@ def convert_tau_pet(
         If specified, it should be between 1 and the number of available CPUs.
         Default=1
 
-    pet_preprocessing_step: ADNIPETPreprocessingStep, optional
+    pet_preprocessing_step: int, optional
         ADNI PET Preprocessing Step to search PET scans with for all PET modalities
-        Default = ADNIPETPreprocessingStep.STEP2
+        Default = 5
     """
     from clinica.utils.stream import cprint
 
@@ -67,6 +67,11 @@ def convert_tau_pet(
         ),
         lvl="info",
     )
+
+    pet_preprocessing_step = ADNIPETPreprocessingStep.from_step_value(
+        pet_preprocessing_step
+    )
+
     images = _compute_tau_pet_paths(
         source_dir, csv_dir, subjects, conversion_dir, pet_preprocessing_step
     )
@@ -91,7 +96,7 @@ def _compute_tau_pet_paths(
     csv_dir: Path,
     subjects: Iterable[str],
     conversion_dir: Path,
-    pet_preprocessing_step: ADNIPETPreprocessingStep = ADNIPETPreprocessingStep.STEP2,
+    pet_preprocessing_step: ADNIPETPreprocessingStep = ADNIPETPreprocessingStep.STEP4_6MM,
 ) -> pd.DataFrame:
     """Compute the paths to Tau PET images.
 

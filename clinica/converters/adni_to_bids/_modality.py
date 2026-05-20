@@ -146,20 +146,17 @@ class ADNIPETPreprocessingStep(Enum):
     @classmethod
     def from_step_value(cls, step_value: int):
         """Accept step specification in raw integer (0, 1, ..., 5)."""
-        error_msg = (
-            f"Step value {step_value} is not a valid ADNI preprocessing step value."
-            f"Valid values are : "
-            f"{cls.possibilities_inventory()}."
-        )
-        if step_value != int(step_value):
-            raise ValueError(error_msg)
-        if 0 <= step_value <= 5:
+        if step_value in range(6):
             if step_value == 4:
                 return cls.STEP4_8MM
             if step_value == 5:
                 return cls.STEP4_6MM
             return cls[f"STEP{step_value}"]
-        raise ValueError(error_msg)
+        raise ValueError(
+            f"Step value {step_value} is not a valid ADNI preprocessing step value."
+            f"Valid values are : "
+            f"{cls.possibilities_inventory()}."
+        )
 
     @property
     def reconstruction_method(self) -> Optional[str]:

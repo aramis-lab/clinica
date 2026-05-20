@@ -38,10 +38,10 @@ from ._modality import ADNIModality
 )
 @click.option(
     "-pps",
-    "--pet_preprocessing_step",
+    "--pet-preprocessing-step",
     type=click.IntRange(0, 5),
-    help=f"[OPTIONAL] ADNI PET processing step for converted images [0 to 5]. See possibilities in the documentation. Default : 2.",
-    default=2,
+    help=f"[OPTIONAL] ADNI PET processing step for converted images [0 to 5]. See possibilities in the documentation. Default depends on tracer.",
+    default=None,
 )
 @option.global_option_group
 @option.n_procs
@@ -53,7 +53,7 @@ def cli(
     subjects_list: Optional[str] = None,
     clinical_data_only: bool = False,
     force_new_extraction: bool = False,
-    pet_preprocessing_step: Optional[int] = 2,
+    pet_preprocessing_step: Optional[int] = None,
     modalities: Optional[Iterable[Union[str, ADNIModality]]] = None,
     n_procs: Optional[int] = None,
 ) -> None:

@@ -21,7 +21,7 @@ def convert_pib_pet(
     subjects: Iterable[str],
     force_new_extraction: bool = False,
     n_procs: int = 1,
-    pet_preprocessing_step: ADNIPETPreprocessingStep = ADNIPETPreprocessingStep.STEP2,
+    pet_preprocessing_step: int = 4,
 ):
     """Convert PIB PET images of ADNI into BIDS format.
 
@@ -51,9 +51,8 @@ def convert_pib_pet(
         If specified, it should be between 1 and the number of available CPUs.
         Default=1.
 
-    pet_preprocessing_step : ADNIPETPreprocessingStep, optional
-        ADNI PET Preprocessing Step to search PET scans with for all PET modalities
-        Default : ADNIPETPreprocessingStep.STEP2
+    pet_preprocessing_step : int, optional
+        ADNI PET Preprocessing Step to search PET scans with for all PET modalities. Default = 4.
     """
     from clinica.utils.stream import cprint
 
@@ -66,6 +65,11 @@ def convert_pib_pet(
         ),
         lvl="info",
     )
+
+    pet_preprocessing_step = ADNIPETPreprocessingStep.from_step_value(
+        pet_preprocessing_step
+    )
+
     images = _compute_pib_pet_paths(
         source_dir, csv_dir, subjects, conversion_dir, pet_preprocessing_step
     )
@@ -90,7 +94,7 @@ def _compute_pib_pet_paths(
     csv_dir: Path,
     subjects: Iterable[str],
     conversion_dir: Path,
-    pet_processing_step: ADNIPETPreprocessingStep = ADNIPETPreprocessingStep.STEP2,
+    pet_processing_step: ADNIPETPreprocessingStep = ADNIPETPreprocessingStep.STEP4_8MM,
 ) -> pd.DataFrame:
     """Compute the paths to the PIB PET images and store them in a TSV file.
 
