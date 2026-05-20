@@ -5,6 +5,12 @@ from typing import Iterable
 
 import pandas as pd
 
+from clinica.converters.adni_to_bids.modality_converters._pet_utils import (
+    ADNITracer,
+)
+
+from .._modality import ADNIModalityConverter, ADNIPETPreprocessingStep
+
 __all__ = ["convert_av45_fbb_pet"]
 
 
@@ -16,6 +22,7 @@ def convert_av45_fbb_pet(
     subjects: Iterable[str],
     force_new_extraction: bool = False,
     n_procs: int = 1,
+    pet_preprocessing_step: int = 5,
 ):
     """Convert AV-45 and Florbetaben PET images of ADNI into BIDS format.
 
@@ -44,15 +51,26 @@ def convert_av45_fbb_pet(
         The requested number of processes.
         If specified, it should be between 1 and the number of available CPUs.
         Default=1.
+
+    pet_preprocessing_step : int, optional
+        ADNI PET Preprocessing Step to search PET scans with for all PET modalities
+        Default : 5
     """
     from clinica.utils.stream import cprint
 
-    from .._utils import ADNIModalityConverter, paths_to_bids
+    from .._utils import paths_to_bids
 
     cprint(
         f"Calculating paths of AV45 and Florbetaben PET images. Output will be stored in {conversion_dir}."
     )
-    images = _compute_av45_fbb_pet_paths(source_dir, csv_dir, subjects, conversion_dir)
+
+    pet_preprocessing_step = ADNIPETPreprocessingStep.from_step_value(
+        pet_preprocessing_step
+    )
+
+    images = _compute_av45_fbb_pet_paths(
+        source_dir, csv_dir, subjects, conversion_dir, pet_preprocessing_step
+    )
     cprint(
         "Paths of AV45 and Florbetaben PET images found. Exporting images into BIDS ..."
     )
@@ -62,8 +80,9 @@ def convert_av45_fbb_pet(
         ADNIModalityConverter.PET_AV45,
         force_new_extraction=force_new_extraction,
         n_procs=n_procs,
+        pet_preprocessing_step=pet_preprocessing_step,
     )
-    cprint(msg="AV45 and Florbetaben PET conversion done.", lvl="debug")
+    cprint(msg="AV45 and Florbetaben (FBB) PET conversion done.", lvl="debug")
 
 
 def _compute_av45_fbb_pet_paths(
@@ -71,6 +90,7 @@ def _compute_av45_fbb_pet_paths(
     csv_dir: Path,
     subjects: Iterable[str],
     conversion_dir: Path,
+    pet_processing_step: ADNIPETPreprocessingStep = ADNIPETPreprocessingStep.STEP4_6MM,
 ) -> pd.DataFrame:
     """Compute the paths to the AV45 and Florbetaben PET images and store them in a TSV file.
 
@@ -88,6 +108,10 @@ def _compute_av45_fbb_pet_paths(
     conversion_dir : Path
         The path to the TSV files including the paths to original images.
 
+    pet_preprocessing_step : ADNIPETPreprocessingStep, optional
+        ADNI PET Preprocessing Step to search PET scans with for all PET modalities
+        Default : ADNIPETPreprocessingStep.STEP2
+
     Returns
     -------
     images : pd.DataFrame
@@ -96,7 +120,7 @@ def _compute_av45_fbb_pet_paths(
     from clinica.converters._utils import load_clinical_csv
 
     from ._image_path_utils import find_image_path
-    from ._pet_utils import get_images_pet
+    from ._pet_utils import define_pet_processing_step_with_tracer, get_images_pet
 
     pet_amyloid_col = [
         "Phase",
@@ -137,8 +161,10 @@ def _compute_av45_fbb_pet_paths(
             [av45_qc_subj, amy_qc_subj], axis=0, ignore_index=True, sort=False
         )
         sequences_preprocessing_step = [
-            "AV45 Co-registered, Averaged",
-            "FBB Co-registered, Averaged",
+            define_pet_processing_step_with_tracer(
+                ADNITracer.AV45, pet_processing_step
+            ),
+            define_pet_processing_step_with_tracer(ADNITracer.FBB, pet_processing_step),
         ]
         subj_dfs_list = get_images_pet(
             subject,

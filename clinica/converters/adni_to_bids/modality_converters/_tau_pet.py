@@ -7,6 +7,12 @@ import pandas as pd
 
 __all__ = ["convert_tau_pet"]
 
+from clinica.converters.adni_to_bids.modality_converters._pet_utils import (
+    ADNITracer,
+)
+
+from .._modality import ADNIModalityConverter, ADNIPETPreprocessingStep
+
 
 def convert_tau_pet(
     source_dir: Path,
@@ -16,6 +22,7 @@ def convert_tau_pet(
     subjects: Iterable[str],
     force_new_extraction: bool = False,
     n_procs: int = 1,
+    pet_preprocessing_step: int = 5,
 ):
     """Convert Tau PET images of ADNI into BIDS format.
 
@@ -44,10 +51,14 @@ def convert_tau_pet(
         The requested number of processes.
         If specified, it should be between 1 and the number of available CPUs.
         Default=1
+
+    pet_preprocessing_step: int, optional
+        ADNI PET Preprocessing Step to search PET scans with for all PET modalities
+        Default = 5
     """
     from clinica.utils.stream import cprint
 
-    from .._utils import ADNIModalityConverter, paths_to_bids
+    from .._utils import paths_to_bids
 
     cprint(
         (
@@ -56,19 +67,28 @@ def convert_tau_pet(
         ),
         lvl="info",
     )
-    images = _compute_tau_pet_paths(source_dir, csv_dir, subjects, conversion_dir)
+
+    pet_preprocessing_step = ADNIPETPreprocessingStep.from_step_value(
+        pet_preprocessing_step
+    )
+
+    images = _compute_tau_pet_paths(
+        source_dir, csv_dir, subjects, conversion_dir, pet_preprocessing_step
+    )
     cprint(
         f"Paths of {ADNIModalityConverter.PET_TAU.value} images found. Exporting images into BIDS ...",
         lvl="info",
     )
+    modality = ADNIModalityConverter.PET_TAU
     paths_to_bids(
         images,
         destination_dir,
-        ADNIModalityConverter.PET_TAU,
+        modality,
         force_new_extraction=force_new_extraction,
         n_procs=n_procs,
+        pet_preprocessing_step=pet_preprocessing_step,
     )
-    cprint(msg=f"{ADNIModalityConverter.PET_TAU.value} conversion done.", lvl="debug")
+    cprint(msg=f"{modality.value} conversion done.", lvl="debug")
 
 
 def _compute_tau_pet_paths(
@@ -76,6 +96,7 @@ def _compute_tau_pet_paths(
     csv_dir: Path,
     subjects: Iterable[str],
     conversion_dir: Path,
+    pet_preprocessing_step: ADNIPETPreprocessingStep = ADNIPETPreprocessingStep.STEP4_6MM,
 ) -> pd.DataFrame:
     """Compute the paths to Tau PET images.
 
@@ -93,6 +114,10 @@ def _compute_tau_pet_paths(
     conversion_dir : Path
         The path to the TSV files including the paths to original images.
 
+    pet_preprocessing_step : ADNIPETPreprocessingStep, optional
+        ADNI PET Preprocessing Step to search PET scans with for all PET modalities
+        Default : ADNIPETPreprocessingStep.STEP2
+
     Returns
     -------
     pd.DataFrame :
@@ -102,7 +127,7 @@ def _compute_tau_pet_paths(
     from clinica.utils.pet import Tracer
 
     from ._image_path_utils import find_image_path
-    from ._pet_utils import get_images_pet
+    from ._pet_utils import define_pet_processing_step_with_tracer, get_images_pet
 
     pet_tau_df = pd.DataFrame(columns=_get_tau_pet_df_columns())
     pet_tau_dfs_list = []
@@ -132,7 +157,11 @@ def _compute_tau_pet_paths(
             subject_pet_meta=subject_pet_meta,
             df_cols=_get_tau_pet_df_columns(),
             modality="TAU-PET",
-            sequences_preprocessing_step=["AV1451 Co-registered, Averaged"],
+            sequences_preprocessing_step=[
+                define_pet_processing_step_with_tracer(
+                    ADNITracer.AV1451, pet_preprocessing_step
+                )
+            ],
         )
         if subj_dfs_list:
             pet_tau_dfs_list += subj_dfs_list
@@ -150,7 +179,8 @@ def _compute_tau_pet_paths(
         pet_tau_df.drop(error_ind, inplace=True)
 
     # Checking for images paths in filesystem
-    images = find_image_path(pet_tau_df, source_dir, "TAU")
+    tracer = Tracer.AV1451.value
+    images = find_image_path(pet_tau_df, source_dir, tracer)
     images.to_csv(
         conversion_dir / f"{Tracer.AV1451.value}_pet_paths.tsv",
         sep="\t",

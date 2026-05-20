@@ -1,8 +1,36 @@
+from enum import Enum
+
 import pandas as pd
 
+from clinica.converters.adni_to_bids._modality import (
+    ADNIModalityConverter,
+    ADNIPETPreprocessingStep,
+)
 from clinica.utils.stream import cprint
 
-__all__ = ["get_images_pet"]
+__all__ = [
+    "get_images_pet",
+    "ADNITracer",
+    "define_pet_processing_step_with_tracer",
+]
+
+
+class ADNITracer(str, Enum):
+    AV45 = "AV45"
+    FBB = "FBB"
+    PIB = "PIB"
+    FDG = "FDG"
+    AV1451 = "AV1451"
+
+
+def define_pet_processing_step_with_tracer(
+    tracer: ADNITracer, step: ADNIPETPreprocessingStep
+) -> str:
+    if step == ADNIPETPreprocessingStep.STEP0:
+        return f"{step.value} {tracer.value}"
+    if tracer == ADNITracer.FDG:
+        return step.value
+    return f"{tracer.value} {step.value}"
 
 
 def get_images_pet(

@@ -24,6 +24,7 @@ def convert_fmap(
     subjects: Iterable[str],
     force_new_extraction: bool = False,
     n_procs: int = 1,
+    **kwargs,
 ):
     """Convert field map images of ADNI into BIDS format.
 
@@ -50,7 +51,8 @@ def convert_fmap(
     """
     from clinica.utils.stream import cprint
 
-    from .._utils import ADNIModalityConverter, paths_to_bids
+    from .._modality import ADNIModalityConverter
+    from .._utils import paths_to_bids
 
     csv_dir = Path(csv_dir)
     source_dir = Path(source_dir)

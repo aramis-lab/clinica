@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Callable, Iterable, Optional, Union
 
-from .._utils import ADNIModality, ADNIModalityConverter
+from .._modality import ADNIModality, ADNIModalityConverter
 
 __all__ = ["converter_factory", "modality_converter_factory"]
 
@@ -18,7 +18,7 @@ def _get_converters_for_modality(
     if modality == ADNIModality.T1:
         return [ADNIModalityConverter.T1]
     if modality == ADNIModality.PET_FDG:
-        return [ADNIModalityConverter.PET_FDG, ADNIModalityConverter.PET_FDG_UNIFORM]
+        return [ADNIModalityConverter.PET_FDG]
     if modality == ADNIModality.PET_AMYLOID:
         return [ADNIModalityConverter.PET_PIB, ADNIModalityConverter.PET_AV45]
     if modality == ADNIModality.PET_TAU:
@@ -43,10 +43,6 @@ def converter_factory(converter: ADNIModalityConverter) -> ConverterInterface:
         from ._fdg_pet import convert_fdg_pet
 
         return convert_fdg_pet
-    if converter == ADNIModalityConverter.PET_FDG_UNIFORM:
-        from ._fdg_pet import convert_fdg_pet_uniform
-
-        return convert_fdg_pet_uniform
     if converter == ADNIModalityConverter.PET_PIB:
         from ._pib_pet import convert_pib_pet
 

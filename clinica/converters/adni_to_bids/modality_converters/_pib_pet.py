@@ -5,6 +5,11 @@ from typing import Iterable
 
 import pandas as pd
 
+from clinica.converters.adni_to_bids._modality import (
+    ADNIModalityConverter,
+    ADNIPETPreprocessingStep,
+)
+
 __all__ = ["convert_pib_pet"]
 
 
@@ -16,6 +21,7 @@ def convert_pib_pet(
     subjects: Iterable[str],
     force_new_extraction: bool = False,
     n_procs: int = 1,
+    pet_preprocessing_step: int = 4,
 ):
     """Convert PIB PET images of ADNI into BIDS format.
 
@@ -44,10 +50,13 @@ def convert_pib_pet(
         The requested number of processes.
         If specified, it should be between 1 and the number of available CPUs.
         Default=1.
+
+    pet_preprocessing_step : int, optional
+        ADNI PET Preprocessing Step to search PET scans with for all PET modalities. Default = 4.
     """
     from clinica.utils.stream import cprint
 
-    from .._utils import ADNIModalityConverter, paths_to_bids
+    from .._utils import paths_to_bids
 
     cprint(
         (
@@ -56,19 +65,28 @@ def convert_pib_pet(
         ),
         lvl="info",
     )
-    images = _compute_pib_pet_paths(source_dir, csv_dir, subjects, conversion_dir)
+
+    pet_preprocessing_step = ADNIPETPreprocessingStep.from_step_value(
+        pet_preprocessing_step
+    )
+
+    images = _compute_pib_pet_paths(
+        source_dir, csv_dir, subjects, conversion_dir, pet_preprocessing_step
+    )
     cprint(
         f"Paths of {ADNIModalityConverter.PET_PIB.value} images found. Exporting images into BIDS ...",
         lvl="info",
     )
+    modality = ADNIModalityConverter.PET_PIB
     paths_to_bids(
         images,
         destination_dir,
-        ADNIModalityConverter.PET_PIB,
+        modality,
         force_new_extraction=force_new_extraction,
         n_procs=n_procs,
+        pet_preprocessing_step=pet_preprocessing_step,
     )
-    cprint(msg=f"{ADNIModalityConverter.PET_PIB.value} conversion done.", lvl="debug")
+    cprint(msg=f"{modality.value} conversion done.", lvl="debug")
 
 
 def _compute_pib_pet_paths(
@@ -76,6 +94,7 @@ def _compute_pib_pet_paths(
     csv_dir: Path,
     subjects: Iterable[str],
     conversion_dir: Path,
+    pet_processing_step: ADNIPETPreprocessingStep = ADNIPETPreprocessingStep.STEP4_8MM,
 ) -> pd.DataFrame:
     """Compute the paths to the PIB PET images and store them in a TSV file.
 
@@ -93,6 +112,10 @@ def _compute_pib_pet_paths(
     conversion_dir : Path
         The path to the TSV files including the paths to original images.
 
+    pet_preprocessing_step : ADNIPETPreprocessingStep, optional
+        ADNI PET Preprocessing Step to search PET scans with for all PET modalities
+        Default : ADNIPETPreprocessingStep.STEP2
+
     Returns
     -------
     images : pd.DataFrame
@@ -102,7 +125,11 @@ def _compute_pib_pet_paths(
     from clinica.utils.pet import Tracer
 
     from ._image_path_utils import find_image_path
-    from ._pet_utils import get_images_pet
+    from ._pet_utils import (
+        ADNITracer,
+        define_pet_processing_step_with_tracer,
+        get_images_pet,
+    )
 
     pet_pib_dfs_list = []
     pet_pib_df = pd.DataFrame(columns=_get_pib_pet_columns())
@@ -122,7 +149,11 @@ def _compute_pib_pet_paths(
             subject_pet_meta=subject_pet_meta,
             df_cols=_get_pib_pet_columns(),
             modality="PIB-PET",
-            sequences_preprocessing_step=["PIB Co-registered, Averaged"],
+            sequences_preprocessing_step=[
+                define_pet_processing_step_with_tracer(
+                    ADNITracer.PIB, pet_processing_step
+                )
+            ],
             viscode_field="VISCODE",
         )
         if subj_dfs_list:
@@ -139,9 +170,11 @@ def _compute_pib_pet_paths(
             )
         ]
         pet_pib_df.drop(error_ind, inplace=True)
-    images = find_image_path(pet_pib_df, source_dir, modality="PIB")
+
+    tracer = Tracer.PIB.value
+    images = find_image_path(pet_pib_df, source_dir, modality=tracer)
     images.to_csv(
-        conversion_dir / f"{Tracer.PIB.value}_pet_paths.tsv",
+        conversion_dir / f"{tracer}_pet_paths.tsv",
         sep="\t",
         index=False,
     )

@@ -1,6 +1,5 @@
 """Module for converting FDG PET of ADNI."""
 
-from enum import Enum
 from functools import partial
 from os import PathLike
 from pathlib import Path
@@ -8,53 +7,26 @@ from typing import Iterable, List, Set, Tuple
 
 import pandas as pd
 
-from .._utils import ADNIModalityConverter
-
 __all__ = [
     "convert_fdg_pet",
-    "convert_fdg_pet_uniform",
 ]
 
+from clinica.converters.adni_to_bids.modality_converters._pet_utils import (
+    ADNITracer,
+)
 
-class ADNIPreprocessingStep(Enum):
-    """ADNI preprocessing steps."""
-
-    STEP0 = "ADNI Brain PET: Raw FDG"
-    STEP1 = "Co-registered Dynamic"
-    STEP2 = "Co-registered, Averaged"
-    STEP3 = "Coreg, Avg, Standardized Image and Voxel Size"
-    STEP4_8MM = "Coreg, Avg, Std Img and Vox Siz, Uniform Resolution"
-    STEP4_6MM = "Coreg, Avg, Std Img and Vox Siz, Uniform 6mm Res"
-
-    @classmethod
-    def from_step_value(cls, step_value: int):
-        """Accept step specification in raw integer (0, 1, ..., 5)."""
-        error_msg = (
-            f"Step value {step_value} is not a valid ADNI preprocessing step value."
-            f"Valid values are {list(ADNIPreprocessingStep)}."
-        )
-        try:
-            step_value = int(step_value)
-        except Exception:
-            raise ValueError(error_msg)
-        if 0 <= step_value <= 5:
-            if step_value == 4:
-                return cls.STEP4_8MM
-            if step_value == 5:
-                return cls.STEP4_6MM
-            return cls[f"STEP{step_value}"]
-        raise ValueError(error_msg)
+from .._modality import ADNIModalityConverter, ADNIPETPreprocessingStep
 
 
-def _convert_fdg_pet(
+def convert_fdg_pet(
     source_dir: Path,
     csv_dir: Path,
     destination_dir: Path,
     conversion_dir: Path,
-    preprocessing_step: ADNIPreprocessingStep,
     subjects: Iterable[str],
     force_new_extraction: bool = False,
     n_procs: int = 1,
+    pet_preprocessing_step: int = 4,
 ):
     """Convert FDG PET images of ADNI into BIDS format.
 
@@ -72,8 +44,8 @@ def _convert_fdg_pet(
     conversion_dir : PathLike
         Path to the TSV files including the paths to original images.
 
-    preprocessing_step : ADNIPreprocessingStep
-        ADNI processing step.
+    pet_preprocessing_step : int, optional
+        ADNI processing step. Default = 4
 
     subjects : List of str, optional
         List of subjects.
@@ -95,42 +67,26 @@ def _convert_fdg_pet(
         "Calculating paths of FDG PET images. "
         f"Output will be stored in {conversion_dir}."
     )
+
+    pet_preprocessing_step = ADNIPETPreprocessingStep.from_step_value(
+        pet_preprocessing_step
+    )
+
     images = _compute_fdg_pet_paths(
-        source_dir, csv_dir, subjects, conversion_dir, preprocessing_step
+        source_dir, csv_dir, subjects, conversion_dir, pet_preprocessing_step
     )
 
     cprint("Paths of FDG PET images found. Exporting images into BIDS ...")
-    modality = _get_modality_from_adni_preprocessing_step(preprocessing_step)
+    modality = ADNIModalityConverter.PET_FDG
     paths_to_bids(
         images,
         destination_dir,
         modality,
         force_new_extraction=force_new_extraction,
         n_procs=n_procs,
+        pet_preprocessing_step=pet_preprocessing_step,
     )
-    cprint(msg="FDG PET conversion done.", lvl="debug")
-
-
-def _get_modality_from_adni_preprocessing_step(
-    step: ADNIPreprocessingStep,
-) -> ADNIModalityConverter:
-    if step == ADNIPreprocessingStep.STEP2:
-        return ADNIModalityConverter.PET_FDG
-    if step == ADNIPreprocessingStep.STEP4_8MM:
-        return ADNIModalityConverter.PET_FDG_UNIFORM
-    raise ValueError(
-        f"The ADNI preprocessing step {step} is not (yet) supported by the converter."
-        f"The converter only supports {ADNIPreprocessingStep.STEP2} and "
-        f"{ADNIPreprocessingStep.STEP4_8MM} for now."
-    )
-
-
-convert_fdg_pet = partial(
-    _convert_fdg_pet, preprocessing_step=ADNIPreprocessingStep.STEP2
-)
-convert_fdg_pet_uniform = partial(
-    _convert_fdg_pet, preprocessing_step=ADNIPreprocessingStep.STEP4_8MM
-)
+    cprint(msg=f"{modality.value} conversion done.", lvl="debug")
 
 
 def _compute_fdg_pet_paths(
@@ -138,7 +94,7 @@ def _compute_fdg_pet_paths(
     csv_dir: Path,
     subjects: Iterable[str],
     conversion_dir: Path,
-    preprocessing_step: ADNIPreprocessingStep,
+    pet_preprocessing_step: ADNIPETPreprocessingStep = ADNIPETPreprocessingStep.STEP4_8MM,
 ) -> pd.DataFrame:
     """Compute the paths to the FDG PET images and store them in a TSV file.
 
@@ -160,7 +116,7 @@ def _compute_fdg_pet_paths(
     conversion_dir : PathLike
         Path to the TSV files including the paths to original images.
 
-    preprocessing_step : PreprocessingStep
+    pet_preprocessing_step : PreprocessingStep
         ADNI processing step, is an int between 0 and 5.
 
     Returns
@@ -172,10 +128,11 @@ def _compute_fdg_pet_paths(
 
     from ._image_path_utils import find_image_path
 
-    pet_fdg_df = _get_pet_fdg_df(csv_dir, subjects, preprocessing_step)
-    images = find_image_path(pet_fdg_df, source_dir, "FDG")
+    tracer = Tracer.FDG.value
+    pet_fdg_df = _get_pet_fdg_df(csv_dir, subjects, pet_preprocessing_step)
+    images = find_image_path(pet_fdg_df, source_dir, tracer)
     images.to_csv(
-        conversion_dir / f"{Tracer.FDG.value}_pet_paths.tsv",
+        conversion_dir / f"{tracer}_pet_paths.tsv",
         sep="\t",
         index=False,
     )
@@ -184,7 +141,9 @@ def _compute_fdg_pet_paths(
 
 
 def _get_pet_fdg_df(
-    csv_dir: Path, subjects: Iterable[str], preprocessing_step: ADNIPreprocessingStep
+    csv_dir: Path,
+    subjects: Iterable[str],
+    pet_preprocessing_step: ADNIPETPreprocessingStep,
 ) -> pd.DataFrame:
     """Build a DataFrame for the PET FDG images for the provided list of subjects."""
     dfs = []
@@ -193,7 +152,7 @@ def _get_pet_fdg_df(
             _get_images_pet_for_subject(
                 subject,
                 _get_csv_data(Path(csv_dir)),
-                preprocessing_step,
+                pet_preprocessing_step,
             )
         )
     if len(dfs) == 0:
@@ -261,9 +220,13 @@ _get_meta_list_df = partial(
 def _get_images_pet_for_subject(
     subject: str,
     csv_data: Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame],
-    preprocessing_step: ADNIPreprocessingStep,
+    pet_preprocessing_step: ADNIPETPreprocessingStep = ADNIPETPreprocessingStep.STEP2,
 ) -> List[pd.DataFrame]:
     """Filter the PET images' QC dataframes for the given subject."""
+    from clinica.converters.adni_to_bids.modality_converters._pet_utils import (
+        define_pet_processing_step_with_tracer,
+    )
+
     from ._pet_utils import get_images_pet
 
     pet_qc_df, pet_qc_adni_3_df, pet_meta_list_df = csv_data
@@ -282,7 +245,11 @@ def _get_images_pet_for_subject(
         subject_pet_metadata,
         _get_pet_fdg_columns(),
         "FDG-PET",
-        [preprocessing_step.value],
+        [
+            define_pet_processing_step_with_tracer(
+                ADNITracer.FDG, pet_preprocessing_step
+            )
+        ],
     )
 
 

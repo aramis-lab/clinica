@@ -93,12 +93,16 @@ Gradwarp, B1-inhomogeneity corrected and N3 bias field corrected images are sele
 - **DWI** We select images containing 'DTI' in the sequence name, that are not multiband, processed nor enhanced.
 - **FLAIR** We select images containing 'FLAIR' in the sequence name, without multiplanar reconstruction (MPR).
 - **fMRI** We select images containing 'MRI' in the sequence name, that are not multiband.
-- **FDG, Amyloid and Tau PET** The images co-registered and averaged across time frames are selected.
+- **FDG, Amyloid and Tau PET** By default, the images _co-registered and averaged_ across time frames are selected.
+
+!!! tip "PET Preprocessing Step"
+    The default processing for images can be changed with option `-pps`, see below.
+
 - **FMAP** We select images referring to Field Mapping in their sequence name.
 
 For all imaging modalities, the scans failing quality control (if it was performed) are discarded.
 
-As a final step in the conversion, images from some modalities are centered (currently, T1, FLAIR and the different PET tracers).
+As a final step in the conversion, images from some modalities are **centered** (currently, T1, FLAIR and the different PET tracers).
 For each image, the coordinates of the origin are set to the center of the box containing the image data.
 This allows other image processing pipelines in Clinica (mainly SPM based) to run without needing further image preprocessing.
 
@@ -170,7 +174,7 @@ CLINICAL_DATA_DIRECTORY
 ### Optional parameters
 
 The converter offers the possibility of converting only the clinical data (once the images are in the BIDS format) using the optional parameter `-c`.
-
+___
 Due to the high computational time required for converting all the modalities of the whole ADNI dataset, it is possible to convert a single modality at a time using the parameter `-m` with one of the following values:
 
 - `T1` for T1-weighted MRI
@@ -181,6 +185,18 @@ Due to the high computational time required for converting all the modalities of
 - `PET_AMYLOID` for Pittsburgh compound B (PIB), Florbetapir (AV45) and Florbetaben (FBB) PET
 - `PET_TAU` for Flortaucipir (AV1451) PET
 - `FMAP` for Field Mapping
+___
+`--pet_preprocessing_step` / `-pps` : this option allows to select the desired adni pet preprocessing step with is by default **2 / "Coregistered, Averaged"**. Options are :
+
+- 0 : ADNI Brain PET: Raw ;
+- 1 : Co-registered Dynamic ;
+- 2 : Co-registered, Averaged (default) ;
+- 3 : Coreg, Avg, Standardized Image and Voxel Size ;
+- 4 : Coreg, Avg, Std Img and Vox Siz, Uniform Resolution ;
+- 5 : Coreg, Avg, Std Img and Vox Siz, Uniform 6mm Res ;
+
+If applied, this option will account for all converted PET modalities. In case you want to use different steps, please run the converter several times, with each time the modality and the corresponding step you want specified.
+___
 
 It is also possible to provide the path to a .txt file with the list of subjects to convert using the optional parameter `--subjects_list`.
 This file must contain one subject identifier per line.
@@ -191,9 +207,9 @@ For example, we can provide a `subjects.txt` file with the following content:
 006_S_4713
 006_S_4485
 ```
-
+___
 If the (Optional) parameter `--xml_path` is given, `adni-to-bids` will try to extract meta data information from the xml files found in the `xml_path` provided. These meta data will be properly combined with other sources of data, and written to their respective files following the BIDS specifications (usually tsv scan files and json sidecar files).
-
+___
 For more information about the optional parameters, you can type:
 
 ```Text
@@ -486,7 +502,7 @@ Known conversion exceptions are removed from the list.
             For each we are looking for Original images, that passed QC (image id corresponding to current QC entry LONIUID), acquired at the same date as the current entry, not containing `early` in the sequence name.
             - We stop the loop at the moment we find the first matching image.
         - With the original image metadata, we can have the series id (it is the same for all the images coming from the same original image and independently of the preprocessing).
-        - We see if there are images with the same series id as the original image and the desired preprocessing sequence ("Co-registered, Averaged").
+        - We see if there are images with the same series id as the original image and the desired preprocessing sequence ("Co-registered, Averaged" unless default is changed with an option).
         - If an explicit "Co-registered, Averaged" image does not exist, it means that the original image is already in that preprocessing stage, so we keep the original image.
         - The selected image data is added to the list of images for the subject.
     - The list of images for each subject is added to the list of images to convert.

@@ -4,7 +4,7 @@ from typing import Iterable, Optional, Union
 from clinica.converters.abstract_converter import Converter
 from clinica.utils.filemanip import UserProvidedPath
 
-from ._utils import ADNIModality
+from ._modality import ADNIModality, ADNIPETPreprocessingStep
 
 __all__ = ["convert"]
 
@@ -19,6 +19,7 @@ def convert(
     xml_path: Optional[UserProvidedPath] = None,
     force_new_extraction: bool = False,
     n_procs: Optional[int] = 1,
+    pet_preprocessing_step: Optional[int] = None,
 ):
     from .._utils import validate_input_path
 
@@ -43,6 +44,7 @@ def convert(
             subjects=subjects,
             force_new_extraction=force_new_extraction,
             n_procs=n_procs,
+            pet_preprocessing_step=pet_preprocessing_step,
         )
     adni_to_bids.convert_clinical_data(
         clinical_data_dir=path_to_clinical,
@@ -190,6 +192,7 @@ class AdniToBids(Converter):
         subjects: Optional[Path] = None,
         force_new_extraction: bool = False,
         n_procs: Optional[int] = 1,
+        pet_preprocessing_step: Optional[int] = None,
     ):
         """Convert the images of ADNI.
 
@@ -200,6 +203,7 @@ class AdniToBids(Converter):
             subjects: Path to list of subjects to process
             modalities: modalities to convert (T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI)
             force_new_extraction: if given pre-existing images in the BIDS directory will be erased and extracted again.
+            pet_preprocessing_step: preprocessing step to search images with for all PET modalities
         """
         from clinica.utils.stream import cprint
 
@@ -226,6 +230,7 @@ class AdniToBids(Converter):
                     subjects=subjects,
                     force_new_extraction=force_new_extraction,
                     n_procs=n_procs,
+                    pet_preprocessing_step=pet_preprocessing_step,
                 )
 
 

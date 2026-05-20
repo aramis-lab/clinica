@@ -4,15 +4,17 @@ from typing import Iterable, List, Optional, Union
 
 import pandas as pd
 
-from clinica.utils.pet import ReconstructionMethod, Tracer
+from clinica.converters.adni_to_bids._modality import (
+    ADNIModalityConverter,
+    ADNIPETPreprocessingStep,
+)
+from clinica.utils.pet import Tracer
 from clinica.utils.stream import cprint
 
 from .._utils import load_clinical_csv
 
 __all__ = [
     "get_subjects_list",
-    "ADNIModality",
-    "ADNIModalityConverter",
     "ADNIStudy",
     "correct_diagnosis_sc_adni3",
     "create_adni_sessions_dict",
@@ -33,7 +35,7 @@ class ADNIStudy(str, Enum):
 def _define_subjects_list(
     source_dir: Path,
     subjs_list_path: Optional[Path] = None,
-) -> List[str]:
+) -> list[str]:
     import re
 
     from clinica.utils.stream import cprint
@@ -48,9 +50,9 @@ def _define_subjects_list(
 
 
 def _check_subjects_list(
-    subjs_list: List[str],
+    subjs_list: list[str],
     clinical_dir: Path,
-) -> List[str]:
+) -> list[str]:
     from copy import copy
 
     from clinica.utils.stream import cprint
@@ -79,52 +81,10 @@ def get_subjects_list(
     source_dir: Path,
     clinical_dir: Path,
     subjs_list_path: Optional[Path] = None,
-) -> List[str]:
+) -> list[str]:
     return _check_subjects_list(
         _define_subjects_list(source_dir, subjs_list_path), clinical_dir
     )
-
-
-class ADNIModality(str, Enum):
-    """Possible modalities supported by the ADNI-to-BIDS converter.
-
-    These are the modalities exposed to the user. There is not a
-    one-to-one relationship with the modality converters. That is,
-    some modalities, like PET_AMYLOID, are associated with multiple
-    converters, while others are associated with only one converter.
-    For this reason, the ADNIModalityConverter enumeration exists,
-    and there is a mapping between a ADNIModality and an iterable of
-    ADNIModalityConverter variants.
-    """
-
-    T1 = "T1"
-    PET_FDG = "PET_FDG"
-    PET_AMYLOID = "PET_AMYLOID"
-    PET_TAU = "PET_TAU"
-    DWI = "DWI"
-    FLAIR = "FLAIR"
-    FMRI = "fMRI"
-    FMAP = "FMAP"
-
-
-class ADNIModalityConverter(str, Enum):
-    """Possible modality converters for ADNI.
-
-    These are not exposed to the user. However, there is a one-to-one
-    relationship with the modality converters. That is, each variant
-    has a corresponding converter.
-    """
-
-    T1 = "T1"
-    PET_FDG = "PET_FDG"
-    PET_FDG_UNIFORM = "PET_FDG_UNIFORM"
-    PET_PIB = "PET_PIB"
-    PET_AV45 = "PET_AV45"
-    PET_TAU = "PET_TAU"
-    DWI = "DWI"
-    FLAIR = "FLAIR"
-    FMRI = "fMRI"
-    FMAP = "FMAP"
 
 
 def correct_diagnosis_sc_adni3(
@@ -635,7 +595,10 @@ def paths_to_bids(
     modality: ADNIModalityConverter,
     force_new_extraction: bool = False,
     n_procs: Optional[int] = 1,
-) -> List[Path]:
+    pet_preprocessing_step: Optional[
+        ADNIPETPreprocessingStep
+    ] = ADNIPETPreprocessingStep.STEP2,
+) -> list[Path]:
     """Images in the list are converted and copied to directory in BIDS format.
 
     Parameters
@@ -657,6 +620,10 @@ def paths_to_bids(
         The number of processes to use for conversion.
         Default=1.
 
+    pet_preprocessing_step: ADNIPETPreprocessingStep, optional
+        ADNI PET Preprocessing Step to search PET scans with for all PET modalities
+        Default = ADNIPETPreprocessingStep.STEP2
+
     Returns
     -------
     output_file_treated : list of paths
@@ -673,6 +640,7 @@ def paths_to_bids(
         modality=modality,
         bids_dir=bids_dir,
         force_new_extraction=force_new_extraction,
+        pet_preprocessing_step=pet_preprocessing_step,
     )
     # If n_procs==1 do not rely on a Process Pool to enable classical debugging
     if n_procs == 1:
@@ -742,6 +710,9 @@ def _create_file(
     modality: ADNIModalityConverter,
     bids_dir: Path,
     force_new_extraction: bool,
+    pet_preprocessing_step: Optional[
+        ADNIPETPreprocessingStep
+    ] = ADNIPETPreprocessingStep.STEP2,
 ) -> Optional[Path]:
     """Creates an image file at the corresponding output folder.
 
@@ -763,6 +734,10 @@ def _create_file(
         If True, pre-existing images in the BIDS directory will be
         erased and extracted again.
 
+    pet_preprocessing_step: ADNIPETPreprocessingStep, optional
+        ADNI PET Preprocessing Step used to search for right PET scans
+        Default = ADNIPETPreprocessingStep.STEP2
+
     Returns
     -------
     output_image : Path
@@ -776,6 +751,7 @@ def _create_file(
     import numpy as np
 
     from clinica.cmdline import setup_clinica_logging
+    from clinica.converters.adni_to_bids._modality import _get_output_filename
     from clinica.converters.study_models import StudyName, bids_id_factory
     from clinica.iotools.data_handling import center_nifti_origin
     from clinica.utils.stream import cprint, log_and_raise, log_and_warn
@@ -798,7 +774,6 @@ def _create_file(
         image_tracer = Tracer(image.Tracer)
         logging_header = f"[{modality.value} - {image_tracer.value}]"
     if not image.Path:
-        # todo : check for message redundancy
         cprint(
             f"{logging_header} No path specified for {subject} in session {viscode}",
             lvl="info",
@@ -815,16 +790,15 @@ def _create_file(
     if image.Is_Dicom:
         image_path = _check_two_dcm_folder(image_path, bids_dir, image_id)
     bids_id = bids_id_factory(StudyName.ADNI).from_original_study_id(subject)
-    output_path = bids_dir / bids_id / session / _get_output_path(modality)
-    output_filename = (
-        f"{bids_id}_{session}{_get_output_filename(modality, image_tracer)}"
-    )
+    output_path = bids_dir / bids_id / session / modality.output_folder
+    acq_details = _get_output_filename(modality, image_tracer, pet_preprocessing_step)
+    output_filename = f"{bids_id}_{session}{acq_details}"
     output_path.mkdir(parents=True, exist_ok=True)
 
     # Check if old images exist and if updated mode is set to TRUE remove them
     if not _remove_existing_images_if_necessary(
         output_path,
-        (_get_output_filename(modality, image_tracer), "magnitude", "phase"),
+        (acq_details, "magnitude", "phase"),
         force_new_extraction,
     ):
         return None
@@ -839,8 +813,8 @@ def _create_file(
             else Path(image_path).parent,
             output_dir=output_path,
             output_fmt=output_filename,
-            compress=not _should_be_centered(modality),
-            bids_sidecar=_write_json_sidecar(modality),
+            compress=not modality.to_center,
+            bids_sidecar=modality.json_sidecar,
         )
         if not success:
             log_and_warn(
@@ -903,12 +877,12 @@ def _create_file(
                 ]
             )
 
-        if _write_json_sidecar(modality) and not json_exists:
+        if modality.json_sidecar and not json_exists:
             log_and_warn(
                 f"{logging_header} JSON file not generated by dcm2niix for subject {subject} and session {session}",
                 UserWarning,
             )
-        if _should_be_centered(modality):
+        if modality.to_center:
             try:
                 output_image = center_nifti_origin(
                     file_without_extension.with_suffix(".nii"), output_image
@@ -917,7 +891,7 @@ def _create_file(
                 log_and_raise(str(e), ValueError)
             file_without_extension.with_suffix(".nii").unlink()
     else:
-        if _should_be_centered(modality):
+        if modality.to_center:
             try:
                 output_image = center_nifti_origin(image_path, output_image)
             except Exception as e:
@@ -935,94 +909,6 @@ def _create_file(
     # Check if there is still the folder tmp_dcm_folder and remove it
     _remove_tmp_dmc_folder(bids_dir, image_id)
     return output_image
-
-
-def _get_output_path(modality: ADNIModalityConverter) -> str:
-    if modality == ADNIModalityConverter.T1:
-        return "anat"
-    if modality == ADNIModalityConverter.DWI:
-        return "dwi"
-    if modality == ADNIModalityConverter.FLAIR:
-        return "anat"
-    if modality == ADNIModalityConverter.FMRI:
-        return "func"
-    if modality == ADNIModalityConverter.FMAP:
-        return "fmap"
-    if modality in (
-        ADNIModalityConverter.PET_FDG,
-        ADNIModalityConverter.PET_FDG_UNIFORM,
-        ADNIModalityConverter.PET_PIB,
-        ADNIModalityConverter.PET_AV45,
-        ADNIModalityConverter.PET_TAU,
-    ):
-        return "pet"
-
-
-def _get_output_filename(
-    modality: ADNIModalityConverter, tracer: Optional[Tracer] = None
-) -> str:
-    if modality == ADNIModalityConverter.T1:
-        return "_T1w"
-    if modality == ADNIModalityConverter.DWI:
-        return "_dwi"
-    if modality == ADNIModalityConverter.FLAIR:
-        return "_FLAIR"
-    if modality == ADNIModalityConverter.FMRI:
-        return "_task-rest_bold"
-    if modality == ADNIModalityConverter.FMAP:
-        return "_fmap"
-    if modality == ADNIModalityConverter.PET_FDG:
-        return f"_trc-{Tracer.FDG.value}_rec-{ReconstructionMethod.CO_REGISTERED_AVERAGED.value}_pet"
-    if modality == ADNIModalityConverter.PET_FDG_UNIFORM:
-        return f"_trc-{Tracer.FDG.value}_rec-{ReconstructionMethod.COREGISTERED_ISOTROPIC.value}_pet"
-    if modality == ADNIModalityConverter.PET_PIB:
-        return f"_trc-{Tracer.PIB.value}_pet"
-    if modality == ADNIModalityConverter.PET_AV45:
-        return f"_trc-{tracer.value}_pet"
-    if modality == ADNIModalityConverter.PET_TAU:
-        return f"_trc-{Tracer.AV1451.value}_pet"
-
-
-def _should_be_centered(modality: ADNIModalityConverter) -> bool:
-    if modality == ADNIModalityConverter.T1:
-        return True
-    if modality == ADNIModalityConverter.DWI:
-        return False
-    if modality == ADNIModalityConverter.FLAIR:
-        return True
-    if modality == ADNIModalityConverter.FMRI:
-        return False
-    if modality == ADNIModalityConverter.FMAP:
-        return False
-    if modality in (
-        ADNIModalityConverter.PET_FDG,
-        ADNIModalityConverter.PET_FDG_UNIFORM,
-        ADNIModalityConverter.PET_PIB,
-        ADNIModalityConverter.PET_AV45,
-        ADNIModalityConverter.PET_TAU,
-    ):
-        return True
-
-
-def _write_json_sidecar(modality: ADNIModalityConverter) -> bool:
-    if modality == ADNIModalityConverter.T1:
-        return False
-    if modality == ADNIModalityConverter.DWI:
-        return True
-    if modality == ADNIModalityConverter.FLAIR:
-        return True
-    if modality == ADNIModalityConverter.FMRI:
-        return True
-    if modality == ADNIModalityConverter.FMAP:
-        return True
-    if modality in (
-        ADNIModalityConverter.PET_FDG,
-        ADNIModalityConverter.PET_FDG_UNIFORM,
-        ADNIModalityConverter.PET_PIB,
-        ADNIModalityConverter.PET_AV45,
-        ADNIModalityConverter.PET_TAU,
-    ):
-        return False
 
 
 def _session_label_to_viscode(session_name: str) -> str:
