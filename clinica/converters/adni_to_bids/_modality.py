@@ -177,9 +177,7 @@ class ADNIPETPreprocessingStep(Enum):
 def _get_output_filename(
     modality: ADNIModalityConverter,
     tracer: Optional[Tracer] = None,
-    pet_preprocessing_step: Optional[
-        ADNIPETPreprocessingStep
-    ] = ADNIPETPreprocessingStep.STEP2,
+    pet_preprocessing_step: Optional[ADNIPETPreprocessingStep] = None,
 ) -> str:
     # rq : tracer only defined for PET_AV45
     if modality == ADNIModalityConverter.T1:
@@ -195,4 +193,6 @@ def _get_output_filename(
     if modality.is_pet:
         if not tracer:
             tracer = modality.tracer
+        if not pet_preprocessing_step:
+            raise ValueError("PET Preprocessing Step is not defined")
         return f"_trc-{tracer.value}_rec-{pet_preprocessing_step.reconstruction_method}_pet"

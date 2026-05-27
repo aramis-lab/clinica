@@ -68,7 +68,7 @@ def convert_fdg_pet(
         f"Output will be stored in {conversion_dir}."
     )
     pet_preprocessing_step = ADNIPETPreprocessingStep.from_step_value(
-        pet_preprocessing_step if pet_preprocessing_step else 4
+        pet_preprocessing_step if pet_preprocessing_step is not None else 4
     )
 
     images = _compute_fdg_pet_paths(

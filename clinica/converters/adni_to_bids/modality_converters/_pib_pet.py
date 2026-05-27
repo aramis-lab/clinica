@@ -67,7 +67,7 @@ def convert_pib_pet(
     )
 
     pet_preprocessing_step = ADNIPETPreprocessingStep.from_step_value(
-        pet_preprocessing_step if pet_preprocessing_step else 4
+        pet_preprocessing_step if pet_preprocessing_step is not None else 4
     )
 
     images = _compute_pib_pet_paths(

@@ -595,9 +595,7 @@ def paths_to_bids(
     modality: ADNIModalityConverter,
     force_new_extraction: bool = False,
     n_procs: Optional[int] = 1,
-    pet_preprocessing_step: Optional[
-        ADNIPETPreprocessingStep
-    ] = ADNIPETPreprocessingStep.STEP2,
+    pet_preprocessing_step: Optional[ADNIPETPreprocessingStep] = None,
 ) -> list[Path]:
     """Images in the list are converted and copied to directory in BIDS format.
 
@@ -622,7 +620,6 @@ def paths_to_bids(
 
     pet_preprocessing_step: ADNIPETPreprocessingStep, optional
         ADNI PET Preprocessing Step to search PET scans with for all PET modalities
-        Default = ADNIPETPreprocessingStep.STEP2
 
     Returns
     -------
@@ -710,9 +707,7 @@ def _create_file(
     modality: ADNIModalityConverter,
     bids_dir: Path,
     force_new_extraction: bool,
-    pet_preprocessing_step: Optional[
-        ADNIPETPreprocessingStep
-    ] = ADNIPETPreprocessingStep.STEP2,
+    pet_preprocessing_step: Optional[ADNIPETPreprocessingStep] = None,
 ) -> Optional[Path]:
     """Creates an image file at the corresponding output folder.
 
@@ -736,7 +731,6 @@ def _create_file(
 
     pet_preprocessing_step: ADNIPETPreprocessingStep, optional
         ADNI PET Preprocessing Step used to search for right PET scans
-        Default = ADNIPETPreprocessingStep.STEP2
 
     Returns
     -------
@@ -774,9 +768,15 @@ def _create_file(
         image_tracer = Tracer(image.Tracer)
         logging_header = f"[{modality.value} - {image_tracer.value}]"
     if not image.Path:
+        msg = f"{logging_header} No path specified for {subject} in session {viscode}"
+        msg = (
+            msg + f" and step {pet_preprocessing_step.value}"
+            if pet_preprocessing_step
+            else msg
+        )
         cprint(
-            f"{logging_header} No path specified for {subject} in session {viscode}",
-            lvl="info",
+            msg,
+            lvl="warning",
         )
         return None
     cprint(

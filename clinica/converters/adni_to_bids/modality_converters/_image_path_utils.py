@@ -36,7 +36,7 @@ def find_image_path(
                     f"No {modality} image path found for subject {image.Subject_ID} in visit {image.VISCODE} "
                     f"with image ID {image.Image_ID}"
                 ),
-                lvl="info",
+                lvl="debug",
             )
     images.loc[:, "Is_Dicom"] = pd.Series(is_dicom, index=images.index)
     images.loc[:, "Path"] = pd.Series(image_folders, index=images.index)

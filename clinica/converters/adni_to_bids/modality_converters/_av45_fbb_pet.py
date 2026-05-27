@@ -65,7 +65,7 @@ def convert_av45_fbb_pet(
     )
 
     pet_preprocessing_step = ADNIPETPreprocessingStep.from_step_value(
-        pet_preprocessing_step if pet_preprocessing_step else 5
+        pet_preprocessing_step if pet_preprocessing_step is not None else 5
     )
 
     images = _compute_av45_fbb_pet_paths(
