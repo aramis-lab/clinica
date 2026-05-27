@@ -113,10 +113,12 @@ def test_adni_preprocessing_step_from_value_error(value):
         ("PET_TAU", ADNIPETPreprocessingStep.STEP0, "_trc-18FAV1451_rec-raw_pet"),
     ],
 )
-def test_get_output_filename(modality, expected):
+def test_get_output_filename(modality, pet_step, expected):
     from clinica.converters.adni_to_bids._modality import _get_output_filename
 
-    assert _get_output_filename(ADNIModalityConverter[f"{modality}"]) == expected
+    assert (
+        _get_output_filename(ADNIModalityConverter[f"{modality}"], pet_step) == expected
+    )
 
 
 def test_get_output_filename_with_tracer():
