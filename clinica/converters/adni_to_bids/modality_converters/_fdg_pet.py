@@ -26,7 +26,7 @@ def convert_fdg_pet(
     subjects: Iterable[str],
     force_new_extraction: bool = False,
     n_procs: int = 1,
-    pet_preprocessing_step: int = 4,
+    pet_preprocessing_step: int = None,
 ):
     """Convert FDG PET images of ADNI into BIDS format.
 
@@ -67,9 +67,8 @@ def convert_fdg_pet(
         "Calculating paths of FDG PET images. "
         f"Output will be stored in {conversion_dir}."
     )
-
     pet_preprocessing_step = ADNIPETPreprocessingStep.from_step_value(
-        pet_preprocessing_step
+        pet_preprocessing_step if pet_preprocessing_step else 4
     )
 
     images = _compute_fdg_pet_paths(

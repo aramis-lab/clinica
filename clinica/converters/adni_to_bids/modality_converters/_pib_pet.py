@@ -21,7 +21,7 @@ def convert_pib_pet(
     subjects: Iterable[str],
     force_new_extraction: bool = False,
     n_procs: int = 1,
-    pet_preprocessing_step: int = 4,
+    pet_preprocessing_step: int = None,
 ):
     """Convert PIB PET images of ADNI into BIDS format.
 
@@ -67,7 +67,7 @@ def convert_pib_pet(
     )
 
     pet_preprocessing_step = ADNIPETPreprocessingStep.from_step_value(
-        pet_preprocessing_step
+        pet_preprocessing_step if pet_preprocessing_step else 4
     )
 
     images = _compute_pib_pet_paths(

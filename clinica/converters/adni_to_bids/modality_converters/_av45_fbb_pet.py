@@ -22,7 +22,7 @@ def convert_av45_fbb_pet(
     subjects: Iterable[str],
     force_new_extraction: bool = False,
     n_procs: int = 1,
-    pet_preprocessing_step: int = 5,
+    pet_preprocessing_step: int = None,
 ):
     """Convert AV-45 and Florbetaben PET images of ADNI into BIDS format.
 
@@ -65,7 +65,7 @@ def convert_av45_fbb_pet(
     )
 
     pet_preprocessing_step = ADNIPETPreprocessingStep.from_step_value(
-        pet_preprocessing_step
+        pet_preprocessing_step if pet_preprocessing_step else 5
     )
 
     images = _compute_av45_fbb_pet_paths(

@@ -22,7 +22,7 @@ def convert_tau_pet(
     subjects: Iterable[str],
     force_new_extraction: bool = False,
     n_procs: int = 1,
-    pet_preprocessing_step: int = 5,
+    pet_preprocessing_step: int = None,
 ):
     """Convert Tau PET images of ADNI into BIDS format.
 
@@ -69,9 +69,8 @@ def convert_tau_pet(
     )
 
     pet_preprocessing_step = ADNIPETPreprocessingStep.from_step_value(
-        pet_preprocessing_step
+        pet_preprocessing_step if pet_preprocessing_step else 5
     )
-
     images = _compute_tau_pet_paths(
         source_dir, csv_dir, subjects, conversion_dir, pet_preprocessing_step
     )
