@@ -40,7 +40,7 @@ from ._modality import ADNIModality
     "-pps",
     "--pet-preprocessing-step",
     type=click.IntRange(0, 5),
-    help=f"[OPTIONAL] ADNI PET processing step for converted images [0 to 5]. See possibilities in the documentation. Default depends on tracer.",
+    help=f"[OPTIONAL] ADNI PET preprocessing step for converted images [0 to 5]. See possibilities in the documentation. Default value depends on tracer.",
     default=None,
 )
 @option.global_option_group
