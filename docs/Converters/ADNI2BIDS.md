@@ -186,7 +186,7 @@ Due to the high computational time required for converting all the modalities of
 - `PET_TAU` for Flortaucipir (AV1451) PET
 - `FMAP` for Field Mapping
 ___
-`--pet_preprocessing_step` / `-pps` : this option allows to select the desired adni pet preprocessing step with is by default **2 / "Coregistered, Averaged"**. Options are :
+`--pet_preprocessing_step` / `-pps` : this option allows to select the desired adni pet preprocessing step. Options are :
 
 - 0 : ADNI Brain PET: Raw ;
 - 1 : Co-registered Dynamic ;
@@ -195,7 +195,8 @@ ___
 - 4 : Coreg, Avg, Std Img and Vox Siz, Uniform Resolution ;
 - 5 : Coreg, Avg, Std Img and Vox Siz, Uniform 6mm Res ;
 
-If applied, this option will account for all converted PET modalities. In case you want to use different steps, please run the converter several times, with each time the modality and the corresponding step you want specified.
+If applied, this option will account for all converted PET modalities. Default values correspond to the best available step per tracer : step 4 for FDG/PIB and step 5 for TAU/AV45/FBB. 
+
 ___
 
 It is also possible to provide the path to a .txt file with the list of subjects to convert using the optional parameter `--subjects_list`.
