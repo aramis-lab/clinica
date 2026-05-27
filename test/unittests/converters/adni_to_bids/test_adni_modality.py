@@ -93,16 +93,24 @@ def test_adni_preprocessing_step_from_value_error(value):
 
 
 @pytest.mark.parametrize(
-    "modality, expected",
+    "modality, pet_step, expected",
     [
-        ("T1", "_T1w"),
-        ("DWI", "_dwi"),
-        ("FLAIR", "_FLAIR"),
-        ("FMRI", "_task-rest_bold"),
-        ("FMAP", "_fmap"),
-        ("PET_FDG", "_trc-18FFDG_rec-coregavg_pet"),
-        ("PET_PIB", "_trc-11CPIB_rec-coregavg_pet"),
-        ("PET_TAU", "_trc-18FAV1451_rec-coregavg_pet"),
+        ("T1", None, "_T1w"),
+        ("DWI", None, "_dwi"),
+        ("FLAIR", None, "_FLAIR"),
+        ("FMRI", None, "_task-rest_bold"),
+        ("FMAP", None, "_fmap"),
+        (
+            "PET_FDG",
+            ADNIPETPreprocessingStep.STEP4_6MM,
+            "_trc-18FFDG_rec-coregiso6_pet",
+        ),
+        (
+            "PET_PIB",
+            ADNIPETPreprocessingStep.STEP4_8MM,
+            "_trc-11CPIB_rec-coregiso8_pet",
+        ),
+        ("PET_TAU", ADNIPETPreprocessingStep.STEP0, "_trc-18FAV1451_rec-raw_pet"),
     ],
 )
 def test_get_output_filename(modality, expected):

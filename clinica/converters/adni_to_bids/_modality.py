@@ -161,6 +161,8 @@ class ADNIPETPreprocessingStep(Enum):
     @property
     def reconstruction_method(self) -> Optional[str]:
         # See the original ReconstructionMethod Class in clinica.utils.pet, based on https://adni.loni.usc.edu/data-samples/adni-data/neuroimaging/pet/
+        if self == ADNIPETPreprocessingStep.STEP0:
+            return "raw"
         if self == ADNIPETPreprocessingStep.STEP1:
             return "coregdyn"
         if self == ADNIPETPreprocessingStep.STEP2:
