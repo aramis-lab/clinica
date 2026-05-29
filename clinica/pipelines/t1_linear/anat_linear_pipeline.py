@@ -300,7 +300,7 @@ class AnatLinear(Pipeline):
         if self.use_antspy:
             n4biascorrection.inputs.output_dir = str(self.base_dir)
             n4biascorrection.inputs.verbose = True
-        n4biascorrection.inputs.bspline_fitting_distance = 400
+        n4biascorrection.inputs.bspline_fitting_distance = 200
 
         # 2. `RegistrationSynQuick` by *ANTS*. It uses nipype interface.
         ants_registration_node = npe.Node(
