@@ -117,7 +117,10 @@ def test_get_output_filename(modality, pet_step, expected):
     from clinica.converters.adni_to_bids._modality import _get_output_filename
 
     assert (
-        _get_output_filename(ADNIModalityConverter[f"{modality}"], pet_step) == expected
+        _get_output_filename(
+            ADNIModalityConverter[f"{modality}"], pet_preprocessing_step=pet_step
+        )
+        == expected
     )
 
 
@@ -126,7 +129,11 @@ def test_get_output_filename_with_tracer():
     from clinica.utils.pet import Tracer
 
     assert (
-        _get_output_filename(ADNIModalityConverter.PET_AV45, tracer=Tracer.AV45)
+        _get_output_filename(
+            ADNIModalityConverter.PET_AV45,
+            tracer=Tracer.AV45,
+            pet_preprocessing_step=ADNIPETPreprocessingStep.STEP2,
+        )
         == "_trc-18FAV45_rec-coregavg_pet"
     )
 
