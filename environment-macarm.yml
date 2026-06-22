@@ -1,0 +1,8 @@
+name: clinica
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - dcm2niix
+  - petpvc
+
