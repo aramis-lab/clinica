@@ -111,8 +111,12 @@ ___
 You can find more details about `Convert3D` on their [website](http://www.itksnap.org/pmwiki/pmwiki.php?n=Convert3D.Convert3D). There are
 two options to install it :
 
-- [Use pre-built binaries](http://www.itksnap.org/pmwiki/pmwiki.php?n=Downloads.C3D).
-- [Use the official conda package](https://anaconda.org/conda-forge/convert3d).
+=== "Linux"
+    - [Use pre-built binaries](http://www.itksnap.org/pmwiki/pmwiki.php?n=Downloads.C3D).
+    - [Use the official conda package](https://anaconda.org/conda-forge/convert3d).
+
+=== "MacOS"
+    [Use pre-built binaries](http://www.itksnap.org/pmwiki/pmwiki.php?n=Downloads.C3D).
 
 ___
 
@@ -193,7 +197,6 @@ official instructions for [downloading](https://www.mrtrix.org/download/).
 
 === "MacOS"
 
-    - [Use the official conda package](https://www.mrtrix.org/download/macos-anaconda/).
     - [Use the MacOS pre-compiled application package installer](https://www.mrtrix.org/download/macos-application/).
     - [Use the Homebrew formula](https://github.com/MRtrix3/homebrew-mrtrix3) (although large dependencies such as `XCode` and `Qt5` are required).
 
