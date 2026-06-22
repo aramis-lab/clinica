@@ -18,9 +18,15 @@ To install Miniconda, open a new terminal and type the following commands:
     bash /tmp/miniconda-installer.sh
     ```
 
-=== "MacOS"
+=== "MacOS (Intell)"
     ```{.sourceCode .bash .copy}
     curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o /tmp/miniconda-installer.sh
+    bash /tmp/miniconda-installer.sh
+    ```
+
+=== "MacOS (ARM)"
+    ```{.sourceCode .bash .copy}
+    curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh -o /tmp/miniconda-installer.sh
     bash /tmp/miniconda-installer.sh
     ```
 
@@ -37,16 +43,10 @@ The latest release of Clinica can be installed by using the conventional
 [PyPI package manager](https://pypi.org/project/clinica/) as follows:
 
 ```{.shell .copy}
-conda create --name clinicaEnv python=3.10
+conda create --name clinicaEnv python=3.11
 conda activate clinicaEnv
 pip install clinica
 ```
-
-??? warning "Conda installation"
-    Since Clinica `v0.3.5`, Conda installation **is no longer available** (i.e.
-    `conda create --name clinicaEnv python=3.6 clinica -c Aramislab -c conda-forge`
-    will only install Clinica `v0.3.4`).
-    Pip is now the only way to install the latest version of Clinica.
 
 ## Installation of the third-party software packages
 
@@ -141,6 +141,9 @@ Clinica uses [Poetry](https://python-poetry.org) to manage its development envir
     ```{.shell .copy}
     conda env create -f environment.yml
     ```
+   
+    !!! warning
+        If you are on MacOS **ARM** you should use the `environment-macarm.yml` file instead.
 
 4. Install Clinica with the necessary development dependencies:
 
