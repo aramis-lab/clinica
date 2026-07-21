@@ -39,3 +39,9 @@ def normalize_to_reference_task(pet_image: str, region_mask: str) -> str:
     from clinica.pipelines.pet.volume.utils import normalize_to_reference
 
     return str(normalize_to_reference(Path(pet_image), Path(region_mask)))
+
+
+def build_pet_pvc_name_task(pet_image: str, pvc_method: str) -> str:
+    from clinica.pipelines.pet.volume.utils import build_pet_pvc_name
+
+    return build_pet_pvc_name(pet_image, pvc_method)

@@ -473,13 +473,13 @@ class PETVolume(GroupPipeline, PETPipeline):
 
         from .tasks import (
             apply_binary_mask_task,
+            build_pet_pvc_name_task,
             compute_atlas_statistics_task,
             create_binary_mask_task,
             create_pvc_mask_task,
             normalize_to_reference_task,
         )
         from .utils import (
-            build_pet_pvc_name,
             get_from_list,
             init_input_node,
         )
@@ -795,7 +795,7 @@ class PETVolume(GroupPipeline, PETPipeline):
                 name="atlas_stats_pvc",
                 iterfield=["image"],
             )
-            atlas_stats_pvc.inputs.in_atlas_names = self.parameters["atlases"]
+            atlas_stats_pvc.inputs.atlas_names = self.parameters["atlases"]
 
             # Connection
             # ==========
@@ -824,7 +824,7 @@ class PETVolume(GroupPipeline, PETPipeline):
                         [
                             ("coregistered_source", "in_file"),
                             (
-                                ("coregistered_source", build_pet_pvc_name, "RBV"),
+                                ("coregistered_source", build_pet_pvc_name_task, "RBV"),
                                 "out_file",
                             ),
                         ],
