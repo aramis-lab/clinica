@@ -35,7 +35,6 @@ def run_pet_surface(
         "suvr_reference_region": region,
         "pvc_psf_tsv": fspath(input_dir / "subjects.tsv"),
         "longitudinal": False,
-        "skip_question": False,
     }
     pipeline = PetSurface(
         bids_directory=fspath(input_dir / "bids"),
