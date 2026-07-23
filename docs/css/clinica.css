@@ -78,7 +78,7 @@ h3, .h3, .md-typeset h3 {
     width: 19%;
     }
 .third_party_table th:nth-child(2) {
-    width: 10%;
+    width: 11%;
     }
 .third_party_table th:nth-child(3) {
     width: 15%;
@@ -87,17 +87,14 @@ h3, .h3, .md-typeset h3 {
     width: 15%;
     }
 .third_party_table th:nth-child(5) {
-    width: 7%;
+    width: 9%;
     }
 .third_party_table th:nth-child(6) {
-    width: 7%;
+    width: 15%;
     }
     .third_party_table th:nth-child(7) {
-    width: 12%;
+    width: 15%;
     }
 .third_party_table th:nth-child(8) {
-    width: 13%;
-    }
-.third_party_table th:nth-child(9) {
-    width: 8%;
+    width: 11%;
     }
