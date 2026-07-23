@@ -1,3 +1,6 @@
+import os
+
+
 def get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id):
     """Extract SUBJECT_DIR.
 
@@ -862,6 +865,21 @@ def produce_tsv(pet, atlas_files):
     return os.path.abspath(filename_tsv[0]), os.path.abspath(filename_tsv[1])
 
 
+def merge_nifti_volumes(inputs: list[str]) -> str:
+    import os
+
+    import nibabel as nib
+    from nilearn.image import concat_imgs
+
+    sorted_inputs = sorted(
+        inputs, key=lambda p: int(p.split("/")[-1].split(".nii.gz")[0])
+    )
+    merged_image = concat_imgs([nib.load(p) for p in sorted_inputs])
+    output_path = os.getcwd() + "/merged_image.nii.gz"
+    nib.save(merged_image, output_path)
+    return output_path
+
+
 def get_wf(
     subject_id,
     session_id,
@@ -911,7 +929,6 @@ def get_wf(
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
     from nipype.interfaces.freesurfer import ApplyVolTransform, MRIConvert, Tkregister2
-    from nipype.interfaces.fsl import Merge
     from nipype.interfaces.petpvc import PETPVC
     from nipype.interfaces.spm import Coregister, Normalize12
 
@@ -997,7 +1014,12 @@ def get_wf(
         raise Exception("CSV file : " + labelconversion.inputs.csv + " does not exist.")
 
     merge_volume = pe.Node(
-        Merge(output_type="NIFTI_GZ", dimension="t"), name="merge_volume"
+        niu.Function(
+            input_names=["inputs"],
+            output_names=["merged_file"],
+            function=utils.merge_nifti_volumes,
+        ),
+        name="merge_volume",
     )
 
     vol2vol = pe.Node(
@@ -1375,7 +1397,7 @@ def get_wf(
             (vol2vol, pons_normalization, [("transformed_file", "pet_path")]),
             (vol2vol_mask, pons_normalization, [("transformed_file", "mask")]),
             (convert_gtmseg, labelconversion, [("out_file", "gtmsegfile")]),
-            (labelconversion, merge_volume, [("list_of_regions", "in_files")]),
+            (labelconversion, merge_volume, [("list_of_regions", "inputs")]),
             (merge_volume, pvc, [("merged_file", "mask_file")]),
             (pons_normalization, pvc, [("suvr", "in_file")]),
             (reformat_surface_name, mris_exp, [("out", "in_surface")]),

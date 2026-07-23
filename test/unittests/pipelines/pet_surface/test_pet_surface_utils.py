@@ -50,3 +50,21 @@ def test_mris_expand(tmp_path):
     assert {_padding_to_3(x) for x in range(7, 14)} == set(
         map(lambda x: x.name.split("-")[-1], outputs)
     )
+
+
+def test_merge_nifti_volumes(tmp_path):
+    import nibabel as nib
+    import numpy as np
+
+    from clinica.pipelines.pet_surface.pet_surface_utils import merge_nifti_volumes
+
+    image1 = nib.Nifti1Image(np.random.rand(3, 3, 3, 1), affine=np.eye(4))
+    image2 = nib.Nifti1Image(np.random.rand(3, 3, 3, 1), affine=np.eye(4))
+    nib.save(image1, tmp_path / "1.nii.gz")
+    nib.save(image2, tmp_path / "2.nii.gz")
+
+    merged_file_path = merge_nifti_volumes(
+        [str(tmp_path / "1.nii.gz"), str(tmp_path / "2.nii.gz")]
+    )
+    merged_image = nib.load(merged_file_path)
+    assert merged_image.shape == (3, 3, 3, 2)
