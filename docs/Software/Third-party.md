@@ -63,19 +63,19 @@ Specific dependencies are described in the table below (1) :
 
 <div markdown="1" class="third_party_table">
 
-|                     | ANTs  | Convert3D | FreeSurfer | FSL | ITK | MRtrix3 | PETPVC | SPM |
-|:-------------------:|:-----:|:---------:|:----------:|:---:|:---:|:-------:|:------:|:---:|
-|    Anat > Linear    |  ✓∘   |           |            |     |     |         |        |     |
-|    Anat > Volume    |       |           |            |     |     |         |        |  ✓  |
-|  Anat > FreeSurfer  |       |           |     ✓      |     |     |         |        |     |
-| DWI > Preprocessing |   ✓   |     ✓     |            |  ✓  |     |    ✓    |        |     |
-|      DWI > DTI      |   ✓   |           |            |  ✓  |     |    ✓    |        |     |
-|  DWI > Connectome   |       |           |     ✓      |  ✓  |     |    ✓    |        |     |
-|    PET > Linear     |   ✓   |           |            |     |     |         |        |     |
-|    PET > Surface    |       |           |     ✓      |  ✓  | ✓⟡  |         |   ✓⟡   |  ✓  |
-|    PET > Volume     |       |           |            |     | ✓⟡  |         |   ✓⟡   |  ✓  |
-|   Stats > Surface   |       |           |     ✓      |     |     |         |        |     |
-|   Stats > Volume    |       |           |            |     |     |         |        |  ✓  |
+|                     | ANTs  | Convert3D | FreeSurfer | FSL | MRtrix3 | ITK + PETPVC | SPM |
+|:-------------------:|:-----:|:---------:|:----------:|:---:|:-------:|:------------:|:---:|
+|    Anat > Linear    |  ✓∘   |           |            |     |         |              |     |
+|    Anat > Volume    |       |           |            |     |         |              |  ✓  |
+|  Anat > FreeSurfer  |       |           |     ✓      |     |         |              |     |
+| DWI > Preprocessing |   ✓   |     ✓     |            |  ✓  |    ✓    |              |     |
+|      DWI > DTI      |   ✓   |           |            |  ✓  |    ✓    |              |     |
+|  DWI > Connectome   |       |           |     ✓      |  ✓  |    ✓    |              |     |
+|    PET > Linear     |   ✓   |           |            |     |         |              |     |
+|    PET > Surface    |       |           |     ✓      |     |         |      ✓⟡      |  ✓  |
+|    PET > Volume     |       |           |            |     |         |      ✓⟡      |  ✓  |
+|   Stats > Surface   |       |           |     ✓      |     |         |              |     |
+|   Stats > Volume    |       |           |            |     |         |              |  ✓  |
 </div>
 
 - *✓∘ : for anatomical linear pipelines there is also the possibility to use ANTsPy instead of ANTs since Clinica `v0.9.0`* 
