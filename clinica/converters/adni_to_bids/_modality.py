@@ -79,6 +79,7 @@ class ADNIModalityConverter(str, Enum):
 
     @property
     def json_sidecar(self) -> bool:
+        # Rq : used only for dcm2nix conversion. If -xml option is used, sidecar json will be added even for T1.
         if self == ADNIModalityConverter.T1:
             return False
         if self == ADNIModalityConverter.DWI:
