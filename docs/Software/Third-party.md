@@ -169,9 +169,25 @@ We recommend installing [**FSL 6.0**](https://fsl.fmrib.ox.ac.uk/).
 
 ___
 
-### ITK
+### PETPVC + ITK
 
-You can find more details about `ITK` on their [website](https://itk.org/). To install it :
+In clinica `PETPVC` (more info on their [github](https://github.com/UCL/PETPVC)) and `ITK` (more info on their
+[website](https://itk.org/)) are used together for pet partial volume correction.
+
+!!! tip "Recommended downloading option"
+    The easiest way to get PETPVC would be to use the official conda package. Then, you don't need to perform any additional
+    steps to download ITK since it will be included in it.
+
+You have basically three options to download PETPVC :
+
+- :star: [Use the official conda package](https://anaconda.org/conda-forge/petpvc).
+- Use pre-built binaries, available [here](https://github.com/UCL/PETPVC/releases).
+- [Build from source](https://github.com/UCL/PETPVC?tab=readme-ov-file#installation-from-source-instructions).
+
+!!! tip
+    If building from source, do not forget to compile in **RELEASE** mode, otherwise, partial volume correction will be very slow.
+
+If the option you chose for PETPVC does not include ITK, you also need to install it : 
 
 === "Linux"
     Follow the instructions on the [ITK blog](https://blog.kitware.com/itk-packages-in-linux-distributions/).
@@ -199,22 +215,6 @@ official instructions for [downloading](https://www.mrtrix.org/download/).
 
     - [Use the MacOS pre-compiled application package installer](https://www.mrtrix.org/download/macos-application/).
     - [Use the Homebrew formula](https://github.com/MRtrix3/homebrew-mrtrix3) (although large dependencies such as `XCode` and `Qt5` are required).
-
-___
-
-### PETPVC
-
-You can find more details about `PETPVC` on their [website](https://github.com/UCL/PETPVC),
-including official instructions for downloading on their [Github](https://github.com/UCL/PETPVC).
-
-You have basically three options:
-
-- Use pre-built binaries, available [here](https://github.com/UCL/PETPVC/releases).
-- [Use the official conda package](https://anaconda.org/conda-forge/petpvc).
-- [Build from source](https://github.com/UCL/PETPVC?tab=readme-ov-file#installation-from-source-instructions).
-
-!!! tip
-    If building from source, do not forget to compile in **RELEASE** mode, otherwise, partial volume correction will be very slow.
 
 ___
 
