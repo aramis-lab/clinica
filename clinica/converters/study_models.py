@@ -17,6 +17,7 @@ __all__ = [
     "OASIS3BIDSSubjectID",
     "HABSBIDSSubjectID",
     "IXIBIDSSubjectID",
+    "OASIS2BIDSSubjectID",
 ]
 
 
@@ -32,6 +33,7 @@ class StudyName(str, Enum):
     OASIS3 = "OASIS3"
     UKB = "UKB"
     IXI = "IXI"
+    OASIS2 = "OASIS2"
 
 
 class BIDSSubjectID(ABC, UserString):
@@ -74,6 +76,8 @@ def bids_id_factory(study: StudyName) -> Type[BIDSSubjectID]:
         return HABSBIDSSubjectID
     if study == StudyName.IXI:
         return IXIBIDSSubjectID
+    if study == StudyName.OASIS2:
+        return OASIS2BIDSSubjectID
 
 
 class ADNIBIDSSubjectID(BIDSSubjectID):
@@ -299,3 +303,30 @@ class IXIBIDSSubjectID(BIDSSubjectID):
 
     def to_original_study_id(self) -> str:
         return str(self).replace("sub-", "")
+
+
+class OASIS2BIDSSubjectID(BIDSSubjectID):
+    # todo : to verify
+    # todo : is there any unit test to enrich ?
+    """Implementation for OASIS2 of the BIDSSubjectIDClass, allowing to go from the source id XXXX
+    to a bids id sub-OAS2XXXX and reciprocally."""
+
+    def validate(self, value: str) -> str:
+        if re.fullmatch(r"sub-OAS2\d{4}", value):
+            return value
+        raise ValueError(
+            f"BIDS OASIS2 subject ID {value} is not properly formatted. "
+            "Expecting a 'sub-OAS2XXXX' format."
+        )
+
+    @classmethod
+    def from_original_study_id(cls, study_id: str) -> str:
+        if re.fullmatch(r"OAS2\d{4}", study_id):
+            return "sub-" + study_id
+        raise ValueError(
+            f"Raw OASIS2 subject ID {study_id} is not properly formatted. "
+            "Expecting a 'OAS2XXXX' format."
+        )
+
+    def to_original_study_id(self) -> str:
+        return self.split("-")[1]

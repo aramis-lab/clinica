@@ -1,5 +1,5 @@
 <!-- markdownlint-disable MD046 -->
-# `oasis3-to-bids` – Conversion of the Open Access Series of Imaging Studies (OASIS-3) to BIDS
+# `oasis2-to-bids` – Conversion of the Open Access Series of Imaging Studies (OASIS-2) to BIDS
 
 ??? quote "Description reproduced from the [OASIS' webpage](https://sites.wustl.edu/oasisbrains/)"
     The Open Access Series of Imaging Studies (OASIS) is a project aimed at making MRI data sets of the brain freely available to the scientific community.
@@ -18,9 +18,6 @@
       the Pet Unified Pipeline (PUP) are also available in OASIS-3.
 
   For more information about the images and the dataset you can read the [OASIS-3: Imaging Methods and Data Dictionary](https://bpb-us-w2.wpmucdn.com/sites.wustl.edu/dist/6/4383/files/2024/04/OASIS-3_Imaging_Data_Dictionary_v2.3-a93c947a586e7367.pdf).
-
-!!! warning "OASIS 2"
-    We do not currently support the conversion of OASIS-2.
 
 ## Dependencies
 

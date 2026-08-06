@@ -6,5 +6,6 @@
 - `ixi-to-bids` - [IXI: Information eXtraction from Images](/Converters/IXItoBIDS.md)
 - `nifd-to-bids` - [NIFD: Neuroimaging in Frontotemporal Dementia](/Converters/NIFD2BIDS.md)
 - `oasis-to-bids` - [OASIS: Open Access Series of Imaging Studies](/Converters/OASIS2BIDS.md)
+- `oasis2-to-bids` - [OASIS-2 : Cross-sectional MRLongitudinal MRI Data](/Converters/OASIS2TOBIDS.md)
 - `oasis3-to-bids` - [OASIS-3: Longitudinal Neuroimaging, Clinical, and Cognitive Dataset for Normal Aging and Alzheimer’s Disease](/Converters/OASIS3TOBIDS.md)
 - `ukb-to-bids` - [UK Biobank: Large-scale biomedical database and research resource in the United Kingdom](/Converters/UKBtoBIDS.md)

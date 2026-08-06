@@ -128,6 +128,7 @@ nav:
     - IXI to BIDS: Converters/IXItoBIDS.md
     - NIFD to BIDS: Converters/NIFD2BIDS.md
     - OASIS to BIDS: Converters/OASIS2BIDS.md
+    - OASIS-2 to BIDS: Converters/OASIS2TOBIDS.md
     - OASIS-3 to BIDS: Converters/OASIS3TOBIDS.md
     - UK Biobank to BIDS: Converters/UKBtoBIDS.md
   - I/O tools:
