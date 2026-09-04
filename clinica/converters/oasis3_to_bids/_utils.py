@@ -264,14 +264,13 @@ def _merge_clinical_scores(
 ) -> pd.DataFrame:
     """Bin clinical visits into session bins and merge scores onto imaging sessions."""
     df_clinical = _compute_session_bins(df_clinical)
-    df_clinical = (
-        df_clinical.merge(df_source["Subject"], how="inner", on="Subject")
-        .drop_duplicates()
-        .set_index(["Subject", "Date"])
-    )
+    df_clinical = df_clinical.merge(
+        df_source["Subject"], how="inner", on="Subject"
+    ).drop_duplicates()
     return df_source.merge(
         df_clinical[
             [
+                "Subject",
                 "session",
                 "mmse",
                 "cdr",
@@ -284,9 +283,9 @@ def _merge_clinical_scores(
                 "perscare",
                 "sumbox",
             ]
-        ],
+        ].drop_duplicates(),
         how="left",
-        on="session",
+        on=["Subject", "session"],
     )
 
 
