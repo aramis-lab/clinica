@@ -148,7 +148,8 @@ class AnatLinear(Pipeline):
         from clinica.utils.ux import print_images_to_process
 
         self.ref_template = get_mni_template(
-            "t1" if self.name == "t1-linear" else "flair"
+            "t1" if self.name == "t1-linear" else "flair",
+            skull_stripped=self.parameters.get("skull_stripped", False),
         )
 
         # Inputs from anat/ folder

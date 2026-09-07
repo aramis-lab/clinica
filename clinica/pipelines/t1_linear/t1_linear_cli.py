@@ -31,6 +31,11 @@ pipeline_name = "t1-linear"
     is_flag=True,
     help="Use ANTsPy instead of ANTs.",
 )
+@cli_param.option.option(
+    "--skull-stripped",
+    is_flag=True,
+    help="Use a skull-stripped reference for already skull-stripped images.",
+)
 @cli_param.option.caps_name
 def cli(
     bids_directory: str,
@@ -41,6 +46,7 @@ def cli(
     working_directory: Optional[str] = None,
     n_procs: Optional[int] = None,
     use_antspy: bool = False,
+    skull_stripped: bool = False,
     caps_name: Optional[str] = None,
 ) -> None:
     """Affine registration of T1w images to the MNI standard space.
@@ -56,6 +62,7 @@ def cli(
     parameters = {
         "uncropped_image": uncropped_image,
         "random_seed": random_seed,
+        "skull_stripped": skull_stripped,
     }
 
     # Most of the time, you will want to instantiate your pipeline with a
