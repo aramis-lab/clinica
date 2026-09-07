@@ -129,3 +129,11 @@ def test_second_lv_run(generate_cli_second_lv_run):
     print(f"Testing input cli run {cli_input}")
     result = runner.invoke(cli, f"run {cli_input} -h")
     assert result.exit_code == 0
+
+
+@pytest.mark.parametrize("pipeline_name", ["flair-linear", "t1-linear"])
+def test_skull_stripped_option(pipeline_name):
+    runner = CliRunner()
+    result = runner.invoke(cli, f"run {pipeline_name} -h")
+    assert result.exit_code == 0
+    assert "--skull-stripped" in result.output
