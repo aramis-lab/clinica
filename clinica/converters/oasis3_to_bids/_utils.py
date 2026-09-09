@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Iterable, Optional
 
 import pandas as pd
+from coverage.files import source_exists
 
 from clinica.utils.stream import cprint, log_and_raise
 
@@ -417,6 +418,13 @@ def _build_scans_df(df_source: pd.DataFrame) -> pd.DataFrame:
     return df_scan
 
 
+def _identify_pattern(sourcedata_dir: Path, source_basename: str) -> str:
+    # todo : @AJoubert later uses clinicaio for more robustness
+    if sourcedata_dir.stem == "NIFTI":
+        return rf"{sourcedata_dir.parent}/BIDS/{source_basename}.[!nii.gz]*"
+    return rf"{sourcedata_dir}/{source_basename}.[!nii.gz]*"
+
+
 def _install_bids(sourcedata_dir: Path, bids_filename: Path) -> None:
     """Should account for all downloading procedures :
     - Official : everything in the same folder
@@ -460,7 +468,7 @@ def _install_bids(sourcedata_dir: Path, bids_filename: Path) -> None:
     # It may or may not be used, since there might not be any sidecars.
     source_basename = Path(source_nifti).with_suffix("").stem
 
-    for source_sidecar in fs.glob(rf"{sourcedata_dir}/**/{source_basename}.[!nii.gz]*"):
+    for source_sidecar in fs.glob(_identify_pattern(sourcedata_dir, source_basename)):
         target_sidecar = bids_filename.with_suffix("").with_suffix(
             Path(source_sidecar).suffix
         )
