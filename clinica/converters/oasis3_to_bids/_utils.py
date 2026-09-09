@@ -420,16 +420,14 @@ def _build_scans_df(df_source: pd.DataFrame) -> pd.DataFrame:
 def _install_bids(sourcedata_dir: Path, bids_filename: Path) -> None:
     """Should account for all downloading procedures :
     - Official : everything in the same folder
-        └─ <participant_id>/
-            └─ <session_id>/
-              └─ <modality>/
-                 ├─ ... .tsv
-                 ├─ ... .nii.gz
-                 └─ ... .json
-    - Documentated : sidecar separated from nifti
-            └─ <participant_id>/
-            └─ <session_id>/
-              └─ <modality>/
+        └─ <participant_id>_<session_id>/
+            └─ <modality>/
+                ├─ ... .tsv
+                ├─ ... .nii.gz
+                └─ ... .json
+    - Documented : sidecar separated from nifti
+        └─ <participant_id>_<session_id>/
+            └─ <modality>/
                 └─ BIDS/
                  ├─ ... .tsv
                  └─ ... .json
