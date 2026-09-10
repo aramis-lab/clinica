@@ -21,7 +21,7 @@ def _running_mris_expand_with_subprocess_mock(cmd: str):
 def test_setting_mris_expand_cmd(tmp_path, platform):
     import sys
 
-    from clinica.pipelines.pet_surface.pet_surface_utils import _setting_mris_expand_cmd
+    from pipelines.pet.surface.utils import _setting_mris_expand_cmd
 
     in_surface = str(tmp_path / "lh.white")
     with mock.patch.object(sys, "platform", platform):
@@ -32,7 +32,7 @@ def test_setting_mris_expand_cmd(tmp_path, platform):
 
 
 def test_mris_expand(tmp_path):
-    from clinica.pipelines.pet_surface.pet_surface_utils import mris_expand
+    from pipelines.pet.surface.utils import mris_expand
 
     name = "lh.white"
     in_surface = tmp_path / name
@@ -55,8 +55,7 @@ def test_mris_expand(tmp_path):
 def test_merge_nifti_volumes(tmp_path):
     import nibabel as nib
     import numpy as np
-
-    from clinica.pipelines.pet_surface.pet_surface_utils import merge_nifti_volumes
+    from pipelines.pet.surface.utils import merge_nifti_volumes
 
     image1 = nib.Nifti1Image(np.random.rand(3, 3, 3, 1), affine=np.eye(4))
     image2 = nib.Nifti1Image(np.random.rand(3, 3, 3, 1), affine=np.eye(4))

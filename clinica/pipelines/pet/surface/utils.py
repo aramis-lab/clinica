@@ -1,12 +1,49 @@
-import os
+from pathlib import Path
+from typing import Union
+
+from clinica.utils.pet import SUVRReferenceRegion, Tracer
+
+__all__ = [
+    "perform_gtmseg",
+    "make_label_conversion",
+    "run_mri_vol2surf",
+    "compute_weighted_mean_surface",
+    "project_onto_fsaverage",
+    "get_mid_surface",
+    "reformat_surfname",
+    "compute_average_pet_signal_based_on_annotations",
+    "merge_nifti_volumes",
+    "run_apply_inverse_deformation_field_SPM_standalone",
+    "run_mri_surf2surf",
+    "normalize_suvr",
+    "run_mris_expand",
+    "remove_nan_from_image",
+    "get_regexp_substitutions",
+    "get_output_dir",
+]
 
 
-def get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id):
-    """Extract SUBJECT_DIR.
+def _get_longitudinal_folder_name(input_folder: Path) -> str:
+    from clinica.utils.exceptions import ClinicaCAPSError
 
-    Extract path to FreeSurfer segmentation in CAPS folder and FreeSurfer ID
-    (e.g. sub-CLNC01_ses-M000.long.sub-CLNC01_long-M000M018 or sub-CLNC01_ses-M000).
-    """
+    longitudinal_folders = [
+        f.name for f in input_folder.iterdir() if f.name.startswith("long-")
+    ]
+    if len(longitudinal_folders) > 1:
+        raise ClinicaCAPSError(
+            f"[Error] Folder {input_folder} contains {len(longitudinal_folders)} "
+            "folders labeled long-*. Only 1 can exist"
+        )
+    if len(longitudinal_folders) == 0:
+        raise ClinicaCAPSError(
+            f"[Error] Folder {input_folder} does not contains a folder labeled long-*. "
+            "Have you run t1-freesurfer-longitudinal?"
+        )
+    return longitudinal_folders[0]
+
+
+def get_output_dir(is_longitudinal, caps_dir, subject_id, session_id):
+    # TODO
     import os
 
     from clinica.utils.exceptions import ClinicaCAPSError
@@ -16,27 +53,51 @@ def get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id):
         long_folds = [f for f in os.listdir(root) if f.startswith("long-")]
         if len(long_folds) > 1:
             raise ClinicaCAPSError(
-                f"[Error] Folder {root} contains {len(long_folds)} folders labeled long-*. Only 1 can exist."
+                f"[Error] Folder {root} contains {len(long_folds)} folders labeled long-*. Only 1 can exist"
             )
         elif len(long_folds) == 0:
             raise ClinicaCAPSError(
                 f"[Error] Folder {root} does not contains a folder labeled long-*. Have you run t1-freesurfer-longitudinal?"
             )
         else:
-            root_env = os.path.join(root, long_folds[0], "freesurfer_longitudinal")
-            sub_id_cmd = f"{subject_id}_{session_id}.long.{subject_id}_{long_folds[0]}"
+            output_dir = os.path.join(
+                caps_dir,
+                "subjects",
+                subject_id,
+                session_id,
+                "pet",
+                long_folds[0],
+                "surface_longitudinal",
+            )
     else:
-        root_env = os.path.join(
-            caps_dir,
-            "subjects",
-            subject_id,
-            session_id,
-            "t1",
-            "freesurfer_cross_sectional",
+        output_dir = os.path.join(
+            caps_dir, "subjects", subject_id, session_id, "pet", "surface"
         )
-        sub_id_cmd = subject_id + "_" + session_id
 
-    return root_env, sub_id_cmd
+    return output_dir
+
+
+def _get_new_subjects_dir(
+    is_longitudinal: bool,
+    caps_dir: Path,
+    subject_id: str,
+    session_id: str,
+) -> tuple[Path, str]:
+    """Extract SUBJECT_DIR.
+
+    Extract path to FreeSurfer segmentation in CAPS folder and FreeSurfer ID
+    (e.g. sub-CLNC01_ses-M000.long.sub-CLNC01_long-M000M018 or sub-CLNC01_ses-M000).
+    """
+    root = caps_dir / "subjects" / subject_id / session_id / "t1"
+
+    if is_longitudinal:
+        longitudinal_folder_name = _get_longitudinal_folder_name(root)
+
+        return (
+            root / longitudinal_folder_name / "freesurfer_longitudinal",
+            f"{subject_id}_{session_id}.long.{subject_id}_{longitudinal_folder_name}",
+        )
+    return root / "freesurfer_cross_sectional", subject_id + "_" + session_id
 
 
 def perform_gtmseg(caps_dir, subject_id, session_id, is_longitudinal):
@@ -65,17 +126,15 @@ def perform_gtmseg(caps_dir, subject_id, session_id, is_longitudinal):
     import nipype.pipeline.engine as pe
     from nipype.interfaces.base import CommandLine
 
-    import clinica.pipelines.pet_surface.pet_surface_utils as utils
-
     # Old subject_dir is saved for later
     subjects_dir_backup = os.path.expandvars("$SUBJECTS_DIR")
 
-    root_env, freesurfer_id = utils.get_new_subjects_dir(
+    root_env, freesurfer_id = _get_new_subjects_dir(
         is_longitudinal, caps_dir, subject_id, session_id
     )
 
     # Set the new subject dir for the function to work properly
-    os.environ["SUBJECTS_DIR"] = root_env
+    os.environ["SUBJECTS_DIR"] = str(root_env)
 
     if not os.path.exists(
         os.path.join(
@@ -121,32 +180,31 @@ def perform_gtmseg(caps_dir, subject_id, session_id, is_longitudinal):
     return out_file
 
 
-def remove_nan(volname):
-    """remove_nan is a method needed after a registration performed by spmregister : instead of filling space with 0, nan
-    are used to extend the PET space. We propose to replace them with 0s.
-
-    Args:
-        (string) volname : path to the Nifti volume where NaNs need to be replaced by 0s
-
-    Returns:
-        (string) Path to the volume in Nifti that does not contain any NaNs
+def remove_nan_from_image(image_path: Path) -> Path:
+    """Remove NaN values from the provided nifti image.
+    This is needed after a registration performed by 'spmregister' : instead
+    of filling space with 0, nan are used to extend the PET space.
+    We propose to replace them with 0s.
+    Parameters
+    ----------
+    image_path : Path
+        The path to the Nifti volume where NaNs need to be replaced by zeros.
+    Returns
+    -------
+    output_image_path : Path
+        The path to the volume in Nifti that does not contain any NaNs.
     """
-    import os
-
     import nibabel as nib
     import numpy as np
 
-    # Load the volume and get the data
-    nifti_in = nib.load(volname)
-    data = np.nan_to_num(nifti_in.get_fdata(dtype="float32"))
+    from clinica.utils.filemanip import get_filename_no_ext
 
-    # Now create final image (using header of original image), and save it in current directory
-    nifti_out = nib.Nifti1Image(data, nifti_in.affine, header=nifti_in.header)
-    filename = os.path.basename(volname)
-    vol_wo_nan = "./no_nan_" + filename + ".gz"
-    vol_wo_nan = os.path.abspath(vol_wo_nan)
-    nib.save(nifti_out, vol_wo_nan)
-    return vol_wo_nan
+    image = nib.load(image_path)
+    data = np.nan_to_num(image.get_fdata(dtype="float32"))
+    output_image = nib.Nifti1Image(data, image.affine, header=image.header)
+    output_image_path = Path.cwd() / f"no_nan_{get_filename_no_ext(image_path)}.nii.gz"
+    nib.save(output_image, output_image_path)
+    return output_image_path
 
 
 def make_label_conversion(gtmsegfile, csv):
@@ -166,8 +224,6 @@ def make_label_conversion(gtmsegfile, csv):
     import nibabel as nib
     import numpy
     import pandas
-
-    from clinica.utils.stream import cprint
 
     def isclose(a, b, rel_tol=1e-9, abs_tol=0.0):
         """Small function designed to measure equality between to floating or double numbers, using 2 thresholds : a
@@ -245,10 +301,9 @@ def make_label_conversion(gtmsegfile, csv):
     return list_of_regions
 
 
-def runApplyInverseDeformationField_SPM_standalone(target, deformation_field, img):
+def run_apply_inverse_deformation_field_SPM_standalone(target, deformation_field, img):
     """
-    This function does the exact same job as runApplyInverseDeformationField but with SPM standalone. We directly create
-    a batch file that SPM standalone can run. This function does not check whether SPM standalone must be used. Previous
+    We directly create a batch file that SPM standalone can run. This function does not check whether SPM standalone must be used. Previous
     check when building the pipeline ensures that all the env vars exists ($SPMSTANDALONE_HOME and $MCR_HOME)
     """
     import os
@@ -319,8 +374,8 @@ def runApplyInverseDeformationField_SPM_standalone(target, deformation_field, im
     return output_file
 
 
-def suvr_normalization(pet_path, mask):
-    """suvr_normalization is a way of getting suvr from your pet image, based on the segmentation performed by
+def normalize_suvr(pet_path, mask):
+    """normalize_suvr is a way of getting suvr from your pet image, based on the segmentation performed by
     gtmsegmentation. The Standard Uptake Value ratio is computed by dividing the whole PET volume by the mean value
     observed in the pons.
 
@@ -415,7 +470,7 @@ def _check_mri_expand_file_location_then_move(
     return expected_location
 
 
-def mris_expand(in_surface):
+def run_mris_expand(in_surface):
     """mris_expand is using the freesurfer function of the same name. It expands the white input surface toward the pial,
     generating 7 surfaces at 35%, 40%, 45%, 50%, 55%, 60%, 65% of thickness.
 
@@ -428,11 +483,12 @@ def mris_expand(in_surface):
     """
     import os
 
-    from clinica.pipelines.pet_surface.pet_surface_utils import (  # noqa
+    from pipelines.pet.surface.utils import (  # noqa
         _check_mri_expand_file_location_then_move,
         _running_mris_expand_with_subprocess,
         _setting_mris_expand_cmd,
     )
+
     from clinica.utils.stream import cprint
 
     # RQ 1 : mris_expand write results where the script is executed
@@ -455,7 +511,7 @@ def mris_expand(in_surface):
     return [os.path.abspath(out_file + str(x).zfill(3)) for x in range(7, 14)]
 
 
-def surf2surf(
+def run_mri_surf2surf(
     in_surface, reg_file, gtmsegfile, subject_id, session_id, caps_dir, is_longitudinal
 ):
     """surf2surf is a wrapper of freesurfer command mri_surf2surf. Here the aim is to convert a input surface (which is
@@ -481,16 +537,14 @@ def surf2surf(
     import subprocess
     import sys
 
-    import clinica.pipelines.pet_surface.pet_surface_utils as utils
-
     # set subjects_dir env. variable for mri_surf2surf to work properly
     subjects_dir_backup = os.path.expandvars("$SUBJECTS_DIR")
 
-    root_env, freesurfer_id = utils.get_new_subjects_dir(
+    root_env, freesurfer_id = _get_new_subjects_dir(
         is_longitudinal, caps_dir, subject_id, session_id
     )
 
-    os.environ["SUBJECTS_DIR"] = root_env
+    os.environ["SUBJECTS_DIR"] = str(root_env)
 
     # make a copy of surface file to surface directory in CAPS in order to allow processing
     shutil.copy(
@@ -538,7 +592,7 @@ def surf2surf(
     return tval
 
 
-def vol2surf(
+def run_mri_vol2surf(
     volume, surface, subject_id, session_id, caps_dir, gtmsegfile, is_longitudinal
 ):
     """vol2surf is a wrapper of freesurfer command mri_vol2surf. It projects the volume into the surface : the value at
@@ -560,16 +614,14 @@ def vol2surf(
     import subprocess
     import sys
 
-    import clinica.pipelines.pet_surface.pet_surface_utils as utils
-
     # set subjects_dir env. variable for mri_vol2surf to work properly
     subjects_dir_backup = os.path.expandvars("$SUBJECTS_DIR")
 
-    root_env, freesurfer_id = utils.get_new_subjects_dir(
+    root_env, freesurfer_id = _get_new_subjects_dir(
         is_longitudinal, caps_dir, subject_id, session_id
     )
 
-    os.environ["SUBJECTS_DIR"] = root_env
+    os.environ["SUBJECTS_DIR"] = str(root_env)
 
     # TODO write nicer way to grab hemi & filename (difficulty caused by the dots in filenames)
     # extract hemisphere based on filename
@@ -642,7 +694,7 @@ def vol2surf(
     return output
 
 
-def weighted_mean(in_surfaces):
+def compute_weighted_mean_surface(in_surfaces):
     """weighted_mean make a weighted average at each node of the surface. The weight are defined by a normal
     distribution (centered on the mid surface)
 
@@ -687,7 +739,7 @@ def weighted_mean(in_surfaces):
     return out_surface
 
 
-def fsaverage_projection(
+def project_onto_fsaverage(
     projection, subject_id, caps_dir, session_id, fwhm, is_longitudinal
 ):
     """fsaverage_projection projects your data into an averaged subject called fsaverage, available in your $SUBJECTS_DIR
@@ -709,15 +761,13 @@ def fsaverage_projection(
 
     from nipype.interfaces.freesurfer import MRISPreproc
 
-    import clinica.pipelines.pet_surface.pet_surface_utils as utils
-
     subjects_dir_backup = os.path.expandvars("$SUBJECTS_DIR")
 
-    root_env, freesurfer_id = utils.get_new_subjects_dir(
+    root_env, freesurfer_id = _get_new_subjects_dir(
         is_longitudinal, caps_dir, subject_id, session_id
     )
 
-    os.environ["SUBJECTS_DIR"] = root_env
+    os.environ["SUBJECTS_DIR"] = str(root_env)
 
     # copy fsaverage folder next to : subject_id + '_' + session_id
     # for the mris_preproc command to properly find src and target
@@ -791,7 +841,7 @@ def reformat_surfname(hemi, left_surface, right_surface):
     )
 
 
-def produce_tsv(pet, atlas_files):
+def compute_average_pet_signal_based_on_annotations(pet: list[Path], atlas_files: dict):
     """produce_tsv computes the average of PET signal based on annot files from Freesurfer. Those files describes the
     brain according to known atlases.
 
@@ -802,6 +852,7 @@ def produce_tsv(pet, atlas_files):
         Returns:
             (string) tsv  : path to the tsv containing average PET values
     """
+    # todo : check connections types
     import os
 
     import nibabel as nib
@@ -866,6 +917,7 @@ def produce_tsv(pet, atlas_files):
 
 
 def merge_nifti_volumes(inputs: list[str]) -> str:
+    # todo : where ?
     import os
 
     import nibabel as nib
@@ -880,550 +932,99 @@ def merge_nifti_volumes(inputs: list[str]) -> str:
     return output_path
 
 
-def get_wf(
-    subject_id,
-    session_id,
-    pvc_psf_tsv,
-    caps_dir,
-    pet,
-    orig_nu,
-    white_surface_left,
-    white_surface_right,
-    working_directory_subjects,
-    acq_label: str,
-    csv_segmentation,
-    suvr_reference_region: str,
-    destrieux_left,
-    destrieux_right,
-    desikan_left,
-    desikan_right,
-    is_longitudinal,
-):
-    """get_wf create a full workflow for only one subject, and then executes it
-
-    Args:
-        subject_id (string): The subject ID
-        session_id (string): The session ID
-        pvc_psf_tsv (string): Path the TSV file containing information on the point spread function (PSF)
-        caps_dir (string): Path to the CAPS directory
-        pet (string): Path to the PET image in the bids directory
-        orig_nu (string): Path to the orig_nu file (must be in the CAPS directory, in mri)
-        white_surface_left (string): Path to the left white surface in native space of subject
-        white_surface_right (string): Path to the right white surface in native space of subject
-        working_directory_subjects (string):
-        acq_label (string):
-        csv_segmentation (string): Path to the CSV for the segmentation (problems encountered while using __file__)
-        suvr_reference_region (string): Label of the SUVR reference region
-        destrieux_left (string):
-        destrieux_right (string):
-        desikan_left (string):
-        desikan_right (string):
-        is_longitudinal (string):
-
-    Returns:
-        Void
-    """
-    import os
-
-    import nipype.interfaces.io as nio
-    import nipype.interfaces.utility as niu
-    import nipype.pipeline.engine as pe
-    from nipype.interfaces.freesurfer import ApplyVolTransform, MRIConvert, Tkregister2
-    from nipype.interfaces.petpvc import PETPVC
-    from nipype.interfaces.spm import Coregister, Normalize12
-
-    import clinica.pipelines.pet_surface.pet_surface_utils as utils
-    from clinica.pipelines.pet.utils import get_suvr_mask, read_psf_information
-    from clinica.utils.filemanip import get_subject_id, load_volume, unzip_nii
-    from clinica.utils.pet import (
-        SUVRReferenceRegion,
-        Tracer,
-    )
-    from clinica.utils.spm import get_tpm, use_spm_standalone_if_available
-    from clinica.utils.ux import print_begin_image
-
-    using_spm_standalone = use_spm_standalone_if_available()
-
-    suvr_reference_region = SUVRReferenceRegion(suvr_reference_region)
-    acq_label = Tracer(acq_label)
-    image_id = get_subject_id(pet)
-    try:
-        load_volume(pet)
-    except ValueError as e:
-        raise ValueError(
-            f"Clinica could not load volumes for {image_id.replace('_', ' | ')}. {str(e)}"
-        )
-    print_begin_image(image_id)
-
-    # Creation of workflow
-    # 1 Creation of node
-    unzip_pet = pe.Node(
-        niu.Function(
-            input_names=["in_file"], output_names=["out_file"], function=unzip_nii
+def get_regexp_substitutions(
+    pet_tracer: Tracer,
+    region: SUVRReferenceRegion,
+    is_longitudinal: bool,
+) -> list[tuple[str, str]]:
+    return [
+        _get_mid_surface_substitutions(is_longitudinal=is_longitudinal),
+        _get_projection_in_native_space_substitutions(
+            pet_tracer, region, is_longitudinal=is_longitudinal
         ),
-        name="unzip_pet",
-    )
-
-    unzip_orig_nu = unzip_pet.clone(name="unzip_orig_nu")
-
-    unzip_mask = unzip_pet.clone(name="unzip_mask")
-    unzip_mask.inputs.in_file = str(get_suvr_mask(suvr_reference_region))
-
-    coreg = pe.Node(Coregister(), name="coreg")
-
-    convert_mgh = pe.Node(MRIConvert(), name="convert_mgh")
-
-    removenan = pe.Node(
-        niu.Function(
-            input_names=["volname"],
-            output_names=["vol_wo_nan"],
-            function=utils.remove_nan,
+        _get_projection_in_fsaverage_substitution(
+            pet_tracer, region, is_longitudinal=is_longitudinal
         ),
-        name="removenan",
-    )
-
-    gtmsegmentation = pe.Node(
-        niu.Function(
-            input_names=["caps_dir", "subject_id", "session_id", "is_longitudinal"],
-            output_names=["gtmseg_file"],
-            function=utils.perform_gtmseg,
+        _get_tsv_file_for_atlas(
+            pet_tracer, region, "destrieux", is_longitudinal=is_longitudinal
         ),
-        name="gtmseg",
-    )
-    gtmsegmentation.inputs.caps_dir = caps_dir
-    gtmsegmentation.inputs.subject_id = subject_id
-    gtmsegmentation.inputs.session_id = session_id
-    gtmsegmentation.inputs.is_longitudinal = is_longitudinal
-
-    tkregister = pe.Node(Tkregister2(reg_header=True), name="tkreg")
-
-    convert_gtmseg = convert_mgh.clone(name="convert_gtmseg")
-
-    labelconversion = pe.Node(
-        niu.Function(
-            input_names=["gtmsegfile", "csv"],
-            output_names=["list_of_regions"],
-            function=utils.make_label_conversion,
+        _get_tsv_file_for_atlas(
+            pet_tracer, region, "desikan", is_longitudinal=is_longitudinal
         ),
-        name="conversion_of_labels",
-    )
-
-    labelconversion.inputs.csv = csv_segmentation
-
-    if not os.path.exists(labelconversion.inputs.csv):
-        raise Exception("CSV file : " + labelconversion.inputs.csv + " does not exist.")
-
-    merge_volume = pe.Node(
-        niu.Function(
-            input_names=["inputs"],
-            output_names=["merged_file"],
-            function=utils.merge_nifti_volumes,
-        ),
-        name="merge_volume",
-    )
-
-    vol2vol = pe.Node(
-        ApplyVolTransform(reg_header=True, interp="trilin"), name="vol2vol"
-    )
-
-    vol2vol_mask = pe.Node(
-        ApplyVolTransform(reg_header=True, interp="nearest"), name="vol2vol_mask"
-    )
-
-    normalize12 = pe.Node(
-        Normalize12(
-            tpm=get_tpm(),
-            affine_regularization_type="mni",
-            jobtype="est",
-            bias_fwhm=60,
-            bias_regularization=0.0001,
-            warping_regularization=[0, 0.001, 0.5, 0.05, 0.2],
-        ),
-        name="normalize_to_MNI",
-    )
-
-    apply_inverse_deformation = pe.Node(
-        niu.Function(
-            input_names=["target", "deformation_field", "img"],
-            output_names=["freesurfer_space_eroded_mask"],
-            function=utils.runApplyInverseDeformationField_SPM_standalone,
-        ),
-        name="applyInverseDeformation",
-    )
-
-    pons_normalization = pe.Node(
-        niu.Function(
-            input_names=["pet_path", "mask"],
-            output_names=["suvr"],
-            function=utils.suvr_normalization,
-        ),
-        name="pons_normalization",
-    )
-    pons_normalization.inputs.pet_tracer = acq_label.value
-
-    # read_psf_information expects a list of subjects/sessions and returns a list of PSF
-    psf_info = read_psf_information(pvc_psf_tsv, [subject_id], [session_id], acq_label)[
-        0
     ]
 
-    pvc = pe.Node(PETPVC(pvc="IY"), name="petpvc")
-    pvc.inputs.fwhm_x = psf_info[0]
-    pvc.inputs.fwhm_y = psf_info[1]
-    pvc.inputs.fwhm_z = psf_info[2]
 
-    reformat_surface_name = pe.Node(
-        niu.Function(
-            input_names=["hemi", "left_surface", "right_surface"],
-            output_names=["out"],
-            function=utils.reformat_surfname,
-        ),
-        name="reformat_surface_name",
-    )
-    reformat_surface_name.inputs.left_surface = white_surface_left
-    reformat_surface_name.inputs.right_surface = white_surface_right
-    reformat_surface_name.iterables = ("hemi", ["lh", "rh"])
-
-    mris_exp = pe.Node(
-        niu.Function(
-            input_names=["in_surface"],
-            output_names=["out_surface"],
-            function=utils.mris_expand,
-        ),
-        name="mris_expand_white",
-    )
-
-    surf_conversion = pe.MapNode(
-        niu.Function(
-            input_names=[
-                "in_surface",
-                "reg_file",
-                "gtmsegfile",
-                "subject_id",
-                "session_id",
-                "caps_dir",
-                "is_longitudinal",
-            ],
-            output_names=["tval"],
-            function=utils.surf2surf,
-        ),
-        name="surf_conversion",
-        iterfield=["in_surface"],
-    )
-    surf_conversion.inputs.subject_id = subject_id
-    surf_conversion.inputs.session_id = session_id
-    surf_conversion.inputs.caps_dir = caps_dir
-    surf_conversion.inputs.is_longitudinal = is_longitudinal
-
-    vol_on_surf = pe.MapNode(
-        niu.Function(
-            input_names=[
-                "volume",
-                "surface",
-                "subject_id",
-                "session_id",
-                "caps_dir",
-                "gtmsegfile",
-                "is_longitudinal",
-            ],
-            output_names=["output"],
-            function=utils.vol2surf,
-        ),
-        name="vol_on_surf",
-        iterfield=["surface"],
-    )
-    vol_on_surf.inputs.subject_id = subject_id
-    vol_on_surf.inputs.session_id = session_id
-    vol_on_surf.inputs.caps_dir = caps_dir
-    vol_on_surf.inputs.is_longitudinal = is_longitudinal
-
-    normal_average = pe.Node(
-        niu.Function(
-            input_names=["in_surfaces"],
-            output_names=["out_surface"],
-            function=utils.weighted_mean,
-        ),
-        name="normal_average",
-    )
-
-    project_on_fsaverage = pe.Node(
-        niu.Function(
-            input_names=[
-                "projection",
-                "subject_id",
-                "caps_dir",
-                "session_id",
-                "fwhm",
-                "is_longitudinal",
-            ],
-            output_names=["out_fsaverage"],
-            function=utils.fsaverage_projection,
-        ),
-        name="project_on_fsaverage",
-    )
-    project_on_fsaverage.iterables = ("fwhm", [0, 5, 10, 15, 20, 25])
-    project_on_fsaverage.inputs.subject_id = subject_id
-    project_on_fsaverage.inputs.session_id = session_id
-    project_on_fsaverage.inputs.caps_dir = caps_dir
-    project_on_fsaverage.inputs.is_longitudinal = is_longitudinal
-
-    extract_mid_surface = pe.Node(
-        niu.Function(
-            input_names=["in_surfaces"],
-            output_names=["mid_surface"],
-            function=utils.get_mid_surface,
-        ),
-        name="extract_mid_surface",
-    )
-
-    surface_atlas = {
-        "destrieux": {"lh": destrieux_left, "rh": destrieux_right},
-        "desikan": {"lh": desikan_left, "rh": desikan_right},
-    }
-
-    gather_pet_projection = pe.JoinNode(
-        niu.IdentityInterface(fields=["pet_projection_lh_rh"]),
-        name="gather_pet_projection_hemisphere",
-        joinsource="reformat_surface_name",
-        joinfield=["pet_projection_lh_rh"],
-    )
-
-    atlas_tsv = pe.Node(
-        niu.Function(
-            input_names=["pet", "atlas_files"],
-            output_names=["destrieux_tsv", "desikan_tsv"],
-            function=utils.produce_tsv,
-        ),
-        name="atlas_tsv",
-    )
-    atlas_tsv.inputs.atlas_files = surface_atlas
-
-    # 2 creation of workflow : working dir, inputnode, outputnode and datasink
-    name_workflow = subject_id.replace("-", "_") + "_" + session_id.replace("-", "_")
+def _get_mid_surface_substitutions(is_longitudinal: bool) -> tuple[str, str]:
     if is_longitudinal:
-        name_workflow += "_long"
-
-    wf = pe.Workflow(name=name_workflow)
-    wf.base_dir = working_directory_subjects
-
-    inputnode = pe.Node(
-        niu.IdentityInterface(
-            fields=[
-                "orig_nu",
-                "pet",
-                "psf",
-                "white_surface_left",
-                "white_surface_right",
-            ]
-        ),
-        name="inputnode",
-        mandatory_inputs=True,
-    )
-    inputnode.inputs.orig_nu = orig_nu
-    inputnode.inputs.pet = pet
-    inputnode.inputs.psf = pvc_psf_tsv
-    inputnode.inputs.white_surface_right = white_surface_right
-    inputnode.inputs.white_surface_left = white_surface_left
-
-    outputnode = pe.Node(
-        niu.IdentityInterface(
-            fields=[
-                "mid_surf",
-                "projection_native_subject",
-                "projection_fsaverage_smoothed",
-                "destrieux_tsv",
-                "desikan_tsv",
-            ]
-        ),
-        name="outputnode",
-        mandatory_inputs=True,
-    )
-
-    datasink = pe.Node(nio.DataSink(), name="sinker")
-
-    def get_output_dir(is_longitudinal, caps_dir, subject_id, session_id):
-        import os
-
-        from clinica.utils.exceptions import ClinicaCAPSError
-
-        if is_longitudinal:
-            root = os.path.join(caps_dir, "subjects", subject_id, session_id, "t1")
-            long_folds = [f for f in os.listdir(root) if f.startswith("long-")]
-            if len(long_folds) > 1:
-                raise ClinicaCAPSError(
-                    f"[Error] Folder {root} contains {len(long_folds)} folders labeled long-*. Only 1 can exist"
-                )
-            elif len(long_folds) == 0:
-                raise ClinicaCAPSError(
-                    f"[Error] Folder {root} does not contains a folder labeled long-*. Have you run t1-freesurfer-longitudinal?"
-                )
-            else:
-                output_dir = os.path.join(
-                    caps_dir,
-                    "subjects",
-                    subject_id,
-                    session_id,
-                    "pet",
-                    long_folds[0],
-                    "surface_longitudinal",
-                )
-        else:
-            output_dir = os.path.join(
-                caps_dir, "subjects", subject_id, session_id, "pet", "surface"
-            )
-
-        return output_dir
-
-    datasink.inputs.base_directory = get_output_dir(
-        is_longitudinal, caps_dir, subject_id, session_id
-    )
-    datasink.inputs.parameterization = True
-    cross_sectional_regexp_substitutions = [
-        # Mid surface
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/midsurface\/.*_hemi_([a-z]+)(.*)$",
-            r"\1/\2_\3_hemi-\4_midcorticalsurface",
-        ),
-        # Projection in native space
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_native\/.*_hemi_([a-z]+).*",
-            r"\1/\2_\3_trc-"
-            + acq_label.value
-            + r"_pet_space-native_suvr-"
-            + suvr_reference_region.value
-            + r"_pvc-iy_hemi-\4_projection.mgh",
-        ),
-        # Projection in fsaverage
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*",
-            r"\1/\2_\3_trc-"
-            + acq_label.value
-            + r"_pet_space-fsaverage_suvr-"
-            + suvr_reference_region.value
-            + r"_pvc-iy_hemi-\4_fwhm-\5_projection.mgh",
-        ),
-        # TSV file for Destrieux atlas
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/destrieux_tsv\/destrieux.tsv",
-            r"\1/atlas_statistics/\2_\3_trc-"
-            + acq_label.value
-            + "_pet_space-destrieux_pvc-iy_suvr-"
-            + suvr_reference_region.value
-            + "_statistics.tsv",
-        ),
-        # TSV file for Desikan atlas
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/desikan_tsv\/desikan.tsv",
-            r"\1/atlas_statistics/\2_\3_trc-"
-            + acq_label.value
-            + "_pet_space-desikan_pvc-iy_suvr-"
-            + suvr_reference_region.value
-            + "_statistics.tsv",
-        ),
-    ]
-    longitudinal_regexp_substitutions = [
-        # Mid surface
-        (
+        return (
             r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/midsurface\/.*_hemi_([a-z]+)(.*)$",
             r"\1/\2_\3_\4_hemi-\5_midcorticalsurface",
-        ),
-        # Projection in native space
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/projection_native\/.*_hemi_([a-z]+).*",
-            r"\1/\2_\3_\4_trc-"
-            + acq_label.value
-            + r"_pet_space-native_suvr-"
-            + suvr_reference_region.value
-            + r"_pvc-iy_hemi-\5_projection.mgh",
-        ),
-        # Projection in fsaverage
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*",
-            r"\1/\2_\3_\4_trc-"
-            + acq_label.value
-            + r"_pet_space-fsaverage_suvr-"
-            + suvr_reference_region.value
-            + r"_pvc-iy_hemi-\5_fwhm-\6_projection.mgh",
-        ),
-        # TSV file for Destrieux atlas
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/destrieux_tsv\/destrieux.tsv",
-            r"\1/atlas_statistics/\2_\3_\4_trc-"
-            + acq_label.value
-            + "_pet_space-destrieux_pvc-iy_suvr-"
-            + suvr_reference_region.value
-            + "_statistics.tsv",
-        ),
-        # TSV file for Desikan atlas
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/desikan_tsv\/desikan.tsv",
-            r"\1/atlas_statistics/\2_\3_\4_trc-"
-            + acq_label.value
-            + "_pet_space-desikan_pvc-iy_suvr-"
-            + suvr_reference_region.value
-            + "_statistics.tsv",
-        ),
-    ]
-    if is_longitudinal:
-        datasink.inputs.regexp_substitutions = longitudinal_regexp_substitutions
-    else:
-        datasink.inputs.regexp_substitutions = cross_sectional_regexp_substitutions
-
-    # 3 Connecting the nodes
-
-    # TODO(@arnaud.marcoux): Add titles for sections of connections.
-    #   Could be useful to add sections title to group similar connections
-    #   together.
-
-    # fmt: off
-    wf.connect(
-        [
-            (inputnode, unzip_pet, [("pet", "in_file")]),
-            (unzip_pet, coreg, [("out_file", "source")]),
-            (inputnode, convert_mgh, [("orig_nu", "in_file")]),
-            (convert_mgh, unzip_orig_nu, [("out_file", "in_file")]),
-            (unzip_orig_nu, coreg, [("out_file", "target")]),
-            (coreg, removenan, [("coregistered_source", "volname")]),
-            (removenan, vol2vol, [("vol_wo_nan", "source_file")]),
-            (inputnode, tkregister, [("orig_nu", "target_image")]),
-            (unzip_orig_nu, normalize12, [("out_file", "image_to_align")]),
-            (unzip_mask, apply_inverse_deformation, [("out_file", "img")]),
-            (normalize12, apply_inverse_deformation, [("deformation_field", "deformation_field")]),
-            (unzip_orig_nu, apply_inverse_deformation, [("out_file", "target")]),
-            (apply_inverse_deformation, vol2vol_mask, [("freesurfer_space_eroded_mask", "source_file")]),
-            (gtmsegmentation, vol2vol_mask, [("gtmseg_file", "target_file")]),
-            (gtmsegmentation, tkregister, [("gtmseg_file", "moving_image")]),
-            (gtmsegmentation, convert_gtmseg, [("gtmseg_file", "in_file")]),
-            (gtmsegmentation, vol2vol, [("gtmseg_file", "target_file")]),
-            (vol2vol, pons_normalization, [("transformed_file", "pet_path")]),
-            (vol2vol_mask, pons_normalization, [("transformed_file", "mask")]),
-            (convert_gtmseg, labelconversion, [("out_file", "gtmsegfile")]),
-            (labelconversion, merge_volume, [("list_of_regions", "inputs")]),
-            (merge_volume, pvc, [("merged_file", "mask_file")]),
-            (pons_normalization, pvc, [("suvr", "in_file")]),
-            (reformat_surface_name, mris_exp, [("out", "in_surface")]),
-            (mris_exp, extract_mid_surface, [("out_surface", "in_surfaces")]),
-            (mris_exp, surf_conversion, [("out_surface", "in_surface")]),
-            (tkregister, surf_conversion, [("reg_file", "reg_file")]),
-            (gtmsegmentation, surf_conversion, [("gtmseg_file", "gtmsegfile")]),
-            (pvc, vol_on_surf, [("out_file", "volume")]),
-            (surf_conversion, vol_on_surf, [("tval", "surface")]),
-            (gtmsegmentation, vol_on_surf, [("gtmseg_file", "gtmsegfile")]),
-            (vol_on_surf, normal_average, [("output", "in_surfaces")]),
-            (normal_average, project_on_fsaverage, [("out_surface", "projection")]),
-            (normal_average, gather_pet_projection, [("out_surface", "pet_projection_lh_rh")]),
-            (gather_pet_projection, atlas_tsv, [("pet_projection_lh_rh", "pet")]),
-            (atlas_tsv, outputnode, [("destrieux_tsv", "destrieux_tsv")]),
-            (atlas_tsv, outputnode, [("desikan_tsv", "desikan_tsv")]),
-            (project_on_fsaverage, outputnode, [("out_fsaverage", "projection_fsaverage_smoothed")]),
-            (extract_mid_surface, outputnode, [("mid_surface", "mid_surf")]),
-            (normal_average, outputnode, [("out_surface", "projection_native_subject")]),
-            (outputnode, datasink, [("projection_fsaverage_smoothed", "projection_fsaverage")]),
-            (outputnode, datasink, [("mid_surf", "midsurface")]),
-            (outputnode, datasink, [("projection_native_subject", "projection_native")]),
-            (outputnode, datasink, [("destrieux_tsv", "destrieux_tsv")]),
-            (outputnode, datasink, [("desikan_tsv", "desikan_tsv")]),
-        ]
+        )
+    return (
+        r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/midsurface\/.*_hemi_([a-z]+)(.*)$",
+        r"\1/\2_\3_hemi-\4_midcorticalsurface",
     )
-    # wf.write_graph(graph2use='flat')
-    wf.run()
-    # fmt: on
+
+
+def _get_projection_in_native_space_substitutions(
+    pet_tracer: Tracer,
+    region: SUVRReferenceRegion,
+    is_longitudinal: bool,
+) -> tuple[str, str]:
+    if is_longitudinal:
+        return (
+            r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/projection_native\/.*_hemi_([a-z]+).*",
+            rf"\1/\2_\3_\4_trc-{pet_tracer.value}_pet_space-native_suvr-{region.value}_pvc-iy_hemi-\5_projection.mgh",
+        )
+    return (
+        r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_native\/.*_hemi_([a-z]+).*",
+        rf"\1/\2_\3_trc-{pet_tracer.value}_pet_space-native_suvr-{region.value}_pvc-iy_hemi-\4_projection.mgh",
+    )
+
+
+def _get_projection_in_fsaverage_substitution(
+    pet_tracer: Tracer,
+    region: SUVRReferenceRegion,
+    is_longitudinal: bool,
+) -> tuple[str, str]:
+    if is_longitudinal:
+        return (
+            (
+                r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/"
+                r"projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*"
+            ),
+            (
+                rf"\1/\2_\3_\4_trc-{pet_tracer.value}_pet_space-fsaverage_"
+                rf"suvr-{region.value}_pvc-iy_hemi-\5_fwhm-\6_projection.mgh"
+            ),
+        )
+    return (
+        r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*",
+        (
+            rf"\1/\2_\3_trc-{pet_tracer.value}_pet_space-fsaverage_"
+            rf"suvr-{region.value}_pvc-iy_hemi-\4_fwhm-\5_projection.mgh"
+        ),
+    )
+
+
+def _get_tsv_file_for_atlas(
+    pet_tracer: Tracer,
+    region: SUVRReferenceRegion,
+    atlas: str,
+    is_longitudinal: bool,
+) -> tuple[str, str]:
+    if is_longitudinal:
+        return (
+            rf"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/{atlas}_tsv\/{atlas}.tsv",
+            (
+                rf"\1/atlas_statistics/\2_\3_\4_trc-{pet_tracer.value}_pet_"
+                rf"space-{atlas}_pvc-iy_suvr-{region.value}_statistics.tsv"
+            ),
+        )
+    return (
+        rf"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/{atlas}_tsv\/{atlas}.tsv",
+        (
+            rf"\1/atlas_statistics/\2_\3_trc-{pet_tracer.value}_pet_"
+            rf"space-{atlas}_pvc-iy_suvr-{region.value}_statistics.tsv"
+        ),
+    )

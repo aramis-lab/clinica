@@ -262,7 +262,7 @@ class PetSurface(PETPipeline):
     def _build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
 
-        The function get_wf constructs a pipeline for one subject (in pet_surface_utils.py) and runs it.
+        The function get_wf constructs a pipeline for one subject (in pet/surface/utils.py) and runs it.
         We use iterables to give to the node all the files and information needed.
         """
         # TODO(@arnaud.marcoux): Convert it to a Node with iterables + MapNodes.
@@ -274,8 +274,7 @@ class PetSurface(PETPipeline):
 
         import nipype.interfaces.utility as niu
         import nipype.pipeline.engine as npe
-
-        import clinica.pipelines.pet_surface.pet_surface_utils as utils
+        from pipelines.pet.surface.workflows import get_wf
 
         full_pipe = npe.MapNode(
             niu.Function(
@@ -299,7 +298,7 @@ class PetSurface(PETPipeline):
                     "is_longitudinal",
                 ],
                 output_names=[],
-                function=utils.get_wf,
+                function=get_wf,
             ),
             name="full_pipeline_mapnode",
             iterfield=[
