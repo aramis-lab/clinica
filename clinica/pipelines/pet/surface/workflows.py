@@ -73,6 +73,7 @@ def get_wf(
 
     """
     import os
+    from pathlib import Path
 
     import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
@@ -95,7 +96,11 @@ def get_wf(
         run_mri_vol2surf_task,
         run_mris_expand_task,
     )
-    from pipelines.pet.surface.utils import merge_nifti_volumes
+    from pipelines.pet.surface.utils import (
+        get_output_dir,
+        get_regexp_substitutions,
+        merge_nifti_volumes,
+    )
 
     from clinica.pipelines.pet.utils import get_suvr_mask, read_psf_information
     from clinica.utils.filemanip import get_subject_id, load_volume, unzip_nii
@@ -139,7 +144,7 @@ def get_wf(
 
     removenan = pe.Node(
         niu.Function(
-            input_names=["volname"],
+            input_names=["image_path"],
             output_names=["vol_wo_nan"],
             function=remove_nan_from_image_task,
         ),
@@ -217,8 +222,8 @@ def get_wf(
 
     pons_normalization = pe.Node(
         niu.Function(
-            input_names=["pet_path", "mask"],
-            output_names=["suvr"],
+            input_names=["pet_image", "mask"],
+            output_names=["suvr_image"],
             function=normalize_suvr_task,
         ),
         name="pons_normalization",
@@ -226,9 +231,9 @@ def get_wf(
     pons_normalization.inputs.pet_tracer = acq_label.value
 
     # read_psf_information expects a list of subjects/sessions and returns a list of PSF
-    psf_info = read_psf_information(pvc_psf_tsv, [subject_id], [session_id], acq_label)[
-        0
-    ]
+    psf_info = read_psf_information(
+        Path(pvc_psf_tsv), [subject_id], [session_id], acq_label
+    )[0]
 
     pvc = pe.Node(PETPVC(pvc="IY"), name="petpvc")
     pvc.inputs.fwhm_x = psf_info[0]
@@ -237,7 +242,7 @@ def get_wf(
 
     reformat_surface_name = pe.Node(
         niu.Function(
-            input_names=["hemi", "left_surface", "right_surface"],
+            input_names=["hemisphere", "left_surface", "right_surface"],
             output_names=["out"],
             function=reformat_surfname_task,
         ),
@@ -245,11 +250,11 @@ def get_wf(
     )
     reformat_surface_name.inputs.left_surface = white_surface_left
     reformat_surface_name.inputs.right_surface = white_surface_right
-    reformat_surface_name.iterables = ("hemi", ["lh", "rh"])
+    reformat_surface_name.iterables = ("hemisphere", ["lh", "rh"])
 
     mris_exp = pe.Node(
         niu.Function(
-            input_names=["in_surface"],
+            input_names=["surface"],
             output_names=["out_surface"],
             function=run_mris_expand_task,
         ),
@@ -259,9 +264,9 @@ def get_wf(
     surf_conversion = pe.MapNode(
         niu.Function(
             input_names=[
-                "in_surface",
-                "reg_file",
-                "gtmsegfile",
+                "surface",
+                "registration",
+                "gtmseg_file",
                 "subject_id",
                 "session_id",
                 "caps_dir",
@@ -281,7 +286,7 @@ def get_wf(
     vol_on_surf = pe.MapNode(
         niu.Function(
             input_names=[
-                "volume",
+                "pet_volume",
                 "surface",
                 "subject_id",
                 "session_id",
@@ -302,7 +307,7 @@ def get_wf(
 
     normal_average = pe.Node(
         niu.Function(
-            input_names=["in_surfaces"],
+            input_names=["surfaces"],
             output_names=["out_surface"],
             function=compute_weighted_mean_surface_task,
         ),
@@ -332,17 +337,12 @@ def get_wf(
 
     extract_mid_surface = pe.Node(
         niu.Function(
-            input_names=["in_surfaces"],
+            input_names=["surfaces"],
             output_names=["mid_surface"],
             function=get_mid_surface_task,
         ),
         name="extract_mid_surface",
     )
-
-    surface_atlas = {
-        "destrieux": {"lh": destrieux_left, "rh": destrieux_right},
-        "desikan": {"lh": desikan_left, "rh": desikan_right},
-    }
 
     gather_pet_projection = pe.JoinNode(
         niu.IdentityInterface(fields=["pet_projection_lh_rh"]),
@@ -353,13 +353,16 @@ def get_wf(
 
     atlas_tsv = pe.Node(
         niu.Function(
-            input_names=["pet", "atlas_files"],
+            input_names=["pet_projections", "atlas_files"],
             output_names=["destrieux_tsv", "desikan_tsv"],
             function=compute_average_pet_signal_based_on_annotations_task,
         ),
         name="atlas_tsv",
     )
-    atlas_tsv.inputs.atlas_files = surface_atlas
+    atlas_tsv.inputs.atlas_files = {
+        "destrieux": {"lh": destrieux_left, "rh": destrieux_right},
+        "desikan": {"lh": desikan_left, "rh": desikan_right},
+    }  # TODO : with better definition (pip utils)
 
     # 2 creation of workflow : working dir, inputnode, outputnode and datasink
     name_workflow = subject_id.replace("-", "_") + "_" + session_id.replace("-", "_")
@@ -404,139 +407,15 @@ def get_wf(
 
     datasink = pe.Node(nio.DataSink(), name="sinker")
 
-    def get_output_dir(is_longitudinal, caps_dir, subject_id, session_id):
-        import os
-
-        from clinica.utils.exceptions import ClinicaCAPSError
-
-        if is_longitudinal:
-            root = os.path.join(caps_dir, "subjects", subject_id, session_id, "t1")
-            long_folds = [f for f in os.listdir(root) if f.startswith("long-")]
-            if len(long_folds) > 1:
-                raise ClinicaCAPSError(
-                    f"[Error] Folder {root} contains {len(long_folds)} folders labeled long-*. Only 1 can exist"
-                )
-            elif len(long_folds) == 0:
-                raise ClinicaCAPSError(
-                    f"[Error] Folder {root} does not contains a folder labeled long-*. Have you run t1-freesurfer-longitudinal?"
-                )
-            else:
-                output_dir = os.path.join(
-                    caps_dir,
-                    "subjects",
-                    subject_id,
-                    session_id,
-                    "pet",
-                    long_folds[0],
-                    "surface_longitudinal",
-                )
-        else:
-            output_dir = os.path.join(
-                caps_dir, "subjects", subject_id, session_id, "pet", "surface"
-            )
-
-        return output_dir
-
-    datasink.inputs.base_directory = get_output_dir(
-        is_longitudinal, caps_dir, subject_id, session_id
+    datasink.inputs.base_directory = str(
+        get_output_dir(is_longitudinal, caps_dir, subject_id, session_id)
     )
     datasink.inputs.parameterization = True
-    cross_sectional_regexp_substitutions = [
-        # Mid surface
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/midsurface\/.*_hemi_([a-z]+)(.*)$",
-            r"\1/\2_\3_hemi-\4_midcorticalsurface",
-        ),
-        # Projection in native space
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_native\/.*_hemi_([a-z]+).*",
-            r"\1/\2_\3_trc-"
-            + acq_label.value
-            + r"_pet_space-native_suvr-"
-            + suvr_reference_region.value
-            + r"_pvc-iy_hemi-\4_projection.mgh",
-        ),
-        # Projection in fsaverage
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*",
-            r"\1/\2_\3_trc-"
-            + acq_label.value
-            + r"_pet_space-fsaverage_suvr-"
-            + suvr_reference_region.value
-            + r"_pvc-iy_hemi-\4_fwhm-\5_projection.mgh",
-        ),
-        # TSV file for Destrieux atlas
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/destrieux_tsv\/destrieux.tsv",
-            r"\1/atlas_statistics/\2_\3_trc-"
-            + acq_label.value
-            + "_pet_space-destrieux_pvc-iy_suvr-"
-            + suvr_reference_region.value
-            + "_statistics.tsv",
-        ),
-        # TSV file for Desikan atlas
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/desikan_tsv\/desikan.tsv",
-            r"\1/atlas_statistics/\2_\3_trc-"
-            + acq_label.value
-            + "_pet_space-desikan_pvc-iy_suvr-"
-            + suvr_reference_region.value
-            + "_statistics.tsv",
-        ),
-    ]
-    longitudinal_regexp_substitutions = [
-        # Mid surface
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/midsurface\/.*_hemi_([a-z]+)(.*)$",
-            r"\1/\2_\3_\4_hemi-\5_midcorticalsurface",
-        ),
-        # Projection in native space
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/projection_native\/.*_hemi_([a-z]+).*",
-            r"\1/\2_\3_\4_trc-"
-            + acq_label.value
-            + r"_pet_space-native_suvr-"
-            + suvr_reference_region.value
-            + r"_pvc-iy_hemi-\5_projection.mgh",
-        ),
-        # Projection in fsaverage
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*",
-            r"\1/\2_\3_\4_trc-"
-            + acq_label.value
-            + r"_pet_space-fsaverage_suvr-"
-            + suvr_reference_region.value
-            + r"_pvc-iy_hemi-\5_fwhm-\6_projection.mgh",
-        ),
-        # TSV file for Destrieux atlas
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/destrieux_tsv\/destrieux.tsv",
-            r"\1/atlas_statistics/\2_\3_\4_trc-"
-            + acq_label.value
-            + "_pet_space-destrieux_pvc-iy_suvr-"
-            + suvr_reference_region.value
-            + "_statistics.tsv",
-        ),
-        # TSV file for Desikan atlas
-        (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/desikan_tsv\/desikan.tsv",
-            r"\1/atlas_statistics/\2_\3_\4_trc-"
-            + acq_label.value
-            + "_pet_space-desikan_pvc-iy_suvr-"
-            + suvr_reference_region.value
-            + "_statistics.tsv",
-        ),
-    ]
-    if is_longitudinal:
-        datasink.inputs.regexp_substitutions = longitudinal_regexp_substitutions
-    else:
-        datasink.inputs.regexp_substitutions = cross_sectional_regexp_substitutions
+    datasink.inputs.regexp_substitutions = get_regexp_substitutions(
+        acq_label, suvr_reference_region, is_longitudinal
+    )
 
     # 3 Connecting the nodes
-
-    # TODO(@arnaud.marcoux): Add titles for sections of connections.
-    #   Could be useful to add sections title to group similar connections
-    #   together.
 
     # fmt: off
     wf.connect(
@@ -546,7 +425,7 @@ def get_wf(
             (inputnode, convert_mgh, [("orig_nu", "in_file")]),
             (convert_mgh, unzip_orig_nu, [("out_file", "in_file")]),
             (unzip_orig_nu, coreg, [("out_file", "target")]),
-            (coreg, removenan, [("coregistered_source", "volname")]),
+            (coreg, removenan, [("coregistered_source", "image_path")]),
             (removenan, vol2vol, [("vol_wo_nan", "source_file")]),
             (inputnode, tkregister, [("orig_nu", "target_image")]),
             (unzip_orig_nu, normalize12, [("out_file", "image_to_align")]),
@@ -558,24 +437,24 @@ def get_wf(
             (gtmsegmentation, tkregister, [("gtmseg_file", "moving_image")]),
             (gtmsegmentation, convert_gtmseg, [("gtmseg_file", "in_file")]),
             (gtmsegmentation, vol2vol, [("gtmseg_file", "target_file")]),
-            (vol2vol, pons_normalization, [("transformed_file", "pet_path")]),
+            (vol2vol, pons_normalization, [("transformed_file", "pet_image")]),
             (vol2vol_mask, pons_normalization, [("transformed_file", "mask")]),
             (convert_gtmseg, labelconversion, [("out_file", "gtmsegfile")]),
             (labelconversion, merge_volume, [("list_of_regions", "inputs")]),
             (merge_volume, pvc, [("merged_file", "mask_file")]),
-            (pons_normalization, pvc, [("suvr", "in_file")]),
-            (reformat_surface_name, mris_exp, [("out", "in_surface")]),
-            (mris_exp, extract_mid_surface, [("out_surface", "in_surfaces")]),
-            (mris_exp, surf_conversion, [("out_surface", "in_surface")]),
-            (tkregister, surf_conversion, [("reg_file", "reg_file")]),
-            (gtmsegmentation, surf_conversion, [("gtmseg_file", "gtmsegfile")]),
-            (pvc, vol_on_surf, [("out_file", "volume")]),
+            (pons_normalization, pvc, [("suvr_image", "in_file")]),
+            (reformat_surface_name, mris_exp, [("out", "surface")]),
+            (mris_exp, extract_mid_surface, [("out_surface", "surfaces")]),
+            (mris_exp, surf_conversion, [("out_surface", "surface")]),
+            (tkregister, surf_conversion, [("reg_file", "registration")]),
+            (gtmsegmentation, surf_conversion, [("gtmseg_file", "gtmseg_file")]),
+            (pvc, vol_on_surf, [("out_file", "pet_volume")]),
             (surf_conversion, vol_on_surf, [("tval", "surface")]),
-            (gtmsegmentation, vol_on_surf, [("gtmseg_file", "gtmsegfile")]),
-            (vol_on_surf, normal_average, [("output", "in_surfaces")]),
+            (gtmsegmentation, vol_on_surf, [("gtmseg_file", "gtmseg_file")]),
+            (vol_on_surf, normal_average, [("output", "surfaces")]),
             (normal_average, project_on_fsaverage, [("out_surface", "projection")]),
             (normal_average, gather_pet_projection, [("out_surface", "pet_projection_lh_rh")]),
-            (gather_pet_projection, atlas_tsv, [("pet_projection_lh_rh", "pet")]),
+            (gather_pet_projection, atlas_tsv, [("pet_projection_lh_rh", "pet_projections")]),
             (atlas_tsv, outputnode, [("destrieux_tsv", "destrieux_tsv")]),
             (atlas_tsv, outputnode, [("desikan_tsv", "desikan_tsv")]),
             (project_on_fsaverage, outputnode, [("out_fsaverage", "projection_fsaverage_smoothed")]),

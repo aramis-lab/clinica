@@ -1,9 +1,9 @@
-from os import PathLike
 from pathlib import Path
 from typing import Union
 
+from clinica.utils.pet import SUVRReferenceRegion, Tracer
+
 __all__ = [
-    "get_new_subjects_dir",
     "perform_gtmseg",
     "make_label_conversion",
     "run_mri_vol2surf",
@@ -18,6 +18,8 @@ __all__ = [
     "normalize_suvr",
     "run_mris_expand",
     "remove_nan_from_image",
+    "get_regexp_substitutions",
+    "get_output_dir",
 ]
 
 
@@ -40,29 +42,60 @@ def _get_longitudinal_folder_name(input_folder: Path) -> str:
     return longitudinal_folders[0]
 
 
-def get_new_subjects_dir(
+def get_output_dir(is_longitudinal, caps_dir, subject_id, session_id):
+    # TODO
+    import os
+
+    from clinica.utils.exceptions import ClinicaCAPSError
+
+    if is_longitudinal:
+        root = os.path.join(caps_dir, "subjects", subject_id, session_id, "t1")
+        long_folds = [f for f in os.listdir(root) if f.startswith("long-")]
+        if len(long_folds) > 1:
+            raise ClinicaCAPSError(
+                f"[Error] Folder {root} contains {len(long_folds)} folders labeled long-*. Only 1 can exist"
+            )
+        elif len(long_folds) == 0:
+            raise ClinicaCAPSError(
+                f"[Error] Folder {root} does not contains a folder labeled long-*. Have you run t1-freesurfer-longitudinal?"
+            )
+        else:
+            output_dir = os.path.join(
+                caps_dir,
+                "subjects",
+                subject_id,
+                session_id,
+                "pet",
+                long_folds[0],
+                "surface_longitudinal",
+            )
+    else:
+        output_dir = os.path.join(
+            caps_dir, "subjects", subject_id, session_id, "pet", "surface"
+        )
+
+    return output_dir
+
+
+def _get_new_subjects_dir(
     is_longitudinal: bool,
-    caps_dir: Union[str, PathLike],
+    caps_dir: Path,
     subject_id: str,
     session_id: str,
-):
+) -> tuple[Path, str]:
     """Extract SUBJECT_DIR.
 
     Extract path to FreeSurfer segmentation in CAPS folder and FreeSurfer ID
     (e.g. sub-CLNC01_ses-M000.long.sub-CLNC01_long-M000M018 or sub-CLNC01_ses-M000).
     """
-    caps_dir = Path(caps_dir)
-    # todo : unclear what this function is supposed to do
-    # todo : t1 or pet ?
-
     root = caps_dir / "subjects" / subject_id / session_id / "t1"
 
     if is_longitudinal:
-        long_folds = _get_longitudinal_folder_name(root)
+        longitudinal_folder_name = _get_longitudinal_folder_name(root)
 
         return (
-            root / long_folds / "freesurfer_longitudinal",
-            f"{subject_id}_{session_id}.long.{subject_id}_{long_folds}",
+            root / longitudinal_folder_name / "freesurfer_longitudinal",
+            f"{subject_id}_{session_id}.long.{subject_id}_{longitudinal_folder_name}",
         )
     return root / "freesurfer_cross_sectional", subject_id + "_" + session_id
 
@@ -96,12 +129,12 @@ def perform_gtmseg(caps_dir, subject_id, session_id, is_longitudinal):
     # Old subject_dir is saved for later
     subjects_dir_backup = os.path.expandvars("$SUBJECTS_DIR")
 
-    root_env, freesurfer_id = get_new_subjects_dir(
+    root_env, freesurfer_id = _get_new_subjects_dir(
         is_longitudinal, caps_dir, subject_id, session_id
     )
 
     # Set the new subject dir for the function to work properly
-    os.environ["SUBJECTS_DIR"] = root_env
+    os.environ["SUBJECTS_DIR"] = str(root_env)
 
     if not os.path.exists(
         os.path.join(
@@ -504,16 +537,14 @@ def run_mri_surf2surf(
     import subprocess
     import sys
 
-    from pipelines.pet.surface.utils import get_new_subjects_dir
-
     # set subjects_dir env. variable for mri_surf2surf to work properly
     subjects_dir_backup = os.path.expandvars("$SUBJECTS_DIR")
 
-    root_env, freesurfer_id = get_new_subjects_dir(
+    root_env, freesurfer_id = _get_new_subjects_dir(
         is_longitudinal, caps_dir, subject_id, session_id
     )
 
-    os.environ["SUBJECTS_DIR"] = root_env
+    os.environ["SUBJECTS_DIR"] = str(root_env)
 
     # make a copy of surface file to surface directory in CAPS in order to allow processing
     shutil.copy(
@@ -583,16 +614,14 @@ def run_mri_vol2surf(
     import subprocess
     import sys
 
-    from pipelines.pet.surface.utils import get_new_subjects_dir
-
     # set subjects_dir env. variable for mri_vol2surf to work properly
     subjects_dir_backup = os.path.expandvars("$SUBJECTS_DIR")
 
-    root_env, freesurfer_id = get_new_subjects_dir(
+    root_env, freesurfer_id = _get_new_subjects_dir(
         is_longitudinal, caps_dir, subject_id, session_id
     )
 
-    os.environ["SUBJECTS_DIR"] = root_env
+    os.environ["SUBJECTS_DIR"] = str(root_env)
 
     # TODO write nicer way to grab hemi & filename (difficulty caused by the dots in filenames)
     # extract hemisphere based on filename
@@ -731,15 +760,14 @@ def project_onto_fsaverage(
     import shutil
 
     from nipype.interfaces.freesurfer import MRISPreproc
-    from pipelines.pet.surface.utils import get_new_subjects_dir
 
     subjects_dir_backup = os.path.expandvars("$SUBJECTS_DIR")
 
-    root_env, freesurfer_id = get_new_subjects_dir(
+    root_env, freesurfer_id = _get_new_subjects_dir(
         is_longitudinal, caps_dir, subject_id, session_id
     )
 
-    os.environ["SUBJECTS_DIR"] = root_env
+    os.environ["SUBJECTS_DIR"] = str(root_env)
 
     # copy fsaverage folder next to : subject_id + '_' + session_id
     # for the mris_preproc command to properly find src and target
@@ -902,3 +930,101 @@ def merge_nifti_volumes(inputs: list[str]) -> str:
     output_path = os.getcwd() + "/merged_image.nii.gz"
     nib.save(merged_image, output_path)
     return output_path
+
+
+def get_regexp_substitutions(
+    pet_tracer: Tracer,
+    region: SUVRReferenceRegion,
+    is_longitudinal: bool,
+) -> list[tuple[str, str]]:
+    return [
+        _get_mid_surface_substitutions(is_longitudinal=is_longitudinal),
+        _get_projection_in_native_space_substitutions(
+            pet_tracer, region, is_longitudinal=is_longitudinal
+        ),
+        _get_projection_in_fsaverage_substitution(
+            pet_tracer, region, is_longitudinal=is_longitudinal
+        ),
+        _get_tsv_file_for_atlas(
+            pet_tracer, region, "destrieux", is_longitudinal=is_longitudinal
+        ),
+        _get_tsv_file_for_atlas(
+            pet_tracer, region, "desikan", is_longitudinal=is_longitudinal
+        ),
+    ]
+
+
+def _get_mid_surface_substitutions(is_longitudinal: bool) -> tuple[str, str]:
+    if is_longitudinal:
+        return (
+            r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/midsurface\/.*_hemi_([a-z]+)(.*)$",
+            r"\1/\2_\3_\4_hemi-\5_midcorticalsurface",
+        )
+    return (
+        r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/midsurface\/.*_hemi_([a-z]+)(.*)$",
+        r"\1/\2_\3_hemi-\4_midcorticalsurface",
+    )
+
+
+def _get_projection_in_native_space_substitutions(
+    pet_tracer: Tracer,
+    region: SUVRReferenceRegion,
+    is_longitudinal: bool,
+) -> tuple[str, str]:
+    if is_longitudinal:
+        return (
+            r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/projection_native\/.*_hemi_([a-z]+).*",
+            rf"\1/\2_\3_\4_trc-{pet_tracer.value}_pet_space-native_suvr-{region.value}_pvc-iy_hemi-\5_projection.mgh",
+        )
+    return (
+        r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_native\/.*_hemi_([a-z]+).*",
+        rf"\1/\2_\3_trc-{pet_tracer.value}_pet_space-native_suvr-{region.value}_pvc-iy_hemi-\4_projection.mgh",
+    )
+
+
+def _get_projection_in_fsaverage_substitution(
+    pet_tracer: Tracer,
+    region: SUVRReferenceRegion,
+    is_longitudinal: bool,
+) -> tuple[str, str]:
+    if is_longitudinal:
+        return (
+            (
+                r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/"
+                r"projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*"
+            ),
+            (
+                rf"\1/\2_\3_\4_trc-{pet_tracer.value}_pet_space-fsaverage_"
+                rf"suvr-{region.value}_pvc-iy_hemi-\5_fwhm-\6_projection.mgh"
+            ),
+        )
+    return (
+        r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*",
+        (
+            rf"\1/\2_\3_trc-{pet_tracer.value}_pet_space-fsaverage_"
+            rf"suvr-{region.value}_pvc-iy_hemi-\4_fwhm-\5_projection.mgh"
+        ),
+    )
+
+
+def _get_tsv_file_for_atlas(
+    pet_tracer: Tracer,
+    region: SUVRReferenceRegion,
+    atlas: str,
+    is_longitudinal: bool,
+) -> tuple[str, str]:
+    if is_longitudinal:
+        return (
+            rf"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/{atlas}_tsv\/{atlas}.tsv",
+            (
+                rf"\1/atlas_statistics/\2_\3_\4_trc-{pet_tracer.value}_pet_"
+                rf"space-{atlas}_pvc-iy_suvr-{region.value}_statistics.tsv"
+            ),
+        )
+    return (
+        rf"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/{atlas}_tsv\/{atlas}.tsv",
+        (
+            rf"\1/atlas_statistics/\2_\3_trc-{pet_tracer.value}_pet_"
+            rf"space-{atlas}_pvc-iy_suvr-{region.value}_statistics.tsv"
+        ),
+    )

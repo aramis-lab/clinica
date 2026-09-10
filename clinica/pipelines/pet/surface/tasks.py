@@ -1,4 +1,4 @@
-# todo : check unexpected argument ; unused functions
+# todo : unused functions
 
 
 def remove_nan_from_image_task(image_path: str) -> str:
@@ -72,43 +72,36 @@ def reformat_surfname_task(
     )
 
 
-def run_mris_expand_task(surface: str, output_dir=None):
+def run_mris_expand_task(surface: str):
     from pathlib import Path
 
     from clinica.pipelines.pet.surface.utils import run_mris_expand
 
-    if output_dir:
-        output_dir = Path(output_dir)
-    return [str(p) for p in run_mris_expand(Path(surface), output_dir)]
+    return [str(p) for p in run_mris_expand(Path(surface))]
 
 
 def run_mri_surf2surf_task(
     surface: str,
     registration: str,
-    gtmsegfile: str,
+    gtmseg_file: str,
     subject_id: str,
     session_id: str,
     caps_dir: str,
     is_longitudinal: bool,
-    output_dir=None,
 ) -> str:
     from pathlib import Path
 
     from clinica.pipelines.pet.surface.utils import run_mri_surf2surf
 
-    if output_dir:
-        output_dir = Path(output_dir)
-
     return str(
         run_mri_surf2surf(
             Path(surface),
             Path(registration),
-            Path(gtmsegfile),
+            Path(gtmseg_file),
             subject_id,
             session_id,
             Path(caps_dir),
             is_longitudinal,
-            output_dir,
         )
     )
 
@@ -121,14 +114,10 @@ def run_mri_vol2surf_task(
     caps_dir: str,
     gtmsegfile: str,
     is_longitudinal: bool,
-    output_dir=None,
 ) -> str:
     from pathlib import Path
 
     from clinica.pipelines.pet.surface.utils import run_mri_vol2surf
-
-    if output_dir:
-        output_dir = Path(output_dir)
 
     return str(
         run_mri_vol2surf(
@@ -139,23 +128,19 @@ def run_mri_vol2surf_task(
             Path(caps_dir),
             Path(gtmsegfile),
             is_longitudinal,
-            output_dir,
         )
     )
 
 
-def compute_weighted_mean_surface_task(surfaces, output_dir=None) -> str:
+def compute_weighted_mean_surface_task(surfaces: list[str]) -> str:
     from pathlib import Path
 
+    # TODO : type
     from clinica.pipelines.pet.surface.utils import compute_weighted_mean_surface
-
-    if output_dir:
-        output_dir = Path(output_dir)
 
     return str(
         compute_weighted_mean_surface(
             [Path(surface) for surface in surfaces],
-            output_dir,
         )
     )
 
@@ -167,14 +152,10 @@ def project_onto_fsaverage_task(
     caps_dir: str,
     fwhm: int,
     is_longitudinal: bool,
-    output_dir=None,
 ) -> str:
     from pathlib import Path
 
     from clinica.pipelines.pet.surface.utils import project_onto_fsaverage
-
-    if output_dir:
-        output_dir = Path(output_dir)
 
     return str(
         project_onto_fsaverage(
@@ -184,7 +165,6 @@ def project_onto_fsaverage_task(
             Path(caps_dir),
             fwhm,
             is_longitudinal,
-            output_dir,
         )
     )
 
@@ -192,6 +172,7 @@ def project_onto_fsaverage_task(
 def get_mid_surface_task(surfaces) -> str:
     from pathlib import Path
 
+    # TODO
     from clinica.pipelines.pet.surface.utils import get_mid_surface
 
     return str(get_mid_surface([Path(surface) for surface in surfaces]))
@@ -200,8 +181,8 @@ def get_mid_surface_task(surfaces) -> str:
 def compute_average_pet_signal_based_on_annotations_task(
     pet_projections: tuple,
     atlas_files: dict,
-    output_dir=None,
 ) -> tuple:
+    # TODO
     from pathlib import Path
 
     from clinica.pipelines.pet.surface.utils import (
@@ -209,8 +190,6 @@ def compute_average_pet_signal_based_on_annotations_task(
     )
     from clinica.utils.stream import log_and_raise
 
-    if output_dir:
-        output_dir = Path(output_dir)
     if len(atlas_files) != 2:
         msg = (
             "The compute_average_pet_signal_based_on_annotations task requires two atlases "
@@ -223,7 +202,6 @@ def compute_average_pet_signal_based_on_annotations_task(
     tsv_files = compute_average_pet_signal_based_on_annotations(
         (Path(pet_projections[0]), Path(pet_projections[1])),
         atlas_files,
-        output_dir,
     )
     if len(tsv_files) != 2:
         msg = (

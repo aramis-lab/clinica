@@ -9,7 +9,6 @@ import pandas as pd
 
 from clinica.pipelines.utils import FreeSurferAnnotationImage
 from clinica.utils.image import HemiSphere
-from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
 
 def get_output_dir(
@@ -115,23 +114,6 @@ def perform_gtmseg(
 
 def _expand_environment_variable_into_path(variable_name: str) -> Path:
     return Path(os.path.expandvars(variable_name))
-
-
-def _get_new_subjects_dir(
-    is_longitudinal: bool, caps_dir: Path, subject_id: str, session_id: str
-) -> Tuple[Path, str]:
-    """Extract SUBJECT_DIR.
-    Extract path to FreeSurfer segmentation in CAPS folder and FreeSurfer ID
-    (e.g. sub-CLNC01_ses-M000.long.sub-CLNC01_long-M000M018 or sub-CLNC01_ses-M000).
-    """
-    root = caps_dir / "subjects" / subject_id / session_id / "t1"
-    if is_longitudinal:
-        longitudinal_folder_name = _get_longitudinal_folder_name(root)
-        return (
-            root / longitudinal_folder_name / "freesurfer_longitudinal",
-            f"{subject_id}_{session_id}.long.{subject_id}_{longitudinal_folder_name}",
-        )
-    return root / "freesurfer_cross_sectional", f"{subject_id}_{session_id}"
 
 
 def _run_gtmseg(freesurfer_id: str):
@@ -1096,101 +1078,3 @@ def compute_average_pet_signal_based_on_annotations(
             columns=["index", "label_name", "mean_scalar"],
         )
     return filename_tsv
-
-
-def get_regexp_substitutions(
-    pet_tracer: Tracer,
-    region: SUVRReferenceRegion,
-    is_longitudinal: bool,
-) -> List[Tuple[str, str]]:
-    return [
-        _get_mid_surface_substitutions(is_longitudinal=is_longitudinal),
-        _get_projection_in_native_space_substitutions(
-            pet_tracer, region, is_longitudinal=is_longitudinal
-        ),
-        _get_projection_in_fsaverage_substitution(
-            pet_tracer, region, is_longitudinal=is_longitudinal
-        ),
-        _get_tsv_file_for_atlas(
-            pet_tracer, region, "destrieux", is_longitudinal=is_longitudinal
-        ),
-        _get_tsv_file_for_atlas(
-            pet_tracer, region, "desikan", is_longitudinal=is_longitudinal
-        ),
-    ]
-
-
-def _get_mid_surface_substitutions(is_longitudinal: bool) -> Tuple[str, str]:
-    if is_longitudinal:
-        return (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/midsurface\/.*_hemi_([a-z]+)(.*)$",
-            r"\1/\2_\3_\4_hemi-\5_midcorticalsurface",
-        )
-    return (
-        r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/midsurface\/.*_hemi_([a-z]+)(.*)$",
-        r"\1/\2_\3_hemi-\4_midcorticalsurface",
-    )
-
-
-def _get_projection_in_native_space_substitutions(
-    pet_tracer: Tracer,
-    region: SUVRReferenceRegion,
-    is_longitudinal: bool,
-) -> Tuple[str, str]:
-    if is_longitudinal:
-        return (
-            r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/projection_native\/.*_hemi_([a-z]+).*",
-            rf"\1/\2_\3_\4_trc-{pet_tracer.value}_pet_space-native_suvr-{region.value}_pvc-iy_hemi-\5_projection.mgh",
-        )
-    return (
-        r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_native\/.*_hemi_([a-z]+).*",
-        rf"\1/\2_\3_trc-{pet_tracer.value}_pet_space-native_suvr-{region.value}_pvc-iy_hemi-\4_projection.mgh",
-    )
-
-
-def _get_projection_in_fsaverage_substitution(
-    pet_tracer: Tracer,
-    region: SUVRReferenceRegion,
-    is_longitudinal: bool,
-) -> Tuple[str, str]:
-    if is_longitudinal:
-        return (
-            (
-                r"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/"
-                r"projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*"
-            ),
-            (
-                rf"\1/\2_\3_\4_trc-{pet_tracer.value}_pet_space-fsaverage_"
-                rf"suvr-{region.value}_pvc-iy_hemi-\5_fwhm-\6_projection.mgh"
-            ),
-        )
-    return (
-        r"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*",
-        (
-            rf"\1/\2_\3_trc-{pet_tracer.value}_pet_space-fsaverage_"
-            rf"suvr-{region.value}_pvc-iy_hemi-\4_fwhm-\5_projection.mgh"
-        ),
-    )
-
-
-def _get_tsv_file_for_atlas(
-    pet_tracer: Tracer,
-    region: SUVRReferenceRegion,
-    atlas: str,
-    is_longitudinal: bool,
-) -> Tuple[str, str]:
-    if is_longitudinal:
-        return (
-            rf"(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/{atlas}_tsv\/{atlas}.tsv",
-            (
-                rf"\1/atlas_statistics/\2_\3_\4_trc-{pet_tracer.value}_pet_"
-                rf"space-{atlas}_pvc-iy_suvr-{region.value}_statistics.tsv"
-            ),
-        )
-    return (
-        rf"(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/{atlas}_tsv\/{atlas}.tsv",
-        (
-            rf"\1/atlas_statistics/\2_\3_trc-{pet_tracer.value}_pet_"
-            rf"space-{atlas}_pvc-iy_suvr-{region.value}_statistics.tsv"
-        ),
-    )
