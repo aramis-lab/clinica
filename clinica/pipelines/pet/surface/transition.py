@@ -11,25 +11,6 @@ from clinica.pipelines.utils import FreeSurferAnnotationImage
 from clinica.utils.image import HemiSphere
 from clinica.utils.pet import SUVRReferenceRegion, Tracer
 
-__all__ = [
-    "get_output_dir",
-    "remove_nan_from_image",
-    "perform_gtmseg",
-    "make_label_conversion",
-    "run_apply_inverse_deformation_field",
-    "run_apply_inverse_deformation_field_spm_standalone",
-    "normalize_suvr",
-    "reformat_surfname",
-    "run_mris_expand",
-    "run_mri_surf2surf",
-    "run_mri_vol2surf",
-    "compute_weighted_mean_surface",
-    "project_onto_fsaverage",
-    "get_mid_surface",
-    "compute_average_pet_signal_based_on_annotations",
-    "get_regexp_substitutions",
-]
-
 
 def get_output_dir(
     is_longitudinal: bool,
@@ -67,33 +48,6 @@ def _get_longitudinal_folder_name(input_folder: Path) -> str:
             "Have you run t1-freesurfer-longitudinal?"
         )
     return longitudinal_folders[0]
-
-    # def remove_nan_from_image(image_path: PathLike) -> Path:
-    """Remove NaN values from the provided nifti image.
-    This is needed after a registration performed by 'spmregister' : instead
-    of filling space with 0, nan are used to extend the PET space.
-    We propose to replace them with 0s.
-    Parameters
-    ----------
-    image_path : PathLike
-        The path to the Nifti volume where NaNs need to be replaced by zeros.
-    Returns
-    -------
-    output_image_path : Path
-        The path to the volume in Nifti that does not contain any NaNs.
-    """
-    import nibabel as nib
-    import numpy as np
-
-    from clinica.utils.filemanip import get_filename_no_ext
-
-    image = nib.load(image_path)
-    data = np.nan_to_num(image.get_fdata(dtype="float32"))
-    output_image = nib.Nifti1Image(data, image.affine, header=image.header)
-    output_image_path = Path.cwd() / f"no_nan_{get_filename_no_ext(image_path)}.nii.gz"
-    nib.save(output_image, output_image_path)
-
-    return output_image_path
 
 
 def perform_gtmseg(

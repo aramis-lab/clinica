@@ -1,3 +1,6 @@
+# todo : check unexpected argument ; unused functions
+
+
 def remove_nan_from_image_task(image_path: str) -> str:
     from pathlib import Path
 
@@ -24,7 +27,7 @@ def make_label_conversion_task(gtmseg_file: str, csv_file: str) -> list:
     return [str(p) for p in make_label_conversion(Path(gtmseg_file), Path(csv_file))]
 
 
-def run_ApplyInverseDeformationField_SPM_standalone_task(
+def run_apply_inverse_deformation_field_SPM_standalone_task(
     target_image: str,
     deformation_field: str,
     image: str,
@@ -32,11 +35,11 @@ def run_ApplyInverseDeformationField_SPM_standalone_task(
     from pathlib import Path
 
     from clinica.pipelines.pet.surface.utils import (
-        run_ApplyInverseDeformationField_SPM_standalone,
+        run_apply_inverse_deformation_field_SPM_standalone,
     )
 
     return str(
-        run_ApplyInverseDeformationField_SPM_standalone(
+        run_apply_inverse_deformation_field_SPM_standalone(
             Path(target_image),
             Path(deformation_field),
             Path(image),

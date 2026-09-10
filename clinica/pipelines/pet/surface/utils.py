@@ -5,19 +5,18 @@ from typing import Union
 __all__ = [
     "get_new_subjects_dir",
     "perform_gtmseg",
-    "remove_nan",
     "make_label_conversion",
     "run_mri_vol2surf",
     "compute_weighted_mean_surface",
     "project_onto_fsaverage",
     "get_mid_surface",
     "reformat_surfname",
-    "produce_tsv",
+    "compute_average_pet_signal_based_on_annotations",
     "merge_nifti_volumes",
-    "run_ApplyInverseDeformationField_SPM_standalone",
+    "run_apply_inverse_deformation_field_SPM_standalone",
     "run_mri_surf2surf",
     "normalize_suvr",
-    "mris_expand",
+    "run_mris_expand",
     "remove_nan_from_image",
 ]
 
@@ -148,44 +147,14 @@ def perform_gtmseg(caps_dir, subject_id, session_id, is_longitudinal):
     return out_file
 
 
-def remove_nan(volname):
-    """remove_nan is a method needed after a registration performed by spmregister : instead of filling space with 0, nan
-    are used to extend the PET space. We propose to replace them with 0s.
-
-    Args:
-        (string) volname : path to the Nifti volume where NaNs need to be replaced by 0s
-
-    Returns:
-        (string) Path to the volume in Nifti that does not contain any NaNs
-    """
-
-    # todo : discriminate with remove_nan_from_image
-    import os
-
-    import nibabel as nib
-    import numpy as np
-
-    # Load the volume and get the data
-    nifti_in = nib.load(volname)
-    data = np.nan_to_num(nifti_in.get_fdata(dtype="float32"))
-
-    # Now create final image (using header of original image), and save it in current directory
-    nifti_out = nib.Nifti1Image(data, nifti_in.affine, header=nifti_in.header)
-    filename = os.path.basename(volname)
-    vol_wo_nan = "./no_nan_" + filename + ".gz"
-    vol_wo_nan = os.path.abspath(vol_wo_nan)
-    nib.save(nifti_out, vol_wo_nan)
-    return vol_wo_nan
-
-
-def remove_nan_from_image(image_path: PathLike) -> Path:
+def remove_nan_from_image(image_path: Path) -> Path:
     """Remove NaN values from the provided nifti image.
     This is needed after a registration performed by 'spmregister' : instead
     of filling space with 0, nan are used to extend the PET space.
     We propose to replace them with 0s.
     Parameters
     ----------
-    image_path : PathLike
+    image_path : Path
         The path to the Nifti volume where NaNs need to be replaced by zeros.
     Returns
     -------
@@ -202,7 +171,6 @@ def remove_nan_from_image(image_path: PathLike) -> Path:
     output_image = nib.Nifti1Image(data, image.affine, header=image.header)
     output_image_path = Path.cwd() / f"no_nan_{get_filename_no_ext(image_path)}.nii.gz"
     nib.save(output_image, output_image_path)
-
     return output_image_path
 
 
@@ -300,7 +268,7 @@ def make_label_conversion(gtmsegfile, csv):
     return list_of_regions
 
 
-def run_ApplyInverseDeformationField_SPM_standalone(target, deformation_field, img):
+def run_apply_inverse_deformation_field_SPM_standalone(target, deformation_field, img):
     """
     We directly create a batch file that SPM standalone can run. This function does not check whether SPM standalone must be used. Previous
     check when building the pipeline ensures that all the env vars exists ($SPMSTANDALONE_HOME and $MCR_HOME)
@@ -469,7 +437,7 @@ def _check_mri_expand_file_location_then_move(
     return expected_location
 
 
-def mris_expand(in_surface):
+def run_mris_expand(in_surface):
     """mris_expand is using the freesurfer function of the same name. It expands the white input surface toward the pial,
     generating 7 surfaces at 35%, 40%, 45%, 50%, 55%, 60%, 65% of thickness.
 
@@ -845,7 +813,7 @@ def reformat_surfname(hemi, left_surface, right_surface):
     )
 
 
-def produce_tsv(pet, atlas_files):
+def compute_average_pet_signal_based_on_annotations(pet: list[Path], atlas_files: dict):
     """produce_tsv computes the average of PET signal based on annot files from Freesurfer. Those files describes the
     brain according to known atlases.
 
@@ -856,6 +824,7 @@ def produce_tsv(pet, atlas_files):
         Returns:
             (string) tsv  : path to the tsv containing average PET values
     """
+    # todo : check connections types
     import os
 
     import nibabel as nib
@@ -920,6 +889,7 @@ def produce_tsv(pet, atlas_files):
 
 
 def merge_nifti_volumes(inputs: list[str]) -> str:
+    # todo : where ?
     import os
 
     import nibabel as nib

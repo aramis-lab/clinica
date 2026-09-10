@@ -1,37 +1,29 @@
-def get_wf(
-    subject_id,
-    session_id,
-    pvc_psf_tsv,
-    caps_dir,
-    pet,
-    orig_nu,
-    white_surface_left,
-    white_surface_right,
-    working_directory_subjects,
-    acq_label: str,
-    csv_segmentation,
-    suvr_reference_region: str,
-    destrieux_left,
-    destrieux_right,
-    desikan_left,
-    desikan_right,
-    is_longitudinal,
-):
-    """get_wf create a full workflow for only one subject, and then executes it
+# todo consider adding a output_dir = None default (to propagate in downstream functions)
 
-    Args:
-        subject_id (string): The subject ID
-        session_id (string): The session ID
-        pvc_psf_tsv (string): Path the TSV file containing information on the point spread function (PSF)
-        caps_dir (string): Path to the CAPS directory
-        pet (string): Path to the PET image in the bids directory
-        orig_nu (string): Path to the orig_nu file (must be in the CAPS directory, in mri)
-        white_surface_left (string): Path to the left white surface in native space of subject
-        white_surface_right (string): Path to the right white surface in native space of subject
-        working_directory_subjects (string):
-        acq_label (string):
-        csv_segmentation (string): Path to the CSV for the segmentation (problems encountered while using __file__)
-        suvr_reference_region (string): Label of the SUVR reference region
+
+def get_wf(
+    subject_id: str,
+    session_id: str,
+    pvc_psf_tsv: str,
+    caps_dir: str,
+    pet: str,
+    orig_nu: str,
+    white_surface_left: str,
+    white_surface_right: str,
+    working_directory_subjects: str,
+    acq_label: str,
+    csv_segmentation: str,
+    suvr_reference_region: str,
+    destrieux_left: str,
+    destrieux_right: str,
+    desikan_left: str,
+    desikan_right: str,
+    is_longitudinal: bool,
+):
+    """
+    get_wf create a full workflow for only one subject, and then executes it
+
+        suvr_reference_region (string):
         destrieux_left (string):
         destrieux_right (string):
         desikan_left (string):
@@ -40,6 +32,45 @@ def get_wf(
 
     Returns:
         Void
+    Parameters
+    ----------
+    subject_id : str
+        The subject ID
+    session_id : str
+        The session ID
+    pvc_psf_tsv : str
+        Path the TSV file containing information on the point spread function (PSF)
+    caps_dir : str
+        Path to the CAPS directory
+    pet : str
+        Path to the PET image in the bids directory
+    orig_nu :
+        Path to the orig_nu file (must be in the CAPS directory, in mri)
+    white_surface_left : str
+        Path to the left white surface in native space of subject
+    white_surface_right : str
+        Path to the right white surface in native space of subject
+    working_directory_subjects : str
+        ???
+    acq_label : str
+        The PET tracer to consider.
+    csv_segmentation : str
+        Path to the CSV for the segmentation (problems encountered while using __file__)
+    suvr_reference_region : str
+        Label of the SUVR reference region
+    destrieux_left : str
+        The path to the destrieux parcellation for the left hemisphere.
+    destrieux_right : str
+        The path to the destrieux parcellation for the right hemisphere.
+    desikan_left : str
+        The path to the desikan parcellation for the left hemisphere.
+    desikan_right : str
+        The path to the desikan parcellation for the right hemisphere.
+    is_longitudinal : bool
+        Whether the pipeline is PETSurface or PETSurfaceLongitudinal.
+    Returns
+    -------
+
     """
     import os
 
@@ -49,7 +80,8 @@ def get_wf(
     from nipype.interfaces.freesurfer import ApplyVolTransform, MRIConvert, Tkregister2
     from nipype.interfaces.petpvc import PETPVC
     from nipype.interfaces.spm import Coregister, Normalize12
-    from pipelines.pet.surface.tasks import (  # TODO / HERE
+    from pipelines.pet.surface.tasks import (
+        compute_average_pet_signal_based_on_annotations_task,
         compute_weighted_mean_surface_task,
         get_mid_surface_task,
         make_label_conversion_task,
@@ -57,11 +89,13 @@ def get_wf(
         perform_gtmseg_task,
         project_onto_fsaverage_task,
         reformat_surfname_task,
-        run_ApplyInverseDeformationField_SPM_standalone_task,
+        remove_nan_from_image_task,
+        run_apply_inverse_deformation_field_SPM_standalone_task,
         run_mri_surf2surf_task,
         run_mri_vol2surf_task,
+        run_mris_expand_task,
     )
-    from pipelines.pet.surface.utils import merge_nifti_volumes, remove_nan
+    from pipelines.pet.surface.utils import merge_nifti_volumes
 
     from clinica.pipelines.pet.utils import get_suvr_mask, read_psf_information
     from clinica.utils.filemanip import get_subject_id, load_volume, unzip_nii
@@ -107,7 +141,7 @@ def get_wf(
         niu.Function(
             input_names=["volname"],
             output_names=["vol_wo_nan"],
-            function=remove_nan,  # todo : discriminate between remove_nans functions
+            function=remove_nan_from_image_task,
         ),
         name="removenan",
     )
@@ -176,7 +210,7 @@ def get_wf(
         niu.Function(
             input_names=["target", "deformation_field", "img"],
             output_names=["freesurfer_space_eroded_mask"],
-            function=run_ApplyInverseDeformationField_SPM_standalone_task,
+            function=run_apply_inverse_deformation_field_SPM_standalone_task,
         ),
         name="applyInverseDeformation",
     )
@@ -217,7 +251,7 @@ def get_wf(
         niu.Function(
             input_names=["in_surface"],
             output_names=["out_surface"],
-            function=utils.mris_expand,
+            function=run_mris_expand_task,
         ),
         name="mris_expand_white",
     )
@@ -321,7 +355,7 @@ def get_wf(
         niu.Function(
             input_names=["pet", "atlas_files"],
             output_names=["destrieux_tsv", "desikan_tsv"],
-            function=utils.produce_tsv,
+            function=compute_average_pet_signal_based_on_annotations_task,
         ),
         name="atlas_tsv",
     )
