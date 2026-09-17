@@ -5,6 +5,14 @@ class ClinicaException(Exception):
     """Base class for Clinica exceptions."""
 
 
+class ClinicaImageError(ClinicaException):
+    """Base class for image errors."""
+
+
+class ClinicaSubprocessError(ClinicaException):
+    """Base class for subprocess errors."""
+
+
 class ClinicaMissingDependencyError(ClinicaException):
     """Base class for Clinica dependencies errors."""
 
