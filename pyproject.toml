@@ -66,6 +66,7 @@ dependencies = [
     "antspyx (>=0.5.4)",
     "rich (>=13.8.0)",
     "brainstat (>=0.5.2)",
+    "clinicaio (>=1.0.0,<2.0.0)",
 ]
 
 [project.urls]

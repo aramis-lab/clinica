@@ -1,9 +1,6 @@
 <!-- markdownlint-disable MD046 -->
 # `oasis-to-bids` – Conversion of the Open Access Series of Imaging Studies (OASIS) to BIDS
 
-!!! warning
-    We do not currently support the conversion of OASIS-2.
-
 ??? quote "Description reproduced from the [OASIS' webpage](https://sites.wustl.edu/oasisbrains)"
     The Open Access Series of Imaging Studies (OASIS) is a project aimed at making MRI data sets of the brain freely available to the scientific community.
     By compiling and freely distributing MRI data sets, we hope to facilitate future discoveries in basic and clinical neuroscience.
