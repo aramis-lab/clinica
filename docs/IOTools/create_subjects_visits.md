@@ -1,5 +1,9 @@
 # `create-subjects-visits` - Generate the list all subjects and visits of a given dataset
 
+!!! warning "Deprecation"
+    This iotool will soon (next release) not be supported by `clinica` anymore. The new python library `clinicaio` will take on this functionality.
+
+
 A TSV file with two columns (`participant_id` and `session_id`) containing the list of visits for each subject can be created as follows:
 
 ```shell

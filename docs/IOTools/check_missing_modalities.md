@@ -1,5 +1,10 @@
 # `check-missing-modalities` - Check missing modalities for each subject
 
+
+!!! warning "Deprecation"
+    This iotool will soon (next release) not be supported by `clinica` anymore. The new python library `clinicaio` will take on this functionality.
+
+
 Starting from a BIDS compliant dataset, this command creates:
 
 1. `<prefix>_ses-<session_label>.tsv`: TSV files for each session available with the list of the modalities found for each subject.

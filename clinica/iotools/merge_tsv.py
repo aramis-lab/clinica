@@ -58,8 +58,15 @@ def merge_tsv(
     ignore_session_scan_files : bool, optional
     """
     from clinica.dataset import check_bids_dataset
+    from clinica.utils.stream import log_and_warn
 
     from .data_handling import create_merge_file
+
+    log_and_warn(
+        "This iotool will soon (next release) not be supported by `clinica` anymore."
+        "The new python library `clinicaio` will take on this functionality.",
+        DeprecationWarning,
+    )
 
     check_bids_dataset(bids_directory)
 

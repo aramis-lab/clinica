@@ -95,7 +95,15 @@ def check_missing_modalities(
     output_prefix: str = "missing_mods",
 ) -> None:
     """Check missing modalities in a BIDS dataset."""
+    from clinica.utils.stream import log_and_warn
+
     from .data_handling import compute_missing_mods
+
+    log_and_warn(
+        "This iotool will soon (next release) not be supported by `clinica` anymore."
+        "The new python library `clinicaio` will take on this functionality.",
+        DeprecationWarning,
+    )
 
     compute_missing_mods(bids_directory, output_directory, output_prefix)
 
@@ -124,9 +132,15 @@ def create_subjects_visits(input_directory: str, output_tsv: str) -> None:
     from os.path import basename, dirname
 
     from clinica.dataset import DatasetType, get_dataset_type
-    from clinica.utils.stream import cprint
+    from clinica.utils.stream import cprint, log_and_warn
 
     from .data_handling import create_subs_sess_list
+
+    log_and_warn(
+        "This iotool will soon (next release) not be supported by `clinica` anymore."
+        "The new python library `clinicaio` will take on this functionality.",
+        DeprecationWarning,
+    )
 
     dataset_type = get_dataset_type(input_directory)
     output_directory = dirname(output_tsv)
