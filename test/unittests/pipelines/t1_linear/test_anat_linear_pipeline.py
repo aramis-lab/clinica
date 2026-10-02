@@ -1,10 +1,40 @@
 import re
+from unittest.mock import Mock
 
 import pytest
 from packaging.version import Version
 
 from clinica.dataset import Visit
 from clinica.utils.testing_utils import build_bids_directory, build_caps_directory
+
+
+@pytest.mark.parametrize(
+    "pipeline_name,modality",
+    [("t1-linear", "t1"), ("flair-linear", "flair")],
+)
+def test_anat_linear_uses_skull_stripped_reference(
+    tmp_path, monkeypatch, pipeline_name, modality
+):
+    from clinica.pipelines.t1_linear.anat_linear_pipeline import AnatLinear
+
+    get_template = Mock(return_value=tmp_path / "brain-template.nii.gz")
+    monkeypatch.setattr("clinica.utils.image.get_mni_template", get_template)
+    monkeypatch.setattr(
+        "clinica.utils.inputs.clinica_file_filter",
+        Mock(return_value=([], [], [])),
+    )
+
+    pipeline = object.__new__(AnatLinear)
+    pipeline._parameters = {"skull_stripped": True}
+    pipeline.name = pipeline_name
+    pipeline.subjects = ["sub-01"]
+    pipeline.sessions = ["ses-M00"]
+    pipeline._bids_directory = tmp_path / "bids"
+    pipeline._input_node = Mock()
+    pipeline.connect = Mock()
+    pipeline._build_input_node()
+
+    get_template.assert_called_once_with(modality, skull_stripped=True)
 
 
 def test_anat_linear_pipeline_no_input_error(tmp_path):
