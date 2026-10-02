@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from clinica.utils.pet import SUVRReferenceRegion
@@ -96,3 +98,39 @@ def test_compute_clipping_threshold(
     assert _compute_clipping_threshold(tmp_path / "test.nii.gz") == pytest.approx(
         expected_threshold
     )
+
+
+def test_get_skull_stripping_from_reference(tmp_path):
+    from pathlib import Path
+
+    import nibabel as nib
+
+    from clinica.pipelines.pet.linear.utils import get_skull_stripping_from_reference
+    from clinica.utils.testing_utils import build_test_image_cubic_object
+
+    build_test_image_cubic_object(
+        shape=(3, 3, 3),
+        background_value=0,
+        object_value=12,
+        object_size=3,
+    ).to_filename(tmp_path / "image.nii.gz")
+
+    build_test_image_cubic_object(
+        shape=(3, 3, 3),
+        background_value=0,
+        object_value=1,
+        object_size=1,
+    ).to_filename(tmp_path / "mask.nii.gz")
+
+    get_skull_stripping_from_reference(
+        tmp_path / "image.nii.gz", tmp_path / "mask.nii.gz"
+    )
+    assert (
+        nib.load(Path.cwd() / "skull_stripped_t1.nii.gz").get_fdata()
+        == build_test_image_cubic_object(
+            shape=(3, 3, 3),
+            background_value=0,
+            object_value=12,
+            object_size=1,
+        ).get_fdata()
+    ).all()

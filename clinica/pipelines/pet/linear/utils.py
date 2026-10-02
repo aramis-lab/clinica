@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
@@ -10,6 +11,7 @@ _all__ = [
     "rename_into_caps",
     "print_end_pipeline",
     "clip_img",
+    "get_skull_stripping_from_reference",
 ]
 
 
@@ -24,7 +26,7 @@ def init_input_node(pet: str) -> str:
 
 
 def concatenate_transforms(
-    pet_to_t1w_transform: str, t1w_to_mni_transform: str
+    pet_to_t1w_transform: list, t1w_to_mni_transform: str
 ) -> list:
     """Concatenate two input transformation files into a list.
 
@@ -41,7 +43,7 @@ def concatenate_transforms(
     list :
         Both transform files path in a list.
     """
-    return [t1w_to_mni_transform, pet_to_t1w_transform]
+    return [t1w_to_mni_transform, *pet_to_t1w_transform]
 
 
 def perform_suvr_normalization(
@@ -289,3 +291,22 @@ def print_end_pipeline(pet: str, final_file):
     from clinica.utils.ux import print_end_image
 
     print_end_image(get_subject_id(pet))
+
+
+def get_skull_stripping_from_reference(
+    image: Path, skull_stripped_reference_mask: Path
+) -> Path:
+    from pathlib import Path
+
+    import nibabel as nib
+
+    to_strip = nib.load(image)
+    skull_stripped_image = nib.Nifti1Image(
+        to_strip.get_fdata() * nib.load(skull_stripped_reference_mask).get_fdata(),
+        to_strip.affine,
+    )
+    output_path = Path.cwd() / "skull_stripped_t1.nii.gz"
+
+    skull_stripped_image.to_filename(output_path)
+
+    return output_path
