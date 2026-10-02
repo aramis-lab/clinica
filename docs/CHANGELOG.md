@@ -6,6 +6,27 @@ Main changes to this code/ project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## Clinica 0.12.0
+
+### Fixed
+- [OASIS3] Explicit nans in the modality mapping (PR[#1692](https://github.com/aramis-lab/clinica/pull/1692))
+- [PET-Volume] Fix pvc_psf_tsv option (PR[#1712](https://github.com/aramis-lab/clinica/pull/1712)
+
+### Enhanced
+- [T1/FLAIR Linear] Set higher value for N4BiasFieldCorrection b-spline parameter (PR[#1700](https://github.com/aramis-lab/clinica/pull/1700))
+- [PET-Surface] Remove FSL from dependencies by replacing `fslmerge` with a python function (PR[#1713](https://github.com/aramis-lab/clinica/pull/1713)
+- [DOC] Update information for mrtrix3 and convert3d (PR[#1705](https://github.com/aramis-lab/clinica/pull/1705))
+- [DOC] Simplify ITK and PETPVC download instructions (PR[#1719](https://github.com/aramis-lab/clinica/pull/1719))
+
+### Added
+- [OASIS2] New converter implementation (PR[#1701](https://github.com/aramis-lab/clinica/pull/1701)) : thanks to [@NSK0904](https://github.com/NSK0904), his first contribution!)
+- [OASIS3] Adapt converter to handle both documented and official download processes (PR[#1694](https://github.com/aramis-lab/clinica/pull/1694))
+- [OASIS3] OASIS3-to-bids : add new modalities PET TAU and option `subjects_list` PR[#1687](https://github.com/aramis-lab/clinica/pull/1687))
+
+### Information
+- [IOTools] Some IOtools to be deprecated in the next release (PR[#1729](https://github.com/aramis-lab/clinica/pull/1729))
+
 ## Clinica 0.11.3
 
 ### Fixed
