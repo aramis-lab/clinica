@@ -1,3 +1,4 @@
+import hashlib
 import re
 
 import nibabel as nib
@@ -252,6 +253,132 @@ def test_get_mni_template(tmp_path, mocker):
 
     assert_array_equal(img.affine, expected_affine)
     assert img.shape == expected_shape
+
+
+@pytest.mark.parametrize(
+    "modality,skull_stripped,expected_filename,expected_url,expected_checksum",
+    [
+        (
+            "t1",
+            False,
+            "mni_icbm152_t1_tal_nlin_sym_09c.nii",
+            "https://aramislab.paris.inria.fr/files/data/img_t1_linear/",
+            "93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34",
+        ),
+        (
+            "flair",
+            False,
+            "GG-853-FLAIR-1.0mm.nii.gz",
+            "https://aramislab.paris.inria.fr/files/data/img_flair_linear/",
+            "b1d2d359a4c3671685227bb14014ce50ac232012b628335a4c049e2911c64ce1",
+        ),
+        (
+            "t1",
+            True,
+            "mni_icbm152_t1_tal_nlin_sym_09c_brain.nii.gz",
+            "https://raw.githubusercontent.com/aramis-lab/clinica/dev/clinica/resources/templates/",
+            "e68a6936e0a34679147e1bc512c801c0af611c43305105a5353764fa8b7737b4",
+        ),
+        (
+            "flair",
+            True,
+            "GG-853-FLAIR-1.0mm_brain.nii.gz",
+            "https://raw.githubusercontent.com/aramis-lab/clinica/dev/clinica/resources/templates/",
+            "b1872afd0a88be2980c37dcc70f27a470c12a6a94580bc564efc986033cfb823",
+        ),
+    ],
+)
+def test_get_mni_template_parameters(
+    modality,
+    skull_stripped,
+    expected_filename,
+    expected_url,
+    expected_checksum,
+    monkeypatch,
+):
+    from unittest.mock import Mock
+
+    from clinica.utils.image import get_mni_template
+
+    get_file = Mock(return_value="skull-stripped-template.nii.gz")
+    monkeypatch.setattr(
+        "clinica.utils.image._get_file_locally_or_download", get_file
+    )
+
+    assert get_mni_template(modality, skull_stripped=skull_stripped) == (
+        "skull-stripped-template.nii.gz"
+    )
+    assert get_file.call_args.kwargs["filename"] == expected_filename
+    assert get_file.call_args.kwargs["url"] == expected_url
+    assert get_file.call_args.kwargs["expected_checksum"] == expected_checksum
+    if skull_stripped:
+        assert get_file.call_args.kwargs["resource_folder"].name == "templates"
+    else:
+        assert get_file.call_args.kwargs["resource_folder"] is None
+
+
+def test_get_file_locally_or_download_fetches_missing_file(tmp_path, monkeypatch):
+    from clinica.utils.image import _get_file_locally_or_download
+
+    output_folder = tmp_path / "templates"
+    filename = "template.nii.gz"
+    remote_url = "https://example.com/templates/"
+    checksum = "expected-checksum"
+
+    def fake_fetch_file(remote, folder):
+        assert remote.filename == filename
+        assert remote.url == remote_url
+        assert remote.checksum == checksum
+        folder.mkdir()
+        (folder / remote.filename).touch()
+
+    monkeypatch.setattr("clinica.utils.inputs.fetch_file", fake_fetch_file)
+
+    result = _get_file_locally_or_download(
+        filename=filename,
+        url=remote_url,
+        expected_checksum=checksum,
+        resource_folder=output_folder,
+    )
+
+    assert result == output_folder / filename
+
+
+@pytest.mark.parametrize(
+    "modality,expected_checksum",
+    [
+        (
+            "t1",
+            "e68a6936e0a34679147e1bc512c801c0af611c43305105a5353764fa8b7737b4",
+        ),
+        (
+            "flair",
+            "b1872afd0a88be2980c37dcc70f27a470c12a6a94580bc564efc986033cfb823",
+        ),
+    ],
+)
+def test_skull_stripped_mni_templates_checksum(modality, expected_checksum):
+    from clinica.utils.image import get_mni_template
+
+    template = get_mni_template(modality, skull_stripped=True)
+
+    assert hashlib.sha256(template.read_bytes()).hexdigest() == expected_checksum
+
+
+@pytest.mark.parametrize(
+    "modality,expected_shape",
+    [("t1", (193, 229, 193)), ("flair", (182, 218, 182))],
+)
+def test_skull_stripped_mni_templates_are_brain_only(modality, expected_shape):
+    from clinica.utils.image import get_mni_template
+
+    image = nib.load(get_mni_template(modality, skull_stripped=True))
+    data = image.get_fdata()
+
+    assert image.shape == expected_shape
+    assert np.isfinite(data).all()
+    assert np.count_nonzero(data) > 0
+    assert np.count_nonzero(data) < data.size
 
 
 def test_crop_nifti_input_image_not_3d_error(tmp_path):

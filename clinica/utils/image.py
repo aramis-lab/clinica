@@ -308,11 +308,16 @@ def _crop_array(array: np.ndarray, bbox: Bbox3D) -> np.ndarray:
 
 
 def _get_file_locally_or_download(
-    filename: str, url: Optional[str] = None, expected_checksum: Optional[str] = None
+    filename: str,
+    url: Optional[str] = None,
+    expected_checksum: Optional[str] = None,
+    resource_folder: Optional[Path] = None,
 ) -> Path:
     from clinica.utils.inputs import RemoteFileStructure, fetch_file
 
-    resource_folder = Path(__file__).parent.parent / "resources" / "masks"
+    resource_folder = resource_folder or (
+        Path(__file__).parent.parent / "resources" / "masks"
+    )
     local_file = resource_folder / filename
     if not local_file.exists():
         if url is None or expected_checksum is None:
@@ -341,7 +346,7 @@ def get_mni_cropped_template() -> Path:
     )
 
 
-def get_mni_template(modality: str) -> Path:
+def get_mni_template(modality: str, skull_stripped: bool = False) -> Path:
     """Get the path to the MNI template for the given modality.
 
     If the file can be found locally in the resources folder, it is
@@ -352,6 +357,10 @@ def get_mni_template(modality: str) -> Path:
     ----------
     modality : str
         t1 or flair depending on which template is desired.
+
+    skull_stripped : bool, optional
+        If True, return a brain-only template suitable for registration of
+        skull-stripped images. Default=False.
 
     Returns
     -------
@@ -366,25 +375,59 @@ def get_mni_template(modality: str) -> Path:
         If the template could not be retrieved locally or remotely.
     """
     if modality.lower() == "t1":
-        return _get_mni_template_t1()
+        return _get_mni_template_t1(skull_stripped)
     if modality.lower() == "flair":
-        return _get_mni_template_flair()
+        return _get_mni_template_flair(skull_stripped)
     raise ValueError(f"No MNI template available for modality {modality}.")
 
 
-def _get_mni_template_t1() -> Path:
+def _get_mni_template_t1(skull_stripped: bool = False) -> Path:
     return _get_file_locally_or_download(
-        filename="mni_icbm152_t1_tal_nlin_sym_09c.nii",
-        url="https://aramislab.paris.inria.fr/files/data/img_t1_linear/",
-        expected_checksum="93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34",
+        filename=(
+            "mni_icbm152_t1_tal_nlin_sym_09c_brain.nii.gz"
+            if skull_stripped
+            else "mni_icbm152_t1_tal_nlin_sym_09c.nii"
+        ),
+        url=(
+            "https://raw.githubusercontent.com/aramis-lab/clinica/dev/clinica/resources/templates/"
+            if skull_stripped
+            else "https://aramislab.paris.inria.fr/files/data/img_t1_linear/"
+        ),
+        expected_checksum=(
+            "e68a6936e0a34679147e1bc512c801c0af611c43305105a5353764fa8b7737b4"
+            if skull_stripped
+            else "93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34"
+        ),
+        resource_folder=(
+            Path(__file__).parent.parent / "resources" / "templates"
+            if skull_stripped
+            else None
+        ),
     )
 
 
-def _get_mni_template_flair() -> Path:
+def _get_mni_template_flair(skull_stripped: bool = False) -> Path:
     return _get_file_locally_or_download(
-        filename="GG-853-FLAIR-1.0mm.nii.gz",
-        url="https://aramislab.paris.inria.fr/files/data/img_flair_linear/",
-        expected_checksum="b1d2d359a4c3671685227bb14014ce50ac232012b628335a4c049e2911c64ce1",
+        filename=(
+            "GG-853-FLAIR-1.0mm_brain.nii.gz"
+            if skull_stripped
+            else "GG-853-FLAIR-1.0mm.nii.gz"
+        ),
+        url=(
+            "https://raw.githubusercontent.com/aramis-lab/clinica/dev/clinica/resources/templates/"
+            if skull_stripped
+            else "https://aramislab.paris.inria.fr/files/data/img_flair_linear/"
+        ),
+        expected_checksum=(
+            "b1872afd0a88be2980c37dcc70f27a470c12a6a94580bc564efc986033cfb823"
+            if skull_stripped
+            else "b1d2d359a4c3671685227bb14014ce50ac232012b628335a4c049e2911c64ce1"
+        ),
+        resource_folder=(
+            Path(__file__).parent.parent / "resources" / "templates"
+            if skull_stripped
+            else None
+        ),
     )
 
 
