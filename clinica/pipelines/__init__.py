@@ -5,7 +5,6 @@ from . import (
     machine_learning,
     machine_learning_spatial_svm,
     pet,
-    pet_surface,
     statistics_surface,
     statistics_volume,
     statistics_volume_correction,

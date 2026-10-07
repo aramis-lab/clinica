@@ -49,7 +49,7 @@ def cli(
 
     from clinica.utils.ux import print_end_pipeline
 
-    from .pet_surface_pipeline import PetSurface
+    from .pipeline import PetSurface
 
     parameters = {
         "acq_label": acq_label,

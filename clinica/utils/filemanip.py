@@ -1,6 +1,6 @@
 from os import PathLike
 from pathlib import Path
-from typing import Callable, List, Optional, Union
+from typing import Callable, Optional, Union
 
 from clinica.dataset import Visit
 
@@ -21,6 +21,8 @@ __all__ = [
     "save_participants_sessions",
     "unzip_nii",
     "zip_nii",
+    "copy_file",
+    "move_file",
 ]
 
 
@@ -645,3 +647,83 @@ def delete_directories_task(directories: list) -> None:
     from clinica.utils.filemanip import delete_directories  # noqa
 
     return delete_directories(directories)
+
+
+def move_file(src: Path, dst: Path):
+    """Move file src to dst.
+
+    Parameters
+    ----------
+    src : Path
+        The path to the source file to be moved.
+
+    dst : Path
+        The path to the destination file.
+
+    Raises
+    ------
+    FileNotFoundError :
+        If the source file does not exist.
+        If the destination file does not exist after moving.
+    """
+    import shutil
+
+    from clinica.utils.stream import cprint, log_and_raise, log_and_warn
+
+    if not src.exists():
+        error_msg = f"File {src} is missing. Something wrong might have occurred prior to this step."
+        log_and_raise(error_msg, FileNotFoundError)
+    if dst.exists():
+        warning_msg = (
+            f"File {dst} already exists and will be overwritten with file {src}."
+        )
+        log_and_warn(warning_msg, Warning)
+    shutil.move(str(src), str(dst))
+    cprint(f"Moved {src} to {dst}.", lvl="debug")
+    if not dst.exists():
+        error_msg = f"Moving {src} to {dst} failed as file {dst} is missing."
+        log_and_raise(error_msg, FileNotFoundError)
+
+
+def copy_file(src: Path, dst: Path, exist_ok: bool = False):
+    """Copy file src to dst.
+
+    Parameters
+    ----------
+    src : Path
+        The path to the source file to be copied.
+
+    dst : Path
+        The path to the destination file or folder.
+        If a folder, the name of the file will be the same as src.
+
+    exist_ok : bool, optional
+        Whether to raise an error or not if the destination file
+        already exists. Default=False.
+
+    Raises
+    ------
+    FileNotFoundError :
+        If the source file does not exist.
+
+    IOError :
+        If the destination file already exists and 'exist_ok' is set to False.
+        If the destination file does not exist after copying.
+    """
+    import shutil
+
+    from clinica.utils.stream import cprint, log_and_raise
+
+    if not src.is_file():
+        error_msg = f"File {src} does not exist and cannot by copied to {dst}."
+        log_and_raise(error_msg, FileNotFoundError)
+    if dst.is_dir():
+        dst = dst / src.name
+    if dst.exists() and not exist_ok:
+        error_msg = f"File {dst} already exists. Set 'exist_ok' to True to overwrite with source file {src}."
+        log_and_raise(error_msg, IOError)
+    shutil.copy(str(src), str(dst))
+    cprint(f"Copied {src} to {dst}.", lvl="debug")
+    if not dst.exists():
+        error_msg = f"An error occurred while copying {src} to {dst}. {dst} seems to be missing."
+        log_and_raise(error_msg, IOError)
