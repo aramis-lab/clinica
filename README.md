@@ -47,7 +47,7 @@
 
 ## About The Project
 
-Clinica is a software platform for clinical research studies involving patients
+Clinico is a software platform for clinical research studies involving patients
 with neurological and psychiatric diseases and the acquisition of multimodal
 data (neuroimaging, clinical and cognitive evaluations, genetics...),
 most often with longitudinal follow-up.
