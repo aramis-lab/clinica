@@ -107,6 +107,18 @@ For participants with multiple T1-weighted images available, the average of the 
 
 ## Using the converter
 
+!!! warning "Check image orientation"
+    Some OASIS-3 images may have missing spatial orientation metadata. Check the
+    `qform_code` and `sform_code` fields in the NIfTI header. A value of `0`
+    means that the corresponding transform is not defined. If both codes are
+    `0`, NiBabel uses a fallback affine rather than a qform or sform transform.
+    See the [NiBabel documentation](
+        https://nipy.org/nibabel/nifti_images.html#the-nifti-affines).
+
+    The converter copies the image files into BIDS. Check their orientation and
+    alignment before using them in downstream pipelines; conversion does not
+    establish missing orientation information.
+
 The converter can be run with the following command line:
 
 ```Text
