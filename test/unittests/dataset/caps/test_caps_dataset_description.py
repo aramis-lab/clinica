@@ -90,7 +90,7 @@ def test_caps_dataset_description(tmp_path, mocker):
         "BIDSVersion": "1.7.0",
         "CAPSVersion": "1.0.0",
         "DatasetType": "derivative",
-        "Processing": [
+        "GeneratedBy": [
             {
                 "Name": "processing-1",
                 "Date": "2024-08-06T16:30:00",
@@ -111,7 +111,7 @@ def test_caps_dataset_description(tmp_path, mocker):
         "BIDSVersion": "1.7.0",
         "CAPSVersion": "1.0.0",
         "DatasetType": "derivative",
-        "Processing": [
+        "GeneratedBy": [
             {
                 "Name": "processing-1",
                 "Date": "2024-08-06T16:30:00",
@@ -136,6 +136,101 @@ def test_caps_dataset_description(tmp_path, mocker):
     assert len(desc.processing) == 1
     desc.delete_processing("processing-2")
     assert len(desc.processing) == 0
+
+
+@pytest.mark.parametrize("field", ["GeneratedBy", "Processing"])
+@pytest.mark.parametrize("reader", ["from_dict", "from_file"])
+def test_read_processing_metadata_formats(tmp_path, mocker, field, reader):
+    from clinica.dataset import CAPSDatasetDescription
+
+    mock_processing_metadata(mocker)
+    original = CAPSDatasetDescription.from_values(name="my caps dataset")
+    original.add_processing("processing-1", str(tmp_path / "bids"))
+    values = {
+        "Name": "my caps dataset",
+        "BIDSVersion": "1.7.0",
+        "CAPSVersion": "1.0.0",
+        "DatasetType": "derivative",
+        field: [json.loads(str(original.processing[0]))],
+    }
+    unchanged = json.loads(json.dumps(values))
+
+    if reader == "from_dict":
+        desc = CAPSDatasetDescription.from_dict(values)
+    else:
+        path = tmp_path / "dataset_description.json"
+        path.write_text(json.dumps(values))
+        desc = CAPSDatasetDescription.from_file(path)
+
+    assert values == unchanged
+    assert len(desc.processing) == 1
+    assert desc.processing[0] == original.processing[0]
+    written = json.loads(str(desc))
+    assert written["GeneratedBy"] == unchanged[field]
+    assert "Processing" not in written
+
+
+def test_generated_by_takes_precedence_over_legacy_processing():
+    from clinica.dataset import CAPSDatasetDescription
+
+    values = {
+        "Name": "my caps dataset",
+        "BIDSVersion": "1.7.0",
+        "CAPSVersion": "1.0.0",
+        "DatasetType": "derivative",
+        "GeneratedBy": [],
+        "Processing": [
+            {
+                "Name": "legacy-processing",
+                "Date": "2024-08-06T16:30:00",
+                "Author": "John Doe",
+                "Machine": "my machine",
+                "InputPath": "bids",
+                "ClinicaVersion": "0.9.0",
+                "Dependencies": [],
+            }
+        ],
+    }
+
+    desc = CAPSDatasetDescription.from_dict(values)
+
+    assert desc.processing == []
+    assert len(values["Processing"]) == 1
+    assert json.loads(str(desc))["GeneratedBy"] == []
+
+
+def test_append_processing_to_legacy_dataset_description(tmp_path, mocker):
+    from clinica.dataset import CAPSDatasetDescription, write_caps_dataset_description
+
+    mock_processing_metadata(mocker)
+    initialize_input_dir(tmp_path / "bids")
+    caps_dir = tmp_path / "caps"
+    caps_dir.mkdir()
+    original = CAPSDatasetDescription.from_values(name="my caps dataset")
+    original.add_processing("processing-1", str(tmp_path / "bids"))
+    legacy = {
+        "Name": "my caps dataset",
+        "BIDSVersion": "1.7.0",
+        "CAPSVersion": "1.0.0",
+        "DatasetType": "derivative",
+        "Processing": [json.loads(str(original.processing[0]))],
+    }
+    (caps_dir / "dataset_description.json").write_text(json.dumps(legacy))
+
+    write_caps_dataset_description(
+        tmp_path / "bids",
+        caps_dir,
+        processing_name="processing-2",
+        dataset_name="my caps dataset",
+    )
+
+    written = json.loads((caps_dir / "dataset_description.json").read_text())
+    assert [entry["Name"] for entry in written["GeneratedBy"]] == [
+        "processing-1",
+        "processing-2",
+    ]
+    assert written["GeneratedBy"][0] == legacy["Processing"][0]
+    assert "Processing" not in written
 
 
 def initialize_input_dir(folder: Path):
@@ -166,7 +261,7 @@ def test_write_caps_dataset_description(tmp_path, mocker):
         "BIDSVersion": "1.7.0",
         "CAPSVersion": "1.0.0",
         "DatasetType": "derivative",
-        "Processing": [
+        "GeneratedBy": [
             {
                 "Name": "foo",
                 "Date": "2024-08-06T16:30:00",
@@ -328,7 +423,7 @@ def test_write_caps_dataset_description_multiple_processing(tmp_path, mocker):
         "BIDSVersion": "1.7.0",
         "CAPSVersion": "1.0.0",
         "DatasetType": "derivative",
-        "Processing": [
+        "GeneratedBy": [
             {
                 "Name": "foo",
                 "Date": "2024-08-06T16:30:00",
@@ -364,7 +459,7 @@ def test_write_caps_dataset_description_multiple_processing(tmp_path, mocker):
         "BIDSVersion": "1.7.0",
         "CAPSVersion": "1.0.0",
         "DatasetType": "derivative",
-        "Processing": [
+        "GeneratedBy": [
             {
                 "Name": "foo",
                 "Date": "2024-08-06T16:30:00",
