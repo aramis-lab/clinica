@@ -14,6 +14,11 @@ This document present the specifications of the CAPS format version `1.0.0`.
 !!! tip "File _dataset_description.json_"
     For any question about this file see [this section](../BIDS.md#the-dataset_descriptionjson-file) in our BIDS specifications.
 
+Processing history is stored in the `GeneratedBy` field of
+`dataset_description.json`. Older CAPS descriptions using `Processing` remain
+readable and use `GeneratedBy` when updated. If both fields are present,
+`GeneratedBy` takes precedence.
+
 ## Subjects and Groups folders
 
 In the following, brackets `[`/`]` will denote optional key/value pairs in the filename, while accolades `{`/`}` will indicate a list of compulsory values (e.g. `hemi-{left|right}` means that the key `hemi` only accepts `left` or `right` as values).
