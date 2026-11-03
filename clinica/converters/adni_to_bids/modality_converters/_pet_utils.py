@@ -110,7 +110,11 @@ def get_images_pet(
             sel_image = averaged_pet_meta.iloc[0]
             original = False
 
-        phase = "ADNI1" if modality == "PIB-PET" else qc_visit.Phase
+        phase = (
+            "ADNI1"
+            if modality == "PIB-PET"
+            else qc_visit[next(c for c in qc_visit.index if c.lower() == "phase")]
+        )
         sequence = replace_special_characters_with_symbol(
             sel_image.image_description, symbol="_"
         )
