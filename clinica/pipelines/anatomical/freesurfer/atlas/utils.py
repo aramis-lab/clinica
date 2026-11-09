@@ -8,6 +8,7 @@ def compute_atlas(
     to_process_with_atlases: tuple,
     path_to_atlas: Path,
 ) -> tuple[Path, str, str]:
+    import os
     import subprocess
     from pathlib import Path
     from tempfile import mkdtemp
@@ -77,16 +78,20 @@ def compute_atlas(
                 f"processed with {to_process_with_atlases[0]}",
                 lvl="warning",
             )
-        mris_ca_label_command = (
-            f"mris_ca_label -sdir {substitute_dir} {subject_id} {hemisphere} "
-            f"{freesurfer_cross}/surf/{hemisphere}.sphere.reg {path} {output_path_annot}"
+        mris_ca_label_command = [
+            "mris_ca_label", "-sdir", str(substitute_dir), subject_id, hemisphere,
+            f"{freesurfer_cross}/surf/{hemisphere}.sphere.reg", str(path),
+            str(output_path_annot),
+        ]
+        subprocess.run(mris_ca_label_command, capture_output=True)
+        mris_anatomical_stats_command = [
+            "mris_anatomical_stats", "-a", str(output_path_annot),
+            "-f", str(output_path_stats), "-b", subject_id, hemisphere,
+        ]
+        subprocess.run(
+            mris_anatomical_stats_command, capture_output=True,
+            env={**os.environ, "SUBJECTS_DIR": str(substitute_dir)},
         )
-        subprocess.run(mris_ca_label_command, shell=True, capture_output=True)
-        mris_anatomical_stats_command = (
-            f"export SUBJECTS_DIR={substitute_dir}; "
-            f"mris_anatomical_stats -a {output_path_annot} -f {output_path_stats} -b {subject_id} {hemisphere}"
-        )
-        subprocess.run(mris_anatomical_stats_command, shell=True, capture_output=True)
         image_id, atlas = (
             to_process_with_atlases[1],
             to_process_with_atlases[0],
