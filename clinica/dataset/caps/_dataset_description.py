@@ -143,7 +143,7 @@ class CAPSDatasetDescription:
         The dataset type.
 
     processing : List of CAPSProcessingDescription
-        The list of processing pipelines that have been run.
+        The list of processing pipelines that have been run, stored as GeneratedBy.
     """
 
     name: str
@@ -248,19 +248,7 @@ class CAPSDatasetDescription:
 
     @classmethod
     def from_dict(cls, values: dict):
-        processing = []
-        if "Processing" in values:
-            processing = [
-                CAPSProcessingDescription.from_dict(processing)
-                for processing in values["Processing"]
-            ]
-        return cls(
-            values["Name"],
-            values["BIDSVersion"],
-            values["CAPSVersion"],
-            DatasetType(values["DatasetType"]),
-            processing,
-        )
+        return converter.structure(values, cls)
 
     def is_compatible_with(
         self, other, policy: Optional[Union[str, VersionComparisonPolicy]] = None
@@ -345,7 +333,10 @@ converter.register_unstructure_hook(
     caps_processing_field_renaming_unstructure_hook,
 )
 caps_dataset_description_field_renaming = {
-    a.name: override(rename=_rename(a.name)) for a in fields(CAPSDatasetDescription)
+    a.name: override(
+        rename="GeneratedBy" if a.name == "processing" else _rename(a.name)
+    )
+    for a in fields(CAPSDatasetDescription)
 }
 caps_dataset_field_renaming_unstructure_hook = make_dict_unstructure_fn(
     CAPSDatasetDescription,
@@ -386,9 +377,17 @@ caps_dataset_field_renaming_structure_hook = make_dict_structure_fn(
     converter,
     **caps_dataset_description_field_renaming,
 )
+
+
+def _structure_caps_dataset_description(values: dict, cls):
+    # Read older CAPS descriptions without changing the caller's dictionary.
+    if "GeneratedBy" not in values and "Processing" in values:
+        values = {**values, "GeneratedBy": values["Processing"]}
+    return caps_dataset_field_renaming_structure_hook(values, cls)
+
+
 converter.register_structure_hook(
-    CAPSDatasetDescription,
-    caps_dataset_field_renaming_structure_hook,
+    CAPSDatasetDescription, _structure_caps_dataset_description
 )
 
 
