@@ -42,6 +42,18 @@ For each subject, among the multiple T1w MR images available, we select the aver
 
 ## Using the converter
 
+!!! warning "Check image orientation"
+    Some OASIS images may have missing spatial orientation metadata. For NIfTI
+    images, check the `qform_code` and `sform_code` header fields. A value of
+    `0` means that the corresponding transform is not defined. If both codes are
+    `0`, NiBabel uses a fallback affine rather than a qform or sform transform.
+    See the [NiBabel documentation](
+        https://nipy.org/nibabel/nifti_images.html#the-nifti-affines).
+
+    The OASIS-1 converter sets the qform and sform when writing NIfTI output.
+    Check the orientation and alignment of the converted images before using
+    them in downstream pipelines; nonzero codes alone do not verify alignment.
+
 The converter can be run with the following command line:
 
 ```Text
