@@ -35,6 +35,16 @@ def _get_protocol_to_bids_df() -> pd.DataFrame:
                 "modality": "pet",
                 "trc_label": "11CPIB",
             },
+            "FDG_cr_meancps": {
+                "datatype": "pet",
+                "modality": "pet",
+                "trc_label": "18FFDG",
+            },
+            "PIB_cr_meancps": {
+                "datatype": "pet",
+                "modality": "pet",
+                "trc_label": "11CPIB",
+            },
         },
         orient="index",
     )
@@ -110,10 +120,16 @@ def _source_session_id_to_bids(dataframe: pd.DataFrame) -> pd.Series:
 def _find_clinical_data(sourcedata: Path) -> Iterator[tuple[str, Path, dict[str, str]]]:
     from csv import DictReader
 
-    for f in sourcedata.rglob("*HABS_DataRelease*.csv"):
+    for f in sourcedata.rglob("*.csv"):
+        if "HABS_DataRelease" in f.name:  # e.g. Demographics_HABS_DataRelease_PDR3.csv
+            name = f.name.split("_")[0]
+        elif f.name.startswith("HABS_PDR3_") and "dictionary" not in f.name:
+            name = f.name.split("_")[2]  # e.g. HABS_PDR3_demographics.csv
+        else:
+            continue
         header = DictReader(open(f, encoding="utf-8-sig")).fieldnames
         yield (
-            f.name.split("_")[0],
+            name[0].upper() + name[1:].removesuffix(".csv"),
             f.relative_to(sourcedata),
             {
                 header[0]: "source_participant_id",
