@@ -25,6 +25,26 @@
 !!! warning "Supported ADNI versions"
     Clinica is currently able to convert ADNI 1, GO, 2 and 3. It is not ready for ADNI 4.
 
+## Quick start
+
+You need two extracted input folders and a separate destination for the converted dataset.
+
+| Argument | What to provide |
+| --- | --- |
+| `DATASET_DIRECTORY` | The root of the extracted ADNI imaging download, containing the participant folders. |
+| `CLINICAL_DATA_DIRECTORY` | The folder containing the extracted clinical CSV files. Use a compatible export as described in the warning above. |
+| `BIDS_DIRECTORY` | The destination for the converted dataset. |
+
+For example, to convert only T1-weighted MRI:
+
+```bash
+clinica convert adni-to-bids -m T1 "adni-images" "adni-clinical" "adni-bids"
+```
+
+Replace the three example paths with your own. Omitting `-m` selects all supported modalities. See [optional parameters](#optional-parameters) for other ways to limit the conversion.
+
+Look in `adni-bids` for a dataset-level `participants.tsv` and participant folders containing session metadata and converted scans. For this example, converted T1-weighted images appear in the session's `anat` folder. The actual participant and session folders depend on the data available for conversion.
+
 ## Dependencies
 
 If you only [installed the core of Clinica](../Software/Installation.md), this pipeline needs the installation of the [**dcm2niix**](../Software/Third-party.md#dcm2nix) DICOM to NIfTI converter.
@@ -186,7 +206,7 @@ Due to the high computational time required for converting all the modalities of
 - `PET_TAU` for Flortaucipir (AV1451) PET
 - `FMAP` for Field Mapping
 ___
-`--pet_preprocessing_step` / `-pps` : this option allows to select the desired adni pet preprocessing step. Options are :
+`--pet-preprocessing-step` / `-pps` : this option allows to select the desired adni pet preprocessing step. Options are :
 
 - 0 : ADNI Brain PET: Raw ;
 - 1 : Co-registered Dynamic ;
