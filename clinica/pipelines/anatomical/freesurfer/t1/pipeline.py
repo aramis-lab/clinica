@@ -20,7 +20,7 @@ class T1FreeSurfer(Pipeline):
     def get_processed_images(
         caps_directory: Path, subjects: List[str], sessions: List[str]
     ) -> List[str]:
-        from clinica.utils.filemanip import extract_image_ids
+        from clinica.utils.filemanip import get_subject_id
         from clinica.utils.input_files import T1_FS_DESTRIEUX
         from clinica.utils.inputs import clinica_file_reader
 
@@ -29,7 +29,10 @@ class T1FreeSurfer(Pipeline):
             t1_freesurfer_files, _ = clinica_file_reader(
                 subjects, sessions, caps_directory, T1_FS_DESTRIEUX
             )
-            image_ids = extract_image_ids(t1_freesurfer_files)
+            image_ids = [
+                get_subject_id(Path(file).relative_to(caps_directory).as_posix())
+                for file in t1_freesurfer_files
+            ]
         return image_ids
 
     def _check_pipeline_parameters(self) -> None:
