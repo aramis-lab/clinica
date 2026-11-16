@@ -25,6 +25,19 @@ Each record consists of the same number of fields, and these are separated by co
 
 - [wikipedia](https://en.wikipedia.org/wiki/Comma-separated_values)
 
+#### FMAP
+
+**FMAP** stands for *Field Map*.
+
+A field map describes variations in the magnetic field during an MRI scan.
+B0 field maps can be used to correct image distortions caused by these
+variations, for example in diffusion-weighted imaging.
+
+##### References
+
+- [BIDS specification: fieldmap data](https://bids-specification.readthedocs.io/en/stable/modality-specific-files/magnetic-resonance-imaging-data.html#fieldmap-data)
+- [Clinica: DWI preprocessing](Pipelines/DWI_Preprocessing.md)
+
 #### fMRI
 
 **fMRI** stands for *Functional Magnetic Resonance Imaging*.
