@@ -25,6 +25,18 @@ Each record consists of the same number of fields, and these are separated by co
 
 - [wikipedia](https://en.wikipedia.org/wiki/Comma-separated_values)
 
+#### DTI
+
+**DTI** stands for *Diffusion Tensor Imaging*.
+
+It is an MRI technique that models the diffusion of water in tissue.
+Clinica's `dwi-dti` pipeline computes DTI-based measures from preprocessed
+diffusion-weighted images to help study the brain's white matter.
+
+##### References
+
+- [Clinica: DTI-based processing](Pipelines/DWI_DTI.md)
+
 #### fMRI
 
 **fMRI** stands for *Functional Magnetic Resonance Imaging*.
