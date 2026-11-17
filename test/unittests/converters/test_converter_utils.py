@@ -27,9 +27,9 @@ def _create_participants_spec(tmp_path: Path) -> Path:
             "ADNI": [np.nan, "PTID", np.nan, "PTGENDER", "APGEN1"],
             "ADNI location": [
                 np.nan,
-                "ADNIMERGE.csv",
+                "ADNIMERGE",
                 np.nan,
-                "ADNIMERGE.csv",
+                "ADNIMERGE",
                 "APOERES.csv",
             ],
             "OASIS": [np.nan, "ID", np.nan, "M/F", np.nan],

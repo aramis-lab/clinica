@@ -240,7 +240,7 @@ def _filter_subj_bids(
     # preprocess the column that contains the subjects ids.
     # todo : use id class here ?
     bids_ids = [x[8:] for x in bids_ids if "sub-ADNI" in x]
-    if location == "ADNIMERGE.csv":
+    if "ADNIMERGE" in location:
         df_files["RID"] = df_files["PTID"].apply(
             lambda x: _remove_space_and_symbols(x)[4:]
         )
@@ -418,7 +418,7 @@ def create_adni_sessions_dict(
             # Filter rows with invalid session IDs.
             df_filtered.dropna(subset="session_id", inplace=True)
 
-            if location == "ADNIMERGE.csv":
+            if "ADNIMERGE" in location:
                 df_filtered["AGE"] = df_filtered.apply(lambda x: _update_age(x), axis=1)
             df_subj_session = _update_sessions_df(
                 df_subj_session, df_filtered, df_sessions, location
@@ -563,11 +563,21 @@ def create_adni_scans_files(conversion_path: Path, bids_subjs_paths: list[Path])
                     conversion_df = converted_dict[converted_mod]
                     try:
                         scan_id = conversion_df.loc[(subject_id, viscode), "Image_ID"]
+                        scan_id = (
+                            scan_id.unique()[0]
+                            if isinstance(scan_id, pd.Series)
+                            else scan_id
+                        )
                         scans_df["scan_id"] = scan_id
                         if "Field_Strength" in conversion_df.columns.values:
                             field_strength = conversion_df.loc[
                                 (subject_id, viscode), "Field_Strength"
                             ]
+                            field_strength = (
+                                field_strength.unique()[0]
+                                if isinstance(field_strength, pd.Series)
+                                else field_strength
+                            )
                             scans_df["mri_field"] = field_strength
                     except KeyError:
                         cprint(

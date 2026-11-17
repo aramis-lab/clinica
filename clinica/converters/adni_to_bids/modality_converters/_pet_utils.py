@@ -17,10 +17,10 @@ def load_all_images_metadata(csv_dir: Path) -> pd.DataFrame:
 
     Returns: DataFrame containing main clinical data for PET images.
     """
-    from clinica.converters._utils import load_clinical_csv
+    from clinica.converters._utils import load_clinical_csv, load_manifest_metadata
 
     all_images = load_clinical_csv(csv_dir, "All_Images")
-    manifest = load_clinical_csv(csv_dir, "Manifest")
+    manifest = load_manifest_metadata(csv_dir)
 
     all_images = all_images.merge(
         manifest[["image_id", "series_id"]], on="image_id", how="left"

@@ -98,41 +98,39 @@ def _compute_flair_paths(
     """
     from .._utils import load_clinical_csv
     from ._image_path_utils import find_image_path
-    from ._visits_utils import visits_to_timepoints
+    from ._mri_utils import load_all_images_metadata
 
     flair_df = _initialize_flair_df()
     flair_dfs_list = []
     # Loading needed .csv files
-    adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
     mayo_mri_qc = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_IMAGEQC_05_07_15")
-    mri_list = load_clinical_csv(csv_dir, "MRILIST")
+    all_images = load_all_images_metadata(csv_dir)
 
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == "AFL"]
 
     # Selecting FLAIR DTI images that are not MPR
-    mri_list = mri_list[mri_list.SEQUENCE.str.contains("flair", case=False, na=False)]
-    mri_list = mri_list[
-        mri_list.SEQUENCE.map(lambda x: not any(subs in x for subs in ("_MPR_",)))
+    all_images = all_images[
+        all_images.image_description.str.contains("FLAIR", case=False, na=False)
+    ]
+    all_images = all_images[
+        all_images.image_description.map(
+            lambda x: not any(subs in x for subs in ("MPR",))
+        )
     ]
     for subject in subjects:
         # Filter ADNIMERGE, MRI_LIST and QC for only one subject and sort the rows/visits by examination date
-        adnimerge_subj = adni_merge[adni_merge.PTID == subject]
-        adnimerge_subj = adnimerge_subj.sort_values("EXAMDATE")
-
-        mri_list_subj = mri_list[mri_list.SUBJECT == subject]
-        mri_list_subj = mri_list_subj.sort_values("SCANDATE")
+        all_images_subj = all_images[
+            (all_images.subject_id == subject) & (all_images.modality == "MRI")
+        ]
+        all_images_subj = all_images_subj.sort_values("image_date")
 
         mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(subject[-4:])]
 
-        # Obtain corresponding timepoints for the subject visits
-        visits = visits_to_timepoints(subject, mri_list_subj, adnimerge_subj, "FLAIR")
-
-        for visit_info in visits.keys():
-            timepoint = visit_info[0]
-            visit_str = visits[visit_info]
-            visit_mri_list = mri_list_subj[mri_list_subj.VISIT == visit_str]
+        for _, row in all_images_subj.iterrows():
+            timepoint = row["image_visit"]
+            visit_all_images = all_images_subj[all_images_subj.image_visit == timepoint]
             flair = _select_flair_image(
-                subject, timepoint, visits[visit_info], visit_mri_list, mayo_mri_qc_subj
+                subject, timepoint, visit_all_images, mayo_mri_qc_subj
             )
             if flair is not None:
                 row_to_append = pd.DataFrame(flair, index=["i"])
@@ -162,7 +160,6 @@ def _initialize_flair_df() -> pd.DataFrame:
         [
             "Subject_ID",
             "VISCODE",
-            "Visit",
             "Sequence",
             "Scan_Date",
             "Study_ID",
@@ -204,9 +201,8 @@ def _get_known_conversion_errors() -> Iterable[tuple[str, str]]:
 
 def _select_flair_image(
     subject_id: str,
-    timepoint,
-    visit_str: str,
-    visit_mri_list: list,
+    timepoint: str,
+    visit_all_images: list,
     mri_qc_subj: pd.DataFrame,
 ) -> Optional[dict[str, Any]]:
     """Select a FLAIR image based on QC information.
@@ -219,13 +215,10 @@ def _select_flair_image(
     subject_id : str
         The subject identifier.
 
-    timepoint : ??
+    timepoint : str
         The visit code.
 
-    visit_str : str
-        The visit name.
-
-    visit_mri_list : list
+    visit_all_images : list
         A list of images metadata.
 
     mri_qc_subj : pd.DataFrame
@@ -240,21 +233,22 @@ def _select_flair_image(
 
     from ._qc_utils import select_image_qc
 
-    selected_image_id = select_image_qc(list(visit_mri_list.IMAGEUID), mri_qc_subj)
+    selected_image_id = select_image_qc(list(visit_all_images.image_id), mri_qc_subj)
     if selected_image_id is None:
         return None
-    selected_scan = visit_mri_list[visit_mri_list.IMAGEUID == selected_image_id].iloc[0]
+    selected_scan = visit_all_images[
+        visit_all_images.image_id == selected_image_id
+    ].iloc[0]
 
     return {
         "Subject_ID": subject_id,
         "VISCODE": timepoint,
-        "Visit": visit_str,
         "Sequence": replace_special_characters_with_symbol(
-            selected_scan.SEQUENCE, symbol="_"
+            selected_scan.image_description, symbol="_"
         ),
-        "Scan_Date": selected_scan["SCANDATE"],
-        "Study_ID": str(int(selected_scan.STUDYID)),
-        "Series_ID": str(int(selected_scan.SERIESID)),
-        "Image_ID": str(int(selected_scan.IMAGEUID)),
-        "Field_Strength": selected_scan.MAGSTRENGTH,
+        "Scan_Date": selected_scan["image_date"],
+        "Study_ID": str(int(selected_scan.study_id)),
+        "Series_ID": str(int(selected_scan.series_id)),
+        "Image_ID": str(int(selected_scan.image_id)),
+        "Field_Strength": selected_scan.MagneticFieldStrength,
     }

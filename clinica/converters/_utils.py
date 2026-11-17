@@ -471,7 +471,7 @@ def viscode_to_session(viscode: str, baseline_identifiers: Optional[set] = None)
     >>> viscode_to_session("m1234")
     'ses-M1234'
     """
-    baseline_identifiers = baseline_identifiers or {"bl", "m0"}
+    baseline_identifiers = baseline_identifiers or {"bl", "m0", "sc"}
     if viscode in baseline_identifiers:
         return "ses-M000"
     session_pattern = "^[m,M][0-9]*"
@@ -482,6 +482,36 @@ def viscode_to_session(viscode: str, baseline_identifiers: Optional[set] = None)
         "Expected a session identifier of the form 'MXXX', "
         f"or a baseline identifier among {baseline_identifiers}."
     )
+
+
+def load_manifest_metadata(clinical_dir: Path) -> pd.DataFrame:
+    """Load the Manifest metadata.
+
+    Parameters
+    ----------
+    clinical_dir: str
+        Directory containing the csv.
+
+    Returns
+    -------
+    pd.DataFrame:
+        Dataframe corresponding to the Manifest filename.
+    """
+    pattern = r"^(?:[^.]*_)?" + "Manifest" + r"(?:_\d{1,2}[A-Za-z]{3}\d{4})?.*\.csv$"
+
+    files_matching_pattern = [
+        f for f in clinical_dir.rglob("[!.]*.csv") if re.search(pattern, f.name)
+    ]
+
+    if not len(files_matching_pattern):
+        raise FileNotFoundError(f"No Manifest CSV files found in {clinical_dir}")
+
+    manifest = pd.concat(
+        [pd.read_csv(f) for f in sorted(files_matching_pattern)],
+        ignore_index=True,
+    )
+
+    return manifest
 
 
 def load_clinical_csv(clinical_dir: Path, filename: str) -> pd.DataFrame:

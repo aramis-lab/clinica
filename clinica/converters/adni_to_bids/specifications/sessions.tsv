@@ -1,33 +1,33 @@
 Field	BIDS CLINICA	BIDS format	BIDS type	ADNI	ADNI location
 BIDS session id	session_id	Keyword 'ses-' followed by the original session id of each dataset without special characters or symbols	string		
-Date of the examination	examination_date	YYYY-MM-DD HH:MM:SS	string	EXAMDATE	ADNIMERGE.csv/ADNIMERGE
-Age at the session	age		float	AGE	ADNIMERGE.csv/ADNIMERGE
-Protocol under which data was collected	current_study	"free format: ADNI1; ADNI2; ADNI3; ADNIGO"	string	COLPROT	ADNIMERGE.csv/ADNIMERGE
-Current Diagnosis	diagnosis	"string: CN (CN) ; MCI (MCI); Dementia (AD)"	string	DX	ADNIMERGE.csv/ADNIMERGE
-Average FDG-PET of angular, temporal and posterior cingulate	adni_fdg	Number (float)		FDG	ADNIMERGE.csv/ADNIMERGE
-Average PIB SUVR of frontal cortex, anterior cingulate, precuneus cortex and parietal cortex	adni_pib	Number (float)		PIB	ADNIMERGE.csv/ADNIMERGE
-Average AV45 SUVR of frontal, anterior cingulate, precuneus, and parietal cortex relative to cerebellum	adni_av45	Number (float)		AV45	ADNIMERGE.csv/ADNIMERGE
-Clinical Dementia Rating Scale - Sum of boxes	cdr_sb	"Number: 0;0.5;1;2;3"		CDRSB	ADNIMERGE.csv/ADNIMERGE
+Date of the examination	examination_date	YYYY-MM-DD HH:MM:SS	string	EXAMDATE	ADNIMERGE.csv
+Age at the session	age		float	AGE	ADNIMERGE.csv
+Protocol under which data was collected	current_study	"free format: ADNI1; ADNI2; ADNI3; ADNIGO"	string	COLPROT	ADNIMERGE.csv
+Current Diagnosis	diagnosis	"string: CN (CN) ; MCI (MCI); Dementia (AD)"	string	DX	ADNIMERGE.csv
+Average FDG-PET of angular, temporal and posterior cingulate	adni_fdg	Number (float)		FDG	ADNIMERGE.csv
+Average PIB SUVR of frontal cortex, anterior cingulate, precuneus cortex and parietal cortex	adni_pib	Number (float)		PIB	ADNIMERGE.csv
+Average AV45 SUVR of frontal, anterior cingulate, precuneus, and parietal cortex relative to cerebellum	adni_av45	Number (float)		AV45	ADNIMERGE.csv
+Clinical Dementia Rating Scale - Sum of boxes	cdr_sb	"Number: 0;0.5;1;2;3"		CDRSB	ADNIMERGE.csv
 Clinical Dementia Rating Scale - Global	cdr_global	"Number: 0;0.5;1;2;3"		CDGLOBAL	CDR.csv
-AD Assessment Scale - 11, classic 70 point total score excluding Q4 (Delayed Word Recall) and Q14 (Number Cancellation)	adas11	Number (float)		ADAS11	ADNIMERGE.csv/ADNIMERGE
-AD Assessment Scale - 13, 85 point total score including Q4 (Delayed Word Recall) and Q14 (Number Cancellation)	adas13	Number (float)		ADAS13	ADNIMERGE.csv/ADNIMERGE
-Mini-mental state exam	MMSE	Number	int	MMSE	ADNIMERGE.csv/ADNIMERGE
-Functional Activities Questionnaires	FAQ	Number		FAQ	ADNIMERGE.csv/ADNIMERGE
-UCSF Ventricule Volume	adni_ventricles_vol	Number (float)		Ventricles	ADNIMERGE.csv/ADNIMERGE
-UCSF Hippocampus Volume	adni_hippocampus_vol	Number (float)		Hippocampus	ADNIMERGE.csv/ADNIMERGE
-UCSF Whole Brain Volume	adni_brain_vol	Number (float)		WholeBrain	ADNIMERGE.csv/ADNIMERGE
-UCSF Entorhinal Volume	adni_entorhinal_vol	Number (float)		Entorhinal	ADNIMERGE.csv/ADNIMERGE
-Intracranial volume	adni_icv			ICV	ADNIMERGE.csv/ADNIMERGE
+AD Assessment Scale - 11, classic 70 point total score excluding Q4 (Delayed Word Recall) and Q14 (Number Cancellation)	adas11	Number (float)		ADAS11	ADNIMERGE.csv
+AD Assessment Scale - 13, 85 point total score including Q4 (Delayed Word Recall) and Q14 (Number Cancellation)	adas13	Number (float)		ADAS13	ADNIMERGE.csv
+Mini-mental state exam	MMSE	Number	int	MMSE	ADNIMERGE.csv
+Functional Activities Questionnaires	FAQ	Number		FAQ	ADNIMERGE.csv
+UCSF Ventricule Volume	adni_ventricles_vol	Number (float)		Ventricles	ADNIMERGE.csv
+UCSF Hippocampus Volume	adni_hippocampus_vol	Number (float)		Hippocampus	ADNIMERGE.csv
+UCSF Whole Brain Volume	adni_brain_vol	Number (float)		WholeBrain	ADNIMERGE.csv
+UCSF Entorhinal Volume	adni_entorhinal_vol	Number (float)		Entorhinal	ADNIMERGE.csv
+Intracranial volume	adni_icv			ICV	ADNIMERGE.csv
 					
-Rey's Auditory Verbal Learning Test - immediate	ravlt_immediate	Number (int)		RAVLT_immediate	ADNIMERGE.csv/ADNIMERGE
-MOntreal Cognitive Assessment Test	moca	Number (int)		MOCA	ADNIMERGE.csv/ADNIMERGE
+Rey's Auditory Verbal Learning Test - immediate	ravlt_immediate	Number (int)		RAVLT_immediate	ADNIMERGE.csv
+MOntreal Cognitive Assessment Test	moca	Number (int)		MOCA	ADNIMERGE.csv
 Trail and Making Test - Part A - Complete	TMT_A	Number (int)		TMT_PtA_Complete	ITEM.csv
 Trail and Making Test - Part B - Complete	TMT_B	Number (int)		TMT_PtB_Complete	ITEM.csv
 Logical Memory - Delayed Recall Total Number of Story Units Recalled	logmem_delay	Number (int)		LDELTOTAL	NEUROBAT.csv
 Logical Memory - Immediate Recall Total Number of Story Units Recalled	logmem_imm	Number (int)		LIMMTOTAL	NEUROBAT.csv
 Digit Symbol Substitution Test Score	dsst	Number (int)		DIGITSCOR	NEUROBAT.csv
 					
-AD Assessment Scale - Delayed Word Recall	adas_Q4	Number		ADASQ4	ADNIMERGE.csv/ADNIMERGE
+AD Assessment Scale - Delayed Word Recall	adas_Q4	Number		ADASQ4	ADNIMERGE.csv
 
 Item Level Data - ANART	anart_Q1	Number		ANART_Q1	ITEM.csv
 Item Level Data - ANART	anart_Q2	Number		ANART_Q2	ITEM.csv
@@ -80,11 +80,11 @@ Item Level Data - ANART	anart_Q48	Number		ANART_Q48	ITEM.csv
 Item Level Data - ANART	anart_Q49	Number		ANART_Q49	ITEM.csv
 Item Level Data - ANART	anart_Q50	Number		ANART_Q50	ITEM.csv
 					
-UCSF Fusiform Volume	adni_fusiform_vol	Number		Fusiform	ADNIMERGE.csv/ADNIMERGE
-UCSF Mid Temporal Volume	adni_midtemp_vol	Number		MidTemp	ADNIMERGE.csv/ADNIMERGE
-CSF level of beta-amyloid 1-42	adni_abeta	Number		ABETA	ADNIMERGE.csv/ADNIMERGE
-CSF level of total Tau	adni_tau	Number		TAU	ADNIMERGE.csv/ADNIMERGE
-CSF level of Tau phosphorylated at threonine 181	adni_ptau	Number		PTAU	ADNIMERGE.csv/ADNIMERGE
+UCSF Fusiform Volume	adni_fusiform_vol	Number		Fusiform	ADNIMERGE.csv
+UCSF Mid Temporal Volume	adni_midtemp_vol	Number		MidTemp	ADNIMERGE.csv
+CSF level of beta-amyloid 1-42	adni_abeta	Number		ABETA	ADNIMERGE.csv
+CSF level of total Tau	adni_tau	Number		TAU	ADNIMERGE.csv
+CSF level of Tau phosphorylated at threonine 181	adni_ptau	Number		PTAU	ADNIMERGE.csv
 					
 Clinical Dementia Rating Scale - Memory component	cdr_cdmemory			CDMEMORY	CDR.csv
 Clinical Dementia Rating Scale - Orientation component	cdr_cdorient			CDORIENT	CDR.csv

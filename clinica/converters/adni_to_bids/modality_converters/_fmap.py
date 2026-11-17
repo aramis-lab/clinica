@@ -96,12 +96,11 @@ def compute_fmap_path(
     import pandas as pd
 
     from ._image_path_utils import find_image_path
-    from ._visits_utils import visits_to_timepoints
+    from ._mri_utils import load_all_images_metadata
 
     fmap_col = [
         "Subject_ID",
         "VISCODE",
-        "Visit",
         "Sequence",
         "Scan_Date",
         "Study_ID",
@@ -111,7 +110,6 @@ def compute_fmap_path(
     ]
     fmap_df = pd.DataFrame(columns=fmap_col)
     fmap_dfs_list = []
-    adni_merge = load_clinical_csv(csv_dir, "ADNIMERGE")
 
     mayo_mri_qc = load_clinical_csv(csv_dir, "MAYOADIRL_MRI_IMAGEQC_05_07_15")
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == "fMRI"]
@@ -125,34 +123,28 @@ def compute_fmap_path(
         [mayo_mri_qc, mayo_mri_qc3], axis=0, ignore_index=True, sort=False
     )
 
-    mri_list = load_clinical_csv(csv_dir, "MRILIST")
+    all_images = load_all_images_metadata(csv_dir)
 
     # Selecting only fMRI images that are not Multiband
-    mri_list = mri_list[
-        mri_list.SEQUENCE.str.contains("apping")
+    all_images = all_images[
+        all_images.image_description.str.contains("apping")
     ]  # 'apping' includes all field map scans, but not others
 
     for subj in subjs_list:
         # Filter ADNIMERGE, MRI_LIST and QC for only one subject and sort the rows/visits by examination date
-        adnimerge_subj = adni_merge[adni_merge.PTID == subj]
-        adnimerge_subj = adnimerge_subj.sort_values("EXAMDATE")
-
-        mri_list_subj = mri_list[mri_list.SUBJECT == subj]
-        mri_list_subj = mri_list_subj.sort_values("SCANDATE")
+        all_images_subj = all_images[
+            (all_images.subject_id == subj) & (all_images.modality == "MRI")
+        ]
+        all_images_subj = all_images_subj.sort_values("image_date")
 
         mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(subj[-4:])]
 
-        # Obtain corresponding timepoints for the subject visits
-        visits = visits_to_timepoints(subj, mri_list_subj, adnimerge_subj, "FMAP")
+        for _, row in all_images_subj.iterrows():
+            timepoint = row["image_visit"]
 
-        for visit_info, visit_str in visits.items():
-            timepoint = visit_info[0]
+            visit_all_images = all_images_subj[all_images_subj.image_visit == timepoint]
 
-            visit_mri_list = mri_list_subj[mri_list_subj.VISIT == visit_str]
-
-            image = fmap_image(
-                subj, timepoint, visits[visit_info], visit_mri_list, mayo_mri_qc_subj
-            )
+            image = fmap_image(subj, timepoint, visit_all_images, mayo_mri_qc_subj)
 
             if image is not None:
                 row_to_append = pd.DataFrame(
@@ -227,8 +219,7 @@ def compute_fmap_path(
 def fmap_image(
     subject_id: str,
     timepoint: str,
-    visit_str: str,
-    visit_mri_list: list[pd.DataFrame],
+    visit_all_images: list[pd.DataFrame],
     mri_qc_subj: pd.DataFrame,
 ) -> Optional[dict]:
     """
@@ -238,8 +229,7 @@ def fmap_image(
     Args:
         subject_id: Subject identifier
         timepoint: Visit code
-        visit_str: Visit name
-        visit_mri_list: List of images metadata
+        visit_all_images: List of images metadata
         mri_qc_subj: Dataframe containing list of QC of scans for the subject
 
     Returns: dictionary - contains image metadata
@@ -250,25 +240,24 @@ def fmap_image(
     from ._qc_utils import select_image_qc
 
     mri_qc_subj.columns = [x.lower() for x in mri_qc_subj.columns]
-    sel_image = select_image_qc(list(visit_mri_list.IMAGEUID), mri_qc_subj)
+    sel_image = select_image_qc(list(visit_all_images.image_id), mri_qc_subj)
 
     if not sel_image:
         return None
 
-    sel_scan = visit_mri_list[visit_mri_list.IMAGEUID == sel_image].iloc[0]
+    sel_scan = visit_all_images[visit_all_images.image_id == sel_image].iloc[0]
 
     image_dict = {
         "Subject_ID": subject_id,
         "VISCODE": timepoint,
-        "Visit": visit_str,
         "Sequence": replace_special_characters_with_symbol(
-            sel_scan.SEQUENCE, symbol="_"
+            sel_scan.image_description, symbol="_"
         ),
-        "Scan_Date": sel_scan["SCANDATE"],
-        "Study_ID": str(int(sel_scan.STUDYID)),
-        "Series_ID": str(int(sel_scan.SERIESID)),
-        "Image_ID": str(int(sel_scan.IMAGEUID)),
-        "Field_Strength": sel_scan.MAGSTRENGTH,
+        "Scan_Date": sel_scan["image_date"],
+        "Study_ID": str(int(sel_scan.study_id)),
+        "Series_ID": str(int(sel_scan.series_id)),
+        "Image_ID": str(int(sel_scan.image_id)),
+        "Field_Strength": sel_scan.MagneticFieldStrength,
     }
 
     return image_dict
