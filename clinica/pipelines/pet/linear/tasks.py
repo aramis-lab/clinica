@@ -67,3 +67,22 @@ def rename_into_caps_task(
         str(transformation_filename_caps),
         pet_filename_in_t1w_caps,
     )
+
+
+def get_skull_stripping_from_reference_task(
+    image: str, skull_stripped_reference_mask: str
+) -> str:
+    from pathlib import Path
+
+    from clinica.pipelines.pet.linear.utils import get_skull_stripping_from_reference
+
+    return str(
+        get_skull_stripping_from_reference(
+            Path(image), Path(skull_stripped_reference_mask)
+        )
+    )
+
+
+def get_item_from_list(input_list: list, index_in_list: int) -> str:
+    assert len(input_list) == index_in_list + 1
+    return input_list[index_in_list]
