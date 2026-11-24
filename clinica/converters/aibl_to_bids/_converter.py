@@ -1,6 +1,7 @@
 """
 Convert the AIBL dataset (https://www.aibl.csiro.au/) into BIDS.
 """
+
 from pathlib import Path
 from typing import Optional
 
@@ -127,7 +128,7 @@ def _convert_images(
 
 
 def _warn_about_missing_files(files: list[list[Optional[Path]]]):
-    from clinica.utils.stream import cprint
+    from clinica.utils.stream import log_and_warn
 
     missing_files = []
     for files_for_given_modality in files:
@@ -138,7 +139,7 @@ def _warn_about_missing_files(files: list[list[Optional[Path]]]):
         msg = "The following file were not converted:\n" + "\n".join(
             (str(f) for f in missing_files)
         )
-        cprint(msg=msg, lvl="warning")
+        log_and_warn(msg, UserWarning)
 
 
 def _convert_clinical_data(input_clinical_data: Path, output_dataset: Path) -> None:
