@@ -365,11 +365,21 @@ def get_mni_template(modality: str) -> Path:
     FileNotFoundError:
         If the template could not be retrieved locally or remotely.
     """
+    if modality.lower() == "brain_mask":
+        return _get_mni_brain_mask()
     if modality.lower() == "t1":
         return _get_mni_template_t1()
     if modality.lower() == "flair":
         return _get_mni_template_flair()
     raise ValueError(f"No MNI template available for modality {modality}.")
+
+
+def _get_mni_brain_mask() -> Path:
+    return _get_file_locally_or_download(
+        filename="qc_pet_mask_brain.nii.gz",
+        url="https://aramislab.paris.inria.fr/files/data/masks/",
+        expected_checksum="e78a542da49755f5c9ba751b4acca725650396999a671831f0acd8fbf4b898e8",
+    )
 
 
 def _get_mni_template_t1() -> Path:
