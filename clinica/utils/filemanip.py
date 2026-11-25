@@ -396,6 +396,11 @@ def extract_image_ids(bids_or_caps_files: list[str]) -> list[str]:
     >>> extract_image_ids(["foo/bar/baz/sub-foo/ses-bar/foooo/sub-01_ses-M000_foo.json"])
     ['sub-01_ses-M000']
 
+    An underscore-separated ID can also appear in a parent directory:
+
+    >>> extract_image_ids(["foo/bar/baz/sub-foo_ses-bar/foooo/test.json"])
+    ['sub-foo_ses-bar']
+
     See also
     --------
     get_subject_id
