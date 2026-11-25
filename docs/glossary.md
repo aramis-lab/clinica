@@ -37,6 +37,19 @@ diffusion-weighted images to help study the brain's white matter.
 
 - [Clinica: DTI-based processing](Pipelines/DWI_DTI.md)
 
+#### FMAP
+
+**FMAP** stands for *Field Map*.
+
+A field map describes variations in the magnetic field during an MRI scan.
+B0 field maps can be used to correct image distortions caused by these
+variations, for example in diffusion-weighted imaging.
+
+##### References
+
+- [BIDS specification: fieldmap data](https://bids-specification.readthedocs.io/en/stable/modality-specific-files/magnetic-resonance-imaging-data.html#fieldmap-data)
+- [Clinica: DWI preprocessing](Pipelines/DWI_Preprocessing.md)
+
 #### fMRI
 
 **fMRI** stands for *Functional Magnetic Resonance Imaging*.
