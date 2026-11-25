@@ -144,6 +144,7 @@ def test_get_subject_id_error(filename):
             "foo/bar/baz/sub-foo/ses-bar/foooo/sub-01_ses-M000_foo.json",
             "sub-foo_ses-bar",
         ),
+        ("sub-01/ses-M000/sub-01/ses-M000/image.nii.gz", "sub-01_ses-M000"),
     ],
 )
 def test_get_subject_id(filename, expected):
@@ -164,6 +165,13 @@ def test_get_filename_no_ext(filename, expected):
     from clinica.utils.filemanip import get_filename_no_ext
 
     assert get_filename_no_ext(filename) == expected
+
+
+def test_get_subject_id_rejects_conflicting_folder_ids():
+    from clinica.utils.filemanip import get_subject_id
+
+    with pytest.raises(ValueError, match="more than one distinct"):
+        get_subject_id("sub-01/ses-M000/sub-02/ses-M001/image.nii.gz")
 
 
 def test_extract_image_ids_error():
@@ -188,10 +196,18 @@ def test_extract_image_ids():
                 "sub-01/ses-M000/pet/sub-01_ses-M000_trc-18FAV45_pet.nii.gz",
                 "foo/bar/baz/sub-foo/ses-bar/foooo/sub-01_ses-M000_foo.json",
                 "sub-01_ses-M000.tar.gz",
+                "sub-01_ses-M000/sub-01_ses-M000.nii.gz",
             ]
         )
-        == ["sub-01_ses-M000"] * 3
+        == ["sub-01_ses-M000"] * 4
     )
+
+
+def test_extract_image_ids_rejects_conflicting_ids():
+    from clinica.utils.filemanip import extract_image_ids
+
+    with pytest.raises(ValueError, match="more than one distinct"):
+        extract_image_ids(["sub-01_ses-M000/sub-02_ses-M001.nii.gz"])
 
 
 def test_extract_subjects_sessions_from_filename():

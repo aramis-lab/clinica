@@ -6,9 +6,7 @@ from clinica.pipelines.anatomical.freesurfer.t1.pipeline import T1FreeSurfer
 
 
 @pytest.mark.parametrize("caps_name", ["caps", "sub-other_ses-M999"])
-def test_get_processed_images_uses_caps_subject_and_session(
-    tmp_path, monkeypatch, caps_name
-):
+def test_get_processed_images_reports_conflicting_ids(tmp_path, monkeypatch, caps_name):
     monkeypatch.chdir(tmp_path)
     caps = Path(caps_name)
     output = (
@@ -28,6 +26,12 @@ def test_get_processed_images_uses_caps_subject_and_session(
         '{"DatasetType": "derivative"}', encoding="utf-8"
     )
 
-    assert T1FreeSurfer.get_processed_images(
-        caps, ["sub-01", "sub-02"], ["ses-M000", "ses-M000"]
-    ) == ["sub-01_ses-M000"]
+    subjects = ["sub-01", "sub-02"]
+    sessions = ["ses-M000", "ses-M000"]
+    if caps_name == "caps":
+        assert T1FreeSurfer.get_processed_images(caps, subjects, sessions) == [
+            "sub-01_ses-M000"
+        ]
+    else:
+        with pytest.raises(ValueError, match="more than one distinct"):
+            T1FreeSurfer.get_processed_images(caps, subjects, sessions)

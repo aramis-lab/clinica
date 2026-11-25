@@ -251,14 +251,21 @@ def save_participants_sessions(
 def _check_bids_or_caps_compliance(filename: str, sep: str):
     import re
 
-    m = re.search(sep.join([r"(sub-[a-zA-Z0-9]+)", r"(ses-[a-zA-Z0-9]+)"]), filename)
-    if not m:
+    pattern = sep.join([r"(sub-[a-zA-Z0-9]+)", r"(ses-[a-zA-Z0-9]+)"])
+    matches = list(re.finditer(pattern, filename))
+    if not matches:
         raise ValueError(
             f"Input filename {filename} is not in a BIDS or CAPS compliant format."
             " It does not contain the subject and session information."
         )
 
-    return m
+    if len({match.groups() for match in matches}) > 1:
+        raise ValueError(
+            f"Input filename {filename} contains more than one distinct "
+            "subject and session ID."
+        )
+
+    return matches[0]
 
 
 def get_subject_id(bids_or_caps_file: Union[str, Path]) -> str:
@@ -280,6 +287,11 @@ def get_subject_id(bids_or_caps_file: Union[str, Path]) -> str:
     -------
     subject_id: str
         The subject ID corresponding to the given file.
+
+    Raises
+    ------
+    ValueError
+        If the path contains no subject and session pair or conflicting pairs.
 
     Examples
     --------
@@ -355,10 +367,8 @@ def get_filename_no_ext(filename: Union[str, Path]) -> str:
 def extract_image_ids(bids_or_caps_files: list[str]) -> list[str]:
     """Extract the image IDs from a list of BIDS or CAPS files.
 
-    .. warning::
-        The image ID is the same as the subject ID from function
-        `get_subject_id()` but is extracted from the filename rather
-        than from the path. (See examples section).
+    This function looks for underscore-separated IDs, which usually appear
+    in the filename. A parent directory can also contain an ID in this form.
 
     Parameters
     ----------
@@ -370,13 +380,18 @@ def extract_image_ids(bids_or_caps_files: list[str]) -> list[str]:
     id_bids_or_caps_files: List[str]
         List of extracted image IDs.
 
+    Raises
+    ------
+    ValueError
+        If a file path contains no image ID or conflicting image IDs.
+
     Examples
     --------
     >>> extract_image_ids(["sub-01/ses-M000/pet/sub-01_ses-M000_trc-18FAV45_pet.nii.gz"])
     ['sub-01_ses-M000']
 
-    Beware, the image IDs is extracted from the filename and not from the folder names
-    as it is the case for `get_subject_id()`:
+    Unlike `get_subject_id()`, this function does not match a subject and
+    session written as two consecutive folders:
 
     >>> extract_image_ids(["foo/bar/baz/sub-foo/ses-bar/foooo/sub-01_ses-M000_foo.json"])
     ['sub-01_ses-M000']
