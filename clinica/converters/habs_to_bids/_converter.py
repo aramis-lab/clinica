@@ -35,6 +35,16 @@ def _get_protocol_to_bids_df() -> pd.DataFrame:
                 "modality": "pet",
                 "trc_label": "11CPIB",
             },
+            "FDG_cr_meancps": {
+                "datatype": "pet",
+                "modality": "pet",
+                "trc_label": "18FFDG",
+            },
+            "PIB_cr_meancps": {
+                "datatype": "pet",
+                "modality": "pet",
+                "trc_label": "11CPIB",
+            },
         },
         orient="index",
     )
@@ -110,10 +120,16 @@ def _source_session_id_to_bids(dataframe: pd.DataFrame) -> pd.Series:
 def _find_clinical_data(sourcedata: Path) -> Iterator[tuple[str, Path, dict[str, str]]]:
     from csv import DictReader
 
-    for f in sourcedata.rglob("*HABS_DataRelease*.csv"):
+    for f in sourcedata.rglob("*.csv"):
+        if "HABS_DataRelease" in f.name:  # e.g. Demographics_HABS_DataRelease_PDR3.csv
+            name = f.name.split("_")[0]
+        elif f.name.startswith("HABS_PDR3_") and "dictionary" not in f.name:
+            name = f.name.split("_")[2]  # e.g. HABS_PDR3_demographics.csv
+        else:
+            continue
         header = DictReader(open(f, encoding="utf-8-sig")).fieldnames
         yield (
-            f.name.split("_")[0],
+            name[0].upper() + name[1:].removesuffix(".csv"),
             f.relative_to(sourcedata),
             {
                 header[0]: "source_participant_id",
@@ -185,10 +201,15 @@ def _parse_imaging_data(paths: list[tuple[str, str]]) -> Optional[pd.DataFrame]:
         .drop(columns="source_participant_id")
         .assign(session_id=_source_session_id_to_bids)
         .drop(columns="source_session_id")
-        .set_index(
-            ["participant_id", "session_id", "datatype", "modality", "trc_label"],
-            verify_integrity=True,
-        )
+    )
+    # Scans acquired at different dates can share a HABS session label:
+    # number them with a BIDS `run` entity, ordered by date.
+    keys = ["participant_id", "session_id", "datatype", "modality", "trc_label"]
+    df = (
+        df.sort_values("date")
+        .assign(run=lambda df: df.groupby(keys, dropna=False).cumcount() + 1)
+        .assign(run=lambda df: df.run.where(df.duplicated(keys, keep=False)))
+        .set_index(keys + ["run"], verify_integrity=True)
         .sort_index()
     )
 
@@ -261,12 +282,13 @@ def _write_bids(
                     lambda row: (
                         f"{row.datatype}/{bids_prefix}"
                         f"{'_trc-' + row.trc_label if notna(row.trc_label) else ''}"
+                        f"{f'_run-{int(row.run):02d}' if notna(row.run) else ''}"
                         f"_{row.modality}.nii.gz"
                     ),
                     axis="columns",
                 )
             )
-            .drop(columns=["datatype", "modality", "trc_label"])
+            .drop(columns=["datatype", "modality", "trc_label", "run"])
             .set_index("filename", verify_integrity=True)
         )
 
