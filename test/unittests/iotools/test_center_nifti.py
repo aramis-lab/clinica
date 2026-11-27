@@ -4,6 +4,8 @@ from pathlib import Path
 from typing import Iterable, Optional, Union
 from unittest.mock import patch
 
+import nibabel as nib
+import numpy as np
 import pytest
 
 from clinica.utils.exceptions import ClinicaBIDSError, ClinicaExistingDatasetError
@@ -168,3 +170,56 @@ def test_center_nifti(tmp_path, centering_threshold, expected_files):
         logs = [f for f in output_dir.glob("centered_nifti_list_*.txt")]
         assert len(logs) == 1
         assert logs[0].read_text() == "\n".join([f for f in expected_files])
+
+
+@pytest.mark.parametrize(
+    "quatern, pixdim, qoffset",
+    [
+        # 90 deg rotation around X with anisotropic voxel sizes
+        ((np.sqrt(0.5), 0.0, 0.0), (1.0, 1.0, 1.0, 2.0), (-128.0, 160.0, -128.0)),
+        # General 3D rotation with qfac = -1 and anisotropic voxel sizes
+        ((0.3, -0.4, 0.5), (-1.0, 1.2, 0.8, 1.5), (10.0, -20.0, 30.0)),
+    ],
+)
+def test_qform_rotation_and_world_center_match_nibabel(
+    tmp_path, quatern, pixdim, qoffset
+):
+    from clinica.iotools.data_handling._centering import (
+        _get_rotation_matrix,
+        _get_world_coordinate_of_center,
+        _scale_with_rotation_matrix,
+    )
+
+    header = nib.Nifti1Header()
+    header.set_data_shape((256, 256, 160))
+    header["qform_code"] = 1
+    header["sform_code"] = 0
+    header["pixdim"][0:4] = pixdim
+    header["quatern_b"], header["quatern_c"], header["quatern_d"] = quatern
+    header["qoffset_x"], header["qoffset_y"], header["qoffset_z"] = qoffset
+
+    rot = _get_rotation_matrix(header)
+    np.testing.assert_allclose(rot @ rot.T, np.eye(3), atol=1e-6)
+    assert np.isclose(np.linalg.det(rot), 1.0, atol=1e-6)
+
+    qform = header.get_qform()
+    center_vox = np.array([128.0, 128.0, 80.0])
+    expected_world = (qform @ np.array([*center_vox, 1.0]))[:3]
+
+    np.testing.assert_allclose(
+        _scale_with_rotation_matrix(center_vox, header),
+        expected_world,
+        atol=1e-4,
+    )
+
+    img = nib.Nifti1Image(np.zeros((256, 256, 160), dtype=np.uint8), None, header)
+    img.set_sform(np.eye(4), code=0)
+    img.set_qform(qform, code=1)
+    nii_path = tmp_path / "rotated.nii.gz"
+    nib.save(img, nii_path)
+
+    np.testing.assert_allclose(
+        _get_world_coordinate_of_center(nii_path),
+        expected_world,
+        atol=1e-4,
+    )

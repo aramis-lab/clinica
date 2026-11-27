@@ -585,9 +585,9 @@ def _scale_with_rotation_matrix(
     Notes
     -----
     This method is used when short qform_code is larger than zero.
-    To get the coordinates, we multiply a rotation matrix (r_mat) by coordinates_vol,
-    then perform Hadamard with pixel dimension pixdim (like in method 1).
-    Then we add an offset (qoffset_x, qoffset_y, qoffset_z)
+    To get the coordinates, we scale coordinates_vol (with q applied to the third
+    coordinate) by pixel dimensions pixdim, multiply by the rotation matrix (r_mat),
+    and then add an offset (qoffset_x, qoffset_y, qoffset_z).
     """
     from clinica.utils.stream import cprint
 
@@ -602,9 +602,9 @@ def _scale_with_rotation_matrix(
     return (
         np.dot(
             _get_rotation_matrix(header),
-            np.array([coordinates_vol[0], coordinates_vol[1], q * coordinates_vol[2]]),
+            np.array([coordinates_vol[0], coordinates_vol[1], q * coordinates_vol[2]])
+            * np.array(header["pixdim"][1:4]),
         )
-        * np.array(header["pixdim"][1:4])
         + offset
     )
 
@@ -624,10 +624,10 @@ def _get_rotation_matrix(header: nib.Nifti1Header) -> np.ndarray:
     np.ndarray :
         The rotation matrix.
     """
-    b = header["quatern_b"]
-    c = header["quatern_c"]
-    d = header["quatern_d"]
-    a = np.sqrt(1 - (b**2) - (c**2) - (d**2))
+    b = float(header["quatern_b"])
+    c = float(header["quatern_c"])
+    d = float(header["quatern_d"])
+    a = np.sqrt(max(0.0, 1.0 - (b**2) - (c**2) - (d**2)))
     rotation = np.zeros((3, 3))
     rotation[0, 0] = (a**2) + (b**2) - (c**2) - (d**2)
     rotation[0, 1] = 2 * ((b * c) - (a * d))
@@ -636,7 +636,7 @@ def _get_rotation_matrix(header: nib.Nifti1Header) -> np.ndarray:
     rotation[1, 1] = (a**2) + (c**2) - (b**2) - (d**2)
     rotation[1, 2] = 2 * ((c * d) - (a * b))
     rotation[2, 0] = 2 * ((b * d) - (a * c))
-    rotation[2, 1] = 2 * ((b * d) - (a * c))
+    rotation[2, 1] = 2 * ((c * d) + (a * b))
     rotation[2, 2] = (a**2) + (d**2) - (b**2) - (c**2)
 
     return rotation
