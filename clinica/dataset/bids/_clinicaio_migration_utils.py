@@ -84,8 +84,6 @@ def write_modality_agnostic_files(
     at the root of the BIDS directory.
     Parameters
     ----------
-    study_name : StudyName
-        The name of the study (Ex ADNI).
     bids_dataset : clinicaio.BIDSDataset
         The BIDS dataset.
     """
